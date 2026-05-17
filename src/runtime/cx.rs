@@ -38,7 +38,7 @@ impl Cx {
         }
     }
 
-    pub fn use_memo<T: Clone + 'static>(&self, f: impl Fn() -> T + 'static) -> Derived<T> {
+    pub fn use_memo<T: Clone + PartialEq + 'static>(&self, f: impl Fn() -> T + 'static) -> Derived<T> {
         let idx = self.index.get();
         self.index.set(idx + 1);
         let mut hooks = self.hooks.borrow_mut();

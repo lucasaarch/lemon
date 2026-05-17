@@ -10,10 +10,22 @@ struct DerivedInner<T> {
     downstream: RefCell<Vec<Weak<dyn Subscriber>>>,
 }
 
-impl<T: Clone + 'static> Subscriber for DerivedInner<T> {
+impl<T: Clone + PartialEq + 'static> Subscriber for DerivedInner<T> {
     fn mark_dirty(&self) {
-        self.stale.set(true);
-        self.cached.borrow_mut().take();
+        let weak = self.self_weak.borrow().clone();
+        let new_value = with_observer(weak as Weak<dyn Subscriber>, || (self.f)());
+
+        let changed = match self.cached.borrow().as_ref() {
+            Some(old) => old != &new_value,
+            None => true,
+        };
+        if !changed {
+            return;
+        }
+
+        self.stale.set(false);
+        *self.cached.borrow_mut() = Some(new_value);
+
         let subs: Vec<Rc<dyn Subscriber>> = {
             let mut downstream = self.downstream.borrow_mut();
             let mut upgraded = Vec::with_capacity(downstream.len());
@@ -35,7 +47,7 @@ impl<T: Clone + 'static> Subscriber for DerivedInner<T> {
 
 pub struct Derived<T>(Rc<DerivedInner<T>>);
 
-impl<T: Clone + 'static> Derived<T> {
+impl<T: Clone + PartialEq + 'static> Derived<T> {
     pub fn new(f: impl Fn() -> T + 'static) -> Self {
         let inner = Rc::new(DerivedInner {
             f: Box::new(f),
@@ -76,6 +88,7 @@ impl<T> Clone for Derived<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::runtime::effect::Effect;
     use crate::runtime::signal::Signal;
     use std::cell::Cell;
     use std::rc::Rc;
@@ -109,5 +122,29 @@ mod tests {
         assert_eq!(d.get(), 11);
         s.set(20);
         assert_eq!(d.get(), 21);
+    }
+
+    #[test]
+    fn does_not_notify_downstream_when_computed_value_unchanged() {
+        let s = Signal::new(10i32);
+        let s_clone = s.clone();
+        let d = Derived::new(move || s_clone.get() / 10 * 10);
+
+        let count = Rc::new(Cell::new(0u32));
+        let c = count.clone();
+        let d2 = d.clone();
+        let _e = Effect::new(move || {
+            d2.get();
+            c.set(c.get() + 1);
+        });
+        assert_eq!(count.get(), 1);
+
+        s.set(11);
+        assert_eq!(d.get(), 10);
+        assert_eq!(count.get(), 1);
+
+        s.set(20);
+        assert_eq!(d.get(), 20);
+        assert_eq!(count.get(), 2);
     }
 }
