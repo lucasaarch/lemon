@@ -1,0 +1,12 @@
+[package]
+name = "lemon"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+parley = "0.9"
+pollster = "0.4"
+taffy = "0.7"
+vello = "0.9"
+wgpu = "29"
+winit = "0.30"
