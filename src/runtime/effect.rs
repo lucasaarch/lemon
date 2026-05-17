@@ -44,6 +44,17 @@ impl Effect {
         inner.is_running.set(false); // Reset to false after initial run
         Effect { _inner: inner }
     }
+
+    /// Like [`new`](Self::new), but does not run `f` until a tracked signal marks the effect dirty.
+    pub fn new_lazy(f: impl Fn() + 'static) -> Self {
+        let inner = Rc::new(EffectInner {
+            f: Box::new(f),
+            self_weak: RefCell::new(Weak::new()),
+            is_running: Cell::new(false),
+        });
+        *inner.self_weak.borrow_mut() = Rc::downgrade(&inner);
+        Effect { _inner: inner }
+    }
 }
 
 #[cfg(test)]

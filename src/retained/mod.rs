@@ -15,6 +15,7 @@ use crate::element::{
 pub enum RetainedError {
     Taffy(taffy::TaffyError),
     UnsupportedElement(&'static str),
+    UnsupportedPatch(&'static str),
     InvalidNodePath(NodePath),
     MissingTextCache(NodePath),
 }
@@ -52,13 +53,19 @@ pub enum RetainedKind {
     Column,
     Text,
     Button,
-    Image { src: String },
+    Image {
+        src: String,
+    },
+    Component {
+        type_id: std::any::TypeId,
+        key: Option<crate::element::types::Key>,
+    },
 }
 
 #[derive(Clone, Debug)]
 pub struct RetainedNode {
     pub kind: RetainedKind,
-    pub taffy_id: NodeId,
+    pub taffy_id: Option<NodeId>,
     pub style: StyleProps,
     pub paint: PaintData,
     pub children: Vec<RetainedNode>,
@@ -67,12 +74,20 @@ pub struct RetainedNode {
 }
 
 impl RetainedNode {
+    pub fn layout_node_id(&self) -> Option<NodeId> {
+        self.taffy_id.or_else(|| {
+            self.children
+                .iter()
+                .find_map(|child| child.layout_node_id())
+        })
+    }
+
     pub fn text(taffy_id: NodeId, content: String, mut style: TextStyle, color: Color) -> Self {
         style.color = Some(color);
 
         Self {
             kind: RetainedKind::Text,
-            taffy_id,
+            taffy_id: Some(taffy_id),
             style: StyleProps::default(),
             paint: PaintData {
                 background: None,
@@ -147,12 +162,15 @@ impl RetainedTree {
             _ => style.flex_direction,
         };
 
-        let child_ids: Vec<_> = children.iter().map(|child| child.taffy_id).collect();
+        let child_ids: Vec<_> = children
+            .iter()
+            .filter_map(|child| child.layout_node_id())
+            .collect();
         let taffy_id = self.taffy.new_with_children(style, &child_ids)?;
 
         Ok(RetainedNode {
             kind,
-            taffy_id,
+            taffy_id: Some(taffy_id),
             style: node.style,
             paint: node.paint.resolve(),
             children,
@@ -175,7 +193,7 @@ impl RetainedTree {
 
         Ok(RetainedNode {
             kind: RetainedKind::Button,
-            taffy_id,
+            taffy_id: Some(taffy_id),
             style: node.style,
             paint: node.paint.resolve(),
             children: Vec::new(),
@@ -195,7 +213,7 @@ impl RetainedTree {
 
         Ok(RetainedNode {
             kind: RetainedKind::Image { src: node.src },
-            taffy_id,
+            taffy_id: Some(taffy_id),
             style: node.style,
             paint: PaintData::default(),
             children: Vec::new(),
@@ -206,8 +224,37 @@ impl RetainedTree {
 
     pub fn apply_patch(&mut self, patch: Patch) -> Result<(), RetainedError> {
         match patch {
+            Patch::UpdateComponent { node, component } => {
+                let retained = self.node_mut_exact(&node)?;
+                let RetainedKind::Component { type_id, key } = &mut retained.kind else {
+                    return Err(RetainedError::InvalidNodePath(node));
+                };
+                *type_id = component.type_id();
+                *key = component.key().cloned();
+            }
+            Patch::MountComponent { node, component } => {
+                let wrapper = RetainedNode {
+                    kind: RetainedKind::Component {
+                        type_id: component.type_id(),
+                        key: component.key().cloned(),
+                    },
+                    taffy_id: None,
+                    style: StyleProps::default(),
+                    paint: PaintData::default(),
+                    children: Vec::new(),
+                    handlers: EventHandlers::default(),
+                    text: None,
+                };
+                self.replace_with_wrapper(node, wrapper)?;
+            }
+            Patch::UnmountComponent { node } => {
+                self.unwrap_component(node)?;
+            }
             Patch::UpdateStyle { node, style } => {
-                let taffy_id = self.node_mut(&node)?.taffy_id;
+                let taffy_id = self
+                    .node_mut(&node)?
+                    .layout_node_id()
+                    .ok_or_else(|| RetainedError::InvalidNodePath(node.clone()))?;
                 self.taffy.set_style(taffy_id, style.to_taffy_style())?;
                 self.node_mut(&node)?.style = style;
             }
@@ -229,13 +276,24 @@ impl RetainedTree {
                 element,
             } => {
                 let child = self.build_node(element)?;
-                let parent_id = self.node_mut(&parent)?.taffy_id;
+                let parent_id = self
+                    .node_mut(&parent)?
+                    .layout_node_id()
+                    .ok_or_else(|| RetainedError::InvalidNodePath(parent.clone()))?;
+                let child_id = child
+                    .layout_node_id()
+                    .ok_or(RetainedError::UnsupportedElement(
+                        "child without layout node",
+                    ))?;
                 self.taffy
-                    .insert_child_at_index(parent_id, index, child.taffy_id)?;
+                    .insert_child_at_index(parent_id, index, child_id)?;
                 self.node_mut(&parent)?.children.insert(index, child);
             }
             Patch::RemoveChild { parent, index } => {
-                let parent_id = self.node_mut(&parent)?.taffy_id;
+                let parent_id = self
+                    .node_mut(&parent)?
+                    .layout_node_id()
+                    .ok_or_else(|| RetainedError::InvalidNodePath(parent.clone()))?;
                 let removed = self.node_mut(&parent)?.children.remove(index);
                 self.taffy.remove_child_at_index(parent_id, index)?;
                 self.remove_subtree_from_taffy(removed)?;
@@ -259,6 +317,15 @@ impl RetainedTree {
         node_mut_from(root, &path.0).ok_or_else(|| RetainedError::InvalidNodePath(path.clone()))
     }
 
+    fn node_mut_exact(&mut self, path: &NodePath) -> Result<&mut RetainedNode, RetainedError> {
+        let root = self
+            .root
+            .as_mut()
+            .ok_or_else(|| RetainedError::InvalidNodePath(path.clone()))?;
+        node_mut_from_exact(root, &path.0)
+            .ok_or_else(|| RetainedError::InvalidNodePath(path.clone()))
+    }
+
     fn replace_node(&mut self, path: NodePath, new_element: Element) -> Result<(), RetainedError> {
         let replacement = self.build_node(new_element)?;
 
@@ -270,15 +337,104 @@ impl RetainedTree {
         }
 
         let (parent_path, index) = split_parent_path(&path)?;
-        let parent_id = self.node_mut(&parent_path)?.taffy_id;
+        let parent_id = self
+            .node_mut(&parent_path)?
+            .layout_node_id()
+            .ok_or_else(|| RetainedError::InvalidNodePath(parent_path.clone()))?;
         let removed = self.node_mut(&parent_path)?.children.remove(index);
         self.taffy.remove_child_at_index(parent_id, index)?;
         self.remove_subtree_from_taffy(removed)?;
+        let replacement_id =
+            replacement
+                .layout_node_id()
+                .ok_or(RetainedError::UnsupportedElement(
+                    "replacement without layout node",
+                ))?;
         self.taffy
-            .insert_child_at_index(parent_id, index, replacement.taffy_id)?;
+            .insert_child_at_index(parent_id, index, replacement_id)?;
         self.node_mut(&parent_path)?
             .children
             .insert(index, replacement);
+        Ok(())
+    }
+
+    fn replace_with_wrapper(
+        &mut self,
+        path: NodePath,
+        mut wrapper: RetainedNode,
+    ) -> Result<(), RetainedError> {
+        if path.0.is_empty() {
+            if let Some(old_root) = self.root.take() {
+                wrapper.children.push(old_root);
+            }
+            self.root = Some(wrapper);
+            return Ok(());
+        }
+
+        let (parent_path, index) = split_parent_path(&path)?;
+        let removed = self.node_mut(&parent_path)?.children.remove(index);
+        wrapper.children.push(removed);
+
+        let parent_id = self
+            .node_mut(&parent_path)?
+            .layout_node_id()
+            .ok_or_else(|| RetainedError::InvalidNodePath(parent_path.clone()))?;
+
+        if let Some(old_layout_id) = wrapper.children[0].layout_node_id() {
+            self.taffy
+                .insert_child_at_index(parent_id, index, old_layout_id)?;
+        }
+
+        self.node_mut(&parent_path)?.children.insert(index, wrapper);
+        Ok(())
+    }
+
+    fn unwrap_component(&mut self, path: NodePath) -> Result<(), RetainedError> {
+        if path.0.is_empty() {
+            let root = self
+                .root
+                .take()
+                .ok_or_else(|| RetainedError::InvalidNodePath(path.clone()))?;
+            let RetainedKind::Component { .. } = root.kind else {
+                return Err(RetainedError::InvalidNodePath(path));
+            };
+            let mut children = root.children;
+            self.root = children.pop();
+            return Ok(());
+        }
+
+        let (parent_path, index) = split_parent_path(&path)?;
+        let removed = self.node_mut(&parent_path)?.children.remove(index);
+        let RetainedKind::Component { .. } = removed.kind else {
+            return Err(RetainedError::InvalidNodePath(path));
+        };
+
+        let parent_id = self
+            .node_mut(&parent_path)?
+            .layout_node_id()
+            .ok_or_else(|| RetainedError::InvalidNodePath(parent_path.clone()))?;
+        self.taffy.remove_child_at_index(parent_id, index)?;
+
+        let mut children = removed.children;
+        if children.len() == 1 {
+            let child = children.remove(0);
+            if let Some(child_id) = child.layout_node_id() {
+                self.taffy
+                    .insert_child_at_index(parent_id, index, child_id)?;
+            }
+            self.node_mut(&parent_path)?.children.insert(index, child);
+        } else {
+            for (offset, child) in children.into_iter().enumerate() {
+                if let Some(child_id) = child.layout_node_id() {
+                    self.taffy
+                        .insert_child_at_index(parent_id, index + offset, child_id)?;
+                }
+                self.node_mut(&parent_path)?
+                    .children
+                    .insert(index + offset, child);
+            }
+        }
+
         Ok(())
     }
 
@@ -288,7 +444,10 @@ impl RetainedTree {
         from: usize,
         to: usize,
     ) -> Result<(), RetainedError> {
-        let parent_id = self.node_mut(&parent)?.taffy_id;
+        let parent_id = self
+            .node_mut(&parent)?
+            .layout_node_id()
+            .ok_or_else(|| RetainedError::InvalidNodePath(parent.clone()))?;
         let child_ids = {
             let parent_node = self.node_mut(&parent)?;
             let child = parent_node.children.remove(from);
@@ -296,7 +455,7 @@ impl RetainedTree {
             parent_node
                 .children
                 .iter()
-                .map(|child| child.taffy_id)
+                .filter_map(|child| child.layout_node_id())
                 .collect::<Vec<_>>()
         };
         self.taffy.set_children(parent_id, &child_ids)?;
@@ -307,7 +466,9 @@ impl RetainedTree {
         for child in node.children {
             self.remove_subtree_from_taffy(child)?;
         }
-        self.taffy.remove(node.taffy_id)?;
+        if let Some(taffy_id) = node.taffy_id {
+            self.taffy.remove(taffy_id)?;
+        }
         Ok(())
     }
 }
@@ -405,6 +566,7 @@ fn into_taffy_justify_content(justify: Justify) -> taffy::JustifyContent {
 }
 
 fn node_mut_from<'a>(node: &'a mut RetainedNode, path: &[usize]) -> Option<&'a mut RetainedNode> {
+    let node = resolve_transparent_mut(node);
     if path.is_empty() {
         return Some(node);
     }
@@ -412,6 +574,26 @@ fn node_mut_from<'a>(node: &'a mut RetainedNode, path: &[usize]) -> Option<&'a m
     let (index, rest) = path.split_first()?;
     let child = node.children.get_mut(*index)?;
     node_mut_from(child, rest)
+}
+
+fn resolve_transparent_mut(node: &mut RetainedNode) -> &mut RetainedNode {
+    if matches!(node.kind, RetainedKind::Component { .. }) && node.children.len() == 1 {
+        &mut node.children[0]
+    } else {
+        node
+    }
+}
+
+fn node_mut_from_exact<'a>(
+    node: &'a mut RetainedNode,
+    path: &[usize],
+) -> Option<&'a mut RetainedNode> {
+    if path.is_empty() {
+        return Some(node);
+    }
+    let (index, rest) = path.split_first()?;
+    let child = node.children.get_mut(*index)?;
+    node_mut_from_exact(child, rest)
 }
 
 fn split_parent_path(path: &NodePath) -> Result<(NodePath, usize), RetainedError> {
@@ -428,6 +610,7 @@ mod tests {
     use crate::diff::{NodePath, Patch};
     use crate::element::builders::{Button, Column, Text};
     use crate::element::style::{Align, Color, Dimension, Edges, Justify, StyleProps};
+    use crate::element::types::ComponentElement;
 
     use super::*;
 
@@ -490,7 +673,7 @@ mod tests {
 
         assert_eq!(node.text_content(), Some("hello"));
         assert_eq!(node.paint.background, None);
-        assert_eq!(node.taffy_id, taffy::NodeId::from(7_u64));
+        assert_eq!(node.taffy_id, Some(taffy::NodeId::from(7_u64)));
     }
 
     #[test]
@@ -509,10 +692,17 @@ mod tests {
         assert_eq!(root.children[0].text_content(), Some("hello"));
         assert_eq!(root.children[1].text_content(), Some("world"));
 
-        let taffy_children = tree.taffy.children(root.taffy_id).unwrap();
+        let root_id = root.layout_node_id().unwrap();
+        let taffy_children = tree.taffy.children(root_id).unwrap();
         assert_eq!(taffy_children.len(), 2);
-        assert_eq!(taffy_children[0], root.children[0].taffy_id);
-        assert_eq!(taffy_children[1], root.children[1].taffy_id);
+        assert_eq!(
+            taffy_children[0],
+            root.children[0].layout_node_id().unwrap()
+        );
+        assert_eq!(
+            taffy_children[1],
+            root.children[1].layout_node_id().unwrap()
+        );
     }
 
     #[test]
@@ -569,8 +759,8 @@ mod tests {
         assert_eq!(root.children.len(), 2);
         assert_eq!(root.children[1].text_content(), Some("b"));
         assert_eq!(
-            tree.taffy.children(root.taffy_id).unwrap()[1],
-            root.children[1].taffy_id
+            tree.taffy.children(root.layout_node_id().unwrap()).unwrap()[1],
+            root.children[1].layout_node_id().unwrap()
         );
 
         tree.apply_patch(Patch::RemoveChild {
@@ -583,8 +773,8 @@ mod tests {
         assert_eq!(root.children.len(), 1);
         assert_eq!(root.children[0].text_content(), Some("b"));
         assert_eq!(
-            tree.taffy.children(root.taffy_id).unwrap()[0],
-            root.children[0].taffy_id
+            tree.taffy.children(root.layout_node_id().unwrap()).unwrap()[0],
+            root.children[0].layout_node_id().unwrap()
         );
     }
 
@@ -597,7 +787,9 @@ mod tests {
                 .into_element(),
         )
         .unwrap();
-        let old_child_id = tree.root.as_ref().unwrap().children[0].taffy_id;
+        let old_child_id = tree.root.as_ref().unwrap().children[0]
+            .layout_node_id()
+            .unwrap();
 
         tree.apply_patch(Patch::ReplaceNode {
             node: NodePath(vec![0]),
@@ -606,9 +798,107 @@ mod tests {
         .unwrap();
 
         let root = tree.root.as_ref().unwrap();
-        assert_ne!(root.children[0].taffy_id, old_child_id);
+        assert_ne!(root.children[0].layout_node_id().unwrap(), old_child_id);
         assert!(matches!(root.children[0].kind, RetainedKind::Column));
         assert_eq!(root.children[0].children[0].text_content(), Some("new"));
         assert_eq!(root.children[1].text_content(), Some("keep"));
+    }
+
+    #[test]
+    fn mount_component_patch_creates_transparent_wrapper_without_taffy_node() {
+        fn child(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("child").into_element()
+        }
+
+        let mut tree = RetainedTree::mount(Text::new("root").into_element()).unwrap();
+        tree.apply_patch(Patch::MountComponent {
+            node: NodePath::root(),
+            component: ComponentElement::from_component_fn(child)
+                .with_key(crate::element::types::Key(5)),
+        })
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        assert!(matches!(root.kind, RetainedKind::Component { .. }));
+        assert!(root.taffy_id.is_none());
+        assert_eq!(root.children[0].text_content(), Some("root"));
+    }
+
+    #[test]
+    fn component_wrapper_is_transparent_to_child_lookup() {
+        let wrapper = RetainedNode {
+            kind: RetainedKind::Component {
+                type_id: std::any::TypeId::of::<u32>(),
+                key: Some(crate::element::types::Key(1)),
+            },
+            taffy_id: None,
+            style: Default::default(),
+            paint: Default::default(),
+            children: vec![RetainedNode::text(
+                taffy::NodeId::from(9_u64),
+                "child".to_owned(),
+                Default::default(),
+                Default::default(),
+            )],
+            handlers: Default::default(),
+            text: None,
+        };
+
+        assert_eq!(wrapper.children[0].text_content(), Some("child"));
+    }
+
+    #[test]
+    fn update_component_patch_updates_wrapper_metadata() {
+        fn child_a(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("a").into_element()
+        }
+
+        fn child_b(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("b").into_element()
+        }
+
+        let mut tree = RetainedTree::mount(Text::new("root").into_element()).unwrap();
+        tree.apply_patch(Patch::MountComponent {
+            node: NodePath::root(),
+            component: ComponentElement::from_component_fn(child_a)
+                .with_key(crate::element::types::Key(1)),
+        })
+        .unwrap();
+
+        tree.apply_patch(Patch::UpdateComponent {
+            node: NodePath::root(),
+            component: ComponentElement::from_component_fn(child_b)
+                .with_key(crate::element::types::Key(2)),
+        })
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let RetainedKind::Component { key, .. } = &root.kind else {
+            panic!("expected component wrapper");
+        };
+        assert_eq!(key.as_ref(), Some(&crate::element::types::Key(2)));
+    }
+
+    #[test]
+    fn unmount_component_promotes_wrapped_subtree() {
+        fn child(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("child").into_element()
+        }
+
+        let mut tree = RetainedTree::mount(Text::new("root").into_element()).unwrap();
+        tree.apply_patch(Patch::MountComponent {
+            node: NodePath::root(),
+            component: ComponentElement::from_component_fn(child)
+                .with_key(crate::element::types::Key(1)),
+        })
+        .unwrap();
+        tree.apply_patch(Patch::UnmountComponent {
+            node: NodePath::root(),
+        })
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        assert!(matches!(root.kind, RetainedKind::Text));
+        assert_eq!(root.text_content(), Some("root"));
     }
 }

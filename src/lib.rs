@@ -3,7 +3,7 @@ pub mod element;
 pub mod retained;
 pub mod runtime;
 
-pub use element::builders::{Box_, Button, Column, Row, Text};
+pub use element::builders::{Box_, Button, Column, Component, Row, Text};
 pub use element::style::{Color, StyleProps};
 pub use runtime::cx::Cx;
 pub use runtime::signal::Signal;
@@ -116,5 +116,19 @@ mod tests {
         assert!(patches
             .iter()
             .any(|p| matches!(p, Patch::UpdateText { content, .. } if content == "31")));
+    }
+
+    #[test]
+    fn crate_root_re_exports_component_builder() {
+        fn child(_cx: &Cx) -> element::Element {
+            Text::new("child").into_element()
+        }
+
+        let element = Component::new(child).key(9).into_element();
+        let element::Element::Component(component) = element else {
+            panic!("expected component element");
+        };
+
+        assert_eq!(component.key(), Some(&element::types::Key(9)));
     }
 }

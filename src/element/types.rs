@@ -5,6 +5,12 @@ use crate::element::{
     style::{PaintProps, StyleProps},
 };
 
+pub type ComponentFn = fn(&crate::runtime::cx::Cx) -> crate::element::Element;
+
+fn component_identity(view: ComponentFn) -> usize {
+    view as *const () as usize
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Key(pub u64);
 
@@ -75,17 +81,63 @@ impl std::fmt::Debug for ImageElement {
 #[derive(Clone)]
 pub struct ComponentElement {
     /// Closure that captures props and calls the component function.
-    pub view: Rc<dyn Fn(&crate::runtime::cx::Cx) -> crate::element::Element>,
-    /// Used for stable component identity across re-renders.
-    pub type_id: std::any::TypeId,
-    pub key: Option<Key>,
+    view: Rc<dyn Fn(&crate::runtime::cx::Cx) -> crate::element::Element>,
+    type_id: std::any::TypeId,
+    identity: usize,
+    key: Option<Key>,
+}
+
+impl ComponentElement {
+    fn new(
+        type_id: std::any::TypeId,
+        identity: usize,
+        view: Rc<dyn Fn(&crate::runtime::cx::Cx) -> crate::element::Element>,
+    ) -> Self {
+        Self {
+            view,
+            type_id,
+            identity,
+            key: None,
+        }
+    }
+
+    pub fn from_component_fn(view: ComponentFn) -> Self {
+        Self::new(
+            std::any::TypeId::of::<ComponentFn>(),
+            component_identity(view),
+            Rc::new(view),
+        )
+    }
+
+    pub fn type_id(&self) -> std::any::TypeId {
+        self.type_id
+    }
+
+    pub(crate) fn identity(&self) -> usize {
+        self.identity
+    }
+
+    pub fn key(&self) -> Option<&Key> {
+        self.key.as_ref()
+    }
+
+    pub fn view(&self) -> Rc<dyn Fn(&crate::runtime::cx::Cx) -> crate::element::Element> {
+        self.view.clone()
+    }
+
+    pub(crate) fn with_key(mut self, key: Key) -> Self {
+        self.key = Some(key);
+        self
+    }
 }
 
 impl std::fmt::Debug for ComponentElement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let _ = &self.view;
         f.debug_struct("ComponentElement")
             .field("view", &"Box<dyn Fn()>")
             .field("type_id", &self.type_id)
+            .field("identity", &self.identity)
             .field("key", &self.key)
             .finish()
     }
@@ -94,7 +146,9 @@ impl std::fmt::Debug for ComponentElement {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::element::builders::Text;
     use crate::element::content::TextContent;
+    use crate::element::Element;
 
     #[test]
     fn box_element_default_has_no_children() {
@@ -120,5 +174,41 @@ mod tests {
             key: None,
         };
         assert_eq!(el.content.resolve(), "dynamic");
+    }
+
+    #[test]
+    fn component_element_new_preserves_explicit_identity_for_wrapped_view() {
+        fn child(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("child").into_element()
+        }
+
+        let type_id = std::any::TypeId::of::<ComponentFn>();
+        let component = ComponentElement::new(type_id, component_identity(child), Rc::new(child))
+            .with_key(Key(3));
+
+        assert_eq!(component.type_id(), type_id);
+        assert_eq!(component.identity(), component_identity(child));
+        assert_eq!(component.key(), Some(&Key(3)));
+        let Element::Text(rendered) = (component.view())(&crate::runtime::cx::Cx::new()) else {
+            panic!("expected text element");
+        };
+        assert_eq!(rendered.content.resolve(), "child");
+    }
+
+    #[test]
+    fn component_fn_identity_distinguishes_different_functions_of_same_type() {
+        fn first(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("first").into_element()
+        }
+
+        fn second(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("second").into_element()
+        }
+
+        let first_component = ComponentElement::from_component_fn(first);
+        let second_component = ComponentElement::from_component_fn(second);
+
+        assert_eq!(first_component.type_id(), second_component.type_id());
+        assert_ne!(first_component.identity(), second_component.identity());
     }
 }

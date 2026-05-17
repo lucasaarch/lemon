@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::element::{
     content::TextContent,
     style::{Color, ColorSource, CornerRadii, Edges, PaintProps, StyleProps, TextStyle},
-    types::{BoxElement, TextElement},
+    types::{BoxElement, ComponentElement, ComponentFn, Key, TextElement},
     Element,
 };
 
@@ -173,9 +173,35 @@ impl From<Button> for Element {
     }
 }
 
+// ── Component ─────────────────────────────────────────────────────────────
+
+pub struct Component(ComponentElement);
+
+impl Component {
+    pub fn new(view: ComponentFn) -> Self {
+        Self(ComponentElement::from_component_fn(view))
+    }
+
+    pub fn key(mut self, key: u64) -> Self {
+        self.0 = self.0.with_key(Key(key));
+        self
+    }
+
+    pub fn into_element(self) -> Element {
+        Element::Component(self.0)
+    }
+}
+
+impl From<Component> for Element {
+    fn from(component: Component) -> Self {
+        component.into_element()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::element::types::Key;
     use std::cell::Cell;
     use std::rc::Rc;
 
@@ -231,5 +257,30 @@ mod tests {
         };
         el.on_click.unwrap()();
         assert!(fired.get());
+    }
+
+    #[test]
+    fn component_builder_tracks_function_identity_and_key() {
+        fn first(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("first").into_element()
+        }
+
+        fn second(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("second").into_element()
+        }
+
+        let Element::Component(first_with_key) = Component::new(first).key(7).into_element() else {
+            panic!("expected component element");
+        };
+        let Element::Component(first_again) = Component::new(first).into_element() else {
+            panic!("expected component element");
+        };
+        let Element::Component(second_component) = Component::new(second).into_element() else {
+            panic!("expected component element");
+        };
+
+        assert_eq!(first_with_key.key(), Some(&Key(7)));
+        assert_eq!(first_with_key.identity(), first_again.identity());
+        assert_ne!(first_with_key.identity(), second_component.identity());
     }
 }

@@ -20,6 +20,17 @@ impl NodePath {
 
 #[derive(Debug)]
 pub enum Patch {
+    UpdateComponent {
+        node: NodePath,
+        component: crate::element::types::ComponentElement,
+    },
+    MountComponent {
+        node: NodePath,
+        component: crate::element::types::ComponentElement,
+    },
+    UnmountComponent {
+        node: NodePath,
+    },
     UpdateStyle {
         node: NodePath,
         style: StyleProps,
@@ -71,6 +82,37 @@ pub fn diff(old: Element, new: Element, path: NodePath) -> Vec<Patch> {
         (Column(o), Column(n)) => diff_box(o, n, path, &mut patches),
         (Row(o), Row(n)) => diff_box(o, n, path, &mut patches),
         (Box_(o), Box_(n)) => diff_box(o, n, path, &mut patches),
+        (Component(o), Component(n)) => {
+            if o.identity() == n.identity() && o.key() == n.key() {
+                patches.push(Patch::UpdateComponent {
+                    node: path,
+                    component: n,
+                });
+            } else {
+                patches.push(Patch::UnmountComponent { node: path.clone() });
+                patches.push(Patch::MountComponent {
+                    node: path,
+                    component: n,
+                });
+            }
+        }
+        (Component(_), new) => {
+            patches.push(Patch::UnmountComponent { node: path.clone() });
+            patches.push(Patch::ReplaceNode {
+                node: path,
+                new_element: new,
+            });
+        }
+        (_, Component(n)) => {
+            patches.push(Patch::MountComponent {
+                node: path.clone(),
+                component: n,
+            });
+            patches.push(Patch::ReplaceNode {
+                node: path,
+                new_element: Element::None,
+            });
+        }
         (Button(o), Button(n)) => {
             if o.style != n.style {
                 patches.push(Patch::UpdateStyle {
@@ -165,20 +207,31 @@ fn diff_children(
 
     // Extra new children → insert
     for (i, el) in new_iter.enumerate() {
-        patches.push(Patch::InsertChild {
-            parent: parent.clone(),
-            index: min + i,
-            element: el,
-        });
+        let node = parent.child(min + i);
+        match el {
+            Element::Component(component) => {
+                patches.push(Patch::MountComponent { node, component })
+            }
+            element => patches.push(Patch::InsertChild {
+                parent: parent.clone(),
+                index: min + i,
+                element,
+            }),
+        }
     }
 
     // Removed old children → remove in reverse order to keep indices stable
     let old_remaining: Vec<_> = old_iter.collect();
     for i in (0..old_remaining.len()).rev() {
-        patches.push(Patch::RemoveChild {
-            parent: parent.clone(),
-            index: min + i,
-        });
+        let index = min + i;
+        let node = parent.child(index);
+        match &old_remaining[i] {
+            Element::Component(_) => patches.push(Patch::UnmountComponent { node }),
+            _ => patches.push(Patch::RemoveChild {
+                parent: parent.clone(),
+                index,
+            }),
+        }
     }
 }
 
@@ -186,7 +239,7 @@ fn diff_children(
 mod tests {
     use super::*;
     use crate::element::{
-        builders::{Button, Column, Text},
+        builders::{Button, Column, Component, Text},
         types::ImageElement,
     };
 
@@ -315,5 +368,166 @@ mod tests {
         let old = Column::new().child(txt("a")).child(txt("b")).into_element();
         let new = Column::new().child(txt("a")).child(txt("b")).into_element();
         assert!(diff(old, new, NodePath::root()).is_empty());
+    }
+
+    #[test]
+    fn equal_component_identity_emits_update_without_lifecycle_patches() {
+        fn child(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("child").into_element()
+        }
+
+        let old = Component::new(child).key(1).into_element();
+        let new = Component::new(child).key(1).into_element();
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(matches!(
+            patches.first(),
+            Some(Patch::UpdateComponent { .. })
+        ));
+        assert_eq!(patches.len(), 1);
+        assert!(!patches.iter().any(|patch| matches!(
+            patch,
+            Patch::MountComponent { .. } | Patch::UnmountComponent { .. }
+        )));
+    }
+
+    #[test]
+    fn different_component_functions_with_same_function_pointer_type_remount() {
+        fn first(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("first").into_element()
+        }
+
+        fn second(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("second").into_element()
+        }
+
+        let old = Component::new(first).key(1).into_element();
+        let new = Component::new(second).key(1).into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(matches!(
+            patches.first(),
+            Some(Patch::UnmountComponent { .. })
+        ));
+        assert!(matches!(patches.get(1), Some(Patch::MountComponent { .. })));
+    }
+
+    #[test]
+    fn changed_component_identity_unmounts_then_mounts() {
+        fn child_a(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("a").into_element()
+        }
+
+        fn child_b(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("b").into_element()
+        }
+
+        let old = Component::new(child_a).key(1).into_element();
+        let new = Component::new(child_b).key(1).into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(matches!(
+            patches.first(),
+            Some(Patch::UnmountComponent { .. })
+        ));
+        assert!(matches!(patches.get(1), Some(Patch::MountComponent { .. })));
+    }
+
+    #[test]
+    fn component_to_non_component_unmounts_then_replaces() {
+        fn child(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("child").into_element()
+        }
+
+        let old = Component::new(child).key(1).into_element();
+        let new = Text::new("next").into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(matches!(
+            patches.first(),
+            Some(Patch::UnmountComponent { .. })
+        ));
+        assert!(matches!(
+            patches.get(1),
+            Some(Patch::ReplaceNode {
+                new_element: Element::Text(_),
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn non_component_to_component_replaces_then_mounts() {
+        fn child(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("child").into_element()
+        }
+
+        let old = Text::new("prev").into_element();
+        let new = Component::new(child).key(1).into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(matches!(
+            patches.first(),
+            Some(Patch::MountComponent { .. })
+        ));
+        assert!(matches!(
+            patches.get(1),
+            Some(Patch::ReplaceNode {
+                new_element: Element::None,
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn component_child_added_mounts_component_instead_of_inserting_element() {
+        fn child(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("child").into_element()
+        }
+
+        let old = Column::new().into_element();
+        let new = Column::new()
+            .child(Component::new(child).key(2))
+            .into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(matches!(
+            patches.first(),
+            Some(Patch::MountComponent { node, .. }) if *node == NodePath(vec![0])
+        ));
+        assert!(!patches.iter().any(|patch| matches!(
+            patch,
+            Patch::InsertChild {
+                element: Element::Component(_),
+                ..
+            }
+        )));
+    }
+
+    #[test]
+    fn component_child_removed_unmounts_component_instead_of_generic_remove() {
+        fn child(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("child").into_element()
+        }
+
+        let old = Column::new()
+            .child(Component::new(child).key(2))
+            .into_element();
+        let new = Column::new().into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(matches!(
+            patches.first(),
+            Some(Patch::UnmountComponent { node }) if *node == NodePath(vec![0])
+        ));
+        assert!(!patches
+            .iter()
+            .any(|patch| matches!(patch, Patch::RemoveChild { parent, index } if *parent == NodePath::root() && *index == 0)));
     }
 }
