@@ -15,3 +15,7 @@ taffy = "0.7"
 vello = "0.9"
 wgpu = "29"
 winit = "0.30"
+
+[[example]]
+name = "counter"
+path = "examples/counter.rs"

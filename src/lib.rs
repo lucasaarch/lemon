@@ -10,7 +10,7 @@ pub use element::builders::{Box_, Button, Column, Component, Row, Text};
 pub use element::style::{Color, StyleProps};
 pub use layout::{layout_pass, layout_pass_if_dirty, LayoutMap, LayoutRect, Viewport};
 pub use paint::{paint_pass, PaintStats};
-pub use platform::{AppState, WindowConfig};
+pub use platform::{run, AppState, WindowConfig};
 pub use retained::RetainedTree;
 pub use runtime::cx::Cx;
 pub use runtime::signal::Signal;
