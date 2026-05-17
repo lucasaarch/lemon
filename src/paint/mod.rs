@@ -3,7 +3,7 @@ use vello::kurbo::{Affine, Rect, RoundedRect, Stroke};
 use vello::peniko::{color::AlphaColor, BlendMode, Color as PenikoColor, Fill};
 use vello::{Glyph, Scene};
 
-use crate::element::style::{Color, CornerRadii};
+use crate::element::style::{default_text_color, Color, CornerRadii, Edges};
 use crate::layout::{LayoutMap, LayoutRect};
 use crate::retained::{RetainedKind, RetainedNode, RetainedTree};
 
@@ -148,8 +148,35 @@ fn paint_text(
         return;
     };
 
-    let color = text.style.color.unwrap_or_default();
-    paint_parley_layout(scene, ctx, layout, rect.x, rect.y, color, stats);
+    let color = text.style.color.unwrap_or_else(default_text_color);
+    let (origin_x, origin_y) = if matches!(node.kind, RetainedKind::Button) {
+        let content = node
+            .style
+            .padding
+            .as_ref()
+            .map(|pad| inset_rect(rect, pad))
+            .unwrap_or(*rect);
+        centered_origin(&content, layout.width(), layout.height())
+    } else {
+        (rect.x, rect.y)
+    };
+    paint_parley_layout(scene, ctx, layout, origin_x, origin_y, color, stats);
+}
+
+fn inset_rect(outer: &LayoutRect, padding: &Edges<f32>) -> LayoutRect {
+    LayoutRect {
+        x: outer.x + padding.left,
+        y: outer.y + padding.top,
+        width: (outer.width - padding.left - padding.right).max(0.0),
+        height: (outer.height - padding.top - padding.bottom).max(0.0),
+    }
+}
+
+fn centered_origin(content: &LayoutRect, text_width: f32, text_height: f32) -> (f32, f32) {
+    (
+        content.x + ((content.width - text_width) * 0.5).max(0.0),
+        content.y + ((content.height - text_height) * 0.5).max(0.0),
+    )
 }
 
 fn paint_parley_layout(

@@ -194,6 +194,35 @@ mod tests {
     }
 
     #[test]
+    fn counter_demo_paints_text_and_button_without_explicit_styles() {
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .gap(12.0)
+                .padding(24.0)
+                .child(Text::new("0").font_size(24.0))
+                .child(Button::new("Incrementar"))
+                .into_element(),
+        )
+        .unwrap();
+
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 900.0,
+                height: 600.0,
+            },
+            1.0,
+        )
+        .unwrap();
+
+        let mut scene = Scene::new();
+        let stats = paint_pass(&tree, &layout, &mut scene, 1.0);
+
+        assert!(stats.glyph_runs > 0, "counter label should paint glyphs");
+        assert!(stats.fills >= 1, "button should paint a background fill");
+    }
+
+    #[test]
     fn end_to_end_runtime_layout_paint_without_panic() {
         let count = Signal::new(0i32);
         let c = count.clone();

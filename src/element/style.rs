@@ -78,6 +78,8 @@ pub struct StyleProps {
     pub flex_shrink: Option<f32>,
     pub align_items: Option<Align>,
     pub justify_content: Option<Justify>,
+    /// Cross-axis alignment when this node is a flex child (e.g. avoid stretch in a column).
+    pub align_self: Option<Align>,
 }
 
 /// Color as RGBA floats in 0.0–1.0.
@@ -186,9 +188,24 @@ impl PaintProps {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TextStyle {
     pub font_size: f32,
     pub font_weight: u16,
     pub color: Option<Color>,
+}
+
+impl Default for TextStyle {
+    fn default() -> Self {
+        TextStyle {
+            font_size: 16.0,
+            font_weight: 400,
+            color: Some(Color::rgb8(235, 235, 240)),
+        }
+    }
+}
+
+/// Foreground used when a text node has no explicit color.
+pub fn default_text_color() -> Color {
+    Color::rgb8(235, 235, 240)
 }

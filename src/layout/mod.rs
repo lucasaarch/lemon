@@ -343,6 +343,37 @@ mod tests {
     }
 
     #[test]
+    fn button_in_column_sizes_to_content_not_full_width() {
+        use crate::element::builders::Button;
+
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .padding(24.0)
+                .child(Button::new("Incrementar"))
+                .into_element(),
+        )
+        .unwrap();
+
+        let map = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 900.0,
+                height: 600.0,
+            },
+            1.0,
+        )
+        .unwrap();
+
+        let button_id = tree.root.as_ref().unwrap().children[0].taffy_id.unwrap();
+        let button_rect = map.get(button_id).unwrap();
+        assert!(
+            button_rect.width < 400.0,
+            "button should hug label, got width {}",
+            button_rect.width
+        );
+    }
+
+    #[test]
     fn component_wrapper_is_transparent_in_layout_collection() {
         fn child(_cx: &crate::runtime::cx::Cx) -> crate::element::Element {
             Text::new("child").into_element()

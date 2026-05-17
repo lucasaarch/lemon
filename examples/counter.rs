@@ -11,7 +11,9 @@ fn counter(cx: &Cx) -> lemon::element::Element {
         .gap(12.0)
         .padding(24.0)
         .child(
-            Text::new(move || count_text.get().to_string()).font_size(24.0),
+            Text::new(move || count_text.get().to_string())
+                .font_size(24.0)
+                .color(lemon::Color::rgb8(235, 235, 240)),
         )
         .child(Button::new("Incrementar").on_click(move || {
             count_btn.update(|n| *n += 1);

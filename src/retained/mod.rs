@@ -228,6 +228,11 @@ impl RetainedTree {
     fn build_button_node(&mut self, node: ButtonElement) -> Result<RetainedNode, RetainedError> {
         let label = node.label.resolve();
         let taffy_id = self.taffy.new_leaf(node.style.to_taffy_style())?;
+        let label_style = TextStyle {
+            font_size: 14.0,
+            font_weight: 500,
+            color: Some(crate::element::style::default_text_color()),
+        };
 
         Ok(RetainedNode {
             kind: RetainedKind::Button,
@@ -240,7 +245,7 @@ impl RetainedTree {
             },
             text: Some(TextCache {
                 content: label,
-                style: TextStyle::default(),
+                style: label_style,
                 needs_layout: true,
                 parley_layout: None,
                 layout_max_width: None,
@@ -556,6 +561,7 @@ impl StyleProps {
                     }),
             },
             align_items: self.align_items.clone().map(into_taffy_align_items),
+            align_self: self.align_self.clone().map(into_taffy_align_self),
             justify_content: self.justify_content.clone().map(into_taffy_justify_content),
             flex_grow: self.flex_grow.unwrap_or(0.0),
             flex_shrink: self.flex_shrink.unwrap_or(1.0),
@@ -587,6 +593,16 @@ fn into_taffy_margin(edges: &Edges<f32>) -> Rect<taffy::LengthPercentageAuto> {
         right: taffy::LengthPercentageAuto::Length(edges.right),
         top: taffy::LengthPercentageAuto::Length(edges.top),
         bottom: taffy::LengthPercentageAuto::Length(edges.bottom),
+    }
+}
+
+fn into_taffy_align_self(align: Align) -> taffy::AlignSelf {
+    match align {
+        Align::Stretch => taffy::AlignSelf::Stretch,
+        Align::Start => taffy::AlignSelf::Start,
+        Align::End => taffy::AlignSelf::End,
+        Align::Center => taffy::AlignSelf::Center,
+        Align::Baseline => taffy::AlignSelf::Baseline,
     }
 }
 
@@ -672,6 +688,7 @@ mod tests {
             flex_shrink: Some(0.0),
             align_items: Some(Align::Center),
             justify_content: Some(Justify::SpaceBetween),
+            align_self: Some(Align::Start),
         };
 
         let taffy_style = style.to_taffy_style();

@@ -145,8 +145,16 @@ impl Button {
     pub fn new(label: impl Into<TextContent>) -> Self {
         Button {
             label: label.into(),
-            style: Default::default(),
-            paint: Default::default(),
+            style: StyleProps {
+                padding: Some(Edges::all(10.0)),
+                align_self: Some(crate::element::style::Align::Start),
+                ..Default::default()
+            },
+            paint: PaintProps {
+                background: Some(Color::rgb8(55, 120, 220).into()),
+                radius: CornerRadii::all(6.0),
+                ..Default::default()
+            },
             on_click: None,
         }
     }
