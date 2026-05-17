@@ -1,6 +1,6 @@
 use parley::PositionedLayoutItem;
-use vello::kurbo::{Affine, RoundedRect, Stroke};
-use vello::peniko::{color::AlphaColor, Color as PenikoColor, Fill};
+use vello::kurbo::{Affine, Rect, RoundedRect, Stroke};
+use vello::peniko::{color::AlphaColor, BlendMode, Color as PenikoColor, Fill};
 use vello::{Glyph, Scene};
 
 use crate::element::style::{Color, CornerRadii};
@@ -8,6 +8,17 @@ use crate::layout::{LayoutMap, LayoutRect};
 use crate::retained::{RetainedKind, RetainedNode, RetainedTree};
 
 type ParleyLayout = parley::Layout<[u8; 4]>;
+
+/// Clip bounds covering all logical content for the HiDPI root layer.
+fn clip_everything() -> Rect {
+    Rect::new(-1e9, -1e9, 1e9, 1e9)
+}
+
+#[derive(Clone, Copy)]
+struct PaintContext {
+    /// Global scale applied to all logical coordinates (HiDPI).
+    base: Affine,
+}
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct PaintStats {
@@ -17,16 +28,36 @@ pub struct PaintStats {
 }
 
 /// Walk the retained tree in pre-order and emit Vello draw commands.
+///
+/// Drawing uses logical points; `scale_factor` is applied via a root transform on
+/// all emitted geometry (and a matching root layer per the architecture spec).
 pub fn paint_pass(
     tree: &RetainedTree,
     layout: &LayoutMap,
     scene: &mut Scene,
-    _scale_factor: f32,
+    scale_factor: f32,
 ) -> PaintStats {
     let mut stats = PaintStats::default();
+    let base = if scale_factor == 1.0 {
+        Affine::IDENTITY
+    } else {
+        Affine::scale(f64::from(scale_factor))
+    };
+    let ctx = PaintContext { base };
+
+    scene.push_layer(
+        Fill::NonZero,
+        BlendMode::default(),
+        1.0,
+        base,
+        &clip_everything(),
+    );
+
     if let Some(root) = tree.root.as_ref() {
-        paint_node(root, layout, scene, &mut stats);
+        paint_node(root, layout, scene, ctx, &mut stats);
     }
+
+    scene.pop_layer();
     stats
 }
 
@@ -34,18 +65,19 @@ fn paint_node(
     node: &RetainedNode,
     layout: &LayoutMap,
     scene: &mut Scene,
+    ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
     if matches!(node.kind, RetainedKind::Component { .. }) {
         for child in &node.children {
-            paint_node(child, layout, scene, stats);
+            paint_node(child, layout, scene, ctx, stats);
         }
         return;
     }
 
     let Some(taffy_id) = node.taffy_id else {
         for child in &node.children {
-            paint_node(child, layout, scene, stats);
+            paint_node(child, layout, scene, ctx, stats);
         }
         return;
     };
@@ -54,11 +86,11 @@ fn paint_node(
         return;
     };
 
-    paint_container(node, rect, scene, stats);
-    paint_text(node, rect, scene, stats);
+    paint_container(node, rect, scene, ctx, stats);
+    paint_text(node, rect, scene, ctx, stats);
 
     for child in &node.children {
-        paint_node(child, layout, scene, stats);
+        paint_node(child, layout, scene, ctx, stats);
     }
 }
 
@@ -66,6 +98,7 @@ fn paint_container(
     node: &RetainedNode,
     rect: &LayoutRect,
     scene: &mut Scene,
+    ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
     let is_container = matches!(
@@ -79,13 +112,14 @@ fn paint_container(
     let shape = layout_rect_to_rounded(rect, &node.paint.radius);
 
     if let Some(background) = node.paint.background {
-        fill_rounded_rect(scene, &shape, background, stats);
+        fill_rounded_rect(scene, ctx, &shape, background, stats);
     }
 
     if let Some(border_color) = node.paint.border_color {
         if node.paint.border_width > 0.0 {
             stroke_rounded_rect(
                 scene,
+                ctx,
                 &shape,
                 border_color,
                 f64::from(node.paint.border_width),
@@ -95,7 +129,13 @@ fn paint_container(
     }
 }
 
-fn paint_text(node: &RetainedNode, rect: &LayoutRect, scene: &mut Scene, stats: &mut PaintStats) {
+fn paint_text(
+    node: &RetainedNode,
+    rect: &LayoutRect,
+    scene: &mut Scene,
+    ctx: PaintContext,
+    stats: &mut PaintStats,
+) {
     let is_text = matches!(node.kind, RetainedKind::Text | RetainedKind::Button);
     if !is_text {
         return;
@@ -109,18 +149,21 @@ fn paint_text(node: &RetainedNode, rect: &LayoutRect, scene: &mut Scene, stats: 
     };
 
     let color = text.style.color.unwrap_or_default();
-    paint_parley_layout(scene, layout, rect.x, rect.y, color, stats);
+    paint_parley_layout(scene, ctx, layout, rect.x, rect.y, color, stats);
 }
 
 fn paint_parley_layout(
     scene: &mut Scene,
+    ctx: PaintContext,
     layout: &ParleyLayout,
     origin_x: f32,
     origin_y: f32,
     color: Color,
     stats: &mut PaintStats,
 ) {
-    let transform = Affine::translate((f64::from(origin_x), f64::from(origin_y)));
+    let transform = ctx
+        .base
+        * Affine::translate((f64::from(origin_x), f64::from(origin_y)));
     let brush = to_peniko_color(color);
 
     for line in layout.lines() {
@@ -159,13 +202,14 @@ fn paint_parley_layout(
 
 fn fill_rounded_rect(
     scene: &mut Scene,
+    ctx: PaintContext,
     shape: &RoundedRect,
     color: Color,
     stats: &mut PaintStats,
 ) {
     scene.fill(
         Fill::NonZero,
-        Affine::IDENTITY,
+        ctx.base,
         to_peniko_color(color),
         None,
         shape,
@@ -175,6 +219,7 @@ fn fill_rounded_rect(
 
 fn stroke_rounded_rect(
     scene: &mut Scene,
+    ctx: PaintContext,
     shape: &RoundedRect,
     color: Color,
     width: f64,
@@ -182,7 +227,7 @@ fn stroke_rounded_rect(
 ) {
     scene.stroke(
         &Stroke::new(width),
-        Affine::IDENTITY,
+        ctx.base,
         to_peniko_color(color),
         None,
         shape,
@@ -212,22 +257,22 @@ fn to_peniko_color(color: Color) -> PenikoColor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::element::builders::{Column, Text};
+    use crate::element::builders::{Button, Column, Text};
     use crate::layout::{layout_pass, Viewport};
     use crate::retained::RetainedTree;
 
-    fn layout_and_paint(tree: &mut RetainedTree) -> PaintStats {
+    fn layout_and_paint(tree: &mut RetainedTree, scale_factor: f32) -> PaintStats {
         let layout = layout_pass(
             &mut *tree,
             Viewport {
                 width: 200.0,
                 height: 200.0,
             },
-            1.0,
+            scale_factor,
         )
         .unwrap();
         let mut scene = Scene::new();
-        paint_pass(tree, &layout, &mut scene, 1.0)
+        paint_pass(tree, &layout, &mut scene, scale_factor)
     }
 
     #[test]
@@ -241,7 +286,7 @@ mod tests {
         )
         .unwrap();
 
-        let stats = layout_and_paint(&mut tree);
+        let stats = layout_and_paint(&mut tree, 1.0);
 
         assert_eq!(stats.fills, 1);
         assert_eq!(stats.strokes, 0);
@@ -258,7 +303,7 @@ mod tests {
         )
         .unwrap();
 
-        let stats = layout_and_paint(&mut tree);
+        let stats = layout_and_paint(&mut tree, 1.0);
 
         assert_eq!(stats.fills, 0);
         assert_eq!(stats.strokes, 1);
@@ -268,7 +313,7 @@ mod tests {
     fn text_with_parley_layout_emits_glyph_runs() {
         let mut tree = RetainedTree::mount(Text::new("hello").font_size(16.0).into_element()).unwrap();
 
-        let stats = layout_and_paint(&mut tree);
+        let stats = layout_and_paint(&mut tree, 1.0);
 
         assert!(stats.glyph_runs > 0, "expected glyph runs for laid-out text");
     }
@@ -298,6 +343,40 @@ mod tests {
         let stats = paint_pass(&tree, &layout, &mut scene, 1.0);
 
         assert_eq!(stats.glyph_runs, 0);
+    }
+
+    #[test]
+    fn button_paints_background_then_label() {
+        let mut tree = RetainedTree::mount(
+            Button::new("Press")
+                .width(120.0)
+                .height(48.0)
+                .background(Color::rgb8(30, 60, 90))
+                .into_element(),
+        )
+        .unwrap();
+
+        let stats = layout_and_paint(&mut tree, 1.0);
+
+        assert_eq!(stats.fills, 1, "button background");
+        assert!(stats.glyph_runs > 0, "button label glyphs");
+    }
+
+    #[test]
+    fn hidpi_scale_factor_runs_without_panic() {
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(80.0)
+                .height(60.0)
+                .background(Color::rgb8(1, 2, 3))
+                .child(Text::new("Hi").font_size(14.0))
+                .into_element(),
+        )
+        .unwrap();
+
+        let stats = layout_and_paint(&mut tree, 2.0);
+        assert_eq!(stats.fills, 1);
+        assert!(stats.glyph_runs > 0);
     }
 
     #[test]
@@ -341,7 +420,7 @@ mod tests {
         })
         .unwrap();
 
-        let stats = layout_and_paint(&mut tree);
+        let stats = layout_and_paint(&mut tree, 1.0);
 
         assert_eq!(stats.fills, 1, "only the column background is painted");
     }

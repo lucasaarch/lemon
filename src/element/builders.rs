@@ -162,6 +162,14 @@ impl Button {
         self.paint.radius = CornerRadii::all(r);
         self
     }
+    pub fn width(mut self, v: f32) -> Self {
+        self.style.width = Some(crate::element::style::Dimension::Points(v));
+        self
+    }
+    pub fn height(mut self, v: f32) -> Self {
+        self.style.height = Some(crate::element::style::Dimension::Points(v));
+        self
+    }
     pub fn into_element(self) -> Element {
         Element::Button(crate::element::types::ButtonElement {
             label: self.label,

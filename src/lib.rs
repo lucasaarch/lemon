@@ -18,6 +18,7 @@ pub use runtime::Runtime;
 mod tests {
     use super::*;
     use crate::diff::Patch;
+    use vello::Scene;
 
     #[test]
     fn counter_increments_produce_update_text_patches() {
@@ -188,6 +189,46 @@ mod tests {
             .as_ref()
             .unwrap()
             .needs_layout);
+    }
+
+    #[test]
+    fn end_to_end_runtime_layout_paint_without_panic() {
+        let count = Signal::new(0i32);
+        let c = count.clone();
+
+        let mut rt = Runtime::new();
+        rt.mount(move |_cx| {
+            let c2 = c.clone();
+            Column::new()
+                .width(200.0)
+                .gap(8.0)
+                .child(Text::new(move || format!("Count: {}", c2.get())).font_size(16.0))
+                .child(
+                    Button::new("Increment")
+                        .width(120.0)
+                        .height(40.0)
+                        .background(Color::rgb8(50, 100, 150)),
+                )
+                .into_element()
+        });
+
+        let mut tree = RetainedTree::mount(rt.root_element().unwrap()).unwrap();
+        let viewport = Viewport {
+            width: 400.0,
+            height: 600.0,
+        };
+
+        let mut scene = Scene::new();
+        let layout = layout_pass(&mut tree, viewport, 1.0).unwrap();
+        let _stats = paint_pass(&tree, &layout, &mut scene, 1.0);
+
+        count.set(1);
+        rt.flush_effects();
+        tree.apply_patches(rt.take_patches()).unwrap();
+        let layout = layout_pass_if_dirty(&mut tree, viewport, 1.0)
+            .unwrap()
+            .expect("layout after patch");
+        let _stats = paint_pass(&tree, &layout, &mut scene, 2.0);
     }
 
     #[test]
