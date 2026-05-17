@@ -1,9 +1,16 @@
 use std::collections::HashMap;
 
+use parley::{
+    Alignment, AlignmentOptions, FontContext, FontWeight, GenericFamily, Layout, LayoutContext,
+    StyleProperty,
+};
 use taffy::geometry::{Point, Size};
 use taffy::{AvailableSpace, NodeId};
 
+use crate::element::style::TextStyle;
 use crate::retained::{RetainedError, RetainedKind, RetainedNode, RetainedTree};
+
+type ParleyBrush = [u8; 4];
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LayoutRect {
@@ -39,6 +46,27 @@ pub struct Viewport {
     pub height: f32,
 }
 
+struct TextMeasureOutput {
+    layout: Layout<ParleyBrush>,
+    max_width: Option<f32>,
+}
+
+struct MeasureContext<'a> {
+    scale_factor: f32,
+    font_cx: &'a mut FontContext,
+    layout_cx: &'a mut LayoutContext<ParleyBrush>,
+    results: &'a mut HashMap<NodeId, TextMeasureOutput>,
+}
+
+#[derive(Clone)]
+struct TextSnapshot {
+    content: String,
+    style: TextStyle,
+    needs_layout: bool,
+    layout_max_width: Option<f32>,
+    parley_layout: Option<Layout<ParleyBrush>>,
+}
+
 /// Run Taffy layout on `tree` and collect absolute logical rects keyed by `NodeId`.
 pub fn layout_pass(
     tree: &mut RetainedTree,
@@ -53,8 +81,18 @@ pub fn layout_pass(
         .layout_node_id()
         .ok_or(RetainedError::UnsupportedElement("root without layout node"))?;
 
-    let mut measure_by_id: HashMap<NodeId, MeasureInfo> = HashMap::new();
-    collect_measure_info(root_node, &mut measure_by_id);
+    let mut snapshots: HashMap<NodeId, TextSnapshot> = HashMap::new();
+    collect_text_snapshots(root_node, &mut snapshots);
+
+    let mut font_cx = FontContext::new();
+    let mut layout_cx = LayoutContext::new();
+    let mut measure_results: HashMap<NodeId, TextMeasureOutput> = HashMap::new();
+    let mut measure_ctx = MeasureContext {
+        scale_factor,
+        font_cx: &mut font_cx,
+        layout_cx: &mut layout_cx,
+        results: &mut measure_results,
+    };
 
     let available_space = Size {
         width: AvailableSpace::Definite(viewport.width),
@@ -65,75 +103,124 @@ pub fn layout_pass(
         root_id,
         available_space,
         |known_dimensions, available_space, node_id, _, _| {
-            measure_node(
-                measure_by_id.get(&node_id),
+            measure_text_node(
+                snapshots.get(&node_id),
                 known_dimensions,
                 available_space,
-                scale_factor,
+                &mut measure_ctx,
+                node_id,
             )
         },
     )?;
 
+    {
+        if let Some(root) = tree.root.as_mut() {
+            apply_text_measurements(root, &measure_results);
+        }
+    }
+
+    let root_node = tree
+        .root
+        .as_ref()
+        .ok_or(RetainedError::UnsupportedElement("empty retained tree"))?;
     let mut map = LayoutMap::default();
     collect_layouts(&tree.taffy, root_node, Point::ZERO, &mut map);
     Ok(map)
 }
 
-#[derive(Clone)]
-struct MeasureInfo {
-    content: String,
-    font_size: f32,
-}
-
-fn collect_measure_info(node: &RetainedNode, map: &mut HashMap<NodeId, MeasureInfo>) {
+fn collect_text_snapshots(node: &RetainedNode, map: &mut HashMap<NodeId, TextSnapshot>) {
     if let (Some(id), Some(text)) = (node.taffy_id, node.text.as_ref()) {
         map.insert(
             id,
-            MeasureInfo {
+            TextSnapshot {
                 content: text.content.clone(),
-                font_size: text.style.font_size,
+                style: text.style.clone(),
+                needs_layout: text.needs_layout,
+                layout_max_width: text.layout_max_width,
+                parley_layout: text.parley_layout.clone(),
             },
         );
     }
     for child in &node.children {
-        collect_measure_info(child, map);
+        collect_text_snapshots(child, map);
     }
 }
 
-/// Placeholder text measurement until Parley integration (layout pass Task 2).
-fn measure_node(
-    info: Option<&MeasureInfo>,
+fn measure_text_node(
+    snapshot: Option<&TextSnapshot>,
     known_dimensions: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
-    _scale_factor: f32,
+    ctx: &mut MeasureContext<'_>,
+    node_id: NodeId,
 ) -> Size<f32> {
     if let (Some(width), Some(height)) = (known_dimensions.width, known_dimensions.height) {
         return Size { width, height };
     }
 
-    let Some(info) = info else {
+    let Some(snapshot) = snapshot else {
         return Size::ZERO;
     };
 
-    let font_size = if info.font_size > 0.0 {
-        info.font_size
+    let max_width = known_dimensions.width.or(match available_space.width {
+        AvailableSpace::Definite(width) => Some(width),
+        AvailableSpace::MinContent | AvailableSpace::MaxContent => None,
+    });
+
+    if !snapshot.needs_layout && snapshot.layout_max_width == max_width {
+        if let Some(layout) = &snapshot.parley_layout {
+            return Size {
+                width: layout.width(),
+                height: layout.height(),
+            };
+        }
+    }
+
+    let font_size = effective_font_size(&snapshot.style);
+    let weight = FontWeight::new(snapshot.style.font_weight as f32);
+
+    let mut builder = ctx.layout_cx.ranged_builder(
+        ctx.font_cx,
+        &snapshot.content,
+        ctx.scale_factor,
+        true,
+    );
+    builder.push_default(GenericFamily::SystemUi);
+    builder.push_default(StyleProperty::FontSize(font_size));
+    builder.push_default(StyleProperty::FontWeight(weight));
+    let mut layout = builder.build(&snapshot.content);
+    layout.break_all_lines(max_width);
+    layout.align(Alignment::Start, AlignmentOptions::default());
+
+    let size = Size {
+        width: layout.width(),
+        height: layout.height(),
+    };
+    ctx.results.insert(
+        node_id,
+        TextMeasureOutput { layout, max_width },
+    );
+    size
+}
+
+fn effective_font_size(style: &TextStyle) -> f32 {
+    if style.font_size > 0.0 {
+        style.font_size
     } else {
         16.0
-    };
-    let line_height = font_size * 1.2;
-    let char_width = font_size * 0.55;
-    let content_width = info.content.chars().count() as f32 * char_width;
+    }
+}
 
-    let width = known_dimensions.width.unwrap_or_else(|| {
-        available_space
-            .width
-            .into_option()
-            .map(|space| space.min(content_width))
-            .unwrap_or(content_width)
-    });
-    let height = known_dimensions.height.unwrap_or(line_height);
-
-    Size { width, height }
+fn apply_text_measurements(node: &mut RetainedNode, results: &HashMap<NodeId, TextMeasureOutput>) {
+    if let Some(id) = node.taffy_id {
+        if let (Some(text), Some(output)) = (&mut node.text, results.get(&id)) {
+            text.parley_layout = Some(output.layout.clone());
+            text.layout_max_width = output.max_width;
+            text.needs_layout = false;
+        }
+    }
+    for child in &mut node.children {
+        apply_text_measurements(child, results);
+    }
 }
 
 fn collect_layouts(
@@ -178,8 +265,43 @@ fn collect_layouts(
 mod tests {
     use super::*;
     use crate::diff::{NodePath, Patch};
-    use crate::element::builders::{Column, Text};
+    use crate::element::builders::{Box_, Column, Text};
     use crate::element::types::ComponentElement;
+
+    #[test]
+    fn text_node_measured_with_parley_clears_needs_layout() {
+        let mut tree = RetainedTree::mount(
+            Box_::new()
+                .width(120.0)
+                .child(Text::new("hello").font_size(16.0))
+                .into_element(),
+        )
+        .unwrap();
+
+        let text_id = tree
+            .root
+            .as_ref()
+            .unwrap()
+            .children[0]
+            .taffy_id
+            .unwrap();
+        assert!(tree.root.as_ref().unwrap().children[0]
+            .text
+            .as_ref()
+            .unwrap()
+            .needs_layout);
+
+        let map = layout_pass(&mut tree, Viewport { width: 400.0, height: 600.0 }, 1.0).unwrap();
+
+        let text = &tree.root.as_ref().unwrap().children[0];
+        let cache = text.text.as_ref().unwrap();
+        let rect = map.get(text_id).unwrap();
+
+        assert!(rect.height > 0.0);
+        assert!(cache.parley_layout.is_some());
+        assert!(!cache.needs_layout);
+        assert!(cache.layout_max_width.is_some());
+    }
 
     #[test]
     fn column_children_stack_vertically() {

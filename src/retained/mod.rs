@@ -26,11 +26,34 @@ impl From<taffy::TaffyError> for RetainedError {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone)]
 pub struct TextCache {
     pub content: String,
     pub style: TextStyle,
     pub needs_layout: bool,
+    pub parley_layout: Option<parley::Layout<[u8; 4]>>,
+    pub layout_max_width: Option<f32>,
+}
+
+impl std::fmt::Debug for TextCache {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TextCache")
+            .field("content", &self.content)
+            .field("style", &self.style)
+            .field("needs_layout", &self.needs_layout)
+            .field("parley_layout", &self.parley_layout.as_ref().map(|_| "Layout"))
+            .field("layout_max_width", &self.layout_max_width)
+            .finish()
+    }
+}
+
+impl PartialEq for TextCache {
+    fn eq(&self, other: &Self) -> bool {
+        self.content == other.content
+            && self.style == other.style
+            && self.needs_layout == other.needs_layout
+            && self.layout_max_width == other.layout_max_width
+    }
 }
 
 #[derive(Clone, Default)]
@@ -101,6 +124,8 @@ impl RetainedNode {
                 content,
                 style,
                 needs_layout: true,
+                parley_layout: None,
+                layout_max_width: None,
             }),
         }
     }
@@ -204,6 +229,8 @@ impl RetainedTree {
                 content: label,
                 style: TextStyle::default(),
                 needs_layout: true,
+                parley_layout: None,
+                layout_max_width: None,
             }),
         })
     }
@@ -268,6 +295,8 @@ impl RetainedTree {
                     .as_mut()
                     .ok_or_else(|| RetainedError::MissingTextCache(node.clone()))?;
                 text.content = content;
+                text.parley_layout = None;
+                text.layout_max_width = None;
                 text.needs_layout = true;
             }
             Patch::InsertChild {
