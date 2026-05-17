@@ -7,17 +7,12 @@ use crate::element::{
 pub struct Key(pub u64);
 
 /// Used by Box_, Row, and Column — all three are the same struct.
+#[derive(Default)]
 pub struct BoxElement {
     pub style: StyleProps,
     pub paint: PaintProps,
     pub children: Vec<crate::element::Element>,
     pub key: Option<Key>,
-}
-
-impl Default for BoxElement {
-    fn default() -> Self {
-        BoxElement { style: Default::default(), paint: Default::default(), children: Vec::new(), key: None }
-    }
 }
 
 pub struct TextElement {

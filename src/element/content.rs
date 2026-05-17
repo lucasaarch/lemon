@@ -22,9 +22,3 @@ impl<F: Fn() -> String + 'static> From<F> for TextContent {
     fn from(f: F) -> Self { TextContent::Dynamic(Box::new(f)) }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct TextStyle {
-    pub font_size: f32,
-    pub font_weight: u16,
-    pub color: Option<crate::element::style::Color>,
-}
