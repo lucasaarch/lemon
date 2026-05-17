@@ -56,7 +56,6 @@ pub enum Patch {
         parent: NodePath,
         index: usize,
     },
-    /// Reserved for keyed diffing — not emitted by the current unkeyed diff implementation.
     MoveChild {
         parent: NodePath,
         from: usize,
@@ -186,7 +185,37 @@ fn diff_box(
     diff_children(o.children, n.children, &path, patches);
 }
 
+fn element_key(element: &Element) -> Option<crate::element::types::Key> {
+    use Element::*;
+    match element {
+        Text(text) => text.key.clone(),
+        Column(container) | Row(container) | Box_(container) => container.key.clone(),
+        Button(button) => button.key.clone(),
+        Image(image) => image.key.clone(),
+        Component(component) => component.key().cloned(),
+        Fragment(_) => Option::None,
+        Element::None => Option::None,
+    }
+}
+
+fn children_are_fully_keyed(children: &[Element]) -> bool {
+    !children.is_empty() && children.iter().all(|child| element_key(child).is_some())
+}
+
 fn diff_children(
+    old: Vec<Element>,
+    new: Vec<Element>,
+    parent: &NodePath,
+    patches: &mut Vec<Patch>,
+) {
+    if children_are_fully_keyed(&old) && children_are_fully_keyed(&new) {
+        diff_children_keyed(old, new, parent, patches);
+    } else {
+        diff_children_by_index(old, new, parent, patches);
+    }
+}
+
+fn diff_children_by_index(
     old: Vec<Element>,
     new: Vec<Element>,
     parent: &NodePath,
@@ -205,33 +234,123 @@ fn diff_children(
         patches.extend(child_patches);
     }
 
-    // Extra new children → insert
     for (i, el) in new_iter.enumerate() {
-        let node = parent.child(min + i);
-        match el {
-            Element::Component(component) => {
-                patches.push(Patch::MountComponent { node, component })
+        push_insert_child(el, parent, min + i, patches);
+    }
+
+    let old_remaining: Vec<_> = old_iter.collect();
+    for i in (0..old_remaining.len()).rev() {
+        push_remove_child(&old_remaining[i], parent, min + i, patches);
+    }
+}
+
+fn diff_children_keyed(
+    old: Vec<Element>,
+    new: Vec<Element>,
+    parent: &NodePath,
+    patches: &mut Vec<Patch>,
+) {
+    use std::collections::HashMap;
+
+    let mut old_by_key: HashMap<crate::element::types::Key, (usize, Element)> = HashMap::new();
+    let mut old_order = Vec::with_capacity(old.len());
+    for (index, element) in old.into_iter().enumerate() {
+        let key = element_key(&element).expect("keyed diff requires keys on every child");
+        old_by_key.insert(key.clone(), (index, element));
+        old_order.push(key);
+    }
+
+    let new_items: Vec<(crate::element::types::Key, Element)> = new
+        .into_iter()
+        .map(|element| {
+            let key = element_key(&element).expect("keyed diff requires keys on every child");
+            (key, element)
+        })
+        .collect();
+
+    let new_order: Vec<_> = new_items.iter().map(|(key, _)| key.clone()).collect();
+    let new_key_set: std::collections::HashSet<_> = new_order.iter().cloned().collect();
+    let old_key_set: std::collections::HashSet<_> = old_by_key.keys().cloned().collect();
+
+    if old_key_set == new_key_set {
+        let mut current_order = old_order;
+        for (new_index, key) in new_order.iter().enumerate() {
+            let current_index = current_order
+                .iter()
+                .position(|current| current == key)
+                .expect("key present in both lists");
+            if current_index != new_index {
+                patches.push(Patch::MoveChild {
+                    parent: parent.clone(),
+                    from: current_index,
+                    to: new_index,
+                });
+                let moved = current_order.remove(current_index);
+                current_order.insert(new_index, moved);
             }
-            element => patches.push(Patch::InsertChild {
-                parent: parent.clone(),
-                index: min + i,
-                element,
-            }),
         }
     }
 
-    // Removed old children → remove in reverse order to keep indices stable
-    let old_remaining: Vec<_> = old_iter.collect();
-    for i in (0..old_remaining.len()).rev() {
-        let index = min + i;
-        let node = parent.child(index);
-        match &old_remaining[i] {
-            Element::Component(_) => patches.push(Patch::UnmountComponent { node }),
-            _ => patches.push(Patch::RemoveChild {
-                parent: parent.clone(),
-                index,
-            }),
+    for (new_index, (key, new_child)) in new_items.iter().enumerate() {
+        if let Some((_, old_child)) = old_by_key.get(key) {
+            patches.extend(diff(
+                old_child.clone(),
+                new_child.clone(),
+                parent.child(new_index),
+            ));
         }
+    }
+
+    let mut removals: Vec<(usize, Element)> = old_by_key
+        .into_iter()
+        .filter(|(key, _)| !new_key_set.contains(key))
+        .map(|(_, (index, element))| (index, element))
+        .collect();
+    removals.sort_by(|(a, _), (b, _)| b.cmp(a));
+    for (index, element) in removals {
+        push_remove_child(&element, parent, index, patches);
+    }
+
+    for (new_index, (key, new_child)) in new_items.into_iter().enumerate() {
+        if !old_key_set.contains(&key) {
+            push_insert_child(new_child, parent, new_index, patches);
+        }
+    }
+}
+
+fn push_insert_child(
+    element: Element,
+    parent: &NodePath,
+    index: usize,
+    patches: &mut Vec<Patch>,
+) {
+    match element {
+        Element::Component(component) => patches.push(Patch::MountComponent {
+            node: parent.child(index),
+            component,
+        }),
+        element => patches.push(Patch::InsertChild {
+            parent: parent.clone(),
+            index,
+            element,
+        }),
+    }
+}
+
+fn push_remove_child(
+    element: &Element,
+    parent: &NodePath,
+    index: usize,
+    patches: &mut Vec<Patch>,
+) {
+    match element {
+        Element::Component(_) => patches.push(Patch::UnmountComponent {
+            node: parent.child(index),
+        }),
+        _ => patches.push(Patch::RemoveChild {
+            parent: parent.clone(),
+            index,
+        }),
     }
 }
 
@@ -507,6 +626,151 @@ mod tests {
                 ..
             }
         )));
+    }
+
+    #[test]
+    fn keyed_reorder_emits_move_child_without_remove_or_insert() {
+        let old = Column::new()
+            .child(Text::new("a").key(1))
+            .child(Text::new("b").key(2))
+            .into_element();
+        let new = Column::new()
+            .child(Text::new("b").key(2))
+            .child(Text::new("a").key(1))
+            .into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(patches.iter().any(|patch| {
+            matches!(patch, Patch::MoveChild { from: 1, to: 0, .. })
+        }));
+        assert!(!patches.iter().any(|patch| {
+            matches!(
+                patch,
+                Patch::RemoveChild { .. } | Patch::InsertChild { .. }
+            )
+        }));
+    }
+
+    #[test]
+    fn keyed_insert_emits_insert_child_at_target_index() {
+        let old = Column::new()
+            .child(Text::new("a").key(1))
+            .into_element();
+        let new = Column::new()
+            .child(Text::new("a").key(1))
+            .child(Text::new("b").key(2))
+            .into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(matches!(
+            patches.first(),
+            Some(Patch::InsertChild { index: 1, .. })
+        ));
+    }
+
+    #[test]
+    fn keyed_remove_emits_remove_child_in_reverse_index_order() {
+        let old = Column::new()
+            .child(Text::new("a").key(1))
+            .child(Text::new("b").key(2))
+            .into_element();
+        let new = Column::new()
+            .child(Text::new("a").key(1))
+            .into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(matches!(
+            patches.first(),
+            Some(Patch::RemoveChild { index: 1, .. })
+        ));
+    }
+
+    #[test]
+    fn keyed_key_change_removes_old_and_inserts_new() {
+        let old = Column::new()
+            .child(Text::new("a").key(1))
+            .into_element();
+        let new = Column::new()
+            .child(Text::new("b").key(2))
+            .into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(matches!(
+            patches.first(),
+            Some(Patch::RemoveChild { index: 0, .. })
+        ));
+        assert!(matches!(
+            patches.get(1),
+            Some(Patch::InsertChild { index: 0, .. })
+        ));
+        assert!(!patches.iter().any(|patch| matches!(patch, Patch::UpdateText { .. })));
+    }
+
+    #[test]
+    fn keyed_component_insert_mounts_component() {
+        fn child(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("child").into_element()
+        }
+
+        let old = Column::new()
+            .child(Text::new("a").key(1))
+            .into_element();
+        let new = Column::new()
+            .child(Text::new("a").key(1))
+            .child(Component::new(child).key(2))
+            .into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(matches!(
+            patches.first(),
+            Some(Patch::MountComponent { node, .. }) if *node == NodePath(vec![1])
+        ));
+    }
+
+    #[test]
+    fn keyed_component_remove_unmounts_component() {
+        fn child(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("child").into_element()
+        }
+
+        let old = Column::new()
+            .child(Text::new("a").key(1))
+            .child(Component::new(child).key(2))
+            .into_element();
+        let new = Column::new()
+            .child(Text::new("a").key(1))
+            .into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(matches!(
+            patches.first(),
+            Some(Patch::UnmountComponent { node }) if *node == NodePath(vec![1])
+        ));
+    }
+
+    #[test]
+    fn mixed_keyed_and_unkeyed_children_fall_back_to_index_diff() {
+        let old = Column::new()
+            .child(Text::new("a").key(1))
+            .child(Text::new("b"))
+            .into_element();
+        let new = Column::new()
+            .child(Text::new("b"))
+            .child(Text::new("a").key(1))
+            .into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(!patches.iter().any(|patch| matches!(patch, Patch::MoveChild { .. })));
+        assert!(patches
+            .iter()
+            .any(|patch| matches!(patch, Patch::UpdateText { .. })));
     }
 
     #[test]

@@ -90,6 +90,7 @@ container_builder!(Box_, Box_);
 pub struct Text {
     content: TextContent,
     style: TextStyle,
+    key: Option<Key>,
 }
 
 impl Text {
@@ -97,7 +98,12 @@ impl Text {
         Text {
             content: content.into(),
             style: TextStyle::default(),
+            key: None,
         }
+    }
+    pub fn key(mut self, key: u64) -> Self {
+        self.key = Some(Key(key));
+        self
     }
     pub fn font_size(mut self, size: f32) -> Self {
         self.style.font_size = size;
@@ -115,7 +121,7 @@ impl Text {
         Element::Text(TextElement {
             content: self.content,
             style: self.style,
-            key: None,
+            key: self.key,
         })
     }
 }
