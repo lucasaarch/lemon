@@ -19,8 +19,9 @@ impl Subscriber for EffectInner {
 
 /// An effect that runs a closure immediately and re-runs it whenever a signal it reads changes.
 /// Dropping the effect stops it from re-running.
-#[allow(dead_code)]
-pub struct Effect(Rc<EffectInner>);
+pub struct Effect {
+    _inner: Rc<EffectInner>,
+}
 
 impl Effect {
     pub fn new(f: impl Fn() + 'static) -> Self {
@@ -29,14 +30,10 @@ impl Effect {
             self_weak: RefCell::new(Weak::new()),
         });
         *inner.self_weak.borrow_mut() = Rc::downgrade(&inner);
-        Effect::run(&inner);
-        Effect(inner)
-    }
-
-    fn run(inner: &Rc<EffectInner>) {
-        with_observer(Rc::downgrade(inner) as Weak<dyn Subscriber>, || {
+        with_observer(Rc::downgrade(&inner) as Weak<dyn Subscriber>, || {
             (inner.f)();
         });
+        Effect { _inner: inner }
     }
 }
 

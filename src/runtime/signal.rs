@@ -17,7 +17,9 @@ impl<T: Clone + 'static> Signal<T> {
     pub fn get(&self) -> T {
         let mut inner = self.0.borrow_mut();
         if let Some(obs) = current_observer() {
-            inner.subscribers.push(obs);
+            if !inner.subscribers.iter().any(|w| w.ptr_eq(&obs)) {
+                inner.subscribers.push(obs);
+            }
         }
         inner.value.clone()
     }
@@ -39,8 +41,6 @@ impl<T: Clone + 'static> Signal<T> {
             inner.subscribers.retain(|w| {
                 if let Some(rc) = w.upgrade() { upgraded.push(rc); true } else { false }
             });
-            // Clear the subscribers list so effects re-register on their next run
-            inner.subscribers.clear();
             upgraded
         };
         for sub in subs {
