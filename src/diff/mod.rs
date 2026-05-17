@@ -15,6 +15,7 @@ impl NodePath {
     }
 }
 
+#[derive(Debug)]
 pub enum Patch {
     UpdateStyle { node: NodePath, style: StyleProps },
     UpdatePaint { node: NodePath, paint: PaintData },

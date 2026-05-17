@@ -98,4 +98,5 @@ mod tests {
         s.set(20);
         assert_eq!(d.get(), 21);
     }
+
 }

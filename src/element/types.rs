@@ -7,7 +7,7 @@ use crate::element::{
 pub struct Key(pub u64);
 
 /// Used by Box_, Row, and Column — all three are the same struct.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct BoxElement {
     pub style: StyleProps,
     pub paint: PaintProps,
@@ -21,6 +21,16 @@ pub struct TextElement {
     pub key: Option<Key>,
 }
 
+impl std::fmt::Debug for TextElement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TextElement")
+            .field("content", &format!("{:?}", self.content.resolve()))
+            .field("style", &self.style)
+            .field("key", &self.key)
+            .finish()
+    }
+}
+
 pub struct ButtonElement {
     pub label: TextContent,
     pub style: StyleProps,
@@ -29,10 +39,32 @@ pub struct ButtonElement {
     pub key: Option<Key>,
 }
 
+impl std::fmt::Debug for ButtonElement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ButtonElement")
+            .field("label", &format!("{:?}", self.label.resolve()))
+            .field("style", &self.style)
+            .field("paint", &self.paint)
+            .field("on_click", &self.on_click.as_ref().map(|_| "Box<dyn Fn()>"))
+            .field("key", &self.key)
+            .finish()
+    }
+}
+
 pub struct ImageElement {
     pub src: String,
     pub style: StyleProps,
     pub key: Option<Key>,
+}
+
+impl std::fmt::Debug for ImageElement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ImageElement")
+            .field("src", &self.src)
+            .field("style", &self.style)
+            .field("key", &self.key)
+            .finish()
+    }
 }
 
 pub struct ComponentElement {
@@ -41,6 +73,16 @@ pub struct ComponentElement {
     /// Used for stable component identity across re-renders.
     pub type_id: std::any::TypeId,
     pub key: Option<Key>,
+}
+
+impl std::fmt::Debug for ComponentElement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ComponentElement")
+            .field("view", &"Box<dyn Fn()>")
+            .field("type_id", &self.type_id)
+            .field("key", &self.key)
+            .finish()
+    }
 }
 
 #[cfg(test)]

@@ -85,12 +85,33 @@ impl<F: Fn() -> Color + 'static> From<F> for ColorSource {
 }
 
 /// Visual decoration properties. May contain dynamic closures.
-#[derive(Default)]
 pub struct PaintProps {
     pub background: Option<ColorSource>,
     pub border_color: Option<ColorSource>,
     pub border_width: f32,
     pub radius: CornerRadii,
+}
+
+impl Default for PaintProps {
+    fn default() -> Self {
+        PaintProps {
+            background: None,
+            border_color: None,
+            border_width: 0.0,
+            radius: CornerRadii::default(),
+        }
+    }
+}
+
+impl std::fmt::Debug for PaintProps {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PaintProps")
+            .field("background", &self.background.as_ref().map(|c| c.resolve()))
+            .field("border_color", &self.border_color.as_ref().map(|c| c.resolve()))
+            .field("border_width", &self.border_width)
+            .field("radius", &self.radius)
+            .finish()
+    }
 }
 
 /// Resolved paint values with no closures — stored in Retained Tree and Patches.

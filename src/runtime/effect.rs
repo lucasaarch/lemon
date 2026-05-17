@@ -1,18 +1,25 @@
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::{Rc, Weak};
 use crate::runtime::observer::{with_observer, Subscriber};
 
 struct EffectInner {
     f: Box<dyn Fn()>,
     self_weak: RefCell<Weak<EffectInner>>,
+    is_running: Cell<bool>,
 }
 
 impl Subscriber for EffectInner {
     fn mark_dirty(&self) {
+        // Prevent recursive effect invocation while already running
+        if self.is_running.get() {
+            return;
+        }
         if let Some(strong) = self.self_weak.borrow().upgrade() {
+            self.is_running.set(true);
             with_observer(Rc::downgrade(&strong) as Weak<dyn Subscriber>, || {
                 (strong.f)();
             });
+            self.is_running.set(false);
         }
     }
 }
@@ -28,11 +35,13 @@ impl Effect {
         let inner = Rc::new(EffectInner {
             f: Box::new(f),
             self_weak: RefCell::new(Weak::new()),
+            is_running: Cell::new(true),  // Set to true during initial run
         });
         *inner.self_weak.borrow_mut() = Rc::downgrade(&inner);
         with_observer(Rc::downgrade(&inner) as Weak<dyn Subscriber>, || {
             (inner.f)();
         });
+        inner.is_running.set(false);  // Reset to false after initial run
         Effect { _inner: inner }
     }
 }
