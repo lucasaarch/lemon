@@ -1,10 +1,12 @@
 pub mod diff;
 pub mod element;
+pub mod layout;
 pub mod retained;
 pub mod runtime;
 
 pub use element::builders::{Box_, Button, Column, Component, Row, Text};
 pub use element::style::{Color, StyleProps};
+pub use layout::{layout_pass, LayoutMap, LayoutRect, Viewport};
 pub use runtime::cx::Cx;
 pub use runtime::signal::Signal;
 pub use runtime::Runtime;
