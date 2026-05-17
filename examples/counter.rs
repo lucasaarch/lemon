@@ -1,10 +1,21 @@
-//! Counter demo — opens a window (UI wiring completed in platform Task 3).
+//! Counter demo from the Lemon architecture spec.
 
-use lemon::{run, Column, Cx, Text, WindowConfig};
+use lemon::{run, Button, Column, Cx, Text, WindowConfig};
 
-fn root(_cx: &Cx) -> lemon::element::Element {
+fn counter(cx: &Cx) -> lemon::element::Element {
+    let count = cx.use_signal(0i32);
+    let count_text = count.clone();
+    let count_btn = count.clone();
+
     Column::new()
-        .child(Text::new("Counter"))
+        .gap(12.0)
+        .padding(24.0)
+        .child(
+            Text::new(move || count_text.get().to_string()).font_size(24.0),
+        )
+        .child(Button::new("Incrementar").on_click(move || {
+            count_btn.update(|n| *n += 1);
+        }))
         .into_element()
 }
 
@@ -13,6 +24,6 @@ fn main() {
         WindowConfig::default()
             .title("Lemon Counter")
             .size(900.0, 600.0),
-        root,
+        counter,
     );
 }

@@ -11,19 +11,20 @@ use vello::util::{RenderContext, RenderSurface};
 use vello::{AaConfig, Renderer, RendererOptions, Scene};
 use winit::application::ApplicationHandler;
 use winit::dpi::LogicalSize;
-use winit::event::WindowEvent;
+use winit::event::{ElementState, MouseButton, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::window::{Window, WindowId};
 
 use crate::element::Element;
-use crate::layout::LayoutMap;
-use crate::retained::RetainedTree;
+use crate::layout::{layout_pass, LayoutMap, LayoutRect, Viewport};
+use crate::paint::paint_pass;
+use crate::retained::{RetainedKind, RetainedNode, RetainedTree};
 use crate::runtime::{cx::Cx, Runtime};
 
 pub use window::WindowConfig;
 
 /// Root view function type used by [`AppState`].
-pub type RootComponent = Box<dyn Fn(&Cx) -> Element>;
+pub type RootComponent = Arc<dyn Fn(&Cx) -> Element>;
 
 /// Application state for the winit / wgpu / Vello shell (Camada 8).
 pub struct AppState {
@@ -39,8 +40,9 @@ pub struct AppState {
     pub layout_dirty: bool,
     pub paint_dirty: bool,
     window_config: WindowConfig,
-    #[allow(dead_code)]
     root_component: Option<RootComponent>,
+    last_cursor: Option<(f32, f32)>,
+    mounted: bool,
 }
 
 impl AppState {
@@ -58,11 +60,13 @@ impl AppState {
             layout_dirty: true,
             paint_dirty: true,
             window_config: config,
-            root_component: Some(Box::new(root)),
+            root_component: Some(Arc::new(root)),
+            last_cursor: None,
+            mounted: false,
         }
     }
 
-    pub fn window_config(&self) -> &WindowConfig {
+    fn window_config(&self) -> &WindowConfig {
         &self.window_config
     }
 
@@ -98,6 +102,76 @@ impl AppState {
         self.paint_dirty = true;
     }
 
+    fn ensure_mounted(&mut self) {
+        if self.mounted {
+            return;
+        }
+        let root = Arc::clone(self.root_component.as_ref().expect("root component"));
+        self.runtime.mount(move |cx| root(cx));
+        let element = self
+            .runtime
+            .root_element()
+            .expect("root element after mount");
+        self.retained = Some(RetainedTree::mount(element).expect("retained mount"));
+        self.mounted = true;
+        self.layout_dirty = true;
+        self.paint_dirty = true;
+    }
+
+    fn viewport(&self) -> Viewport {
+        let window = self.window.as_ref().expect("window");
+        let scale = window.scale_factor() as f32;
+        let size: LogicalSize<f32> = window.inner_size().to_logical(f64::from(scale));
+        Viewport {
+            width: size.width.max(1.0),
+            height: size.height.max(1.0),
+        }
+    }
+
+    fn scale_factor(&self) -> f32 {
+        self.window
+            .as_ref()
+            .map(|w| w.scale_factor() as f32)
+            .unwrap_or(1.0)
+    }
+
+    fn update_frame(&mut self) {
+        self.ensure_mounted();
+
+        self.runtime.flush_effects();
+        let patches = self.runtime.take_patches();
+        if !patches.is_empty() {
+            let tree = self.retained.as_mut().expect("retained tree");
+            if let Err(err) = tree.apply_patches(patches) {
+                eprintln!("apply_patches: {err:?}");
+            }
+            self.layout_dirty = true;
+        }
+
+        if self.layout_dirty {
+            let viewport = self.viewport();
+            let scale = self.scale_factor();
+            let tree = self.retained.as_mut().expect("retained tree");
+            match layout_pass(tree, viewport, scale) {
+                Ok(map) => {
+                    self.layout_map = map;
+                    self.layout_dirty = false;
+                    self.paint_dirty = true;
+                }
+                Err(err) => eprintln!("layout_pass: {err:?}"),
+            }
+        }
+
+        if self.paint_dirty {
+            self.scene.reset();
+            let scale = self.scale_factor();
+            if let Some(tree) = self.retained.as_ref() {
+                paint_pass(tree, &self.layout_map, &mut self.scene, scale);
+            }
+            self.paint_dirty = false;
+        }
+    }
+
     fn resize_surface(&mut self, width: u32, height: u32) {
         if width == 0 || height == 0 {
             return;
@@ -109,8 +183,18 @@ impl AppState {
         }
     }
 
-    /// Clear the surface to the window background (UI paint wired in Task 3).
-    fn render_frame(&mut self) {
+    fn handle_click(&mut self, x: f32, y: f32) {
+        let Some(root) = self.retained.as_ref().and_then(|t| t.root.as_ref()) else {
+            return;
+        };
+        if let Some(node) = hit_test_clickable(root, &self.layout_map, x, y) {
+            if let Some(handler) = node.handlers.on_click.as_ref() {
+                handler();
+            }
+        }
+    }
+
+    fn present(&mut self) {
         let Some(window) = self.window.as_ref() else {
             return;
         };
@@ -124,8 +208,6 @@ impl AppState {
         let width = surface.config.width;
         let height = surface.config.height;
         let device_handle = &self.render_cx.devices[surface.dev_id];
-
-        self.scene.reset();
 
         renderer
             .render_to_texture(
@@ -185,6 +267,58 @@ impl AppState {
             .poll(wgpu::PollType::Poll)
             .expect("poll wgpu device");
     }
+
+    fn render_frame(&mut self) {
+        self.update_frame();
+        self.present();
+    }
+
+    fn request_redraw(&self) {
+        if let Some(window) = self.window.as_ref() {
+            window.request_redraw();
+        }
+    }
+
+    fn needs_redraw(&self) -> bool {
+        self.layout_dirty || self.paint_dirty
+    }
+}
+
+fn point_in_rect(x: f32, y: f32, rect: &LayoutRect) -> bool {
+    x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
+}
+
+/// Post-order hit test: deepest clickable node wins.
+fn hit_test_clickable<'a>(
+    node: &'a RetainedNode,
+    layout: &LayoutMap,
+    x: f32,
+    y: f32,
+) -> Option<&'a RetainedNode> {
+    let mut hit = None;
+
+    if matches!(node.kind, RetainedKind::Component { .. }) {
+        for child in &node.children {
+            hit = hit_test_clickable(child, layout, x, y).or(hit);
+        }
+        return hit;
+    }
+
+    for child in &node.children {
+        hit = hit_test_clickable(child, layout, x, y).or(hit);
+    }
+
+    if node.handlers.on_click.is_some() {
+        if let Some(id) = node.taffy_id {
+            if let Some(rect) = layout.get(id) {
+                if point_in_rect(x, y, rect) {
+                    hit = Some(node);
+                }
+            }
+        }
+    }
+
+    hit
 }
 
 struct LemonApplication {
@@ -205,7 +339,7 @@ impl ApplicationHandler for LemonApplication {
             event_loop
                 .create_window(
                     Window::default_attributes()
-                        .with_title(config.title)
+                        .with_title(config.title.clone())
                         .with_inner_size(LogicalSize::new(config.width, config.height))
                         .with_resizable(config.resizable),
                 )
@@ -213,9 +347,7 @@ impl ApplicationHandler for LemonApplication {
         );
 
         state.attach_window(window);
-        if let Some(window) = state.window.as_ref() {
-            window.request_redraw();
-        }
+        state.request_redraw();
     }
 
     fn window_event(
@@ -232,6 +364,22 @@ impl ApplicationHandler for LemonApplication {
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::Resized(size) => {
                 state.resize_surface(size.width, size.height);
+                state.request_redraw();
+            }
+            WindowEvent::CursorMoved { position, .. } => {
+                let scale = state.scale_factor();
+                let logical = position.to_logical(f64::from(scale));
+                state.last_cursor = Some((logical.x, logical.y));
+            }
+            WindowEvent::MouseInput {
+                state: ElementState::Pressed,
+                button: MouseButton::Left,
+                ..
+            } => {
+                if let Some((x, y)) = state.last_cursor {
+                    state.handle_click(x, y);
+                    state.request_redraw();
+                }
             }
             WindowEvent::RedrawRequested => state.render_frame(),
             _ => {}
@@ -240,8 +388,8 @@ impl ApplicationHandler for LemonApplication {
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
         if let Some(state) = self.state.as_ref() {
-            if let Some(window) = state.window.as_ref() {
-                window.request_redraw();
+            if state.needs_redraw() {
+                state.request_redraw();
             }
         }
     }
@@ -269,5 +417,47 @@ mod tests {
         assert!(state.paint_dirty);
         assert!(state.window.is_none());
         assert!(state.retained.is_none());
+        assert!(!state.mounted);
+    }
+
+    #[test]
+    fn hit_test_prefers_deepest_child() {
+        use crate::element::builders::{Button, Column};
+        use crate::layout::layout_pass;
+        use std::rc::Rc;
+        use std::cell::Cell;
+
+        let clicked = Rc::new(Cell::new(false));
+        let flag = clicked.clone();
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(200.0)
+                .height(200.0)
+                .child(
+                    Button::new("Click")
+                        .width(80.0)
+                        .height(40.0)
+                        .on_click(move || flag.set(true)),
+                )
+                .into_element(),
+        )
+        .unwrap();
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 200.0,
+                height: 200.0,
+            },
+            1.0,
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let button = &root.children[0];
+        let rect = layout.get(button.taffy_id.unwrap()).unwrap();
+        let hit = hit_test_clickable(root, &layout, rect.x + 1.0, rect.y + 1.0);
+        assert!(hit.is_some());
+        hit.unwrap().handlers.on_click.as_ref().unwrap()();
+        assert!(clicked.get());
     }
 }
