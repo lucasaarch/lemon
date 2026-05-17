@@ -6,7 +6,8 @@ pub mod runtime;
 
 pub use element::builders::{Box_, Button, Column, Component, Row, Text};
 pub use element::style::{Color, StyleProps};
-pub use layout::{layout_pass, LayoutMap, LayoutRect, Viewport};
+pub use layout::{layout_pass, layout_pass_if_dirty, LayoutMap, LayoutRect, Viewport};
+pub use retained::RetainedTree;
 pub use runtime::cx::Cx;
 pub use runtime::signal::Signal;
 pub use runtime::Runtime;
@@ -118,6 +119,73 @@ mod tests {
         assert!(patches
             .iter()
             .any(|p| matches!(p, Patch::UpdateText { content, .. } if content == "31")));
+    }
+
+    #[test]
+    fn runtime_patches_drive_relayout_height_change() {
+        let text = Signal::new("A".to_owned());
+        let t = text.clone();
+
+        let mut rt = Runtime::new();
+        rt.mount(move |_cx| {
+            let t2 = t.clone();
+            Column::new()
+                .width(120.0)
+                .child(Text::new(move || t2.get()).font_size(16.0))
+                .into_element()
+        });
+
+        let initial = rt.root_element().expect("root element after mount");
+        let mut tree = RetainedTree::mount(initial).unwrap();
+        let viewport = Viewport {
+            width: 400.0,
+            height: 600.0,
+        };
+
+        let map_before = layout_pass(&mut tree, viewport, 1.0).unwrap();
+        let text_id = tree.root.as_ref().unwrap().children[0].taffy_id.unwrap();
+        let height_before = map_before.get(text_id).unwrap().height;
+
+        text.set("Line one\nLine two\nLine three".to_owned());
+        rt.flush_effects();
+        let patches = rt.take_patches();
+        assert!(
+            patches.iter().any(|p| matches!(p, Patch::UpdateText { .. })),
+            "expected UpdateText patch, got {patches:?}"
+        );
+        tree.apply_patches(patches).unwrap();
+
+        let updated_content = &tree.root.as_ref().unwrap().children[0]
+            .text
+            .as_ref()
+            .unwrap()
+            .content;
+        assert!(
+            updated_content.contains("Line three"),
+            "retained text not updated: {updated_content:?}"
+        );
+        assert!(tree.root.as_ref().unwrap().children[0]
+            .text
+            .as_ref()
+            .unwrap()
+            .needs_layout);
+
+        assert!(tree.layout_dirty);
+        let map_after = layout_pass_if_dirty(&mut tree, viewport, 1.0)
+            .unwrap()
+            .expect("layout should run after patches");
+        let height_after = map_after.get(text_id).unwrap().height;
+
+        assert!(
+            height_after > height_before,
+            "height should grow after longer text: before={height_before} after={height_after}"
+        );
+        assert!(!tree.layout_dirty);
+        assert!(!tree.root.as_ref().unwrap().children[0]
+            .text
+            .as_ref()
+            .unwrap()
+            .needs_layout);
     }
 
     #[test]

@@ -139,6 +139,7 @@ impl RetainedNode {
 pub struct RetainedTree {
     pub taffy: TaffyTree<()>,
     pub root: Option<RetainedNode>,
+    pub layout_dirty: bool,
 }
 
 impl RetainedTree {
@@ -146,6 +147,7 @@ impl RetainedTree {
         Self {
             taffy: TaffyTree::new(),
             root: None,
+            layout_dirty: false,
         }
     }
 
@@ -153,7 +155,18 @@ impl RetainedTree {
         let mut tree = Self::new();
         let root = tree.build_node(element)?;
         tree.root = Some(root);
+        tree.layout_dirty = true;
         Ok(tree)
+    }
+
+    pub fn apply_patches(
+        &mut self,
+        patches: impl IntoIterator<Item = Patch>,
+    ) -> Result<(), RetainedError> {
+        for patch in patches {
+            self.apply_patch(patch)?;
+        }
+        Ok(())
     }
 
     fn build_node(&mut self, element: Element) -> Result<RetainedNode, RetainedError> {
@@ -298,6 +311,9 @@ impl RetainedTree {
                 text.parley_layout = None;
                 text.layout_max_width = None;
                 text.needs_layout = true;
+                if let Some(taffy_id) = retained.taffy_id {
+                    self.taffy.mark_dirty(taffy_id)?;
+                }
             }
             Patch::InsertChild {
                 parent,
@@ -335,6 +351,7 @@ impl RetainedTree {
             }
         }
 
+        self.layout_dirty = true;
         Ok(())
     }
 

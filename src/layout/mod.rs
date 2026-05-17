@@ -125,7 +125,20 @@ pub fn layout_pass(
         .ok_or(RetainedError::UnsupportedElement("empty retained tree"))?;
     let mut map = LayoutMap::default();
     collect_layouts(&tree.taffy, root_node, Point::ZERO, &mut map);
+    tree.layout_dirty = false;
     Ok(map)
+}
+
+/// Run layout only when `tree.layout_dirty` is set (e.g. after patches).
+pub fn layout_pass_if_dirty(
+    tree: &mut RetainedTree,
+    viewport: Viewport,
+    scale_factor: f32,
+) -> Result<Option<LayoutMap>, RetainedError> {
+    if !tree.layout_dirty {
+        return Ok(None);
+    }
+    Ok(Some(layout_pass(tree, viewport, scale_factor)?))
 }
 
 fn collect_text_snapshots(node: &RetainedNode, map: &mut HashMap<NodeId, TextSnapshot>) {

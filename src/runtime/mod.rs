@@ -62,6 +62,11 @@ impl Runtime {
     pub fn take_patches(&mut self) -> Vec<Patch> {
         std::mem::take(&mut self.patch_queue)
     }
+
+    /// Current root element tree after the last render (mount or flush).
+    pub fn root_element(&self) -> Option<Element> {
+        self.slots.first()?.previous.clone()
+    }
 }
 
 impl Default for Runtime {
