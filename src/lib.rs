@@ -1,5 +1,6 @@
 pub mod diff;
 pub mod element;
+pub mod retained;
 pub mod runtime;
 
 pub use element::builders::{Box_, Button, Column, Row, Text};
