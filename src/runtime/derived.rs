@@ -14,11 +14,14 @@ impl<T: Clone + 'static> Subscriber for DerivedInner<T> {
     fn mark_dirty(&self) {
         self.stale.set(true);
         self.cached.borrow_mut().take();
-        let subs: Vec<Rc<dyn Subscriber>> = self.downstream
-            .borrow()
-            .iter()
-            .filter_map(|w| w.upgrade())
-            .collect();
+        let subs: Vec<Rc<dyn Subscriber>> = {
+            let mut downstream = self.downstream.borrow_mut();
+            let mut upgraded = Vec::with_capacity(downstream.len());
+            downstream.retain(|w| {
+                if let Some(rc) = w.upgrade() { upgraded.push(rc); true } else { false }
+            });
+            upgraded
+        };
         for sub in subs { sub.mark_dirty(); }
     }
 }
@@ -40,7 +43,10 @@ impl<T: Clone + 'static> Derived<T> {
 
     pub fn get(&self) -> T {
         if let Some(obs) = current_observer() {
-            self.0.downstream.borrow_mut().push(obs);
+            let mut downstream = self.0.downstream.borrow_mut();
+            if !downstream.iter().any(|w| w.ptr_eq(&obs)) {
+                downstream.push(obs);
+            }
         }
         if self.0.stale.get() {
             let weak = self.0.self_weak.borrow().clone();
