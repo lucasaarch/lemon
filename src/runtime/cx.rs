@@ -7,7 +7,6 @@ use crate::runtime::signal::Signal;
 pub struct Cx {
     hooks: RefCell<Vec<Box<dyn Any>>>,
     index: Cell<usize>,
-    pub(crate) effects: RefCell<Vec<Effect>>,
 }
 
 impl Cx {
@@ -15,7 +14,6 @@ impl Cx {
         Cx {
             hooks: RefCell::new(Vec::new()),
             index: Cell::new(0),
-            effects: RefCell::new(Vec::new()),
         }
     }
 
@@ -55,7 +53,13 @@ impl Cx {
     }
 
     pub fn use_effect(&self, f: impl Fn() + 'static) {
-        self.effects.borrow_mut().push(Effect::new(f));
+        let idx = self.index.get();
+        self.index.set(idx + 1);
+        let mut hooks = self.hooks.borrow_mut();
+        if idx >= hooks.len() {
+            hooks.push(Box::new(Effect::new(f)));
+        }
+        // On re-render, the effect already lives in hooks; f is dropped
     }
 }
 
@@ -93,5 +97,40 @@ mod tests {
         assert_eq!(m.get(), 10);
         s.set(8);
         assert_eq!(m.get(), 16);
+    }
+
+    #[test]
+    fn use_effect_runs_once_on_mount_not_on_rerender() {
+        use crate::runtime::signal::Signal;
+        use std::cell::Cell;
+        use std::rc::Rc;
+
+        let run_count = Rc::new(Cell::new(0u32));
+        let cx = Cx::new();
+        let trigger = Signal::new(0u32);
+
+        // Simulate two renders
+        cx.reset_hooks();
+        let r = run_count.clone();
+        let t = trigger.clone();
+        cx.use_effect(move || {
+            t.get(); // track trigger
+            r.set(r.get() + 1);
+        });
+
+        assert_eq!(run_count.get(), 1); // ran once on mount
+
+        cx.reset_hooks();
+        let r2 = run_count.clone();
+        let t2 = trigger.clone();
+        cx.use_effect(move || {
+            t2.get();
+            r2.set(r2.get() + 1);
+        }); // second render — new f dropped, effect NOT recreated
+
+        assert_eq!(run_count.get(), 1); // still 1 — no duplicate effect
+
+        trigger.set(1);
+        assert_eq!(run_count.get(), 2); // only one effect fires
     }
 }
