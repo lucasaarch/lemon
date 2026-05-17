@@ -22,6 +22,7 @@ pub enum Patch {
     ReplaceNode { node: NodePath, new_element: Element },
     InsertChild { parent: NodePath, index: usize, element: Element },
     RemoveChild { parent: NodePath, index: usize },
+    /// Reserved for keyed diffing — not emitted by the current unkeyed diff implementation.
     MoveChild { parent: NodePath, from: usize, to: usize },
 }
 
@@ -41,6 +42,7 @@ pub fn diff(old: Element, new: Element, path: NodePath) -> Vec<Patch> {
         (Row(o), Row(n)) => diff_box(o, n, path, &mut patches),
         (Box_(o), Box_(n)) => diff_box(o, n, path, &mut patches),
         (Button(o), Button(n)) => {
+            // TODO: diff button style (ButtonElement::style is currently not diffed; style changes will be dropped)
             let ol = o.label.resolve();
             let nl = n.label.resolve();
             if ol != nl {
