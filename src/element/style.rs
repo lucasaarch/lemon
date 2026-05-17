@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Edges<T: Clone> {
     pub top: T,
@@ -8,7 +10,12 @@ pub struct Edges<T: Clone> {
 
 impl<T: Clone> Edges<T> {
     pub fn all(v: T) -> Self {
-        Edges { top: v.clone(), right: v.clone(), bottom: v.clone(), left: v }
+        Edges {
+            top: v.clone(),
+            right: v.clone(),
+            bottom: v.clone(),
+            left: v,
+        }
     }
 }
 
@@ -21,10 +28,25 @@ pub enum Dimension {
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub enum Align { #[default] Stretch, Start, End, Center, Baseline }
+pub enum Align {
+    #[default]
+    Stretch,
+    Start,
+    End,
+    Center,
+    Baseline,
+}
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub enum Justify { #[default] Start, End, Center, SpaceBetween, SpaceAround, SpaceEvenly }
+pub enum Justify {
+    #[default]
+    Start,
+    End,
+    Center,
+    SpaceBetween,
+    SpaceAround,
+    SpaceEvenly,
+}
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct CornerRadii {
@@ -36,7 +58,12 @@ pub struct CornerRadii {
 
 impl CornerRadii {
     pub fn all(r: f32) -> Self {
-        CornerRadii { top_left: r, top_right: r, bottom_right: r, bottom_left: r }
+        CornerRadii {
+            top_left: r,
+            top_right: r,
+            bottom_right: r,
+            bottom_left: r,
+        }
     }
 }
 
@@ -55,36 +82,58 @@ pub struct StyleProps {
 
 /// Color as RGBA floats in 0.0–1.0.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct Color { pub r: f32, pub g: f32, pub b: f32, pub a: f32 }
+pub struct Color {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub a: f32,
+}
 
 impl Color {
     pub const fn rgb8(r: u8, g: u8, b: u8) -> Self {
-        Color { r: r as f32 / 255.0, g: g as f32 / 255.0, b: b as f32 / 255.0, a: 1.0 }
+        Color {
+            r: r as f32 / 255.0,
+            g: g as f32 / 255.0,
+            b: b as f32 / 255.0,
+            a: 1.0,
+        }
     }
-    pub fn with_alpha(mut self, a: f32) -> Self { self.a = a; self }
+    pub fn with_alpha(mut self, a: f32) -> Self {
+        self.a = a;
+        self
+    }
 }
 
 /// A color that may be evaluated dynamically from a closure.
+#[derive(Clone)]
 pub enum ColorSource {
     Static(Color),
-    Dynamic(Box<dyn Fn() -> Color>),
+    Dynamic(Rc<dyn Fn() -> Color>),
 }
 
 impl ColorSource {
     pub fn resolve(&self) -> Color {
-        match self { Self::Static(c) => *c, Self::Dynamic(f) => f() }
+        match self {
+            Self::Static(c) => *c,
+            Self::Dynamic(f) => f(),
+        }
     }
 }
 
 impl From<Color> for ColorSource {
-    fn from(c: Color) -> Self { ColorSource::Static(c) }
+    fn from(c: Color) -> Self {
+        ColorSource::Static(c)
+    }
 }
 
 impl<F: Fn() -> Color + 'static> From<F> for ColorSource {
-    fn from(f: F) -> Self { ColorSource::Dynamic(Box::new(f)) }
+    fn from(f: F) -> Self {
+        ColorSource::Dynamic(Rc::new(f))
+    }
 }
 
 /// Visual decoration properties. May contain dynamic closures.
+#[derive(Clone)]
 pub struct PaintProps {
     pub background: Option<ColorSource>,
     pub border_color: Option<ColorSource>,
@@ -107,7 +156,10 @@ impl std::fmt::Debug for PaintProps {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PaintProps")
             .field("background", &self.background.as_ref().map(|c| c.resolve()))
-            .field("border_color", &self.border_color.as_ref().map(|c| c.resolve()))
+            .field(
+                "border_color",
+                &self.border_color.as_ref().map(|c| c.resolve()),
+            )
             .field("border_width", &self.border_width)
             .field("radius", &self.radius)
             .finish()

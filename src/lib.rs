@@ -1,3 +1,119 @@
 pub mod diff;
 pub mod element;
 pub mod runtime;
+
+pub use element::builders::{Box_, Button, Column, Row, Text};
+pub use element::style::{Color, StyleProps};
+pub use runtime::cx::Cx;
+pub use runtime::signal::Signal;
+pub use runtime::Runtime;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::diff::Patch;
+
+    #[test]
+    fn counter_increments_produce_update_text_patches() {
+        let count = Signal::new(0i32);
+        let c = count.clone();
+
+        let mut rt = Runtime::new();
+        rt.mount(move |_cx| {
+            let c2 = c.clone();
+            Column::new()
+                .child(Text::new(move || format!("Count: {}", c2.get())))
+                .into_element()
+        });
+
+        assert!(rt.take_patches().is_empty(), "no patches on first mount");
+
+        count.set(1);
+        rt.flush_effects();
+
+        let patches = rt.take_patches();
+        assert!(!patches.is_empty());
+        let has_patch = patches
+            .iter()
+            .any(|p| matches!(p, Patch::UpdateText { content, .. } if content == "Count: 1"));
+        assert!(has_patch, "expected UpdateText 'Count: 1'");
+
+        count.set(2);
+        rt.flush_effects();
+        let patches = rt.take_patches();
+        let has_patch = patches
+            .iter()
+            .any(|p| matches!(p, Patch::UpdateText { content, .. } if content == "Count: 2"));
+        assert!(has_patch, "expected UpdateText 'Count: 2'");
+    }
+
+    #[test]
+    fn conditional_child_produces_insert_and_remove_patches() {
+        let show = Signal::new(false);
+        let s = show.clone();
+
+        let mut rt = Runtime::new();
+        rt.mount(move |_cx| {
+            let visible = s.get();
+            let mut col = Column::new();
+            if visible {
+                col = col.child(Text::new("visible"));
+            }
+            col.into_element()
+        });
+
+        assert!(rt.take_patches().is_empty());
+
+        show.set(true);
+        rt.flush_effects();
+        let patches = rt.take_patches();
+        assert!(
+            patches
+                .iter()
+                .any(|p| matches!(p, Patch::InsertChild { .. })),
+            "showing child must produce InsertChild"
+        );
+
+        show.set(false);
+        rt.flush_effects();
+        let patches = rt.take_patches();
+        assert!(
+            patches
+                .iter()
+                .any(|p| matches!(p, Patch::RemoveChild { .. })),
+            "hiding child must produce RemoveChild"
+        );
+    }
+
+    #[test]
+    fn multiple_signals_each_trigger_patch() {
+        let name = Signal::new("Alice".to_owned());
+        let age = Signal::new(30u32);
+        let n = name.clone();
+        let a = age.clone();
+
+        let mut rt = Runtime::new();
+        rt.mount(move |_cx| {
+            let n2 = n.clone();
+            let a2 = a.clone();
+            Column::new()
+                .child(Text::new(move || n2.get()))
+                .child(Text::new(move || a2.get().to_string()))
+                .into_element()
+        });
+
+        name.set("Bob".to_owned());
+        rt.flush_effects();
+        let patches = rt.take_patches();
+        assert!(patches
+            .iter()
+            .any(|p| matches!(p, Patch::UpdateText { content, .. } if content == "Bob")));
+
+        age.set(31);
+        rt.flush_effects();
+        let patches = rt.take_patches();
+        assert!(patches
+            .iter()
+            .any(|p| matches!(p, Patch::UpdateText { content, .. } if content == "31")));
+    }
+}

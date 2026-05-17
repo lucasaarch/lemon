@@ -1,6 +1,6 @@
+use crate::runtime::observer::{with_observer, Subscriber};
 use std::cell::{Cell, RefCell};
 use std::rc::{Rc, Weak};
-use crate::runtime::observer::{with_observer, Subscriber};
 
 struct EffectInner {
     f: Box<dyn Fn()>,
@@ -35,13 +35,13 @@ impl Effect {
         let inner = Rc::new(EffectInner {
             f: Box::new(f),
             self_weak: RefCell::new(Weak::new()),
-            is_running: Cell::new(true),  // Set to true during initial run
+            is_running: Cell::new(true), // Set to true during initial run
         });
         *inner.self_weak.borrow_mut() = Rc::downgrade(&inner);
         with_observer(Rc::downgrade(&inner) as Weak<dyn Subscriber>, || {
             (inner.f)();
         });
-        inner.is_running.set(false);  // Reset to false after initial run
+        inner.is_running.set(false); // Reset to false after initial run
         Effect { _inner: inner }
     }
 }
@@ -57,7 +57,9 @@ mod tests {
     fn runs_immediately() {
         let ran = Rc::new(Cell::new(false));
         let r = ran.clone();
-        let _e = Effect::new(move || { r.set(true); });
+        let _e = Effect::new(move || {
+            r.set(true);
+        });
         assert!(ran.get());
     }
 
@@ -67,7 +69,10 @@ mod tests {
         let count = Rc::new(Cell::new(0u32));
         let c = count.clone();
         let s2 = s.clone();
-        let _e = Effect::new(move || { s2.get(); c.set(c.get() + 1); });
+        let _e = Effect::new(move || {
+            s2.get();
+            c.set(c.get() + 1);
+        });
         assert_eq!(count.get(), 1);
         s.set(1);
         assert_eq!(count.get(), 2);
@@ -81,7 +86,12 @@ mod tests {
         let count = Rc::new(Cell::new(0u32));
         let c = count.clone();
         let s2 = s.clone();
-        { let _e = Effect::new(move || { s2.get(); c.set(c.get() + 1); }); }
+        {
+            let _e = Effect::new(move || {
+                s2.get();
+                c.set(c.get() + 1);
+            });
+        }
         s.set(99);
         assert_eq!(count.get(), 1); // ran once on mount, not again after drop
     }

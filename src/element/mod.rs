@@ -5,7 +5,7 @@ pub mod types;
 
 use types::{BoxElement, ButtonElement, ComponentElement, ImageElement, TextElement};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Element {
     Text(TextElement),
     Box_(BoxElement),

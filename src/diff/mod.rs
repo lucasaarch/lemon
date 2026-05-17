@@ -1,4 +1,7 @@
-use crate::element::{Element, style::{PaintData, StyleProps}};
+use crate::element::{
+    style::{PaintData, StyleProps},
+    Element,
+};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct NodePath(pub Vec<usize>);
@@ -17,14 +20,37 @@ impl NodePath {
 
 #[derive(Debug)]
 pub enum Patch {
-    UpdateStyle { node: NodePath, style: StyleProps },
-    UpdatePaint { node: NodePath, paint: PaintData },
-    UpdateText { node: NodePath, content: String },
-    ReplaceNode { node: NodePath, new_element: Element },
-    InsertChild { parent: NodePath, index: usize, element: Element },
-    RemoveChild { parent: NodePath, index: usize },
+    UpdateStyle {
+        node: NodePath,
+        style: StyleProps,
+    },
+    UpdatePaint {
+        node: NodePath,
+        paint: PaintData,
+    },
+    UpdateText {
+        node: NodePath,
+        content: String,
+    },
+    ReplaceNode {
+        node: NodePath,
+        new_element: Element,
+    },
+    InsertChild {
+        parent: NodePath,
+        index: usize,
+        element: Element,
+    },
+    RemoveChild {
+        parent: NodePath,
+        index: usize,
+    },
     /// Reserved for keyed diffing — not emitted by the current unkeyed diff implementation.
-    MoveChild { parent: NodePath, from: usize, to: usize },
+    MoveChild {
+        parent: NodePath,
+        from: usize,
+        to: usize,
+    },
 }
 
 pub fn diff(old: Element, new: Element, path: NodePath) -> Vec<Patch> {
@@ -36,29 +62,59 @@ pub fn diff(old: Element, new: Element, path: NodePath) -> Vec<Patch> {
             let os = o.content.resolve();
             let ns = n.content.resolve();
             if os != ns {
-                patches.push(Patch::UpdateText { node: path, content: ns });
+                patches.push(Patch::UpdateText {
+                    node: path,
+                    content: ns,
+                });
             }
         }
         (Column(o), Column(n)) => diff_box(o, n, path, &mut patches),
         (Row(o), Row(n)) => diff_box(o, n, path, &mut patches),
         (Box_(o), Box_(n)) => diff_box(o, n, path, &mut patches),
         (Button(o), Button(n)) => {
-            // TODO: diff button style (ButtonElement::style is currently not diffed; style changes will be dropped)
+            if o.style != n.style {
+                patches.push(Patch::UpdateStyle {
+                    node: path.clone(),
+                    style: n.style,
+                });
+            }
             let ol = o.label.resolve();
             let nl = n.label.resolve();
             if ol != nl {
-                patches.push(Patch::UpdateText { node: path.clone(), content: nl });
+                patches.push(Patch::UpdateText {
+                    node: path.clone(),
+                    content: nl,
+                });
             }
             let op = o.paint.resolve();
             let np = n.paint.resolve();
             if op != np {
-                patches.push(Patch::UpdatePaint { node: path, paint: np });
+                patches.push(Patch::UpdatePaint {
+                    node: path,
+                    paint: np,
+                });
             }
         }
-        (None, None) | (Image(_), Image(_)) => {}
+        (Image(o), Image(n)) => {
+            if o.src != n.src {
+                patches.push(Patch::ReplaceNode {
+                    node: path,
+                    new_element: Image(n),
+                });
+            } else if o.style != n.style {
+                patches.push(Patch::UpdateStyle {
+                    node: path,
+                    style: n.style,
+                });
+            }
+        }
+        (None, None) => {}
         // Different types — replace entirely
         (_, new) => {
-            patches.push(Patch::ReplaceNode { node: path, new_element: new });
+            patches.push(Patch::ReplaceNode {
+                node: path,
+                new_element: new,
+            });
         }
     }
 
@@ -72,12 +128,18 @@ fn diff_box(
     patches: &mut Vec<Patch>,
 ) {
     if o.style != n.style {
-        patches.push(Patch::UpdateStyle { node: path.clone(), style: n.style });
+        patches.push(Patch::UpdateStyle {
+            node: path.clone(),
+            style: n.style,
+        });
     }
     let op = o.paint.resolve();
     let np = n.paint.resolve();
     if op != np {
-        patches.push(Patch::UpdatePaint { node: path.clone(), paint: np });
+        patches.push(Patch::UpdatePaint {
+            node: path.clone(),
+            paint: np,
+        });
     }
     diff_children(o.children, n.children, &path, patches);
 }
@@ -93,28 +155,40 @@ fn diff_children(
     let mut new_iter = new.into_iter();
 
     for i in 0..min {
-        let child_patches =
-            diff(old_iter.next().unwrap(), new_iter.next().unwrap(), parent.child(i));
+        let child_patches = diff(
+            old_iter.next().unwrap(),
+            new_iter.next().unwrap(),
+            parent.child(i),
+        );
         patches.extend(child_patches);
     }
 
     // Extra new children → insert
     for (i, el) in new_iter.enumerate() {
-        patches.push(Patch::InsertChild { parent: parent.clone(), index: min + i, element: el });
+        patches.push(Patch::InsertChild {
+            parent: parent.clone(),
+            index: min + i,
+            element: el,
+        });
     }
 
     // Removed old children → remove in reverse order to keep indices stable
     let old_remaining: Vec<_> = old_iter.collect();
     for i in (0..old_remaining.len()).rev() {
-        patches
-            .push(Patch::RemoveChild { parent: parent.clone(), index: min + i });
+        patches.push(Patch::RemoveChild {
+            parent: parent.clone(),
+            index: min + i,
+        });
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::element::builders::{Button, Column, Text};
+    use crate::element::{
+        builders::{Button, Column, Text},
+        types::ImageElement,
+    };
 
     fn txt(s: &'static str) -> Element {
         Text::new(s).into_element()
@@ -129,9 +203,7 @@ mod tests {
     fn changed_text_produces_update_text() {
         let patches = diff(txt("old"), txt("new"), NodePath::root());
         assert_eq!(patches.len(), 1);
-        assert!(
-            matches!(&patches[0], Patch::UpdateText { content, .. } if content == "new")
-        );
+        assert!(matches!(&patches[0], Patch::UpdateText { content, .. } if content == "new"));
     }
 
     #[test]
@@ -173,15 +245,75 @@ mod tests {
     }
 
     #[test]
+    fn button_style_change_produces_update_style() {
+        let old = Element::Button(crate::element::types::ButtonElement {
+            label: "ok".into(),
+            style: Default::default(),
+            paint: Default::default(),
+            on_click: None,
+            key: None,
+        });
+        let new_style = crate::element::style::StyleProps {
+            width: Some(crate::element::style::Dimension::Points(120.0)),
+            ..Default::default()
+        };
+        let new = Element::Button(crate::element::types::ButtonElement {
+            label: "ok".into(),
+            style: new_style,
+            paint: Default::default(),
+            on_click: None,
+            key: None,
+        });
+        let patches = diff(old, new, NodePath::root());
+        assert!(patches
+            .iter()
+            .any(|p| matches!(p, Patch::UpdateStyle { .. })));
+    }
+
+    #[test]
+    fn image_style_change_produces_update_style() {
+        let old = Element::Image(ImageElement {
+            src: "a.png".to_owned(),
+            style: Default::default(),
+            key: None,
+        });
+        let new_style = crate::element::style::StyleProps {
+            height: Some(crate::element::style::Dimension::Points(64.0)),
+            ..Default::default()
+        };
+        let new = Element::Image(ImageElement {
+            src: "a.png".to_owned(),
+            style: new_style,
+            key: None,
+        });
+        let patches = diff(old, new, NodePath::root());
+        assert!(patches
+            .iter()
+            .any(|p| matches!(p, Patch::UpdateStyle { .. })));
+    }
+
+    #[test]
+    fn image_src_change_produces_replace() {
+        let old = Element::Image(ImageElement {
+            src: "a.png".to_owned(),
+            style: Default::default(),
+            key: None,
+        });
+        let new = Element::Image(ImageElement {
+            src: "b.png".to_owned(),
+            style: Default::default(),
+            key: None,
+        });
+        let patches = diff(old, new, NodePath::root());
+        assert!(patches
+            .iter()
+            .any(|p| matches!(p, Patch::ReplaceNode { .. })));
+    }
+
+    #[test]
     fn unchanged_children_produce_no_patches() {
-        let old = Column::new()
-            .child(txt("a"))
-            .child(txt("b"))
-            .into_element();
-        let new = Column::new()
-            .child(txt("a"))
-            .child(txt("b"))
-            .into_element();
+        let old = Column::new().child(txt("a")).child(txt("b")).into_element();
+        let new = Column::new().child(txt("a")).child(txt("b")).into_element();
         assert!(diff(old, new, NodePath::root()).is_empty());
     }
 }

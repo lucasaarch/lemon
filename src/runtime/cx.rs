@@ -1,8 +1,8 @@
-use std::any::Any;
-use std::cell::{Cell, RefCell};
 use crate::runtime::derived::Derived;
 use crate::runtime::effect::Effect;
 use crate::runtime::signal::Signal;
+use std::any::Any;
+use std::cell::{Cell, RefCell};
 
 pub struct Cx {
     hooks: RefCell<Vec<Box<dyn Any>>>,
@@ -27,7 +27,8 @@ impl Cx {
         self.index.set(idx + 1);
         let mut hooks = self.hooks.borrow_mut();
         if idx < hooks.len() {
-            hooks[idx].downcast_ref::<Signal<T>>()
+            hooks[idx]
+                .downcast_ref::<Signal<T>>()
                 .expect("use_signal: hook type mismatch — called with different type on re-render")
                 .clone()
         } else {
@@ -42,7 +43,8 @@ impl Cx {
         self.index.set(idx + 1);
         let mut hooks = self.hooks.borrow_mut();
         if idx < hooks.len() {
-            hooks[idx].downcast_ref::<Derived<T>>()
+            hooks[idx]
+                .downcast_ref::<Derived<T>>()
                 .expect("use_memo: hook type mismatch")
                 .clone()
         } else {
@@ -64,7 +66,9 @@ impl Cx {
 }
 
 impl Default for Cx {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[cfg(test)]

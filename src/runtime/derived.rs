@@ -1,6 +1,6 @@
+use crate::runtime::observer::{current_observer, with_observer, Subscriber};
 use std::cell::{Cell, RefCell};
 use std::rc::{Rc, Weak};
-use crate::runtime::observer::{current_observer, with_observer, Subscriber};
 
 struct DerivedInner<T> {
     f: Box<dyn Fn() -> T>,
@@ -18,11 +18,18 @@ impl<T: Clone + 'static> Subscriber for DerivedInner<T> {
             let mut downstream = self.downstream.borrow_mut();
             let mut upgraded = Vec::with_capacity(downstream.len());
             downstream.retain(|w| {
-                if let Some(rc) = w.upgrade() { upgraded.push(rc); true } else { false }
+                if let Some(rc) = w.upgrade() {
+                    upgraded.push(rc);
+                    true
+                } else {
+                    false
+                }
             });
             upgraded
         };
-        for sub in subs { sub.mark_dirty(); }
+        for sub in subs {
+            sub.mark_dirty();
+        }
     }
 }
 
@@ -61,7 +68,9 @@ impl<T: Clone + 'static> Derived<T> {
 }
 
 impl<T> Clone for Derived<T> {
-    fn clone(&self) -> Self { Derived(Rc::clone(&self.0)) }
+    fn clone(&self) -> Self {
+        Derived(Rc::clone(&self.0))
+    }
 }
 
 #[cfg(test)]
@@ -83,7 +92,10 @@ mod tests {
         let count = Rc::new(Cell::new(0u32));
         let c = count.clone();
         let s = Signal::new(1i32);
-        let d = Derived::new(move || { c.set(c.get() + 1); s.get() });
+        let d = Derived::new(move || {
+            c.set(c.get() + 1);
+            s.get()
+        });
         d.get();
         d.get();
         assert_eq!(count.get(), 1);
@@ -98,5 +110,4 @@ mod tests {
         s.set(20);
         assert_eq!(d.get(), 21);
     }
-
 }

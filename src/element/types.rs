@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::element::{
     content::TextContent,
     style::{PaintProps, StyleProps},
@@ -7,7 +9,7 @@ use crate::element::{
 pub struct Key(pub u64);
 
 /// Used by Box_, Row, and Column — all three are the same struct.
-#[derive(Default, Debug)]
+#[derive(Clone, Default, Debug)]
 pub struct BoxElement {
     pub style: StyleProps,
     pub paint: PaintProps,
@@ -15,6 +17,7 @@ pub struct BoxElement {
     pub key: Option<Key>,
 }
 
+#[derive(Clone)]
 pub struct TextElement {
     pub content: TextContent,
     pub style: crate::element::style::TextStyle,
@@ -31,11 +34,12 @@ impl std::fmt::Debug for TextElement {
     }
 }
 
+#[derive(Clone)]
 pub struct ButtonElement {
     pub label: TextContent,
     pub style: StyleProps,
     pub paint: PaintProps,
-    pub on_click: Option<Box<dyn Fn()>>,
+    pub on_click: Option<Rc<dyn Fn()>>,
     pub key: Option<Key>,
 }
 
@@ -51,6 +55,7 @@ impl std::fmt::Debug for ButtonElement {
     }
 }
 
+#[derive(Clone)]
 pub struct ImageElement {
     pub src: String,
     pub style: StyleProps,
@@ -67,9 +72,10 @@ impl std::fmt::Debug for ImageElement {
     }
 }
 
+#[derive(Clone)]
 pub struct ComponentElement {
     /// Closure that captures props and calls the component function.
-    pub view: Box<dyn Fn(&crate::runtime::cx::Cx) -> crate::element::Element>,
+    pub view: Rc<dyn Fn(&crate::runtime::cx::Cx) -> crate::element::Element>,
     /// Used for stable component identity across re-renders.
     pub type_id: std::any::TypeId,
     pub key: Option<Key>,
@@ -109,7 +115,7 @@ mod tests {
     #[test]
     fn text_element_resolves_dynamic_content() {
         let el = TextElement {
-            content: TextContent::Dynamic(Box::new(|| "dynamic".to_owned())),
+            content: TextContent::Dynamic(Rc::new(|| "dynamic".to_owned())),
             style: Default::default(),
             key: None,
         };

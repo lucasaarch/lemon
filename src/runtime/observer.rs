@@ -13,7 +13,9 @@ struct StackGuard;
 
 impl Drop for StackGuard {
     fn drop(&mut self) {
-        OBSERVER_STACK.with(|stack| { stack.borrow_mut().pop(); });
+        OBSERVER_STACK.with(|stack| {
+            stack.borrow_mut().pop();
+        });
     }
 }
 
@@ -35,7 +37,9 @@ mod tests {
 
     struct MockSub(Cell<u32>);
     impl Subscriber for MockSub {
-        fn mark_dirty(&self) { self.0.set(self.0.get() + 1); }
+        fn mark_dirty(&self) {
+            self.0.set(self.0.get() + 1);
+        }
     }
 
     #[test]

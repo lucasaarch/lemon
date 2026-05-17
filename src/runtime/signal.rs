@@ -1,6 +1,6 @@
+use crate::runtime::observer::{current_observer, Subscriber};
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
-use crate::runtime::observer::{current_observer, Subscriber};
 
 struct SignalInner<T> {
     value: T,
@@ -11,7 +11,10 @@ pub struct Signal<T>(Rc<RefCell<SignalInner<T>>>);
 
 impl<T: Clone + 'static> Signal<T> {
     pub fn new(value: T) -> Self {
-        Signal(Rc::new(RefCell::new(SignalInner { value, subscribers: Vec::new() })))
+        Signal(Rc::new(RefCell::new(SignalInner {
+            value,
+            subscribers: Vec::new(),
+        })))
     }
 
     pub fn get(&self) -> T {
@@ -39,7 +42,12 @@ impl<T: Clone + 'static> Signal<T> {
             let mut inner = self.0.borrow_mut();
             let mut upgraded = Vec::with_capacity(inner.subscribers.len());
             inner.subscribers.retain(|w| {
-                if let Some(rc) = w.upgrade() { upgraded.push(rc); true } else { false }
+                if let Some(rc) = w.upgrade() {
+                    upgraded.push(rc);
+                    true
+                } else {
+                    false
+                }
             });
             upgraded
         };
@@ -50,7 +58,9 @@ impl<T: Clone + 'static> Signal<T> {
 }
 
 impl<T> Clone for Signal<T> {
-    fn clone(&self) -> Self { Signal(Rc::clone(&self.0)) }
+    fn clone(&self) -> Self {
+        Signal(Rc::clone(&self.0))
+    }
 }
 
 #[cfg(test)]
@@ -62,7 +72,9 @@ mod tests {
 
     struct Counter(Cell<u32>);
     impl Subscriber for Counter {
-        fn mark_dirty(&self) { self.0.set(self.0.get() + 1); }
+        fn mark_dirty(&self) {
+            self.0.set(self.0.get() + 1);
+        }
     }
 
     #[test]
@@ -89,7 +101,9 @@ mod tests {
     fn set_notifies_subscriber() {
         let s = Signal::new(0i32);
         let counter = Rc::new(Counter(Cell::new(0)));
-        with_observer(Rc::downgrade(&counter) as _, || { s.get(); });
+        with_observer(Rc::downgrade(&counter) as _, || {
+            s.get();
+        });
         s.set(1);
         assert_eq!(counter.0.get(), 1);
     }
@@ -98,7 +112,9 @@ mod tests {
     fn dead_subscriber_is_skipped() {
         let s = Signal::new(0i32);
         let counter = Rc::new(Counter(Cell::new(0)));
-        with_observer(Rc::downgrade(&counter) as _, || { s.get(); });
+        with_observer(Rc::downgrade(&counter) as _, || {
+            s.get();
+        });
         drop(counter);
         s.set(1); // must not panic
     }
