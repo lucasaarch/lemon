@@ -3,10 +3,12 @@ use crate::runtime::effect::Effect;
 use crate::runtime::signal::Signal;
 use std::any::Any;
 use std::cell::{Cell, RefCell};
+use std::rc::Rc;
 
 pub struct Cx {
     hooks: RefCell<Vec<Box<dyn Any>>>,
     index: Cell<usize>,
+    deferred_sink: RefCell<Option<Rc<RefCell<Vec<Effect>>>>>,
 }
 
 impl Cx {
@@ -14,7 +16,12 @@ impl Cx {
         Cx {
             hooks: RefCell::new(Vec::new()),
             index: Cell::new(0),
+            deferred_sink: RefCell::new(None),
         }
+    }
+
+    pub(crate) fn set_deferred_sink(&self, sink: Rc<RefCell<Vec<Effect>>>) {
+        *self.deferred_sink.borrow_mut() = Some(sink);
     }
 
     /// Must be called before each re-render of this component.
@@ -59,9 +66,20 @@ impl Cx {
         self.index.set(idx + 1);
         let mut hooks = self.hooks.borrow_mut();
         if idx >= hooks.len() {
-            hooks.push(Box::new(Effect::new(f)));
+            let effect = Effect::new_lazy(f);
+            if let Some(sink) = self.deferred_sink.borrow().as_ref() {
+                sink.borrow_mut().push(effect.clone());
+            }
+            hooks.push(Box::new(effect));
         }
         // On re-render, the effect already lives in hooks; f is dropped
+    }
+}
+
+pub(crate) fn flush_deferred_sink(sink: &Rc<RefCell<Vec<Effect>>>) {
+    let pending = std::mem::take(&mut *sink.borrow_mut());
+    for effect in pending {
+        effect.run_deferred_initial();
     }
 }
 
@@ -104,25 +122,49 @@ mod tests {
     }
 
     #[test]
+    fn use_effect_deferred_until_flush() {
+        use std::cell::Cell;
+        use std::rc::Rc;
+
+        let run_count = Rc::new(Cell::new(0u32));
+        let sink = Rc::new(RefCell::new(Vec::new()));
+        let cx = Cx::new();
+        cx.set_deferred_sink(Rc::clone(&sink));
+
+        cx.reset_hooks();
+        let r = run_count.clone();
+        cx.use_effect(move || {
+            r.set(r.get() + 1);
+        });
+
+        assert_eq!(run_count.get(), 0);
+        super::flush_deferred_sink(&sink);
+        assert_eq!(run_count.get(), 1);
+    }
+
+    #[test]
     fn use_effect_runs_once_on_mount_not_on_rerender() {
         use crate::runtime::signal::Signal;
         use std::cell::Cell;
         use std::rc::Rc;
 
         let run_count = Rc::new(Cell::new(0u32));
+        let sink = Rc::new(RefCell::new(Vec::new()));
         let cx = Cx::new();
+        cx.set_deferred_sink(Rc::clone(&sink));
         let trigger = Signal::new(0u32);
 
-        // Simulate two renders
         cx.reset_hooks();
         let r = run_count.clone();
         let t = trigger.clone();
         cx.use_effect(move || {
-            t.get(); // track trigger
+            t.get();
             r.set(r.get() + 1);
         });
 
-        assert_eq!(run_count.get(), 1); // ran once on mount
+        assert_eq!(run_count.get(), 0);
+        super::flush_deferred_sink(&sink);
+        assert_eq!(run_count.get(), 1);
 
         cx.reset_hooks();
         let r2 = run_count.clone();
@@ -130,11 +172,11 @@ mod tests {
         cx.use_effect(move || {
             t2.get();
             r2.set(r2.get() + 1);
-        }); // second render — new f dropped, effect NOT recreated
+        });
 
-        assert_eq!(run_count.get(), 1); // still 1 — no duplicate effect
+        assert_eq!(run_count.get(), 1);
 
         trigger.set(1);
-        assert_eq!(run_count.get(), 2); // only one effect fires
+        assert_eq!(run_count.get(), 2);
     }
 }

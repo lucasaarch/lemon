@@ -26,6 +26,7 @@ impl Subscriber for EffectInner {
 
 /// An effect that runs a closure immediately and re-runs it whenever a signal it reads changes.
 /// Dropping the effect stops it from re-running.
+#[derive(Clone)]
 pub struct Effect {
     _inner: Rc<EffectInner>,
 }
@@ -54,6 +55,18 @@ impl Effect {
         });
         *inner.self_weak.borrow_mut() = Rc::downgrade(&inner);
         Effect { _inner: inner }
+    }
+
+    /// Run the effect body once (used for deferred `use_effect` hooks after first paint).
+    pub fn run_deferred_initial(&self) {
+        if self._inner.is_running.get() {
+            return;
+        }
+        self._inner.is_running.set(true);
+        with_observer(Rc::downgrade(&self._inner) as Weak<dyn Subscriber>, || {
+            (self._inner.f)();
+        });
+        self._inner.is_running.set(false);
     }
 }
 

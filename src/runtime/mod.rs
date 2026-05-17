@@ -28,12 +28,14 @@ struct ComponentSlot {
     view: Rc<RefCell<ViewFn>>,
     cx: Rc<RefCell<Cx>>,
     children: Vec<ComponentSlot>,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
     _effect: Effect,
 }
 
 pub struct Runtime {
     slots: Vec<ComponentSlot>,
     patch_queue: Vec<Patch>,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
 }
 
 impl Runtime {
@@ -41,11 +43,17 @@ impl Runtime {
         Runtime {
             slots: Vec::new(),
             patch_queue: Vec::new(),
+            deferred_effects: Rc::new(RefCell::new(Vec::new())),
         }
     }
 
     pub fn mount(&mut self, f: impl Fn(&Cx) -> Element + 'static) {
-        let mut slot = create_component_slot(NodePath::root(), Rc::new(f), false);
+        let mut slot = create_component_slot(
+            NodePath::root(),
+            Rc::new(f),
+            false,
+            Rc::clone(&self.deferred_effects),
+        );
         if let Some(initial) = slot.pending.borrow_mut().take() {
             slot.previous = Some(initial);
         }
@@ -63,6 +71,11 @@ impl Runtime {
         std::mem::take(&mut self.patch_queue)
     }
 
+    /// Run mount-time `use_effect` hooks queued during render (after first paint).
+    pub fn flush_deferred_effects(&mut self) {
+        cx::flush_deferred_sink(&self.deferred_effects);
+    }
+
     /// Current root element tree after the last render (mount or flush).
     pub fn root_element(&self) -> Option<Element> {
         self.slots.first()?.previous.clone()
@@ -75,9 +88,16 @@ impl Default for Runtime {
     }
 }
 
-fn create_component_slot(path: NodePath, view: ViewFn, lazy_effect: bool) -> ComponentSlot {
+fn create_component_slot(
+    path: NodePath,
+    view: ViewFn,
+    lazy_effect: bool,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+) -> ComponentSlot {
     let view_cell = Rc::new(RefCell::new(view));
     let cx = Rc::new(RefCell::new(Cx::new()));
+    cx.borrow()
+        .set_deferred_sink(Rc::clone(&deferred_effects));
     let pending = Rc::new(RefCell::new(None));
 
     let view_cell2 = Rc::clone(&view_cell);
@@ -103,6 +123,7 @@ fn create_component_slot(path: NodePath, view: ViewFn, lazy_effect: bool) -> Com
         view: view_cell,
         cx,
         children: Vec::new(),
+        deferred_effects,
         _effect: effect,
     }
 }
@@ -111,12 +132,14 @@ fn render_slot(slot: &mut ComponentSlot, patches: &mut Vec<Patch>) {
     if let Some(new_tree) = slot.pending.borrow_mut().take() {
         let next_previous = new_tree.clone();
         if let Some(old_tree) = slot.previous.take() {
+            let deferred = Rc::clone(&slot.deferred_effects);
             diff_with_nested_components(
                 &mut slot.children,
                 old_tree,
                 new_tree,
                 slot.path.clone(),
                 patches,
+                deferred,
             );
         }
         slot.previous = Some(next_previous);
@@ -161,8 +184,9 @@ fn mount_component_slot(
     parent_slots: &mut Vec<ComponentSlot>,
     path: NodePath,
     component: ComponentElement,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
 ) {
-    let mut slot = create_component_slot(path, component.view(), true);
+    let mut slot = create_component_slot(path, component.view(), true, deferred_effects);
     bootstrap_nested_slot(&mut slot);
     parent_slots.push(slot);
 }
@@ -191,6 +215,7 @@ fn handle_component_pair(
     new: ComponentElement,
     path: NodePath,
     patches: &mut Vec<Patch>,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
 ) {
     let new_for_patch = new.clone();
     if same_component_identity(old, &new) {
@@ -199,7 +224,7 @@ fn handle_component_pair(
             sync_render(slot);
             render_slot(slot, patches);
         } else {
-            mount_component_slot(parent_slots, path.clone(), new);
+            mount_component_slot(parent_slots, path.clone(), new, Rc::clone(&deferred_effects));
             if let Some(slot) = find_slot_mut(parent_slots, &path) {
                 render_slot(slot, patches);
             }
@@ -215,7 +240,12 @@ fn handle_component_pair(
             node: path.clone(),
             component: new_for_patch.clone(),
         });
-        mount_component_slot(parent_slots, path.clone(), new);
+        mount_component_slot(
+            parent_slots,
+            path.clone(),
+            new,
+            Rc::clone(&deferred_effects),
+        );
         if let Some(slot) = find_slot_mut(parent_slots, &path) {
             render_slot(slot, patches);
         }
@@ -250,6 +280,7 @@ fn diff_children_slots(
     new_children: &[Element],
     parent: &NodePath,
     patches: &mut Vec<Patch>,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
 ) {
     let min = old_children.len().min(new_children.len());
     for i in 0..min {
@@ -259,6 +290,7 @@ fn diff_children_slots(
             new_children[i].clone(),
             parent.child(i),
             patches,
+            Rc::clone(&deferred_effects),
         );
     }
 
@@ -271,7 +303,12 @@ fn diff_children_slots(
                     node: path.clone(),
                     component: component.clone(),
                 });
-                mount_component_slot(slots, path, component.clone());
+                mount_component_slot(
+                    slots,
+                    path,
+                    component.clone(),
+                    Rc::clone(&deferred_effects),
+                );
             }
             element => patches.push(Patch::InsertChild {
                 parent: parent.clone(),
@@ -296,11 +333,20 @@ fn diff_children_slots(
     }
 }
 
-fn sync_slots_for_emitted_patches(slots: &mut Vec<ComponentSlot>, emitted: &[Patch]) {
+fn sync_slots_for_emitted_patches(
+    slots: &mut Vec<ComponentSlot>,
+    emitted: &[Patch],
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+) {
     for patch in emitted {
         match patch {
             Patch::MountComponent { node, component } if find_slot_mut(slots, node).is_none() => {
-                mount_component_slot(slots, node.clone(), component.clone());
+                mount_component_slot(
+                    slots,
+                    node.clone(),
+                    component.clone(),
+                    Rc::clone(&deferred_effects),
+                );
             }
             Patch::UnmountComponent { node } => {
                 unmount_component_slot(slots, node);
@@ -310,7 +356,12 @@ fn sync_slots_for_emitted_patches(slots: &mut Vec<ComponentSlot>, emitted: &[Pat
                     *slot.view.borrow_mut() = component.view();
                     sync_render(slot);
                 } else {
-                    mount_component_slot(slots, node.clone(), component.clone());
+                    mount_component_slot(
+                        slots,
+                        node.clone(),
+                        component.clone(),
+                        Rc::clone(&deferred_effects),
+                    );
                 }
             }
             _ => {}
@@ -324,20 +375,35 @@ fn diff_with_nested_components(
     new: Element,
     path: NodePath,
     patches: &mut Vec<Patch>,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
 ) {
     match (old, new) {
         (Element::Component(old_component), Element::Component(new_component)) => {
-            handle_component_pair(slots, &old_component, new_component, path, patches);
+            handle_component_pair(
+                slots,
+                &old_component,
+                new_component,
+                path,
+                patches,
+                deferred_effects,
+            );
         }
         (Element::Column(old), Element::Column(new))
         | (Element::Row(old), Element::Row(new))
         | (Element::Box_(old), Element::Box_(new)) => {
             diff_container_props(&old, &new, &path, patches);
-            diff_children_slots(slots, &old.children, &new.children, &path, patches);
+            diff_children_slots(
+                slots,
+                &old.children,
+                &new.children,
+                &path,
+                patches,
+                deferred_effects,
+            );
         }
         (old, new) => {
             let emitted = diff(old, new, path);
-            sync_slots_for_emitted_patches(slots, &emitted);
+            sync_slots_for_emitted_patches(slots, &emitted, deferred_effects);
             patches.extend(emitted);
         }
     }
@@ -398,6 +464,26 @@ mod tests {
         let mut rt = Runtime::new();
         rt.mount(|_cx| Text::new("hello").into_element());
         assert!(rt.take_patches().is_empty());
+    }
+
+    #[test]
+    fn deferred_use_effect_runs_on_flush() {
+        use std::cell::Cell;
+        use std::rc::Rc;
+
+        let ran = Rc::new(Cell::new(false));
+        let flag = ran.clone();
+        let mut rt = Runtime::new();
+        rt.mount(move |cx| {
+            let flag = flag.clone();
+            cx.use_effect(move || {
+                flag.set(true);
+            });
+            Text::new("x").into_element()
+        });
+        assert!(!ran.get());
+        rt.flush_deferred_effects();
+        assert!(ran.get());
     }
 
     #[test]

@@ -282,6 +282,7 @@ impl AppState {
     fn render_frame(&mut self) {
         self.update_frame();
         self.present();
+        self.runtime.flush_deferred_effects();
     }
 
     fn request_redraw(&self) {
