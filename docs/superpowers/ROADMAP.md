@@ -1,6 +1,7 @@
 # Lemon Implementation Roadmap
 
-**Spec:** `specs/2026-05-17-lemon-architecture-design.md`
+**Spec:** `specs/2026-05-17-lemon-architecture-design.md`  
+**GitHub tracker:** [Issue #14](https://github.com/lucasaarch/lemon/issues/14) (issues `#1`–`#13` in execution order)
 
 Execute plans **in this order**. Each plan is self-contained (TDD steps, `cargo test` gates). Do not skip ahead — later layers assume earlier ones.
 

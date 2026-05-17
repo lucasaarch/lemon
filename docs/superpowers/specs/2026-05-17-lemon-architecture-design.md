@@ -599,3 +599,47 @@ winit::Event
 - Temas / design tokens formais
 - Widgets de input (TextInput, Select, Slider)
 - Imagens e assets
+
+---
+
+## Implementation Status
+
+**Last updated:** 2026-05-17  
+**Tracker:** [GitHub #14](https://github.com/lucasaarch/lemon/issues/14) (issues `#1`–`#13`, label `lemon-roadmap`)  
+**Execution order:** `docs/superpowers/ROADMAP.md`
+
+### By layer
+
+| Layer | Spec section | Status | Plan / notes |
+|-------|----------------|--------|----------------|
+| 1 | Reactive runtime | **Done** | `plans/2026-05-17-lemon-core-runtime.md` |
+| 2 | Component model | **Done** (gaps below) | `plans/2026-05-17-lemon-component-lifecycle.md` |
+| 3 | Element tree | **Done** | core-runtime plan |
+| 4 | Diff + patch | **Partial** | Keyed `MoveChild` not implemented yet |
+| 5 | Retained tree | **Done** | retained-tree + component-lifecycle |
+| 6 | Layout pass | **Not started** | `plans/2026-05-17-lemon-layout-pass.md` |
+| 7 | Paint pass | **Not started** | `plans/2026-05-17-lemon-paint-pass.md` |
+| 8 | Platform + `lemon::run` | **Not started** | `plans/2026-05-17-lemon-platform.md` |
+
+### Spec alignment notes (implemented code)
+
+| Topic | Spec | Implementation |
+|-------|------|----------------|
+| Component identity | Function type + `key` | Function pointer `identity()` + `key` (distinguishes distinct fns) |
+| Component props | `Component::new(fn, Props)` | `Component::new(fn)` — props via Rust closures |
+| Retained `Component` node | Stores `view_fn`, `cx`, `effect_id` | Metadata only (`type_id`, `key`); runtime owns `Cx` / `Effect` |
+| `taffy_id` on all nodes | Required | `Option<NodeId>`; `None` for component wrappers |
+| Component patch on same identity | Mount / unmount only | Also `UpdateComponent` to swap `view` |
+| `use_effect` timing | After first paint | Runs on mount today — deferred queue planned |
+| `Derived` notify | Only when value changes | Notifies on any dependency change — equality planned |
+| `EventHandlers` | click, hover, key | **click only** in retained |
+| `TextCache.parley_layout` | Cached Parley layout | Field not yet present — layout plan |
+
+### Verification gates
+
+| Milestone | Command |
+|-----------|---------|
+| Pure core (current) | `cargo test` (68 tests) |
+| After layout + paint | `cargo test` |
+| First window | `cargo run --example counter` |
+| Per change | `cargo fmt --all && cargo clippy --all-targets --all-features -- -D warnings && cargo test` |
