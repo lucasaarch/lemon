@@ -15,10 +15,11 @@ impl<T: Clone + 'static> Signal<T> {
     }
 
     pub fn get(&self) -> T {
+        let mut inner = self.0.borrow_mut();
         if let Some(obs) = current_observer() {
-            self.0.borrow_mut().subscribers.push(obs);
+            inner.subscribers.push(obs);
         }
-        self.0.borrow().value.clone()
+        inner.value.clone()
     }
 
     pub fn set(&self, value: T) {
@@ -34,8 +35,11 @@ impl<T: Clone + 'static> Signal<T> {
     fn notify(&self) {
         let subs: Vec<Rc<dyn Subscriber>> = {
             let mut inner = self.0.borrow_mut();
-            inner.subscribers.retain(|w| w.strong_count() > 0);
-            inner.subscribers.iter().filter_map(|w| w.upgrade()).collect()
+            let mut upgraded = Vec::with_capacity(inner.subscribers.len());
+            inner.subscribers.retain(|w| {
+                if let Some(rc) = w.upgrade() { upgraded.push(rc); true } else { false }
+            });
+            upgraded
         };
         for sub in subs {
             sub.mark_dirty();
