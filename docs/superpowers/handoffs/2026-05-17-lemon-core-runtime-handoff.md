@@ -106,20 +106,20 @@ These are the meaningful gaps still left relative to `docs/superpowers/specs/202
 
 ## Recommended Next Plan
 
-Build the next implementation plan in this order:
+**Completed since this handoff was written:**
 
-1. Retained tree data model
-2. Patch application engine
-3. Taffy layout integration
-4. Text measurement/cache with Parley
-5. Paint pass with Vello
-6. winit/wgpu app shell
-7. `lemon::run()`
-8. Revisit semantic gaps:
-   - deferred `use_effect`
-   - `Derived<T>` propagation semantics
-   - keyed diff
-   - nested `ComponentElement`
+| Plan | Status |
+|------|--------|
+| `2026-05-17-lemon-retained-tree.md` | Implemented |
+| `2026-05-17-lemon-component-lifecycle.md` | Implemented |
+| `2026-05-17-lemon-core-runtime.md` | Implemented (Layers 1–4) |
+
+**Execute next (plans written 2026-05-17):**
+
+1. `docs/superpowers/plans/2026-05-17-lemon-layout-pass.md` — Taffy compute + Parley measure + `LayoutMap`
+2. `docs/superpowers/plans/2026-05-17-lemon-paint-pass.md` — Vello `Scene` traversal
+3. `docs/superpowers/plans/2026-05-17-lemon-platform.md` — winit/wgpu frame loop + `lemon::run()`
+4. `docs/superpowers/plans/2026-05-17-lemon-runtime-semantics.md` — keyed diff, derived equality, deferred `use_effect` (last item needs platform)
 
 ## Files Most Relevant for Resuming
 

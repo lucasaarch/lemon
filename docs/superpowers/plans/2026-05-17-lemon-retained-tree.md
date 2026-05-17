@@ -1,5 +1,7 @@
 # Lemon Retained Tree Implementation Plan
 
+> **Status (2026-05-17):** Implemented on `master`. Component wrapper patches (`MountComponent` / `UnmountComponent` / `UpdateComponent`) were added later by `2026-05-17-lemon-component-lifecycle.md`; treat that plan as the source of truth for component retained semantics.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Implement Lemon Layer 5 for the currently supported concrete element types: a retained tree backed by Taffy nodes plus a patch-application engine that keeps retained state synchronized with the existing diff output.
@@ -35,7 +37,7 @@ src/
 - Create: `src/retained/mod.rs`
 - Test: `src/retained/mod.rs`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add these tests to `src/retained/mod.rs`:
 
@@ -91,7 +93,7 @@ mod tests {
 }
 ```
 
-- [ ] **Step 2: Run the tests to verify red**
+- [x] **Step 2: Run the tests to verify red**
 
 Run:
 
@@ -101,7 +103,7 @@ cargo test retained::tests -- --nocapture
 
 Expected: compilation fails because `retained` module, `StyleProps::to_taffy_style`, and `RetainedNode` do not exist yet.
 
-- [ ] **Step 3: Implement the minimal retained skeleton**
+- [x] **Step 3: Implement the minimal retained skeleton**
 
 Create `src/retained/mod.rs` with:
 
@@ -267,7 +269,7 @@ fn into_taffy_dimension(dimension: crate::element::style::Dimension) -> taffy::s
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify green**
+- [x] **Step 4: Run the tests to verify green**
 
 Run:
 
@@ -277,7 +279,7 @@ cargo test retained::tests -- --nocapture
 
 Expected: `test result: ok. 2 passed`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib.rs src/retained/mod.rs
@@ -292,7 +294,7 @@ git commit -m "feat(retained): scaffold retained tree model"
 - Modify: `src/retained/mod.rs`
 - Test: `src/retained/mod.rs`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add these tests:
 
@@ -347,7 +349,7 @@ fn mount_resolves_paint_and_handlers_for_button_nodes() {
 }
 ```
 
-- [ ] **Step 2: Run the tests to verify red**
+- [x] **Step 2: Run the tests to verify red**
 
 Run:
 
@@ -357,7 +359,7 @@ cargo test retained::tests::mount_ -- --nocapture
 
 Expected: compile error because `RetainedTree::mount` and element-to-retained conversion do not exist yet.
 
-- [ ] **Step 3: Implement mounting from `Element`**
+- [x] **Step 3: Implement mounting from `Element`**
 
 Extend `src/retained/mod.rs` with:
 
@@ -421,7 +423,7 @@ Implement the `build_box_node`, `build_text_node`, `build_button_node`, and `bui
 - copy button click handlers into `EventHandlers`
 - store current text content in `TextCache { needs_layout: true }`
 
-- [ ] **Step 4: Run the tests to verify green**
+- [x] **Step 4: Run the tests to verify green**
 
 Run:
 
@@ -431,7 +433,7 @@ cargo test retained::tests::mount_ -- --nocapture
 
 Expected: both `mount_...` tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/retained/mod.rs
@@ -446,7 +448,7 @@ git commit -m "feat(retained): mount retained trees from element trees"
 - Modify: `src/retained/mod.rs`
 - Test: `src/retained/mod.rs`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add these tests:
 
@@ -530,7 +532,7 @@ fn replace_node_patch_rebuilds_subtree_at_same_index() {
 }
 ```
 
-- [ ] **Step 2: Run the tests to verify red**
+- [x] **Step 2: Run the tests to verify red**
 
 Run:
 
@@ -540,7 +542,7 @@ cargo test retained::tests::update_text_patch retained::tests::insert_and_remove
 
 Expected: compile error because `apply_patch` and tree traversal helpers do not exist yet.
 
-- [ ] **Step 3: Implement patch application**
+- [x] **Step 3: Implement patch application**
 
 Extend `src/retained/mod.rs` with:
 
@@ -595,7 +597,7 @@ Implement `node_mut`, `replace_node`, `move_child`, and `remove_subtree_from_taf
 - recursively remove descendants from Taffy when a subtree is deleted
 - rebuild replacement subtrees with fresh `NodeId`s
 
-- [ ] **Step 4: Run the focused patch tests to verify green**
+- [x] **Step 4: Run the focused patch tests to verify green**
 
 Run:
 
@@ -605,7 +607,7 @@ cargo test retained::tests::update_text_patch retained::tests::insert_and_remove
 
 Expected: all three tests pass.
 
-- [ ] **Step 5: Run full project verification**
+- [x] **Step 5: Run full project verification**
 
 Run:
 
@@ -622,7 +624,7 @@ Expected:
 - `cargo check` exits `0`
 - `cargo test` exits `0`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/lib.rs src/retained/mod.rs

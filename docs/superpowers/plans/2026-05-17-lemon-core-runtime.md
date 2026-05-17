@@ -1,5 +1,7 @@
 # Lemon Core Runtime Implementation Plan
 
+> **Status (2026-05-17):** Implemented on `master` (Layers 1–4). Checkboxes below were left for historical traceability; all tasks are done. Follow-on work lives in later plans (retained tree, component lifecycle, layout, paint, platform).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Implement Lemon's pure core (Layers 1–4 of the architecture spec): reactive runtime (signals, derived, effects, component context), element tree with fluent builders, and the diff/patch engine — all testable in `cargo test` without GPU or OS.
