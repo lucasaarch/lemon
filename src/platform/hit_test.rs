@@ -1,0 +1,177 @@
+//! Hit-testing in logical coordinates against a [`LayoutMap`].
+
+use crate::layout::{LayoutMap, LayoutRect};
+use crate::retained::{RetainedKind, RetainedNode};
+
+/// Cursor position in logical points (pre-HiDPI layout space).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct LogicalPoint {
+    pub x: f32,
+    pub y: f32,
+}
+
+impl LogicalPoint {
+    pub fn new(x: f32, y: f32) -> Self {
+        Self { x, y }
+    }
+}
+
+/// Convert physical pixel coordinates to logical points using the window scale factor.
+pub fn physical_to_logical(physical_x: f64, physical_y: f64, scale_factor: f32) -> LogicalPoint {
+    let scale = f64::from(scale_factor);
+    LogicalPoint::new(
+        (physical_x / scale) as f32,
+        (physical_y / scale) as f32,
+    )
+}
+
+fn point_in_rect(point: LogicalPoint, rect: &LayoutRect) -> bool {
+    point.x >= rect.x
+        && point.x < rect.x + rect.width
+        && point.y >= rect.y
+        && point.y < rect.y + rect.height
+}
+
+/// Walk the retained tree in post-order (children before parents) and return the top-most
+/// node under `point` that has an `on_click` handler.
+pub fn hit_test_on_click<'a>(
+    node: &'a RetainedNode,
+    layout: &LayoutMap,
+    point: LogicalPoint,
+) -> Option<&'a RetainedNode> {
+    if matches!(node.kind, RetainedKind::Component { .. }) {
+        let mut hit = None;
+        for child in &node.children {
+            hit = hit_test_on_click(child, layout, point).or(hit);
+        }
+        return hit;
+    }
+
+    let mut hit = None;
+    for child in &node.children {
+        hit = hit_test_on_click(child, layout, point).or(hit);
+    }
+
+    if node.handlers.on_click.is_some() {
+        if let Some(id) = node.taffy_id {
+            if let Some(rect) = layout.get(id) {
+                if point_in_rect(point, rect) {
+                    hit = Some(node);
+                }
+            }
+        }
+    }
+
+    hit
+}
+
+/// Invoke `on_click` on `node` if present. Returns whether a handler ran.
+pub fn dispatch_click(node: &RetainedNode) -> bool {
+    if let Some(handler) = node.handlers.on_click.as_ref() {
+        handler();
+        true
+    } else {
+        false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::element::builders::{Button, Column, Text};
+    use crate::layout::{layout_pass, Viewport};
+    use crate::retained::RetainedTree;
+    use std::cell::Cell;
+    use std::rc::Rc;
+
+    #[test]
+    fn physical_to_logical_divides_by_scale_factor() {
+        let p = physical_to_logical(200.0, 100.0, 2.0);
+        assert_eq!(p, LogicalPoint::new(100.0, 50.0));
+    }
+
+    #[test]
+    fn hit_test_returns_deepest_clickable_node() {
+        let clicked = Rc::new(Cell::new(false));
+        let flag = clicked.clone();
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(200.0)
+                .height(200.0)
+                .child(
+                    Button::new("Click")
+                        .width(80.0)
+                        .height(40.0)
+                        .on_click(move || flag.set(true)),
+                )
+                .into_element(),
+        )
+        .unwrap();
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 200.0,
+                height: 200.0,
+            },
+            1.0,
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let button = &root.children[0];
+        let rect = layout.get(button.taffy_id.unwrap()).unwrap();
+        let hit = hit_test_on_click(root, &layout, LogicalPoint::new(rect.x + 4.0, rect.y + 4.0));
+
+        assert!(hit.is_some());
+        assert!(dispatch_click(hit.unwrap()));
+        assert!(clicked.get());
+    }
+
+    #[test]
+    fn hit_test_skips_non_clickable_sibling() {
+        let button_clicked = Rc::new(Cell::new(false));
+        let flag = button_clicked.clone();
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(200.0)
+                .height(120.0)
+                .child(Text::new("label").font_size(16.0))
+                .child(
+                    Button::new("OK")
+                        .width(60.0)
+                        .height(30.0)
+                        .on_click(move || flag.set(true)),
+                )
+                .into_element(),
+        )
+        .unwrap();
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 200.0,
+                height: 120.0,
+            },
+            1.0,
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let text_rect = layout.get(root.children[0].taffy_id.unwrap()).unwrap();
+        let miss = hit_test_on_click(
+            root,
+            &layout,
+            LogicalPoint::new(text_rect.x + 2.0, text_rect.y + 2.0),
+        );
+        assert!(miss.is_none());
+
+        let button_rect = layout.get(root.children[1].taffy_id.unwrap()).unwrap();
+        let hit = hit_test_on_click(
+            root,
+            &layout,
+            LogicalPoint::new(button_rect.x + 2.0, button_rect.y + 2.0),
+        );
+        assert!(hit.is_some());
+        dispatch_click(hit.unwrap());
+        assert!(button_clicked.get());
+    }
+}

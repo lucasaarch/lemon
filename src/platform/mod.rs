@@ -1,5 +1,6 @@
 //! Platform layer: winit window, wgpu surface, Vello renderer, and frame loop.
 
+mod hit_test;
 mod window;
 
 use std::num::NonZeroUsize;
@@ -16,9 +17,10 @@ use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::window::{Window, WindowId};
 
 use crate::element::Element;
-use crate::layout::{layout_pass, LayoutMap, LayoutRect, Viewport};
+use crate::layout::{layout_pass, LayoutMap, Viewport};
+use hit_test::{dispatch_click, hit_test_on_click, LogicalPoint};
 use crate::paint::paint_pass;
-use crate::retained::{RetainedKind, RetainedNode, RetainedTree};
+use crate::retained::RetainedTree;
 use crate::runtime::{cx::Cx, Runtime};
 
 pub use window::WindowConfig;
@@ -183,15 +185,24 @@ impl AppState {
         }
     }
 
-    fn handle_click(&mut self, x: f32, y: f32) {
+    /// Route a pointer click through hit-test and dispatch `on_click` (logical coordinates).
+    fn event_pass_click(&mut self, point: LogicalPoint) -> bool {
         let Some(root) = self.retained.as_ref().and_then(|t| t.root.as_ref()) else {
-            return;
+            return false;
         };
-        if let Some(node) = hit_test_clickable(root, &self.layout_map, x, y) {
-            if let Some(handler) = node.handlers.on_click.as_ref() {
-                handler();
-            }
+        let Some(node) = hit_test_on_click(root, &self.layout_map, point) else {
+            return false;
+        };
+        let handled = dispatch_click(node);
+        if handled {
+            self.layout_dirty = true;
+            self.paint_dirty = true;
         }
+        handled
+    }
+
+    fn cursor_logical(&self, physical_x: f64, physical_y: f64) -> LogicalPoint {
+        hit_test::physical_to_logical(physical_x, physical_y, self.scale_factor())
     }
 
     fn present(&mut self) {
@@ -284,43 +295,6 @@ impl AppState {
     }
 }
 
-fn point_in_rect(x: f32, y: f32, rect: &LayoutRect) -> bool {
-    x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
-}
-
-/// Post-order hit test: deepest clickable node wins.
-fn hit_test_clickable<'a>(
-    node: &'a RetainedNode,
-    layout: &LayoutMap,
-    x: f32,
-    y: f32,
-) -> Option<&'a RetainedNode> {
-    let mut hit = None;
-
-    if matches!(node.kind, RetainedKind::Component { .. }) {
-        for child in &node.children {
-            hit = hit_test_clickable(child, layout, x, y).or(hit);
-        }
-        return hit;
-    }
-
-    for child in &node.children {
-        hit = hit_test_clickable(child, layout, x, y).or(hit);
-    }
-
-    if node.handlers.on_click.is_some() {
-        if let Some(id) = node.taffy_id {
-            if let Some(rect) = layout.get(id) {
-                if point_in_rect(x, y, rect) {
-                    hit = Some(node);
-                }
-            }
-        }
-    }
-
-    hit
-}
-
 struct LemonApplication {
     state: Option<AppState>,
 }
@@ -367,8 +341,7 @@ impl ApplicationHandler for LemonApplication {
                 state.request_redraw();
             }
             WindowEvent::CursorMoved { position, .. } => {
-                let scale = state.scale_factor();
-                let logical = position.to_logical(f64::from(scale));
+                let logical = state.cursor_logical(position.x, position.y);
                 state.last_cursor = Some((logical.x, logical.y));
             }
             WindowEvent::MouseInput {
@@ -376,8 +349,11 @@ impl ApplicationHandler for LemonApplication {
                 button: MouseButton::Left,
                 ..
             } => {
-                if let Some((x, y)) = state.last_cursor {
-                    state.handle_click(x, y);
+                let point = state
+                    .last_cursor
+                    .map(|(x, y)| LogicalPoint::new(x, y))
+                    .unwrap_or(LogicalPoint::new(0.0, 0.0));
+                if state.event_pass_click(point) {
                     state.request_redraw();
                 }
             }
@@ -418,46 +394,5 @@ mod tests {
         assert!(state.window.is_none());
         assert!(state.retained.is_none());
         assert!(!state.mounted);
-    }
-
-    #[test]
-    fn hit_test_prefers_deepest_child() {
-        use crate::element::builders::{Button, Column};
-        use crate::layout::layout_pass;
-        use std::rc::Rc;
-        use std::cell::Cell;
-
-        let clicked = Rc::new(Cell::new(false));
-        let flag = clicked.clone();
-        let mut tree = RetainedTree::mount(
-            Column::new()
-                .width(200.0)
-                .height(200.0)
-                .child(
-                    Button::new("Click")
-                        .width(80.0)
-                        .height(40.0)
-                        .on_click(move || flag.set(true)),
-                )
-                .into_element(),
-        )
-        .unwrap();
-        let layout = layout_pass(
-            &mut tree,
-            Viewport {
-                width: 200.0,
-                height: 200.0,
-            },
-            1.0,
-        )
-        .unwrap();
-
-        let root = tree.root.as_ref().unwrap();
-        let button = &root.children[0];
-        let rect = layout.get(button.taffy_id.unwrap()).unwrap();
-        let hit = hit_test_clickable(root, &layout, rect.x + 1.0, rect.y + 1.0);
-        assert!(hit.is_some());
-        hit.unwrap().handlers.on_click.as_ref().unwrap()();
-        assert!(clicked.get());
     }
 }
