@@ -9,11 +9,18 @@ thread_local! {
     static OBSERVER_STACK: RefCell<Vec<Weak<dyn Subscriber>>> = RefCell::new(Vec::new());
 }
 
+struct StackGuard;
+
+impl Drop for StackGuard {
+    fn drop(&mut self) {
+        OBSERVER_STACK.with(|stack| { stack.borrow_mut().pop(); });
+    }
+}
+
 pub fn with_observer<R>(observer: Weak<dyn Subscriber>, f: impl FnOnce() -> R) -> R {
     OBSERVER_STACK.with(|stack| stack.borrow_mut().push(observer));
-    let result = f();
-    OBSERVER_STACK.with(|stack| { stack.borrow_mut().pop(); });
-    result
+    let _guard = StackGuard;
+    f()
 }
 
 pub fn current_observer() -> Option<Weak<dyn Subscriber>> {
