@@ -2,8 +2,8 @@ use parley::PositionedLayoutItem;
 use taffy::NodeId;
 use vello::kurbo::{Affine, Line, Rect, RoundedRect, Stroke};
 use vello::peniko::{
-    color::AlphaColor, BlendMode, Blob, Color as PenikoColor, Fill, ImageAlphaType, ImageBrush,
-    ImageData as PenikoImageData, ImageFormat,
+    color::AlphaColor, BlendMode, Blob, Color as PenikoColor, Fill, Gradient, ImageAlphaType,
+    ImageBrush, ImageData as PenikoImageData, ImageFormat,
 };
 use vello::{Glyph, Scene};
 
@@ -254,13 +254,19 @@ fn paint_container(
 
     let shape = layout_rect_to_rounded(rect, &node.paint.radius);
 
-    if let Some(background) = node.paint.background {
+    if let Some(shadow) = node.paint.box_shadow {
+        paint_box_shadow(scene, ctx, rect, &node.paint.radius, shadow, stats);
+    }
+
+    if let Some(gradient) = node.paint.background_gradient {
+        fill_gradient_rounded_rect(scene, ctx, rect, &shape, gradient, stats);
+    } else if let Some(background) = node.paint.background {
         fill_rounded_rect(scene, ctx, &shape, background, stats);
     }
 
-    if let Some(border_color) = node.paint.border_color {
-        let widths = &node.paint.border_width;
-        if widths.any_positive() {
+    let widths = &node.paint.border_width;
+    if widths.any_positive() {
+        if let Some(border_color) = uniform_border_color(&node.paint.border_color) {
             if widths.is_uniform() {
                 stroke_rounded_rect(
                     scene,
@@ -277,12 +283,50 @@ fn paint_container(
                     rect,
                     &node.paint.radius,
                     *widths,
-                    border_color,
+                    &node.paint.border_color,
                     stats,
                 );
             }
+        } else {
+            paint_per_side_borders(
+                scene,
+                ctx,
+                rect,
+                &node.paint.radius,
+                *widths,
+                &node.paint.border_color,
+                stats,
+            );
         }
     }
+}
+
+fn paint_box_shadow(
+    scene: &mut Scene,
+    ctx: PaintContext,
+    rect: &LayoutRect,
+    radii: &CornerRadii,
+    shadow: crate::element::style::BoxShadow,
+    stats: &mut PaintStats,
+) {
+    if shadow.color.a <= 0.0 {
+        return;
+    }
+
+    let shadow_rect = Rect::new(
+        f64::from(rect.x + shadow.offset_x),
+        f64::from(rect.y + shadow.offset_y),
+        f64::from(rect.x + rect.width + shadow.offset_x),
+        f64::from(rect.y + rect.height + shadow.offset_y),
+    );
+    scene.draw_blurred_rounded_rect(
+        ctx.base,
+        shadow_rect,
+        to_peniko_color(shadow.color),
+        shadow_radius(radii),
+        f64::from(shadow.blur_radius.max(0.0)),
+    );
+    stats.fills += 1;
 }
 
 /// Fills rectangular strips for each side that has a positive border width.
@@ -292,10 +336,9 @@ fn paint_per_side_borders(
     rect: &LayoutRect,
     radii: &CornerRadii,
     widths: Edges<f32>,
-    color: Color,
+    colors: &Edges<Option<Color>>,
     stats: &mut PaintStats,
 ) {
-    let brush = to_peniko_color(color);
     let x = f64::from(rect.x);
     let y = f64::from(rect.y);
     let w = f64::from(rect.width);
@@ -307,28 +350,36 @@ fn paint_per_side_borders(
     let bl = f64::from(radii.bottom_left.min(rect.width * 0.5));
 
     if widths.top > 0.0 {
-        let t = f64::from(widths.top);
-        let bar = Rect::new(x + tl, y, x + w - tr, y + t);
-        scene.fill(Fill::NonZero, ctx.base, brush, None, &bar);
-        stats.fills += 1;
+        if let Some(color) = colors.top {
+            let t = f64::from(widths.top);
+            let bar = Rect::new(x + tl, y, x + w - tr, y + t);
+            scene.fill(Fill::NonZero, ctx.base, to_peniko_color(color), None, &bar);
+            stats.fills += 1;
+        }
     }
     if widths.bottom > 0.0 {
-        let b = f64::from(widths.bottom);
-        let bar = Rect::new(x + bl, y + h - b, x + w - br, y + h);
-        scene.fill(Fill::NonZero, ctx.base, brush, None, &bar);
-        stats.fills += 1;
+        if let Some(color) = colors.bottom {
+            let b = f64::from(widths.bottom);
+            let bar = Rect::new(x + bl, y + h - b, x + w - br, y + h);
+            scene.fill(Fill::NonZero, ctx.base, to_peniko_color(color), None, &bar);
+            stats.fills += 1;
+        }
     }
     if widths.left > 0.0 {
-        let l = f64::from(widths.left);
-        let bar = Rect::new(x, y + tl, x + l, y + h - bl);
-        scene.fill(Fill::NonZero, ctx.base, brush, None, &bar);
-        stats.fills += 1;
+        if let Some(color) = colors.left {
+            let l = f64::from(widths.left);
+            let bar = Rect::new(x, y + tl, x + l, y + h - bl);
+            scene.fill(Fill::NonZero, ctx.base, to_peniko_color(color), None, &bar);
+            stats.fills += 1;
+        }
     }
     if widths.right > 0.0 {
-        let r = f64::from(widths.right);
-        let bar = Rect::new(x + w - r, y + tr, x + w, y + h - br);
-        scene.fill(Fill::NonZero, ctx.base, brush, None, &bar);
-        stats.fills += 1;
+        if let Some(color) = colors.right {
+            let r = f64::from(widths.right);
+            let bar = Rect::new(x + w - r, y + tr, x + w, y + h - br);
+            scene.fill(Fill::NonZero, ctx.base, to_peniko_color(color), None, &bar);
+            stats.fills += 1;
+        }
     }
 }
 
@@ -490,6 +541,19 @@ fn fill_rounded_rect(
     stats.fills += 1;
 }
 
+fn fill_gradient_rounded_rect(
+    scene: &mut Scene,
+    ctx: PaintContext,
+    rect: &LayoutRect,
+    shape: &RoundedRect,
+    gradient: crate::element::style::LinearGradient,
+    stats: &mut PaintStats,
+) {
+    let brush = to_peniko_gradient(rect, gradient);
+    scene.fill(Fill::NonZero, ctx.base, &brush, None, shape);
+    stats.fills += 1;
+}
+
 fn stroke_rounded_rect(
     scene: &mut Scene,
     ctx: PaintContext,
@@ -525,6 +589,45 @@ fn layout_rect_to_rounded(rect: &LayoutRect, radii: &CornerRadii) -> RoundedRect
 
 fn to_peniko_color(color: Color) -> PenikoColor {
     AlphaColor::new([color.r, color.g, color.b, color.a])
+}
+
+fn to_peniko_gradient(
+    rect: &LayoutRect,
+    gradient: crate::element::style::LinearGradient,
+) -> Gradient {
+    let start = (
+        rect.x + rect.width * gradient.start.0,
+        rect.y + rect.height * gradient.start.1,
+    );
+    let end = (
+        rect.x + rect.width * gradient.end.0,
+        rect.y + rect.height * gradient.end.1,
+    );
+    Gradient::new_linear(start, end).with_stops([
+        to_peniko_color(gradient.start_color),
+        to_peniko_color(gradient.end_color),
+    ])
+}
+
+fn uniform_border_color(colors: &Edges<Option<Color>>) -> Option<Color> {
+    match (colors.top, colors.right, colors.bottom, colors.left) {
+        (Some(top), Some(right), Some(bottom), Some(left))
+            if top == right && right == bottom && bottom == left =>
+        {
+            Some(top)
+        }
+        _ => None,
+    }
+}
+
+fn shadow_radius(radii: &CornerRadii) -> f64 {
+    f64::from(
+        radii
+            .top_left
+            .max(radii.top_right)
+            .max(radii.bottom_right)
+            .max(radii.bottom_left),
+    )
 }
 
 fn resolved_opacity(opacity: f32) -> f32 {
@@ -866,6 +969,51 @@ mod tests {
     }
 
     #[test]
+    fn column_with_linear_gradient_emits_fill() {
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(100.0)
+                .height(80.0)
+                .linear_gradient(crate::element::style::LinearGradient::new(
+                    (0.0, 0.0),
+                    (1.0, 1.0),
+                    Color::rgb8(40, 80, 120),
+                    Color::rgb8(120, 80, 40),
+                ))
+                .into_element(),
+        )
+        .unwrap();
+
+        let stats = layout_and_paint(&mut tree, 1.0);
+
+        assert_eq!(stats.fills, 1);
+        assert_eq!(stats.strokes, 0);
+    }
+
+    #[test]
+    fn column_with_box_shadow_emits_fill_before_background() {
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(100.0)
+                .height(80.0)
+                .box_shadow(crate::element::style::BoxShadow::new(
+                    Color::rgb8(0, 0, 0).with_alpha(0.25),
+                    0.0,
+                    6.0,
+                    12.0,
+                ))
+                .background(Color::rgb8(40, 80, 120))
+                .into_element(),
+        )
+        .unwrap();
+
+        let stats = layout_and_paint(&mut tree, 1.0);
+
+        assert_eq!(stats.fills, 2, "shadow then background");
+        assert_eq!(stats.strokes, 0);
+    }
+
+    #[test]
     fn container_border_emits_stroke() {
         let mut tree = RetainedTree::mount(
             Column::new()
@@ -880,6 +1028,27 @@ mod tests {
 
         assert_eq!(stats.fills, 0);
         assert_eq!(stats.strokes, 1);
+    }
+
+    #[test]
+    fn container_border_colors_per_side_emit_one_fill_per_side() {
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(100.0)
+                .height(80.0)
+                .border(Color::rgb8(255, 0, 0), 2.0)
+                .border_color_top(Color::rgb8(255, 0, 0))
+                .border_color_right(Color::rgb8(0, 255, 0))
+                .border_color_bottom(Color::rgb8(0, 0, 255))
+                .border_color_left(Color::rgb8(255, 255, 0))
+                .into_element(),
+        )
+        .unwrap();
+
+        let stats = layout_and_paint(&mut tree, 1.0);
+
+        assert_eq!(stats.fills, 4, "each side is painted separately");
+        assert_eq!(stats.strokes, 0);
     }
 
     #[test]

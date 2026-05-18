@@ -2,7 +2,10 @@ use std::rc::Rc;
 
 use crate::element::{
     content::TextContent,
-    style::{Color, ColorSource, CornerRadii, Edges, Overflow, PaintProps, StyleProps, TextStyle},
+    style::{
+        BoxShadow, Color, ColorSource, CornerRadii, Edges, LinearGradient, Overflow, PaintProps,
+        StyleProps, TextStyle,
+    },
     types::{BoxElement, ComponentElement, ComponentFn, Key, TextElement},
     Element,
 };
@@ -137,52 +140,94 @@ macro_rules! container_builder {
                 self.0.style.z_index = z;
                 self
             }
+            /// Solid fill painted inside this container’s rounded bounds.
+            ///
+            /// Calling this clears any previously configured [`linear_gradient`](Self::linear_gradient).
             pub fn background(mut self, c: impl Into<ColorSource>) -> Self {
                 self.0.paint.background = Some(c.into());
+                self.0.paint.background_gradient = None;
+                self
+            }
+            /// Two-stop linear gradient fill painted inside this container’s rounded bounds.
+            pub fn linear_gradient(mut self, gradient: LinearGradient) -> Self {
+                self.0.paint.background_gradient = Some(gradient);
+                self.0.paint.background = None;
+                self
+            }
+            /// Blurred outer shadow painted before the background and borders.
+            pub fn box_shadow(mut self, shadow: BoxShadow) -> Self {
+                self.0.paint.box_shadow = Some(shadow);
                 self
             }
             /// Border color and uniform width on all sides, in logical points.
             pub fn border(mut self, color: Color, width: f32) -> Self {
-                self.0.paint.border_color = Some(ColorSource::Static(color));
+                self.0.paint.border_color = Edges::all(Some(ColorSource::Static(color)));
                 self.0.paint.border_width = Edges::all(width);
                 self
             }
             /// Border on the top side only (sets color and width for that side).
             pub fn border_top(mut self, color: Color, width: f32) -> Self {
-                self.0.paint.border_color = Some(ColorSource::Static(color));
+                self.0.paint.border_color.top = Some(ColorSource::Static(color));
                 self.0.paint.border_width.top = width;
                 self
             }
             /// Border on the right side only.
             pub fn border_right(mut self, color: Color, width: f32) -> Self {
-                self.0.paint.border_color = Some(ColorSource::Static(color));
+                self.0.paint.border_color.right = Some(ColorSource::Static(color));
                 self.0.paint.border_width.right = width;
                 self
             }
             /// Border on the bottom side only.
             pub fn border_bottom(mut self, color: Color, width: f32) -> Self {
-                self.0.paint.border_color = Some(ColorSource::Static(color));
+                self.0.paint.border_color.bottom = Some(ColorSource::Static(color));
                 self.0.paint.border_width.bottom = width;
                 self
             }
             /// Border on the left side only.
             pub fn border_left(mut self, color: Color, width: f32) -> Self {
-                self.0.paint.border_color = Some(ColorSource::Static(color));
+                self.0.paint.border_color.left = Some(ColorSource::Static(color));
                 self.0.paint.border_width.left = width;
                 self
             }
             /// Border on the left and right sides.
             pub fn border_x(mut self, color: Color, width: f32) -> Self {
-                self.0.paint.border_color = Some(ColorSource::Static(color));
+                self.0.paint.border_color.left = Some(ColorSource::Static(color));
+                self.0.paint.border_color.right = Some(ColorSource::Static(color));
                 self.0.paint.border_width.left = width;
                 self.0.paint.border_width.right = width;
                 self
             }
             /// Border on the top and bottom sides.
             pub fn border_y(mut self, color: Color, width: f32) -> Self {
-                self.0.paint.border_color = Some(ColorSource::Static(color));
+                self.0.paint.border_color.top = Some(ColorSource::Static(color));
+                self.0.paint.border_color.bottom = Some(ColorSource::Static(color));
                 self.0.paint.border_width.top = width;
                 self.0.paint.border_width.bottom = width;
+                self
+            }
+            /// Uniform border color on all sides, preserving existing widths.
+            pub fn border_color(mut self, color: Color) -> Self {
+                self.0.paint.border_color = Edges::all(Some(ColorSource::Static(color)));
+                self
+            }
+            /// Top border color only.
+            pub fn border_color_top(mut self, color: Color) -> Self {
+                self.0.paint.border_color.top = Some(ColorSource::Static(color));
+                self
+            }
+            /// Right border color only.
+            pub fn border_color_right(mut self, color: Color) -> Self {
+                self.0.paint.border_color.right = Some(ColorSource::Static(color));
+                self
+            }
+            /// Bottom border color only.
+            pub fn border_color_bottom(mut self, color: Color) -> Self {
+                self.0.paint.border_color.bottom = Some(ColorSource::Static(color));
+                self
+            }
+            /// Left border color only.
+            pub fn border_color_left(mut self, color: Color) -> Self {
+                self.0.paint.border_color.left = Some(ColorSource::Static(color));
                 self
             }
             /// Top border width only (other sides unchanged; set [`border`](Self::border) color first).
@@ -622,9 +667,23 @@ impl Button {
         self.style.padding = Some(Edges::all(v));
         self
     }
-    /// Fill color behind the label ([`Color`] or reactive [`ColorSource`]).
+    /// Solid fill behind the label ([`Color`] or reactive [`ColorSource`]).
+    ///
+    /// Calling this clears any previously configured [`linear_gradient`](Self::linear_gradient).
     pub fn background(mut self, c: impl Into<ColorSource>) -> Self {
         self.paint.background = Some(c.into());
+        self.paint.background_gradient = None;
+        self
+    }
+    /// Two-stop linear gradient fill painted behind the label.
+    pub fn linear_gradient(mut self, gradient: LinearGradient) -> Self {
+        self.paint.background_gradient = Some(gradient);
+        self.paint.background = None;
+        self
+    }
+    /// Blurred outer shadow painted before the button background.
+    pub fn box_shadow(mut self, shadow: BoxShadow) -> Self {
+        self.paint.box_shadow = Some(shadow);
         self
     }
     pub fn radius(mut self, r: f32) -> Self {
@@ -842,6 +901,57 @@ mod tests {
         assert_eq!(b.right, 5.0);
         assert_eq!(b.bottom, 5.0);
         assert_eq!(b.left, 5.0);
+    }
+
+    #[test]
+    fn border_color_top_does_not_overwrite_other_sides() {
+        let Element::Column(el) = Column::new()
+            .border(Color::rgb8(1, 2, 3), 5.0)
+            .border_color_top(Color::rgb8(9, 8, 7))
+            .into_element()
+        else {
+            panic!()
+        };
+        let colors = el.paint.resolve().border_color;
+        assert_eq!(colors.top, Some(Color::rgb8(9, 8, 7)));
+        assert_eq!(colors.right, Some(Color::rgb8(1, 2, 3)));
+        assert_eq!(colors.bottom, Some(Color::rgb8(1, 2, 3)));
+        assert_eq!(colors.left, Some(Color::rgb8(1, 2, 3)));
+    }
+
+    #[test]
+    fn linear_gradient_replaces_solid_background() {
+        let Element::View(el) = View::new()
+            .background(Color::rgb8(1, 2, 3))
+            .linear_gradient(LinearGradient::new(
+                (0.0, 0.0),
+                (1.0, 1.0),
+                Color::rgb8(10, 20, 30),
+                Color::rgb8(40, 50, 60),
+            ))
+            .into_element()
+        else {
+            panic!()
+        };
+        assert!(el.paint.background.is_none());
+        assert_eq!(
+            el.paint.background_gradient,
+            Some(LinearGradient::new(
+                (0.0, 0.0),
+                (1.0, 1.0),
+                Color::rgb8(10, 20, 30),
+                Color::rgb8(40, 50, 60),
+            ))
+        );
+    }
+
+    #[test]
+    fn box_builder_sets_box_shadow() {
+        let shadow = BoxShadow::new(Color::rgb8(0, 0, 0).with_alpha(0.25), 0.0, 6.0, 12.0);
+        let Element::View(el) = View::new().box_shadow(shadow).into_element() else {
+            panic!()
+        };
+        assert_eq!(el.paint.box_shadow, Some(shadow));
     }
 
     #[test]

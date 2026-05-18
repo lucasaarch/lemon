@@ -329,7 +329,10 @@ mod tests {
             Some(lemon::element::style::Edges::all(custom.spacing.sm))
         );
         let paint = view.paint.resolve();
-        assert_eq!(paint.border_color, Some(custom.colors.border));
+        assert_eq!(
+            paint.border_color,
+            lemon::element::style::Edges::all(Some(custom.colors.border))
+        );
         assert_eq!(paint.radius, CornerRadii::all(custom.radius.sm));
 
         let Element::Row(row) = &view.children[0] else {
@@ -390,7 +393,10 @@ mod tests {
             "unset padding should fall back to theme default"
         );
         let paint = view.paint.resolve();
-        assert_eq!(paint.border_color, Some(Color::rgb8(1, 2, 3)));
+        assert_eq!(
+            paint.border_color,
+            lemon::element::style::Edges::all(Some(Color::rgb8(1, 2, 3)))
+        );
         assert_eq!(paint.focus_ring_color, Some(Color::rgb8(4, 5, 6)));
 
         let Element::Row(row) = &view.children[0] else {
