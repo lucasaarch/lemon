@@ -198,6 +198,10 @@ impl ComponentElement {
         }
     }
 
+    pub(crate) fn has_props(&self) -> bool {
+        self.props.is_some()
+    }
+
     pub(crate) fn with_key(mut self, key: Key) -> Self {
         self.key = Some(key);
         self
