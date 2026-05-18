@@ -1,0 +1,12 @@
+[package]
+name = "lemon-widgets"
+version.workspace = true
+edition.workspace = true
+description = "UI widget library for the Lemon toolkit"
+license.workspace = true
+repository.workspace = true
+keywords = ["ui", "gui", "widgets", "reactive"]
+categories = ["gui"]
+
+[dependencies]
+lemon = { workspace = true }

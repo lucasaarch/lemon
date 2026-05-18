@@ -63,6 +63,44 @@ macro_rules! container_builder {
                 self.0.children.push(el.into());
                 self
             }
+            pub fn on_click(mut self, f: impl Fn() + 'static) -> Self {
+                self.0.handlers.on_click = Some(Rc::new(f));
+                self
+            }
+            pub fn on_key_down(
+                mut self,
+                f: impl Fn(crate::element::events::KeyEvent) + 'static,
+            ) -> Self {
+                self.0.handlers.on_key_down = Some(Rc::new(f));
+                self
+            }
+            pub fn on_key_up(
+                mut self,
+                f: impl Fn(crate::element::events::KeyEvent) + 'static,
+            ) -> Self {
+                self.0.handlers.on_key_up = Some(Rc::new(f));
+                self
+            }
+            pub fn on_hover_enter(mut self, f: impl Fn() + 'static) -> Self {
+                self.0.handlers.on_hover_enter = Some(Rc::new(f));
+                self
+            }
+            pub fn on_hover_leave(mut self, f: impl Fn() + 'static) -> Self {
+                self.0.handlers.on_hover_leave = Some(Rc::new(f));
+                self
+            }
+            pub fn focusable(mut self) -> Self {
+                self.0.style.focusable = true;
+                self
+            }
+            pub fn cursor(mut self, c: crate::element::events::Cursor) -> Self {
+                self.0.style.cursor = c;
+                self
+            }
+            pub fn key(mut self, key: u64) -> Self {
+                self.0.key = Some(Key(key));
+                self
+            }
             pub fn into_element(self) -> Element {
                 Element::$variant(self.0)
             }
@@ -245,6 +283,37 @@ mod tests {
             panic!()
         };
         assert_eq!(el.children.len(), 2);
+    }
+
+    #[test]
+    fn box_builder_sets_key() {
+        let Element::Box_(el) = Box_::new().key(9).into_element() else {
+            panic!()
+        };
+        assert_eq!(el.key, Some(Key(9)));
+    }
+
+    #[test]
+    fn box_builder_sets_focusable_cursor_and_handlers() {
+        let Element::Box_(el) = Box_::new()
+            .focusable()
+            .cursor(crate::element::events::Cursor::Pointer)
+            .on_click(|| {})
+            .on_hover_enter(|| {})
+            .on_hover_leave(|| {})
+            .on_key_down(|_| {})
+            .on_key_up(|_| {})
+            .into_element()
+        else {
+            panic!()
+        };
+        assert!(el.style.focusable);
+        assert_eq!(el.style.cursor, crate::element::events::Cursor::Pointer);
+        assert!(el.handlers.on_click.is_some());
+        assert!(el.handlers.on_hover_enter.is_some());
+        assert!(el.handlers.on_hover_leave.is_some());
+        assert!(el.handlers.on_key_down.is_some());
+        assert!(el.handlers.on_key_up.is_some());
     }
 
     #[test]

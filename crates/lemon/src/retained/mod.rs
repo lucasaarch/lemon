@@ -1,3 +1,5 @@
+pub mod focus;
+
 use std::rc::Rc;
 
 use taffy::{NodeId, Rect, Size, Style, TaffyTree};
@@ -41,7 +43,10 @@ impl std::fmt::Debug for TextCache {
             .field("content", &self.content)
             .field("style", &self.style)
             .field("needs_layout", &self.needs_layout)
-            .field("parley_layout", &self.parley_layout.as_ref().map(|_| "Layout"))
+            .field(
+                "parley_layout",
+                &self.parley_layout.as_ref().map(|_| "Layout"),
+            )
             .field("layout_max_width", &self.layout_max_width)
             .finish()
     }
@@ -59,12 +64,32 @@ impl PartialEq for TextCache {
 #[derive(Clone, Default)]
 pub struct EventHandlers {
     pub on_click: Option<Rc<dyn Fn()>>,
+    pub on_key_down: Option<Rc<dyn Fn(crate::element::events::KeyEvent)>>,
+    pub on_key_up: Option<Rc<dyn Fn(crate::element::events::KeyEvent)>>,
+    pub on_hover_enter: Option<Rc<dyn Fn()>>,
+    pub on_hover_leave: Option<Rc<dyn Fn()>>,
 }
 
 impl std::fmt::Debug for EventHandlers {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("EventHandlers")
             .field("on_click", &self.on_click.as_ref().map(|_| "Rc<dyn Fn()>"))
+            .field(
+                "on_key_down",
+                &self.on_key_down.as_ref().map(|_| "Rc<dyn Fn(KeyEvent)>"),
+            )
+            .field(
+                "on_key_up",
+                &self.on_key_up.as_ref().map(|_| "Rc<dyn Fn(KeyEvent)>"),
+            )
+            .field(
+                "on_hover_enter",
+                &self.on_hover_enter.as_ref().map(|_| "Rc<dyn Fn()>"),
+            )
+            .field(
+                "on_hover_leave",
+                &self.on_hover_leave.as_ref().map(|_| "Rc<dyn Fn()>"),
+            )
             .finish()
     }
 }
@@ -188,12 +213,19 @@ impl RetainedTree {
         kind: RetainedKind,
         node: BoxElement,
     ) -> Result<RetainedNode, RetainedError> {
-        let mut children = Vec::with_capacity(node.children.len());
-        for child in node.children {
+        let BoxElement {
+            style: node_style,
+            paint,
+            children: node_children,
+            key: _,
+            handlers,
+        } = node;
+        let mut children = Vec::with_capacity(node_children.len());
+        for child in node_children {
             children.push(self.build_node(child)?);
         }
 
-        let mut style = node.style.to_taffy_style();
+        let mut style = node_style.to_taffy_style();
         style.flex_direction = match kind {
             RetainedKind::Column => taffy::FlexDirection::Column,
             RetainedKind::Row => taffy::FlexDirection::Row,
@@ -209,10 +241,10 @@ impl RetainedTree {
         Ok(RetainedNode {
             kind,
             taffy_id: Some(taffy_id),
-            style: node.style,
-            paint: node.paint.resolve(),
+            style: node_style,
+            paint: paint.resolve(),
             children,
-            handlers: EventHandlers::default(),
+            handlers,
             text: None,
         })
     }
@@ -242,6 +274,7 @@ impl RetainedTree {
             children: Vec::new(),
             handlers: EventHandlers {
                 on_click: node.on_click,
+                ..Default::default()
             },
             text: Some(TextCache {
                 content: label,
@@ -670,7 +703,8 @@ mod tests {
     use std::{cell::Cell, rc::Rc};
 
     use crate::diff::{NodePath, Patch};
-    use crate::element::builders::{Button, Column, Text};
+    use crate::element::builders::{Box_, Button, Column, Text};
+    use crate::element::events::{KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
     use crate::element::style::{Align, Color, Dimension, Edges, Justify, StyleProps};
     use crate::element::types::ComponentElement;
 
@@ -689,6 +723,7 @@ mod tests {
             align_items: Some(Align::Center),
             justify_content: Some(Justify::SpaceBetween),
             align_self: Some(Align::Start),
+            ..Default::default()
         };
 
         let taffy_style = style.to_taffy_style();
@@ -963,5 +998,60 @@ mod tests {
         let root = tree.root.as_ref().unwrap();
         assert!(matches!(root.kind, RetainedKind::Text));
         assert_eq!(root.text_content(), Some("root"));
+    }
+
+    #[test]
+    fn box_element_hover_handlers_are_applied_to_retained_node() {
+        let entered = Rc::new(Cell::new(false));
+        let left = Rc::new(Cell::new(false));
+        let e = entered.clone();
+        let l = left.clone();
+
+        let element = Box_::new()
+            .width(100.0)
+            .height(100.0)
+            .on_hover_enter(move || e.set(true))
+            .on_hover_leave(move || l.set(true))
+            .into_element();
+
+        let tree = RetainedTree::mount(element).unwrap();
+        let root = tree.root.as_ref().unwrap();
+        assert!(root.handlers.on_hover_enter.is_some());
+        assert!(root.handlers.on_hover_leave.is_some());
+
+        root.handlers.on_hover_enter.as_ref().unwrap()();
+        assert!(entered.get());
+        root.handlers.on_hover_leave.as_ref().unwrap()();
+        assert!(left.get());
+    }
+
+    #[test]
+    fn box_element_key_down_handler_is_applied_to_retained_node() {
+        use std::cell::RefCell;
+
+        let received = Rc::new(RefCell::new(None::<LemonKey>));
+        let r = received.clone();
+
+        let element = Box_::new()
+            .width(100.0)
+            .height(100.0)
+            .focusable()
+            .on_key_down(move |ev: KeyEvent| {
+                *r.borrow_mut() = Some(ev.key.clone());
+            })
+            .into_element();
+
+        let tree = RetainedTree::mount(element).unwrap();
+        let root = tree.root.as_ref().unwrap();
+        assert!(root.style.focusable);
+        assert!(root.handlers.on_key_down.is_some());
+
+        root.handlers.on_key_down.as_ref().unwrap()(KeyEvent {
+            key: LemonKey::Named(NamedKey::Enter),
+            modifiers: Modifiers::default(),
+            repeat: false,
+            state: KeyState::Pressed,
+        });
+        assert_eq!(*received.borrow(), Some(LemonKey::Named(NamedKey::Enter)));
     }
 }

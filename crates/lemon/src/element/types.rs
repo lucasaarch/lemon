@@ -21,6 +21,7 @@ pub struct BoxElement {
     pub paint: PaintProps,
     pub children: Vec<crate::element::Element>,
     pub key: Option<Key>,
+    pub handlers: crate::retained::EventHandlers,
 }
 
 #[derive(Clone)]

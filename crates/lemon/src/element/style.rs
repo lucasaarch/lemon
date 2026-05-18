@@ -80,6 +80,8 @@ pub struct StyleProps {
     pub justify_content: Option<Justify>,
     /// Cross-axis alignment when this node is a flex child (e.g. avoid stretch in a column).
     pub align_self: Option<Align>,
+    pub focusable: bool,
+    pub cursor: crate::element::events::Cursor,
 }
 
 /// Color as RGBA floats in 0.0–1.0.

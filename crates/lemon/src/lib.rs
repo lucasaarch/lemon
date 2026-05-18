@@ -7,6 +7,7 @@ pub mod retained;
 pub mod runtime;
 
 pub use element::builders::{Box_, Button, Column, Component, Row, Text};
+pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 pub use element::style::{Color, StyleProps};
 pub use layout::{layout_pass, layout_pass_if_dirty, LayoutMap, LayoutRect, Viewport};
 pub use paint::{paint_pass, PaintStats};
@@ -155,7 +156,9 @@ mod tests {
         rt.flush_effects();
         let patches = rt.take_patches();
         assert!(
-            patches.iter().any(|p| matches!(p, Patch::UpdateText { .. })),
+            patches
+                .iter()
+                .any(|p| matches!(p, Patch::UpdateText { .. })),
             "expected UpdateText patch, got {patches:?}"
         );
         tree.apply_patches(patches).unwrap();
@@ -169,11 +172,13 @@ mod tests {
             updated_content.contains("Line three"),
             "retained text not updated: {updated_content:?}"
         );
-        assert!(tree.root.as_ref().unwrap().children[0]
-            .text
-            .as_ref()
-            .unwrap()
-            .needs_layout);
+        assert!(
+            tree.root.as_ref().unwrap().children[0]
+                .text
+                .as_ref()
+                .unwrap()
+                .needs_layout
+        );
 
         assert!(tree.layout_dirty);
         let map_after = layout_pass_if_dirty(&mut tree, viewport, 1.0)
@@ -186,11 +191,13 @@ mod tests {
             "height should grow after longer text: before={height_before} after={height_after}"
         );
         assert!(!tree.layout_dirty);
-        assert!(!tree.root.as_ref().unwrap().children[0]
-            .text
-            .as_ref()
-            .unwrap()
-            .needs_layout);
+        assert!(
+            !tree.root.as_ref().unwrap().children[0]
+                .text
+                .as_ref()
+                .unwrap()
+                .needs_layout
+        );
     }
 
     #[test]

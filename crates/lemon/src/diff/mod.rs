@@ -318,12 +318,7 @@ fn diff_children_keyed(
     }
 }
 
-fn push_insert_child(
-    element: Element,
-    parent: &NodePath,
-    index: usize,
-    patches: &mut Vec<Patch>,
-) {
+fn push_insert_child(element: Element, parent: &NodePath, index: usize, patches: &mut Vec<Patch>) {
     match element {
         Element::Component(component) => patches.push(Patch::MountComponent {
             node: parent.child(index),
@@ -337,12 +332,7 @@ fn push_insert_child(
     }
 }
 
-fn push_remove_child(
-    element: &Element,
-    parent: &NodePath,
-    index: usize,
-    patches: &mut Vec<Patch>,
-) {
+fn push_remove_child(element: &Element, parent: &NodePath, index: usize, patches: &mut Vec<Patch>) {
     match element {
         Element::Component(_) => patches.push(Patch::UnmountComponent {
             node: parent.child(index),
@@ -641,22 +631,17 @@ mod tests {
 
         let patches = diff(old, new, NodePath::root());
 
-        assert!(patches.iter().any(|patch| {
-            matches!(patch, Patch::MoveChild { from: 1, to: 0, .. })
-        }));
+        assert!(patches
+            .iter()
+            .any(|patch| { matches!(patch, Patch::MoveChild { from: 1, to: 0, .. }) }));
         assert!(!patches.iter().any(|patch| {
-            matches!(
-                patch,
-                Patch::RemoveChild { .. } | Patch::InsertChild { .. }
-            )
+            matches!(patch, Patch::RemoveChild { .. } | Patch::InsertChild { .. })
         }));
     }
 
     #[test]
     fn keyed_insert_emits_insert_child_at_target_index() {
-        let old = Column::new()
-            .child(Text::new("a").key(1))
-            .into_element();
+        let old = Column::new().child(Text::new("a").key(1)).into_element();
         let new = Column::new()
             .child(Text::new("a").key(1))
             .child(Text::new("b").key(2))
@@ -676,9 +661,7 @@ mod tests {
             .child(Text::new("a").key(1))
             .child(Text::new("b").key(2))
             .into_element();
-        let new = Column::new()
-            .child(Text::new("a").key(1))
-            .into_element();
+        let new = Column::new().child(Text::new("a").key(1)).into_element();
 
         let patches = diff(old, new, NodePath::root());
 
@@ -690,12 +673,8 @@ mod tests {
 
     #[test]
     fn keyed_key_change_removes_old_and_inserts_new() {
-        let old = Column::new()
-            .child(Text::new("a").key(1))
-            .into_element();
-        let new = Column::new()
-            .child(Text::new("b").key(2))
-            .into_element();
+        let old = Column::new().child(Text::new("a").key(1)).into_element();
+        let new = Column::new().child(Text::new("b").key(2)).into_element();
 
         let patches = diff(old, new, NodePath::root());
 
@@ -707,7 +686,9 @@ mod tests {
             patches.get(1),
             Some(Patch::InsertChild { index: 0, .. })
         ));
-        assert!(!patches.iter().any(|patch| matches!(patch, Patch::UpdateText { .. })));
+        assert!(!patches
+            .iter()
+            .any(|patch| matches!(patch, Patch::UpdateText { .. })));
     }
 
     #[test]
@@ -716,9 +697,7 @@ mod tests {
             Text::new("child").into_element()
         }
 
-        let old = Column::new()
-            .child(Text::new("a").key(1))
-            .into_element();
+        let old = Column::new().child(Text::new("a").key(1)).into_element();
         let new = Column::new()
             .child(Text::new("a").key(1))
             .child(Component::new(child).key(2))
@@ -742,9 +721,7 @@ mod tests {
             .child(Text::new("a").key(1))
             .child(Component::new(child).key(2))
             .into_element();
-        let new = Column::new()
-            .child(Text::new("a").key(1))
-            .into_element();
+        let new = Column::new().child(Text::new("a").key(1)).into_element();
 
         let patches = diff(old, new, NodePath::root());
 
@@ -767,7 +744,9 @@ mod tests {
 
         let patches = diff(old, new, NodePath::root());
 
-        assert!(!patches.iter().any(|patch| matches!(patch, Patch::MoveChild { .. })));
+        assert!(!patches
+            .iter()
+            .any(|patch| matches!(patch, Patch::MoveChild { .. })));
         assert!(patches
             .iter()
             .any(|patch| matches!(patch, Patch::UpdateText { .. })));

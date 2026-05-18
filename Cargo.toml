@@ -1,12 +1,19 @@
 [workspace]
-members = ["crates/lemon", "examples/counter"]
+members = [
+    "crates/lemon",
+    "crates/lemon-widgets",
+    "examples/counter",
+    "examples/card",
+    "examples/list_keyed",
+]
 resolver = "2"
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-license = "MIT OR Apache-2.0"
+license = "MIT"
 repository = "https://github.com/lucasaarch/lemon"
 
 [workspace.dependencies]
 lemon = { path = "crates/lemon", version = "0.1.0" }
+lemon-widgets = { path = "crates/lemon-widgets", version = "0.1.0" }

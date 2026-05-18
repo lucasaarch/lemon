@@ -79,7 +79,9 @@ pub fn layout_pass(
         .ok_or(RetainedError::UnsupportedElement("empty retained tree"))?;
     let root_id = root_node
         .layout_node_id()
-        .ok_or(RetainedError::UnsupportedElement("root without layout node"))?;
+        .ok_or(RetainedError::UnsupportedElement(
+            "root without layout node",
+        ))?;
 
     let mut snapshots: HashMap<NodeId, TextSnapshot> = HashMap::new();
     collect_text_snapshots(root_node, &mut snapshots);
@@ -191,12 +193,9 @@ fn measure_text_node(
     let font_size = effective_font_size(&snapshot.style);
     let weight = FontWeight::new(snapshot.style.font_weight as f32);
 
-    let mut builder = ctx.layout_cx.ranged_builder(
-        ctx.font_cx,
-        &snapshot.content,
-        ctx.scale_factor,
-        true,
-    );
+    let mut builder =
+        ctx.layout_cx
+            .ranged_builder(ctx.font_cx, &snapshot.content, ctx.scale_factor, true);
     builder.push_default(GenericFamily::SystemUi);
     builder.push_default(StyleProperty::FontSize(font_size));
     builder.push_default(StyleProperty::FontWeight(weight));
@@ -208,10 +207,8 @@ fn measure_text_node(
         width: layout.width(),
         height: layout.height(),
     };
-    ctx.results.insert(
-        node_id,
-        TextMeasureOutput { layout, max_width },
-    );
+    ctx.results
+        .insert(node_id, TextMeasureOutput { layout, max_width });
     size
 }
 
@@ -256,7 +253,9 @@ fn collect_layouts(
         return;
     };
 
-    let layout = taffy.layout(taffy_id).expect("layout exists after compute_layout");
+    let layout = taffy
+        .layout(taffy_id)
+        .expect("layout exists after compute_layout");
     let abs = LayoutRect {
         x: offset.x + layout.location.x,
         y: offset.y + layout.location.y,
@@ -265,10 +264,7 @@ fn collect_layouts(
     };
     map.rects.insert(taffy_id, abs);
 
-    let child_offset = Point {
-        x: abs.x,
-        y: abs.y,
-    };
+    let child_offset = Point { x: abs.x, y: abs.y };
     for child in &node.children {
         collect_layouts(taffy, child, child_offset, map);
     }
@@ -291,20 +287,24 @@ mod tests {
         )
         .unwrap();
 
-        let text_id = tree
-            .root
-            .as_ref()
-            .unwrap()
-            .children[0]
-            .taffy_id
-            .unwrap();
-        assert!(tree.root.as_ref().unwrap().children[0]
-            .text
-            .as_ref()
-            .unwrap()
-            .needs_layout);
+        let text_id = tree.root.as_ref().unwrap().children[0].taffy_id.unwrap();
+        assert!(
+            tree.root.as_ref().unwrap().children[0]
+                .text
+                .as_ref()
+                .unwrap()
+                .needs_layout
+        );
 
-        let map = layout_pass(&mut tree, Viewport { width: 400.0, height: 600.0 }, 1.0).unwrap();
+        let map = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 600.0,
+            },
+            1.0,
+        )
+        .unwrap();
 
         let text = &tree.root.as_ref().unwrap().children[0];
         let cache = text.text.as_ref().unwrap();
@@ -327,7 +327,15 @@ mod tests {
         )
         .unwrap();
 
-        let map = layout_pass(&mut tree, Viewport { width: 400.0, height: 600.0 }, 1.0).unwrap();
+        let map = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 600.0,
+            },
+            1.0,
+        )
+        .unwrap();
 
         let root = tree.root.as_ref().unwrap();
         let short_id = root.children[0].taffy_id.unwrap();
@@ -339,7 +347,10 @@ mod tests {
         assert!(long.y > short.y);
         assert!(short.width > 0.0 && short.height > 0.0);
         assert!(long.width > 0.0 && long.height > 0.0);
-        assert_eq!(short.width, long.width, "column stretches children to same width");
+        assert_eq!(
+            short.width, long.width,
+            "column stretches children to same width"
+        );
     }
 
     #[test]
@@ -387,7 +398,15 @@ mod tests {
         })
         .unwrap();
 
-        let map = layout_pass(&mut tree, Viewport { width: 200.0, height: 200.0 }, 1.0).unwrap();
+        let map = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 200.0,
+                height: 200.0,
+            },
+            1.0,
+        )
+        .unwrap();
 
         let root = tree.root.as_ref().unwrap();
         assert!(matches!(root.kind, RetainedKind::Component { .. }));

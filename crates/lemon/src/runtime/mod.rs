@@ -96,8 +96,7 @@ fn create_component_slot(
 ) -> ComponentSlot {
     let view_cell = Rc::new(RefCell::new(view));
     let cx = Rc::new(RefCell::new(Cx::new()));
-    cx.borrow()
-        .set_deferred_sink(Rc::clone(&deferred_effects));
+    cx.borrow().set_deferred_sink(Rc::clone(&deferred_effects));
     let pending = Rc::new(RefCell::new(None));
 
     let view_cell2 = Rc::clone(&view_cell);
@@ -224,7 +223,12 @@ fn handle_component_pair(
             sync_render(slot);
             render_slot(slot, patches);
         } else {
-            mount_component_slot(parent_slots, path.clone(), new, Rc::clone(&deferred_effects));
+            mount_component_slot(
+                parent_slots,
+                path.clone(),
+                new,
+                Rc::clone(&deferred_effects),
+            );
             if let Some(slot) = find_slot_mut(parent_slots, &path) {
                 render_slot(slot, patches);
             }
@@ -303,12 +307,7 @@ fn diff_children_slots(
                     node: path.clone(),
                     component: component.clone(),
                 });
-                mount_component_slot(
-                    slots,
-                    path,
-                    component.clone(),
-                    Rc::clone(&deferred_effects),
-                );
+                mount_component_slot(slots, path, component.clone(), Rc::clone(&deferred_effects));
             }
             element => patches.push(Patch::InsertChild {
                 parent: parent.clone(),
@@ -441,6 +440,7 @@ fn freeze_box(container: &BoxElement) -> BoxElement {
         paint: freeze_paint(&container.paint),
         children: container.children.iter().map(freeze_element).collect(),
         key: container.key.clone(),
+        handlers: container.handlers.clone(),
     }
 }
 
@@ -592,9 +592,9 @@ mod tests {
         runtime.flush_effects();
         let patches = runtime.take_patches();
 
-        assert!(patches.iter().any(
-            |patch| matches!(patch, Patch::UpdateText { content, .. } if content == "2")
-        ));
+        assert!(patches
+            .iter()
+            .any(|patch| matches!(patch, Patch::UpdateText { content, .. } if content == "2")));
     }
 
     #[test]

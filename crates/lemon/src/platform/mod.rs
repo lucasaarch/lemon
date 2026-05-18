@@ -12,16 +12,21 @@ use vello::util::{RenderContext, RenderSurface};
 use vello::{AaConfig, Renderer, RendererOptions, Scene};
 use winit::application::ApplicationHandler;
 use winit::dpi::LogicalSize;
-use winit::event::{ElementState, MouseButton, WindowEvent};
+use winit::event::{ElementState, KeyEvent as WinitKeyEvent, MouseButton, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, EventLoop};
-use winit::window::{Window, WindowId};
+use winit::keyboard::{Key, NamedKey as WinitNamedKey};
+use winit::window::{CursorIcon, Window, WindowId};
 
+use crate::element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 use crate::element::Element;
 use crate::layout::{layout_pass, LayoutMap, Viewport};
-use hit_test::{dispatch_click, hit_test_on_click, LogicalPoint};
 use crate::paint::paint_pass;
+use crate::retained::focus::FocusManager;
 use crate::retained::RetainedTree;
 use crate::runtime::{cx::Cx, Runtime};
+use hit_test::{
+    dispatch_click, find_node_by_taffy_id, hit_test_hover, hit_test_on_click, LogicalPoint,
+};
 
 pub use window::WindowConfig;
 
@@ -41,6 +46,9 @@ pub struct AppState {
     pub font_cx: FontContext,
     pub layout_dirty: bool,
     pub paint_dirty: bool,
+    pub focus_manager: FocusManager,
+    pub hovered_node_id: Option<taffy::NodeId>,
+    pub active_modifiers: Modifiers,
     window_config: WindowConfig,
     root_component: Option<RootComponent>,
     last_cursor: Option<(f32, f32)>,
@@ -61,6 +69,9 @@ impl AppState {
             font_cx: FontContext::new(),
             layout_dirty: true,
             paint_dirty: true,
+            focus_manager: FocusManager::new(),
+            hovered_node_id: None,
+            active_modifiers: Modifiers::default(),
             window_config: config,
             root_component: Some(Arc::new(root)),
             last_cursor: None,
@@ -199,6 +210,104 @@ impl AppState {
             self.paint_dirty = true;
         }
         handled
+    }
+
+    fn event_pass_keyboard(&mut self, key_event: WinitKeyEvent) {
+        let lemon_key = winit_key_to_lemon(&key_event.logical_key);
+        let state = if key_event.state == ElementState::Pressed {
+            KeyState::Pressed
+        } else {
+            KeyState::Released
+        };
+
+        if state == KeyState::Pressed
+            && !key_event.repeat
+            && lemon_key == LemonKey::Named(NamedKey::Tab)
+        {
+            if let Some(tree) = self.retained.as_ref() {
+                self.focus_manager.cycle(tree, !self.active_modifiers.shift);
+            }
+            self.paint_dirty = true;
+            return;
+        }
+
+        let Some(focused_id) = self.focus_manager.focused else {
+            return;
+        };
+
+        let handler = self
+            .retained
+            .as_ref()
+            .and_then(|tree| tree.root.as_ref())
+            .and_then(|root| find_node_by_taffy_id(root, focused_id))
+            .and_then(|node| match state {
+                KeyState::Pressed => node.handlers.on_key_down.clone(),
+                KeyState::Released => node.handlers.on_key_up.clone(),
+            });
+
+        let Some(handler) = handler else {
+            return;
+        };
+
+        handler(KeyEvent {
+            key: lemon_key,
+            modifiers: self.active_modifiers.clone(),
+            repeat: key_event.repeat,
+            state,
+        });
+        self.layout_dirty = true;
+        self.paint_dirty = true;
+    }
+
+    fn event_pass_hover(&mut self, point: LogicalPoint) {
+        let new_id = self
+            .retained
+            .as_ref()
+            .and_then(|tree| tree.root.as_ref())
+            .and_then(|root| hit_test_hover(root, &self.layout_map, point))
+            .and_then(|node| node.taffy_id);
+
+        if new_id == self.hovered_node_id {
+            return;
+        }
+
+        let old_leave = self.hovered_node_id.and_then(|old_id| {
+            self.retained
+                .as_ref()
+                .and_then(|tree| tree.root.as_ref())
+                .and_then(|root| find_node_by_taffy_id(root, old_id))
+                .and_then(|node| node.handlers.on_hover_leave.clone())
+        });
+
+        let (new_enter, new_cursor) = if let Some(id) = new_id {
+            self.retained
+                .as_ref()
+                .and_then(|tree| tree.root.as_ref())
+                .and_then(|root| find_node_by_taffy_id(root, id))
+                .map(|node| {
+                    (
+                        node.handlers.on_hover_enter.clone(),
+                        node.style.cursor.clone(),
+                    )
+                })
+                .unwrap_or((None, Cursor::Default))
+        } else {
+            (None, Cursor::Default)
+        };
+
+        if let Some(handler) = old_leave {
+            handler();
+        }
+        if let Some(handler) = new_enter {
+            handler();
+        }
+        if let Some(window) = &self.window {
+            window.set_cursor(lemon_cursor_to_winit(&new_cursor));
+        }
+
+        self.hovered_node_id = new_id;
+        self.layout_dirty = true;
+        self.paint_dirty = true;
     }
 
     fn cursor_logical(&self, physical_x: f64, physical_y: f64) -> LogicalPoint {
@@ -341,9 +450,28 @@ impl ApplicationHandler for LemonApplication {
                 state.resize_surface(size.width, size.height);
                 state.request_redraw();
             }
+            WindowEvent::ModifiersChanged(modifiers) => {
+                let current = modifiers.state();
+                state.active_modifiers = Modifiers {
+                    shift: current.shift_key(),
+                    ctrl: current.control_key(),
+                    alt: current.alt_key(),
+                    meta: current.super_key(),
+                };
+            }
+            WindowEvent::KeyboardInput { event, .. } => {
+                state.event_pass_keyboard(event);
+                if state.needs_redraw() {
+                    state.request_redraw();
+                }
+            }
             WindowEvent::CursorMoved { position, .. } => {
                 let logical = state.cursor_logical(position.x, position.y);
                 state.last_cursor = Some((logical.x, logical.y));
+                state.event_pass_hover(logical);
+                if state.needs_redraw() {
+                    state.request_redraw();
+                }
             }
             WindowEvent::MouseInput {
                 state: ElementState::Pressed,
@@ -381,6 +509,41 @@ pub fn run(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) {
     event_loop.run_app(&mut app).expect("run event loop");
 }
 
+fn winit_key_to_lemon(key: &Key) -> LemonKey {
+    match key {
+        Key::Character(s) => LemonKey::Character(s.to_string()),
+        Key::Named(WinitNamedKey::Tab) => LemonKey::Named(NamedKey::Tab),
+        Key::Named(WinitNamedKey::Enter) => LemonKey::Named(NamedKey::Enter),
+        Key::Named(WinitNamedKey::Escape) => LemonKey::Named(NamedKey::Escape),
+        Key::Named(WinitNamedKey::Space) => LemonKey::Named(NamedKey::Space),
+        Key::Named(WinitNamedKey::Backspace) => LemonKey::Named(NamedKey::Backspace),
+        Key::Named(WinitNamedKey::Delete) => LemonKey::Named(NamedKey::Delete),
+        Key::Named(WinitNamedKey::ArrowLeft) => LemonKey::Named(NamedKey::ArrowLeft),
+        Key::Named(WinitNamedKey::ArrowRight) => LemonKey::Named(NamedKey::ArrowRight),
+        Key::Named(WinitNamedKey::ArrowUp) => LemonKey::Named(NamedKey::ArrowUp),
+        Key::Named(WinitNamedKey::ArrowDown) => LemonKey::Named(NamedKey::ArrowDown),
+        Key::Named(WinitNamedKey::Home) => LemonKey::Named(NamedKey::Home),
+        Key::Named(WinitNamedKey::End) => LemonKey::Named(NamedKey::End),
+        Key::Named(WinitNamedKey::PageUp) => LemonKey::Named(NamedKey::PageUp),
+        Key::Named(WinitNamedKey::PageDown) => LemonKey::Named(NamedKey::PageDown),
+        _ => LemonKey::Other,
+    }
+}
+
+fn lemon_cursor_to_winit(cursor: &Cursor) -> CursorIcon {
+    match cursor {
+        Cursor::Default => CursorIcon::Default,
+        Cursor::Pointer => CursorIcon::Pointer,
+        Cursor::Text => CursorIcon::Text,
+        Cursor::Grab => CursorIcon::Grab,
+        Cursor::Grabbing => CursorIcon::Grabbing,
+        Cursor::Wait => CursorIcon::Wait,
+        Cursor::NotAllowed => CursorIcon::NotAllowed,
+        Cursor::Move => CursorIcon::Move,
+        Cursor::Crosshair => CursorIcon::Crosshair,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -388,12 +551,16 @@ mod tests {
 
     #[test]
     fn app_state_starts_dirty_with_runtime() {
-        let state = AppState::new(WindowConfig::default(), |_cx| Text::new("hi").into_element());
+        let state = AppState::new(WindowConfig::default(), |_cx| {
+            Text::new("hi").into_element()
+        });
 
         assert!(state.layout_dirty);
         assert!(state.paint_dirty);
         assert!(state.window.is_none());
         assert!(state.retained.is_none());
         assert!(!state.mounted);
+        assert!(state.focus_manager.focused.is_none());
+        assert!(state.hovered_node_id.is_none());
     }
 }

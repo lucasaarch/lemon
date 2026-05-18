@@ -188,9 +188,7 @@ fn paint_parley_layout(
     color: Color,
     stats: &mut PaintStats,
 ) {
-    let transform = ctx
-        .base
-        * Affine::translate((f64::from(origin_x), f64::from(origin_y)));
+    let transform = ctx.base * Affine::translate((f64::from(origin_x), f64::from(origin_y)));
     let brush = to_peniko_color(color);
 
     for line in layout.lines() {
@@ -234,13 +232,7 @@ fn fill_rounded_rect(
     color: Color,
     stats: &mut PaintStats,
 ) {
-    scene.fill(
-        Fill::NonZero,
-        ctx.base,
-        to_peniko_color(color),
-        None,
-        shape,
-    );
+    scene.fill(Fill::NonZero, ctx.base, to_peniko_color(color), None, shape);
     stats.fills += 1;
 }
 
@@ -338,16 +330,21 @@ mod tests {
 
     #[test]
     fn text_with_parley_layout_emits_glyph_runs() {
-        let mut tree = RetainedTree::mount(Text::new("hello").font_size(16.0).into_element()).unwrap();
+        let mut tree =
+            RetainedTree::mount(Text::new("hello").font_size(16.0).into_element()).unwrap();
 
         let stats = layout_and_paint(&mut tree, 1.0);
 
-        assert!(stats.glyph_runs > 0, "expected glyph runs for laid-out text");
+        assert!(
+            stats.glyph_runs > 0,
+            "expected glyph runs for laid-out text"
+        );
     }
 
     #[test]
     fn text_without_parley_layout_skips_glyphs() {
-        let mut tree = RetainedTree::mount(Text::new("hello").font_size(16.0).into_element()).unwrap();
+        let mut tree =
+            RetainedTree::mount(Text::new("hello").font_size(16.0).into_element()).unwrap();
         let layout = layout_pass(
             &mut tree,
             Viewport {
