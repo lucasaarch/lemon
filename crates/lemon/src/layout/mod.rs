@@ -447,6 +447,114 @@ mod tests {
     }
 
     #[test]
+    fn same_fn_sibling_components_update_text_at_index_five_reflows() {
+        use crate::element::builders::{Button, Column, Component, Row, Text};
+        use crate::runtime::Runtime;
+        use crate::Cx;
+
+        fn mini(cx: &Cx) -> crate::element::Element {
+            let n = cx.use_signal(0i32);
+            let label = n.clone();
+            Row::new()
+                .child(Text::new(move || format!("{}", label.get())).font_size(16.0))
+                .child(Button::new("+").width(44.0))
+                .into_element()
+        }
+
+        let mut runtime = Runtime::new();
+        runtime.mount(|_cx| {
+            Column::new()
+                .child(Text::new("a"))
+                .child(Text::new("b"))
+                .child(Text::new("c"))
+                .child(Text::new("d"))
+                .child(Text::new("e"))
+                .child(Component::new(mini).key(1))
+                .child(Component::new(mini).key(2))
+                .into_element()
+        });
+
+        let mut tree = RetainedTree::mount(runtime.root_element().expect("root")).unwrap();
+        tree.apply_patches(runtime.take_patches()).unwrap();
+        layout_pass(
+            &mut tree,
+            Viewport {
+                width: 520.0,
+                height: 627.0,
+            },
+            2.0,
+        )
+        .unwrap();
+        assert!(!tree.text_needs_reflow());
+
+        tree.apply_patch(Patch::UpdateText {
+            node: NodePath(vec![5, 0]),
+            content: "1".to_owned(),
+        })
+        .unwrap();
+        layout_pass(
+            &mut tree,
+            Viewport {
+                width: 520.0,
+                height: 627.0,
+            },
+            2.0,
+        )
+        .unwrap();
+
+        let text = tree
+            .root
+            .as_ref()
+            .unwrap()
+            .children
+            .get(5)
+            .expect("first component")
+            .children
+            .first()
+            .expect("row")
+            .children
+            .first()
+            .expect("counter text");
+        let cache = text.text.as_ref().expect("text cache");
+        let first_id = text.taffy_id.expect("text taffy_id");
+        let second_id = tree
+            .root
+            .as_ref()
+            .unwrap()
+            .children
+            .get(6)
+            .unwrap()
+            .children
+            .first()
+            .unwrap()
+            .children
+            .first()
+            .unwrap()
+            .taffy_id
+            .expect("second text taffy_id");
+        assert_ne!(
+            first_id, second_id,
+            "sibling counter text nodes must not share a Taffy NodeId (first={first_id:?}, second={second_id:?})"
+        );
+        let first_row = tree.taffy.parent(first_id).expect("text parent row");
+        assert!(
+            tree.taffy.parent(first_row).is_some(),
+            "first mini-counter row must stay attached in the Taffy tree"
+        );
+        assert_eq!(cache.content, "1");
+        assert!(
+            cache.parley_layout.is_some(),
+            "counter text should have parley layout after layout_pass (needs_layout={}, first_id={first_id:?})",
+            cache.needs_layout
+        );
+        assert!(!cache.needs_layout);
+        assert!(
+            !tree.text_needs_reflow(),
+            "no text node should still need reflow"
+        );
+    }
+
+    #[test]
     fn component_wrapper_is_transparent_in_layout_collection() {
         fn child(_cx: &crate::runtime::cx::Cx) -> crate::element::Element {
             Text::new("child").into_element()

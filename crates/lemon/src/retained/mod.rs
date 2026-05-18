@@ -534,9 +534,17 @@ impl RetainedTree {
             .layout_node_id()
             .ok_or_else(|| RetainedError::InvalidNodePath(parent_path.clone()))?;
 
-        if let Some(old_layout_id) = wrapper.children[0].layout_node_id() {
-            self.taffy
-                .insert_child_at_index(parent_id, index, old_layout_id)?;
+        if let Some(child_id) = wrapper.children[0].layout_node_id() {
+            // `ReplaceNode` (bootstrap) already attached the subtree to `parent_id`. Re-inserting
+            // detaches the node in Taffy 0.7 while leaving retained children intact.
+            let needs_insert = match self.taffy.parent(child_id) {
+                None => true,
+                Some(existing_parent) => existing_parent != parent_id,
+            };
+            if needs_insert {
+                self.taffy
+                    .insert_child_at_index(parent_id, index, child_id)?;
+            }
         }
 
         self.node_mut(&parent_path)?.children.insert(index, wrapper);
@@ -1140,6 +1148,42 @@ mod tests {
         assert!(matches!(root.kind, RetainedKind::Component { .. }));
         assert!(root.taffy_id.is_none());
         assert_eq!(root.children[0].text_content(), Some("root"));
+    }
+
+    #[test]
+    fn mount_component_after_replace_node_keeps_sibling_rows_in_taffy_tree() {
+        use crate::element::builders::{Column, Component, Row, Text};
+        use crate::runtime::Runtime;
+        use crate::Cx;
+
+        fn mini(_cx: &Cx) -> Element {
+            Row::new().child(Text::new("0")).into_element()
+        }
+
+        let mut runtime = Runtime::new();
+        runtime.mount(|_cx| {
+            Column::new()
+                .child(Component::new(mini).key(1))
+                .child(Component::new(mini).key(2))
+                .into_element()
+        });
+        let mut tree = RetainedTree::mount(runtime.root_element().expect("root")).unwrap();
+        tree.apply_patches(runtime.take_patches())
+            .expect("bootstrap");
+
+        let column_id = tree.root.as_ref().unwrap().taffy_id.expect("column");
+        for (index, label) in [(0usize, "first"), (1, "second")] {
+            let row = tree.root.as_ref().unwrap().children[index]
+                .children
+                .first()
+                .and_then(|node| node.layout_node_id())
+                .expect("row");
+            assert_eq!(
+                tree.taffy.parent(row),
+                Some(column_id),
+                "{label} component row must remain attached in Taffy"
+            );
+        }
     }
 
     #[test]
