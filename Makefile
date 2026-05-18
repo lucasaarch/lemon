@@ -4,10 +4,7 @@
 CARGO := cargo
 EXAMPLES := counter signals memo effects keys components layout form
 
-.PHONY: help \
-	check ci fmt fmt-check clippy test build build-examples doc doc-open \
-	run-counter run-signals run-memo run-effects run-keys run-components run-components-debug run-layout run-form run \
-	clean
+.PHONY: help check ci fmt fmt-check clippy test build build-examples doc doc-open clean
 
 .DEFAULT_GOAL := help
 
@@ -45,35 +42,6 @@ doc: ## Build rustdoc for lemon (library)
 
 doc-open: doc ## Build and open lemon docs in the browser
 	$(CARGO) doc -p lemon --no-deps --open
-
-run-counter: ## Run the counter quick-start example
-	$(CARGO) run -p counter
-
-run-signals: ## Run the use_signal example
-	$(CARGO) run -p signals
-
-run-memo: ## Run the use_memo example
-	$(CARGO) run -p memo
-
-run-effects: ## Run the use_effect example
-	$(CARGO) run -p effects
-
-run-keys: ## Run the keyed list example
-	$(CARGO) run -p keys
-
-run-components: ## Run the Component example
-	$(CARGO) run -p components
-
-run-components-debug: ## Run the Component example with LEMON_DEBUG=1
-	LEMON_DEBUG=1 $(CARGO) run -p components
-
-run-layout: ## Run the layout example
-	$(CARGO) run -p layout
-
-run-form: ## Run the widgets / form example
-	$(CARGO) run -p form
-
-run: run-counter ## Default example (counter)
 
 clean: ## Remove build artifacts
 	$(CARGO) clean

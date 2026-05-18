@@ -229,7 +229,7 @@ mod tests {
             height: 600.0,
         };
 
-        let map_before = layout_pass(&mut tree, viewport, 1.0).unwrap();
+        let map_before = layout_pass(&mut tree, viewport).unwrap();
         let text_id = tree.root.as_ref().unwrap().children[0].taffy_id.unwrap();
         let height_before = map_before.get(text_id).unwrap().height;
 
@@ -262,7 +262,7 @@ mod tests {
         );
 
         assert!(tree.layout_dirty);
-        let map_after = layout_pass_if_dirty(&mut tree, viewport, 1.0)
+        let map_after = layout_pass_if_dirty(&mut tree, viewport)
             .unwrap()
             .expect("layout should run after patches");
         let height_after = map_after.get(text_id).unwrap().height;
@@ -299,7 +299,6 @@ mod tests {
                 width: 900.0,
                 height: 600.0,
             },
-            1.0,
         )
         .unwrap();
 
@@ -338,13 +337,13 @@ mod tests {
         };
 
         let mut scene = Scene::new();
-        let layout = layout_pass(&mut tree, viewport, 1.0).unwrap();
+        let layout = layout_pass(&mut tree, viewport).unwrap();
         let _stats = paint_pass(&tree, &layout, &mut scene, 1.0, None, true);
 
         count.set(1);
         rt.flush_effects();
         tree.apply_patches(rt.take_patches()).unwrap();
-        let layout = layout_pass_if_dirty(&mut tree, viewport, 1.0)
+        let layout = layout_pass_if_dirty(&mut tree, viewport)
             .unwrap()
             .expect("layout after patch");
         let _stats = paint_pass(&tree, &layout, &mut scene, 2.0, None, true);

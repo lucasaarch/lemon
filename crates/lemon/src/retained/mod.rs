@@ -1009,7 +1009,6 @@ mod tests {
                 width: 400.0,
                 height: 400.0,
             },
-            1.0,
         )
         .unwrap();
         assert!(!tree.text_needs_reflow());
@@ -1027,7 +1026,6 @@ mod tests {
                 width: 400.0,
                 height: 400.0,
             },
-            1.0,
         )
         .unwrap();
         assert!(

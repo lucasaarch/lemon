@@ -164,7 +164,7 @@ impl AppState {
             viewport.height
         );
         let tree = self.retained.as_mut().expect("retained tree");
-        match layout_pass(tree, viewport, scale) {
+        match layout_pass(tree, viewport) {
             Ok(map) => {
                 self.layout_map = map;
                 self.layout_dirty = false;

@@ -54,11 +54,14 @@ struct TextMeasureOutput {
 }
 
 struct MeasureContext<'a> {
-    scale_factor: f32,
     font_cx: &'a mut FontContext,
     layout_cx: &'a mut LayoutContext<ParleyBrush>,
     results: &'a mut HashMap<NodeId, TextMeasureOutput>,
 }
+
+/// Parley multiplies font metrics by this factor. Layout uses logical points; HiDPI is applied
+/// in [`crate::paint::paint_pass`], not here.
+const PARLEY_LAYOUT_SCALE: f32 = 1.0;
 
 #[derive(Clone)]
 struct TextSnapshot {
@@ -72,11 +75,11 @@ struct TextSnapshot {
 /// Runs Taffy flex layout and text measurement on `tree`, returning absolute logical rects.
 ///
 /// Clears [`RetainedTree::layout_dirty`](crate::retained::RetainedTree::layout_dirty). Pass the
-/// same [`Viewport`] size the window uses in logical points.
+/// same [`Viewport`] size the window uses in logical points. `font_size` and other style sizes are
+/// logical pixels; the platform applies the window scale factor when painting.
 pub fn layout_pass(
     tree: &mut RetainedTree,
     viewport: Viewport,
-    scale_factor: f32,
 ) -> Result<LayoutMap, RetainedError> {
     let root_node = tree
         .root
@@ -95,7 +98,6 @@ pub fn layout_pass(
     let mut layout_cx = LayoutContext::new();
     let mut measure_results: HashMap<NodeId, TextMeasureOutput> = HashMap::new();
     let mut measure_ctx = MeasureContext {
-        scale_factor,
         font_cx: &mut font_cx,
         layout_cx: &mut layout_cx,
         results: &mut measure_results,
@@ -140,12 +142,11 @@ pub fn layout_pass(
 pub fn layout_pass_if_dirty(
     tree: &mut RetainedTree,
     viewport: Viewport,
-    scale_factor: f32,
 ) -> Result<Option<LayoutMap>, RetainedError> {
     if !tree.layout_dirty {
         return Ok(None);
     }
-    Ok(Some(layout_pass(tree, viewport, scale_factor)?))
+    Ok(Some(layout_pass(tree, viewport)?))
 }
 
 fn collect_text_snapshots(node: &RetainedNode, map: &mut HashMap<NodeId, TextSnapshot>) {
@@ -204,7 +205,7 @@ fn measure_text_node(
 
     let mut builder =
         ctx.layout_cx
-            .ranged_builder(ctx.font_cx, &snapshot.content, ctx.scale_factor, true);
+            .ranged_builder(ctx.font_cx, &snapshot.content, PARLEY_LAYOUT_SCALE, true);
     builder.push_default(GenericFamily::SystemUi);
     builder.push_default(StyleProperty::FontSize(font_size));
     builder.push_default(StyleProperty::FontWeight(weight));
@@ -230,7 +231,7 @@ fn effective_font_size(style: &TextStyle) -> f32 {
 }
 
 /// Measures the width of a single-line string using the same defaults as layout.
-pub fn measure_single_line_width(content: &str, style: &TextStyle, scale_factor: f32) -> f32 {
+pub fn measure_single_line_width(content: &str, style: &TextStyle) -> f32 {
     if content.is_empty() {
         return 0.0;
     }
@@ -240,7 +241,7 @@ pub fn measure_single_line_width(content: &str, style: &TextStyle, scale_factor:
     let font_size = effective_font_size(style);
     let weight = FontWeight::new(style.font_weight as f32);
 
-    let mut builder = layout_cx.ranged_builder(&mut font_cx, content, scale_factor, true);
+    let mut builder = layout_cx.ranged_builder(&mut font_cx, content, PARLEY_LAYOUT_SCALE, true);
     builder.push_default(GenericFamily::SystemUi);
     builder.push_default(StyleProperty::FontSize(font_size));
     builder.push_default(StyleProperty::FontWeight(weight));
@@ -308,6 +309,27 @@ mod tests {
     use crate::element::types::ComponentElement;
 
     #[test]
+    fn font_size_16px_measures_in_logical_points_not_display_scale() {
+        let mut tree = RetainedTree::mount(Text::new("Ag").font_size(16.0).into_element()).unwrap();
+
+        let map = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 600.0,
+            },
+        )
+        .unwrap();
+
+        let text_id = tree.root.as_ref().unwrap().taffy_id.unwrap();
+        let height = map.get(text_id).unwrap().height;
+        assert!(
+            height > 12.0 && height < 26.0,
+            "16px logical font should measure near 16px tall, got {height}"
+        );
+    }
+
+    #[test]
     fn text_node_measured_with_parley_clears_needs_layout() {
         let mut tree = RetainedTree::mount(
             View::new()
@@ -332,7 +354,6 @@ mod tests {
                 width: 400.0,
                 height: 600.0,
             },
-            1.0,
         )
         .unwrap();
 
@@ -367,7 +388,6 @@ mod tests {
                 width: 400.0,
                 height: 600.0,
             },
-            1.0,
         )
         .unwrap();
 
@@ -395,7 +415,6 @@ mod tests {
                 width: 400.0,
                 height: 600.0,
             },
-            1.0,
         )
         .unwrap();
 
@@ -433,7 +452,6 @@ mod tests {
                 width: 900.0,
                 height: 600.0,
             },
-            1.0,
         )
         .unwrap();
 
@@ -482,7 +500,6 @@ mod tests {
                 width: 520.0,
                 height: 627.0,
             },
-            2.0,
         )
         .unwrap();
         assert!(!tree.text_needs_reflow());
@@ -498,7 +515,6 @@ mod tests {
                 width: 520.0,
                 height: 627.0,
             },
-            2.0,
         )
         .unwrap();
 
@@ -574,7 +590,6 @@ mod tests {
                 width: 200.0,
                 height: 200.0,
             },
-            1.0,
         )
         .unwrap();
 

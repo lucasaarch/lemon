@@ -225,7 +225,6 @@ mod tests {
                 width: 200.0,
                 height: 200.0,
             },
-            1.0,
         )
         .unwrap();
 
@@ -263,7 +262,6 @@ mod tests {
                 width: 200.0,
                 height: 120.0,
             },
-            1.0,
         )
         .unwrap();
 
@@ -311,7 +309,6 @@ mod tests {
                 width: 200.0,
                 height: 200.0,
             },
-            1.0,
         )
         .unwrap();
 
@@ -345,7 +342,6 @@ mod tests {
                 width: 200.0,
                 height: 200.0,
             },
-            1.0,
         )
         .unwrap();
         let _ = layout;
@@ -377,7 +373,6 @@ mod tests {
                 width: 400.0,
                 height: 400.0,
             },
-            1.0,
         )
         .unwrap();
 
@@ -410,7 +405,6 @@ mod tests {
                 width: 200.0,
                 height: 200.0,
             },
-            1.0,
         )
         .unwrap();
 

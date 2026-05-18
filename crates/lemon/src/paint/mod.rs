@@ -437,7 +437,7 @@ fn first_text_descendant(node: &RetainedNode) -> Option<&RetainedNode> {
 fn paint_text_input_caret(
     node: &RetainedNode,
     layout: &LayoutMap,
-    scale_factor: f32,
+    _scale_factor: f32,
     focused: Option<NodeId>,
     caret_visible: bool,
     scene: &mut Scene,
@@ -501,7 +501,7 @@ fn paint_text_input_caret(
     };
     let cursor = cursor.min(content.len());
     let prefix = &content[..cursor];
-    let caret_x = text_rect.x + measure_single_line_width(prefix, &text_style, scale_factor);
+    let caret_x = text_rect.x + measure_single_line_width(prefix, &text_style);
     let caret_top = text_rect.y + ((text_rect.height - line_height) * 0.5).max(0.0);
     let caret_bottom = caret_top + line_height;
 
@@ -612,7 +612,6 @@ mod tests {
                 width: 200.0,
                 height: 200.0,
             },
-            scale_factor,
         )
         .unwrap();
         let mut scene = Scene::new();
@@ -676,7 +675,6 @@ mod tests {
                 width: 200.0,
                 height: 200.0,
             },
-            1.0,
         )
         .unwrap();
 
