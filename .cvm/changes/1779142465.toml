@@ -1,0 +1,6 @@
+[update]
+major = []
+minor = ["lemon", "lemon-widgets"]
+patch = []
+pre = true
+summary = "Add hover, pressed, and disabled widget interaction states"
