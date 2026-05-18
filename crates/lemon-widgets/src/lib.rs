@@ -35,11 +35,11 @@ pub mod slider;
 pub mod text_field_state;
 pub mod text_input;
 pub use image::Image;
-pub use scroll::Scroll;
-pub use select::Select;
-pub use slider::Slider;
+pub use scroll::{Scroll, ScrollStyle};
+pub use select::{Select, SelectStyle};
+pub use slider::{Slider, SliderStyle};
 pub use text_field_state::TextFieldState;
-pub use text_input::TextInput;
+pub use text_input::{TextInput, TextInputStyle};
 
 /// Deprecated alias for [`View`].
 #[deprecated(

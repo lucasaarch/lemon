@@ -42,6 +42,36 @@ impl AnimState {
     }
 }
 
+/// Per-widget visual overrides for [`Slider`].
+///
+/// # Examples
+///
+/// ```no_run
+/// use lemon::Color;
+/// use lemon_widgets::SliderStyle;
+///
+/// let style = SliderStyle::default().fill_color(Color::rgb8(255, 120, 0));
+/// ```
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SliderStyle {
+    track_color: Option<Color>,
+    fill_color: Option<Color>,
+}
+
+impl SliderStyle {
+    /// Overrides the slider track color.
+    pub fn track_color(mut self, color: Color) -> Self {
+        self.track_color = Some(color);
+        self
+    }
+
+    /// Overrides the slider fill color.
+    pub fn fill_color(mut self, color: Color) -> Self {
+        self.fill_color = Some(color);
+        self
+    }
+}
+
 /// Horizontal slider widget backed by a user-owned `f32` signal.
 ///
 /// The value is always in the range `[0.0, 1.0]`.
@@ -51,16 +81,18 @@ impl AnimState {
 /// **Programmatic value changes** (e.g. `signal.set(0.8)` from another widget) animate the fill
 /// over ~150 ms using a linear interpolation driven by the platform frame loop.
 ///
+/// Use [`SliderStyle`] to override per-widget visuals while keeping theme defaults for unset fields.
+///
 /// # Examples
 ///
 /// ```no_run
-/// use lemon::{Cx, element::Element};
-/// use lemon_widgets::Slider;
+/// use lemon::{Cx, Color, element::Element};
+/// use lemon_widgets::{Slider, SliderStyle};
 ///
 /// fn my_view(cx: &Cx) -> Element {
 ///     let volume = cx.use_signal(0.5_f32);
 ///     Slider::new(cx, volume)
-///         .width(240.0)
+///         .style(SliderStyle::default().fill_color(Color::rgb8(255, 120, 0)))
 ///         .into_element()
 /// }
 /// ```
@@ -71,6 +103,7 @@ pub struct Slider {
     height: f32,
     track_color: Color,
     fill_color: Color,
+    style: SliderStyle,
 }
 
 impl Slider {
@@ -108,6 +141,7 @@ impl Slider {
             height: theme.spacing.sm * 2.0,
             track_color: theme.colors.border,
             fill_color: theme.colors.accent,
+            style: SliderStyle::default(),
         }
     }
 
@@ -123,6 +157,24 @@ impl Slider {
         self
     }
 
+    /// Replaces all slider style overrides.
+    pub fn style(mut self, style: SliderStyle) -> Self {
+        self.style = style;
+        self
+    }
+
+    /// Overrides the slider track color for this widget.
+    pub fn track_color(mut self, color: Color) -> Self {
+        self.style.track_color = Some(color);
+        self
+    }
+
+    /// Overrides the slider fill color for this widget.
+    pub fn fill_color(mut self, color: Color) -> Self {
+        self.style.fill_color = Some(color);
+        self
+    }
+
     /// Builds and returns the [`Element`] for this slider.
     ///
     /// Call this at the end of the builder chain to insert the widget into a parent container.
@@ -131,6 +183,8 @@ impl Slider {
         let display = anim.display().clamp(0.0, 1.0);
         let fill_width = display * self.width;
         let radius = self.height / 2.0;
+        let track_color = self.style.track_color.unwrap_or(self.track_color);
+        let fill_color = self.style.fill_color.unwrap_or(self.fill_color);
 
         // Subscribe to the frame clock while animating so the platform drives re-renders.
         if anim.is_animating() {
@@ -147,7 +201,7 @@ impl Slider {
             .width(self.width)
             .height(self.height)
             .radius(radius)
-            .background(self.track_color)
+            .background(track_color)
             .cursor(Cursor::Pointer)
             .on_pointer_down(move |nx, _| {
                 let v = nx.clamp(0.0, 1.0);
@@ -165,7 +219,7 @@ impl Slider {
                     .width(fill_width)
                     .height(self.height)
                     .radius(radius)
-                    .background(self.fill_color),
+                    .background(fill_color),
             )
             .into_element()
     }
@@ -285,6 +339,62 @@ mod tests {
             track.style.height,
             Some(Dimension::Points(custom.spacing.sm * 2.0))
         );
+
+        lemon::set_active_theme(previous);
+    }
+
+    #[test]
+    fn slider_style_overrides_beat_theme_defaults() {
+        let previous = lemon::current_theme();
+        let mut custom = lemon::Theme::default_dark();
+        custom.colors.border = Color::rgb8(11, 22, 33);
+        custom.colors.accent = Color::rgb8(44, 55, 66);
+        lemon::set_active_theme(custom);
+
+        let value = Signal::new(0.5_f32);
+        let override_track = Color::rgb8(99, 88, 77);
+        let override_fill = Color::rgb8(66, 55, 44);
+        let cx = lemon::Cx::new();
+        let el = Slider::new(&cx, value)
+            .style(
+                SliderStyle::default()
+                    .track_color(override_track)
+                    .fill_color(override_fill),
+            )
+            .into_element();
+
+        let Element::View(track) = el else {
+            panic!("expected View element from Slider");
+        };
+        assert_eq!(track.paint.resolve().background, Some(override_track));
+        let Element::View(fill) = &track.children[0] else {
+            panic!("expected View fill child");
+        };
+        assert_eq!(fill.paint.resolve().background, Some(override_fill));
+
+        lemon::set_active_theme(previous);
+    }
+
+    #[test]
+    fn slider_style_unset_fields_fall_back_to_theme() {
+        let previous = lemon::current_theme();
+        let mut custom = lemon::Theme::default_dark();
+        custom.colors.accent = Color::rgb8(44, 55, 66);
+        lemon::set_active_theme(custom.clone());
+
+        let value = Signal::new(0.5_f32);
+        let cx = lemon::Cx::new();
+        let el = Slider::new(&cx, value)
+            .style(SliderStyle::default().track_color(Color::rgb8(99, 88, 77)))
+            .into_element();
+
+        let Element::View(track) = el else {
+            panic!("expected View element from Slider");
+        };
+        let Element::View(fill) = &track.children[0] else {
+            panic!("expected View fill child");
+        };
+        assert_eq!(fill.paint.resolve().background, Some(custom.colors.accent));
 
         lemon::set_active_theme(previous);
     }

@@ -2,7 +2,7 @@ use lemon::{
     element::{
         builders::{Row, Text, View},
         events::Cursor,
-        style::{Color, Overflow},
+        style::{Color, ColorSource, Overflow},
         types::TextInputMeta,
         Element,
     },
@@ -10,6 +10,48 @@ use lemon::{
 };
 
 use crate::TextFieldState;
+
+/// Per-widget visual overrides for [`TextInput`].
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct TextInputStyle {
+    placeholder_color: Option<Color>,
+    border_color: Option<Color>,
+    padding: Option<f32>,
+    radius: Option<f32>,
+    focus_ring_color: Option<Color>,
+}
+
+impl TextInputStyle {
+    /// Overrides the placeholder text color.
+    pub fn placeholder_color(mut self, color: Color) -> Self {
+        self.placeholder_color = Some(color);
+        self
+    }
+
+    /// Overrides the border color.
+    pub fn border_color(mut self, color: Color) -> Self {
+        self.border_color = Some(color);
+        self
+    }
+
+    /// Overrides the container padding in logical points.
+    pub fn padding(mut self, value: f32) -> Self {
+        self.padding = Some(value);
+        self
+    }
+
+    /// Overrides the border radius in logical points.
+    pub fn radius(mut self, value: f32) -> Self {
+        self.radius = Some(value);
+        self
+    }
+
+    /// Overrides the focus ring color.
+    pub fn focus_ring_color(mut self, color: Color) -> Self {
+        self.focus_ring_color = Some(color);
+        self
+    }
+}
 
 /// Single-line text input widget.
 ///
@@ -22,12 +64,13 @@ use crate::TextFieldState;
 /// # Examples
 ///
 /// ```no_run
-/// use lemon::{Cx, element::Element};
-/// use lemon_widgets::{TextInput, TextFieldState};
+/// use lemon::{Color, Cx, element::Element};
+/// use lemon_widgets::{TextInput, TextFieldState, TextInputStyle};
 ///
 /// fn my_view(cx: &Cx) -> Element {
 ///     let state = cx.use_signal(TextFieldState::new(""));
 ///     TextInput::new(cx, state)
+///         .style(TextInputStyle::default().border_color(Color::rgb8(200, 80, 80)))
 ///         .placeholder("Type here…")
 ///         .width(240.0)
 ///         .into_element()
@@ -41,6 +84,8 @@ pub struct TextInput {
     border_color: Color,
     padding: f32,
     radius: f32,
+    focus_ring_color: Color,
+    style: TextInputStyle,
 }
 
 impl TextInput {
@@ -58,6 +103,8 @@ impl TextInput {
             border_color: theme.colors.border,
             padding: theme.spacing.sm,
             radius: theme.radius.sm,
+            focus_ring_color: theme.chrome.focus_ring,
+            style: TextInputStyle::default(),
         }
     }
 
@@ -73,6 +120,42 @@ impl TextInput {
         self
     }
 
+    /// Replaces all text input style overrides.
+    pub fn style(mut self, style: TextInputStyle) -> Self {
+        self.style = style;
+        self
+    }
+
+    /// Overrides the placeholder text color for this widget.
+    pub fn placeholder_color(mut self, color: Color) -> Self {
+        self.style.placeholder_color = Some(color);
+        self
+    }
+
+    /// Overrides the border color for this widget.
+    pub fn border_color(mut self, color: Color) -> Self {
+        self.style.border_color = Some(color);
+        self
+    }
+
+    /// Overrides the container padding for this widget.
+    pub fn padding(mut self, value: f32) -> Self {
+        self.style.padding = Some(value);
+        self
+    }
+
+    /// Overrides the border radius for this widget.
+    pub fn radius(mut self, value: f32) -> Self {
+        self.style.radius = Some(value);
+        self
+    }
+
+    /// Overrides the focus ring color for this widget.
+    pub fn focus_ring_color(mut self, color: Color) -> Self {
+        self.style.focus_ring_color = Some(color);
+        self
+    }
+
     /// Builds and returns the [`Element`] for this input field.
     ///
     /// Call this at the end of the builder chain to insert the widget into a parent container.
@@ -80,20 +163,28 @@ impl TextInput {
         let field = self.state.get();
         let current_value = field.value.clone();
         let placeholder = self.placeholder.clone();
+        let placeholder_color = self
+            .style
+            .placeholder_color
+            .unwrap_or(self.placeholder_color);
+        let border_color = self.style.border_color.unwrap_or(self.border_color);
+        let padding = self.style.padding.unwrap_or(self.padding);
+        let radius = self.style.radius.unwrap_or(self.radius);
+        let focus_ring_color = self.style.focus_ring_color.unwrap_or(self.focus_ring_color);
 
         // Text shown in the field: current value or placeholder (dimmed).
         let text_child: Element = if current_value.is_empty() {
             Text::new(placeholder)
-                .color(self.placeholder_color)
+                .color(placeholder_color)
                 .into_element()
         } else {
             Text::new(current_value).into_element()
         };
 
         let mut container = View::new()
-            .padding(self.padding)
-            .border(self.border_color, 1.5)
-            .radius(self.radius)
+            .padding(padding)
+            .border(border_color, 1.5)
+            .radius(radius)
             .overflow(Overflow::Hidden)
             .focusable()
             .cursor(Cursor::Text)
@@ -116,7 +207,11 @@ impl TextInput {
             container = container.width(w);
         }
 
-        container.into_element()
+        let mut element = container.into_element();
+        if let Element::View(view) = &mut element {
+            view.paint.focus_ring_color = Some(ColorSource::Static(focus_ring_color));
+        }
+        element
     }
 }
 
@@ -169,6 +264,55 @@ mod tests {
             panic!("expected placeholder Text");
         };
         assert_eq!(text.style.color, Some(custom.colors.foreground_secondary));
+
+        set_active_theme(previous);
+    }
+
+    #[test]
+    fn text_input_style_overrides_and_fallbacks() {
+        let previous = current_theme();
+        let mut custom = Theme::default_dark();
+        custom.colors.foreground_secondary = Color::rgb8(120, 121, 122);
+        custom.colors.border = Color::rgb8(12, 34, 56);
+        custom.chrome.focus_ring = Color::rgb8(30, 40, 50);
+        custom.spacing.sm = 10.0;
+        custom.radius.sm = 7.0;
+        set_active_theme(custom);
+
+        let cx = Cx::new();
+        let state = Signal::new(TextFieldState::new(""));
+        let Element::View(view) = TextInput::new(&cx, state)
+            .style(
+                TextInputStyle::default()
+                    .border_color(Color::rgb8(1, 2, 3))
+                    .focus_ring_color(Color::rgb8(4, 5, 6)),
+            )
+            .placeholder("Type here")
+            .into_element()
+        else {
+            panic!("expected View element");
+        };
+
+        assert_eq!(
+            view.style.padding,
+            Some(lemon::element::style::Edges::all(10.0)),
+            "unset padding should fall back to theme default"
+        );
+        let paint = view.paint.resolve();
+        assert_eq!(paint.border_color, Some(Color::rgb8(1, 2, 3)));
+        assert_eq!(paint.focus_ring_color, Some(Color::rgb8(4, 5, 6)));
+
+        let Element::Row(row) = &view.children[0] else {
+            panic!("expected inner Row");
+        };
+        let Element::Text(text) = &row.children[0] else {
+            panic!("expected placeholder Text");
+        };
+        assert_eq!(
+            text.style.color,
+            Some(Color::rgb8(120, 121, 122)),
+            "unset placeholder color should fall back to theme default"
+        );
 
         set_active_theme(previous);
     }
