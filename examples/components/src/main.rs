@@ -13,7 +13,7 @@ fn mini_counter(cx: &Cx) -> lemon::element::Element {
         .align_items(lemon::element::style::Align::Center)
         .children(children![
             Text::new(move || format!("{}", label.get())).font_size(16.0),
-            Button::new("+")
+            Button::new(cx, "+")
                 .on_click(move || inc.update(|v| *v += 1))
                 .width(44.0),
         ])
@@ -40,7 +40,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
                 .color(Color::rgb8(160, 170, 190)),
             Row::new().gap(8.0).children(children![
                 Text::new(move || format!("parent = {}", parent_label.get())).font_size(16.0),
-                Button::new("+ parent").on_click(move || parent_inc.update(|v| *v += 1)),
+                Button::new(cx, "+ parent").on_click(move || parent_inc.update(|v| *v += 1)),
             ]),
             Text::new("Two child components — separate hook slots:")
                 .font_size(15.0)

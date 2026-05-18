@@ -33,19 +33,19 @@ fn app(cx: &Cx) -> lemon::element::Element {
             })
             .font_size(16.0),
             Row::new().gap(8.0).children(children![
-                Button::new("Alice").on_click({
+                Button::new(cx, "Alice").on_click({
                     let s = name_set.clone();
                     move || s.set("Alice".into())
                 }),
-                Button::new("Bob").on_click(move || name_set.set("Bob".into())),
-                Button::new("Clear").on_click({
+                Button::new(cx, "Bob").on_click(move || name_set.set("Bob".into())),
+                Button::new(cx, "Clear").on_click({
                     let s = name.clone();
                     move || s.set(String::new())
                 }),
             ]),
             section_label("2. .update() for in-place mutation"),
             Text::new(move || format!("Button clicks: {}", clicks_display.get())).font_size(16.0),
-            Button::new("Click me").on_click(move || clicks_inc.update(|n| *n += 1)),
+            Button::new(cx, "Click me").on_click(move || clicks_inc.update(|n| *n += 1)),
             section_label("3. Multiple independent signals"),
             Text::new(move || {
                 if enabled_read.get() {
@@ -56,7 +56,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
             })
             .font_size(16.0)
             .color(Color::rgb8(120, 200, 140)),
-            Button::new("Toggle flag").on_click(move || enabled_toggle.update(|v| *v = !*v)),
+            Button::new(cx, "Toggle flag").on_click(move || enabled_toggle.update(|v| *v = !*v)),
         ])
         .into_element()
 }

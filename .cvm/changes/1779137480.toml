@@ -1,0 +1,6 @@
+[update]
+major = ["lemon", "lemon-widgets"]
+minor = []
+patch = []
+pre = true
+summary = "Make widget defaults read active theme tokens"

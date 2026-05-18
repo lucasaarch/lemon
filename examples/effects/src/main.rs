@@ -39,7 +39,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
                 .color(Color::rgb8(120, 200, 160)),
             Text::new(move || format!("last trigger value seen: {}", last_display.get()))
                 .font_size(15.0),
-            Button::new("Bump trigger").on_click(move || bump.update(|n| *n += 1)),
+            Button::new(cx, "Bump trigger").on_click(move || bump.update(|n| *n += 1)),
             Text::new("Do not call hooks inside the effect body.")
                 .font_size(13.0)
                 .color(Color::rgb8(100, 110, 130)),

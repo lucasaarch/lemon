@@ -25,7 +25,9 @@
 pub mod prelude;
 
 pub use lemon::children;
-pub use lemon::element::builders::{Button, Column, Component, Row, Text, View};
+pub mod button;
+pub use button::Button;
+pub use lemon::element::builders::{Column, Component, Row, Text, View};
 pub mod image;
 pub mod scroll;
 pub mod select;
@@ -55,7 +57,7 @@ mod text_input_tests {
     fn text_input_renders_placeholder_when_value_is_empty() {
         fn root(cx: &Cx) -> Element {
             let state = cx.use_signal(TextFieldState::new(""));
-            TextInput::new(state)
+            TextInput::new(cx, state)
                 .placeholder("Enter text...")
                 .into_element()
         }
@@ -64,8 +66,9 @@ mod text_input_tests {
 
     #[test]
     fn text_input_is_focusable_and_has_text_cursor() {
+        let cx = Cx::new();
         let state = Signal::new(TextFieldState::new(""));
-        let el = TextInput::new(state).into_element();
+        let el = TextInput::new(&cx, state).into_element();
 
         let Element::View(view) = el else {
             panic!("expected View element from TextInput");
@@ -81,8 +84,9 @@ mod text_input_tests {
 
     #[test]
     fn text_input_on_key_down_updates_state() {
+        let cx = Cx::new();
         let state = Signal::new(TextFieldState::new(""));
-        let el = TextInput::new(state.clone()).into_element();
+        let el = TextInput::new(&cx, state.clone()).into_element();
 
         let Element::View(view) = el else {
             panic!("expected View element from TextInput");
@@ -103,8 +107,9 @@ mod text_input_tests {
 
     #[test]
     fn text_input_has_border() {
+        let cx = Cx::new();
         let state = Signal::new(TextFieldState::new(""));
-        let el = TextInput::new(state).into_element();
+        let el = TextInput::new(&cx, state).into_element();
 
         let Element::View(view) = el else {
             panic!("expected View element from TextInput");

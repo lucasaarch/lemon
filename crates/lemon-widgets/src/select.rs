@@ -1,14 +1,12 @@
 use lemon::{
     element::{
-        builders::{Button, Column, Text, View},
+        builders::{Button as CoreButton, Column, Text, View},
         events::Cursor,
         style::Color,
         Element,
     },
     Cx, Signal,
 };
-
-const TRIGGER_HEIGHT: f32 = 40.0;
 
 /// Dropdown select widget backed by user-owned signal state.
 ///
@@ -52,6 +50,14 @@ pub struct Select<T> {
     options: Vec<(T, String)>,
     width: Option<f32>,
     placeholder: String,
+    trigger_height: f32,
+    trigger_padding: f32,
+    trigger_background: Color,
+    trigger_radius: f32,
+    dropdown_background: Color,
+    dropdown_border: Color,
+    dropdown_radius: f32,
+    item_padding: f32,
 }
 
 impl<T: Clone + PartialEq + 'static> Select<T> {
@@ -60,23 +66,36 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
     /// - `value` — caller-owned signal updated with the chosen option when the user selects one.
     /// - `options` — ordered list of `(value, label)` pairs shown as choices.
     pub fn new(cx: &Cx, value: Signal<Option<T>>, options: Vec<(T, String)>) -> Self {
-        Self::with_open(value, cx.use_signal(false), options)
+        Self::with_open(cx, value, cx.use_signal(false), options)
     }
 
     /// Creates a `Select` with a caller-supplied open signal.
     ///
     /// Useful when you need to control or observe the open state externally (e.g. in tests).
+    ///
+    /// `cx` supplies the active theme so the widget can derive its default trigger and dropdown
+    /// styling from [`Cx::use_theme`](lemon::Cx::use_theme).
     pub fn with_open(
+        cx: &Cx,
         value: Signal<Option<T>>,
         open: Signal<bool>,
         options: Vec<(T, String)>,
     ) -> Self {
+        let theme = cx.use_theme();
         Self {
             value,
             open,
             options,
             width: None,
             placeholder: "Select…".to_string(),
+            trigger_height: theme.spacing.sm * 5.0,
+            trigger_padding: theme.spacing.sm,
+            trigger_background: theme.colors.accent,
+            trigger_radius: theme.radius.md,
+            dropdown_background: theme.colors.surface,
+            dropdown_border: theme.colors.border,
+            dropdown_radius: theme.radius.md,
+            item_padding: theme.spacing.sm,
         }
     }
 
@@ -105,6 +124,14 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
         let options = self.options;
         let width = self.width;
         let placeholder = self.placeholder;
+        let trigger_height = self.trigger_height;
+        let trigger_padding = self.trigger_padding;
+        let trigger_background = self.trigger_background;
+        let trigger_radius = self.trigger_radius;
+        let dropdown_background = self.dropdown_background;
+        let dropdown_border = self.dropdown_border;
+        let dropdown_radius = self.dropdown_radius;
+        let item_padding = self.item_padding;
 
         // Derive trigger label from the current selection, falling back to placeholder.
         let trigger_label = current
@@ -119,8 +146,11 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
 
         // Trigger button: toggles the dropdown open/closed on click.
         let open_for_trigger = open.clone();
-        let mut trigger = Button::new(format!("{trigger_label} ▾"))
-            .height(TRIGGER_HEIGHT)
+        let mut trigger = CoreButton::new(format!("{trigger_label} ▾"))
+            .padding(trigger_padding)
+            .background(trigger_background)
+            .radius(trigger_radius)
+            .height(trigger_height)
             .on_click(move || {
                 open_for_trigger.update(|b| *b = !*b);
             });
@@ -142,11 +172,11 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
             let mut dropdown = Column::new()
                 .z_index(10)
                 .absolute()
-                .top(TRIGGER_HEIGHT)
+                .top(trigger_height)
                 .left(0.0)
-                .background(Color::rgb8(35, 35, 52))
-                .border(Color::rgb8(80, 80, 110), 1.0)
-                .radius(6.0);
+                .background(dropdown_background)
+                .border(dropdown_border, 1.0)
+                .radius(dropdown_radius);
             if let Some(w) = width {
                 dropdown = dropdown.width(w);
             }
@@ -155,7 +185,7 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
                 let open_c = open.clone();
                 let val_c = value.clone();
                 let mut item = View::new()
-                    .padding(8.0)
+                    .padding(item_padding)
                     .cursor(Cursor::Pointer)
                     .on_click(move || {
                         val_c.set(Some(opt.clone()));
@@ -204,7 +234,8 @@ mod tests {
     fn select_closed_shows_placeholder_in_trigger() {
         let value = Signal::new(None::<Color>);
         let open = Signal::new(false);
-        let el = Select::with_open(value, open, make_options()).into_element();
+        let cx = Cx::new();
+        let el = Select::with_open(&cx, value, open, make_options()).into_element();
 
         let Element::Column(col) = el else {
             panic!("expected Column container");
@@ -225,7 +256,8 @@ mod tests {
     fn select_closed_shows_selected_label_in_trigger() {
         let value = Signal::new(Some(Color::Green));
         let open = Signal::new(false);
-        let el = Select::with_open(value, open, make_options()).into_element();
+        let cx = Cx::new();
+        let el = Select::with_open(&cx, value, open, make_options()).into_element();
 
         let Element::Column(col) = el else {
             panic!("expected Column container");
@@ -244,7 +276,8 @@ mod tests {
     fn select_open_shows_options_as_children() {
         let value = Signal::new(None::<Color>);
         let open = Signal::new(true);
-        let el = Select::with_open(value, open, make_options()).into_element();
+        let cx = Cx::new();
+        let el = Select::with_open(&cx, value, open, make_options()).into_element();
 
         let Element::Column(col) = el else {
             panic!("expected Column container");
@@ -268,9 +301,10 @@ mod tests {
 
         let value = Signal::new(None::<Color>);
         let open = Signal::new(true);
+        let cx = Cx::new();
         let root = Column::new()
             .child(
-                Select::with_open(value, open, make_options())
+                Select::with_open(&cx, value, open, make_options())
                     .placeholder("Pick")
                     .width(180.0),
             )
@@ -312,7 +346,8 @@ mod tests {
 
         let value = Signal::new(None::<Color>);
         let open = Signal::new(true);
-        let el = Select::with_open(value, open, make_options())
+        let cx = Cx::new();
+        let el = Select::with_open(&cx, value, open, make_options())
             .width(180.0)
             .into_element();
         let mut tree = RetainedTree::mount(el).unwrap();
@@ -336,13 +371,14 @@ mod tests {
 
         let value = Signal::new(None::<Color>);
         let open = Signal::new(false);
-        let closed = Select::with_open(value.clone(), open.clone(), make_options())
+        let cx = Cx::new();
+        let closed = Select::with_open(&cx, value.clone(), open.clone(), make_options())
             .width(180.0)
             .into_element();
         let mut tree = RetainedTree::mount(closed.clone()).unwrap();
 
         open.set(true);
-        let opened = Select::with_open(value, open, make_options())
+        let opened = Select::with_open(&cx, value, open, make_options())
             .width(180.0)
             .into_element();
         let patches = diff(closed, opened, NodePath::root());
@@ -372,7 +408,8 @@ mod tests {
 
         let value = Signal::new(None::<Color>);
         let open = Signal::new(true);
-        let root = Select::with_open(value, open, make_options())
+        let cx = Cx::new();
+        let root = Select::with_open(&cx, value, open, make_options())
             .width(180.0)
             .into_element();
         let mut tree = RetainedTree::mount(root).unwrap();
@@ -396,7 +433,8 @@ mod tests {
     fn select_trigger_click_toggles_open_state() {
         let value = Signal::new(None::<Color>);
         let open = Signal::new(false);
-        let el = Select::with_open(value, open.clone(), make_options()).into_element();
+        let cx = Cx::new();
+        let el = Select::with_open(&cx, value, open.clone(), make_options()).into_element();
 
         let Element::Column(col) = el else {
             panic!("expected Column container");
@@ -416,7 +454,8 @@ mod tests {
     fn select_option_click_updates_value_and_closes() {
         let value = Signal::new(None::<Color>);
         let open = Signal::new(true);
-        let el = Select::with_open(value.clone(), open.clone(), make_options()).into_element();
+        let cx = Cx::new();
+        let el = Select::with_open(&cx, value.clone(), open.clone(), make_options()).into_element();
 
         let Element::Column(col) = el else {
             panic!("expected Column container");
@@ -446,7 +485,8 @@ mod tests {
     fn select_click_outside_closes_dropdown() {
         let value = Signal::new(None::<Color>);
         let open = Signal::new(true);
-        let el = Select::with_open(value, open.clone(), make_options()).into_element();
+        let cx = Cx::new();
+        let el = Select::with_open(&cx, value, open.clone(), make_options()).into_element();
 
         let Element::Column(col) = el else {
             panic!("expected Column container");
@@ -464,7 +504,8 @@ mod tests {
     fn select_custom_placeholder_appears_in_trigger() {
         let value = Signal::new(None::<Color>);
         let open = Signal::new(false);
-        let el = Select::with_open(value, open, make_options())
+        let cx = Cx::new();
+        let el = Select::with_open(&cx, value, open, make_options())
             .placeholder("Pick a color")
             .into_element();
 
@@ -479,5 +520,55 @@ mod tests {
             label.contains("Pick a color"),
             "trigger should show custom placeholder, got: {label}"
         );
+    }
+
+    #[test]
+    fn select_defaults_follow_active_theme() {
+        use lemon::{
+            current_theme,
+            element::style::{CornerRadii, Edges},
+            set_active_theme, Theme,
+        };
+
+        let previous = current_theme();
+        let mut custom = Theme::default_dark();
+        custom.colors.accent = lemon::Color::rgb8(10, 20, 30);
+        custom.colors.surface = lemon::Color::rgb8(40, 50, 60);
+        custom.colors.border = lemon::Color::rgb8(70, 80, 90);
+        custom.spacing.sm = 9.0;
+        custom.radius.md = 11.0;
+        set_active_theme(custom.clone());
+
+        let cx = Cx::new();
+        let value = Signal::new(None::<Color>);
+        let open = Signal::new(true);
+        let Element::Column(root) =
+            Select::with_open(&cx, value, open, make_options()).into_element()
+        else {
+            panic!("expected Column");
+        };
+
+        let Element::Button(trigger) = &root.children[0] else {
+            panic!("expected trigger Button");
+        };
+        assert_eq!(trigger.style.padding, Some(Edges::all(custom.spacing.sm)));
+        let trigger_paint = trigger.paint.resolve();
+        assert_eq!(trigger_paint.background, Some(custom.colors.accent));
+        assert_eq!(trigger_paint.radius, CornerRadii::all(custom.radius.md));
+
+        let Element::Column(dropdown) = &root.children[1] else {
+            panic!("expected dropdown Column");
+        };
+        let dropdown_paint = dropdown.paint.resolve();
+        assert_eq!(dropdown_paint.background, Some(custom.colors.surface));
+        assert_eq!(dropdown_paint.border_color, Some(custom.colors.border));
+        assert_eq!(dropdown_paint.radius, CornerRadii::all(custom.radius.md));
+
+        let Element::View(option) = &dropdown.children[0] else {
+            panic!("expected option View");
+        };
+        assert_eq!(option.style.padding, Some(Edges::all(custom.spacing.sm)));
+
+        set_active_theme(previous);
     }
 }

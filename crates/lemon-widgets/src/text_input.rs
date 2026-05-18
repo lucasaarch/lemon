@@ -6,7 +6,7 @@ use lemon::{
         types::TextInputMeta,
         Element,
     },
-    Signal,
+    Cx, Signal,
 };
 
 use crate::TextFieldState;
@@ -27,7 +27,7 @@ use crate::TextFieldState;
 ///
 /// fn my_view(cx: &Cx) -> Element {
 ///     let state = cx.use_signal(TextFieldState::new(""));
-///     TextInput::new(state)
+///     TextInput::new(cx, state)
 ///         .placeholder("Type here…")
 ///         .width(240.0)
 ///         .into_element()
@@ -37,6 +37,10 @@ pub struct TextInput {
     state: Signal<TextFieldState>,
     placeholder: String,
     width: Option<f32>,
+    placeholder_color: Color,
+    border_color: Color,
+    padding: f32,
+    radius: f32,
 }
 
 impl TextInput {
@@ -44,11 +48,16 @@ impl TextInput {
     ///
     /// The builder reads the signal immediately so the parent component re-renders
     /// whenever the field value or cursor changes.
-    pub fn new(state: Signal<TextFieldState>) -> Self {
+    pub fn new(cx: &Cx, state: Signal<TextFieldState>) -> Self {
+        let theme = cx.use_theme();
         TextInput {
             state,
             placeholder: String::new(),
             width: None,
+            placeholder_color: theme.colors.foreground_secondary,
+            border_color: theme.colors.border,
+            padding: theme.spacing.sm,
+            radius: theme.radius.sm,
         }
     }
 
@@ -75,16 +84,16 @@ impl TextInput {
         // Text shown in the field: current value or placeholder (dimmed).
         let text_child: Element = if current_value.is_empty() {
             Text::new(placeholder)
-                .color(Color::rgb8(156, 163, 175))
+                .color(self.placeholder_color)
                 .into_element()
         } else {
             Text::new(current_value).into_element()
         };
 
         let mut container = View::new()
-            .padding(6.0)
-            .border(Color::rgb8(156, 163, 175), 1.5)
-            .radius(4.0)
+            .padding(self.padding)
+            .border(self.border_color, 1.5)
+            .radius(self.radius)
             .overflow(Overflow::Hidden)
             .focusable()
             .cursor(Cursor::Text)
@@ -114,5 +123,53 @@ impl TextInput {
 impl From<TextInput> for Element {
     fn from(input: TextInput) -> Self {
         input.into_element()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lemon::{
+        current_theme,
+        element::{style::CornerRadii, Element},
+        set_active_theme, Theme,
+    };
+
+    #[test]
+    fn text_input_defaults_follow_active_theme() {
+        let previous = current_theme();
+        let mut custom = Theme::default_dark();
+        custom.colors.foreground_secondary = Color::rgb8(120, 121, 122);
+        custom.colors.border = Color::rgb8(12, 34, 56);
+        custom.spacing.sm = 10.0;
+        custom.radius.sm = 7.0;
+        set_active_theme(custom.clone());
+
+        let cx = Cx::new();
+        let state = Signal::new(TextFieldState::new(""));
+        let Element::View(view) = TextInput::new(&cx, state)
+            .placeholder("Type here")
+            .into_element()
+        else {
+            panic!("expected View element");
+        };
+
+        assert_eq!(
+            view.style.padding,
+            Some(lemon::element::style::Edges::all(custom.spacing.sm))
+        );
+        let paint = view.paint.resolve();
+        assert_eq!(paint.border_color, Some(custom.colors.border));
+        assert_eq!(paint.radius, CornerRadii::all(custom.radius.sm));
+
+        let Element::Row(row) = &view.children[0] else {
+            panic!("expected inner Row");
+        };
+        let Element::Text(text) = &row.children[0] else {
+            panic!("expected placeholder Text");
+        };
+        assert_eq!(text.style.color, Some(custom.colors.foreground_secondary));
+
+        set_active_theme(previous);
     }
 }
