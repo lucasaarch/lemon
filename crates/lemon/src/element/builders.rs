@@ -536,6 +536,32 @@ impl Component {
         Self(ComponentElement::from_component_fn(view))
     }
 
+    /// Wraps a typed sub-view function and props; hooks inside `view` persist across re-renders.
+    ///
+    /// `view` must be a function pointer. Use this when the component needs strongly typed,
+    /// comparable props.
+    ///
+    /// ```
+    /// use lemon::prelude::*;
+    ///
+    /// #[derive(Clone, PartialEq)]
+    /// struct Props {
+    ///     label: &'static str,
+    /// }
+    ///
+    /// fn child(_cx: &Cx, props: &Props) -> Element {
+    ///     Text::new(props.label).into_element()
+    /// }
+    ///
+    /// let _ = Component::new_with_props(child, Props { label: "hello" });
+    /// ```
+    pub fn new_with_props<P: Clone + PartialEq + 'static>(
+        view: fn(&crate::runtime::cx::Cx, &P) -> Element,
+        props: P,
+    ) -> Self {
+        Self(ComponentElement::from_component_fn_with_props(view, props))
+    }
+
     /// Stable key when this component is one of several keyed siblings.
     pub fn key(mut self, key: u64) -> Self {
         self.0 = self.0.with_key(Key(key));

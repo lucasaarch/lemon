@@ -327,6 +327,7 @@ fn handle_component_pair(
     deferred_effects: Rc<RefCell<Vec<Effect>>>,
 ) {
     let new_for_patch = new.clone();
+    let props_changed = !old.props_eq(&new);
     if same_component_identity(old, &new) {
         if let Some(slot) = find_slot_mut(parent_slots, &path) {
             *slot.view.borrow_mut() = new.view();
@@ -337,7 +338,7 @@ fn handle_component_pair(
             }
             crate::lemon_trace!(
                 Runtime,
-                "handle_component_pair path={} key={:?} pending_before={had_pending}",
+                "handle_component_pair path={} key={:?} pending_before={had_pending} props_changed={props_changed}",
                 crate::debug::format_path(&path),
                 new.key()
             );
