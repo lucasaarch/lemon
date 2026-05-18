@@ -69,6 +69,11 @@ macro_rules! container_builder {
                 self.0.paint.radius = CornerRadii::all(r);
                 self
             }
+            /// Sets an image to draw inside this container using object-fit: contain scaling.
+            pub fn image(mut self, handle: crate::asset::ImageHandle) -> Self {
+                self.0.paint.image = Some(handle);
+                self
+            }
             /// Appends a child widget; call repeatedly to build a list of children.
             pub fn child(mut self, el: impl Into<Element>) -> Self {
                 self.0.children.push(el.into());

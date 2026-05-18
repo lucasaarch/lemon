@@ -162,6 +162,8 @@ pub struct PaintProps {
     pub border_color: Option<ColorSource>,
     pub border_width: f32,
     pub radius: CornerRadii,
+    /// Optional image drawn inside the container using object-fit: contain scaling.
+    pub image: Option<crate::asset::ImageHandle>,
 }
 
 impl Default for PaintProps {
@@ -171,6 +173,7 @@ impl Default for PaintProps {
             border_color: None,
             border_width: 0.0,
             radius: CornerRadii::default(),
+            image: None,
         }
     }
 }
@@ -185,6 +188,7 @@ impl std::fmt::Debug for PaintProps {
             )
             .field("border_width", &self.border_width)
             .field("radius", &self.radius)
+            .field("image", &self.image)
             .finish()
     }
 }
@@ -196,6 +200,8 @@ pub struct PaintData {
     pub border_color: Option<Color>,
     pub border_width: f32,
     pub radius: CornerRadii,
+    /// Optional image drawn inside the container using object-fit: contain scaling.
+    pub image: Option<crate::asset::ImageHandle>,
 }
 
 impl PaintProps {
@@ -205,6 +211,7 @@ impl PaintProps {
             border_color: self.border_color.as_ref().map(|c| c.resolve()),
             border_width: self.border_width,
             radius: self.radius.clone(),
+            image: self.image.clone(),
         }
     }
 }
