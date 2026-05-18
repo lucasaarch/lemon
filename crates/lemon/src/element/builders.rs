@@ -7,7 +7,7 @@ use crate::element::{
     Element,
 };
 
-// ── Macro to generate container builders (Column, Row, Box_) ──────────────
+// ── Macro to generate container builders (Column, Row, View) ──────────────
 
 macro_rules! container_builder {
     ($name:ident, $variant:ident, $doc:expr) => {
@@ -166,8 +166,8 @@ container_builder!(
     "Horizontal flex container: children stack from left to right."
 );
 container_builder!(
-    Box_,
-    Box_,
+    View,
+    View,
     "Generic flex container; use when you do not need an explicit row or column axis."
 );
 
@@ -365,7 +365,7 @@ mod tests {
 
     #[test]
     fn box_builder_sets_key() {
-        let Element::Box_(el) = Box_::new().key(9).into_element() else {
+        let Element::View(el) = View::new().key(9).into_element() else {
             panic!()
         };
         assert_eq!(el.key, Some(Key(9)));
@@ -373,7 +373,7 @@ mod tests {
 
     #[test]
     fn box_builder_sets_overflow() {
-        let Element::Box_(el) = Box_::new().overflow(Overflow::Hidden).into_element() else {
+        let Element::View(el) = View::new().overflow(Overflow::Hidden).into_element() else {
             panic!()
         };
         assert_eq!(el.style.overflow, Overflow::Hidden);
@@ -381,7 +381,7 @@ mod tests {
 
     #[test]
     fn box_builder_sets_focusable_cursor_and_handlers() {
-        let Element::Box_(el) = Box_::new()
+        let Element::View(el) = View::new()
             .focusable()
             .cursor(crate::element::events::Cursor::Pointer)
             .on_click(|| {})

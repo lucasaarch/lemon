@@ -279,13 +279,13 @@ fn collect_layouts(
 mod tests {
     use super::*;
     use crate::diff::{NodePath, Patch};
-    use crate::element::builders::{Box_, Column, Text};
+    use crate::element::builders::{Column, Text, View};
     use crate::element::types::ComponentElement;
 
     #[test]
     fn text_node_measured_with_parley_clears_needs_layout() {
         let mut tree = RetainedTree::mount(
-            Box_::new()
+            View::new()
                 .width(120.0)
                 .child(Text::new("hello").font_size(16.0))
                 .into_element(),

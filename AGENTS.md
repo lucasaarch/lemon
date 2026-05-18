@@ -147,7 +147,7 @@ The canonical builder style is:
 
 - `Column::new()`
 - `Row::new()`
-- `Box_::new()`
+- `View::new()` (formerly `Box_`; see crate docs)
 - `Text::new(...)`
 - `Button::new(...)`
 - `Component::new(...)`

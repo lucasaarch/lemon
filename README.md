@@ -91,7 +91,7 @@ cargo run -p list_keyed
 Lemon is intentionally built as a pipeline of small layers:
 
 1. **Runtime**: signals, derived values, effects, and hook-like APIs through `Cx`
-2. **Element tree**: builders such as `Column`, `Row`, `Box_`, `Text`, and `Button`
+2. **Element tree**: builders such as `Column`, `Row`, `View`, `Text`, and `Button` (`Box_` was renamed to `View`; see `cargo doc -p lemon`)
 3. **Diff**: compare virtual trees and emit patches
 4. **Retained tree**: store live nodes, handlers, and Taffy layout IDs
 5. **Layout**: compute flex layout and text measurement

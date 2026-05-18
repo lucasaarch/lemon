@@ -119,7 +119,7 @@ fn paint_container(
 ) {
     let is_container = matches!(
         node.kind,
-        RetainedKind::Box | RetainedKind::Row | RetainedKind::Column | RetainedKind::Button
+        RetainedKind::View | RetainedKind::Row | RetainedKind::Column | RetainedKind::Button
     );
     if !is_container {
         return;

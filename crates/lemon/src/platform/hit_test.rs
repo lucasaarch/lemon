@@ -158,7 +158,7 @@ pub fn hit_test_scroll<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::element::builders::{Box_, Button, Column, Text};
+    use crate::element::builders::{Button, Column, Text, View};
     use crate::layout::{layout_pass, Viewport};
     use crate::retained::RetainedTree;
     use std::cell::Cell;
@@ -265,7 +265,7 @@ mod tests {
                 .width(200.0)
                 .height(200.0)
                 .child(
-                    Box_::new()
+                    View::new()
                         .width(80.0)
                         .height(40.0)
                         .on_hover_enter(move || e.set(true)),
@@ -332,7 +332,7 @@ mod tests {
         let s = scrolled.clone();
 
         let mut tree = RetainedTree::mount(
-            Box_::new()
+            View::new()
                 .width(200.0)
                 .height(150.0)
                 .on_scroll(move |_| s.set(true))

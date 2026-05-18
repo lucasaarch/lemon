@@ -1,5 +1,5 @@
 use lemon::{run, Color, Cx, WindowConfig};
-use lemon_widgets::{Box_, Button, Column, Row, Text};
+use lemon_widgets::{Button, Column, Row, Text, View};
 
 fn card(cx: &Cx) -> lemon::element::Element {
     let liked = cx.use_signal(false);
@@ -9,7 +9,7 @@ fn card(cx: &Cx) -> lemon::element::Element {
         .padding(32.0)
         .gap(0.0)
         .child(
-            Box_::new()
+            View::new()
                 .padding(24.0)
                 .background(Color::rgb8(30, 30, 38))
                 .radius(12.0)
@@ -23,7 +23,7 @@ fn card(cx: &Cx) -> lemon::element::Element {
                                 .color(Color::rgb8(160, 160, 180)),
                         )
                         .child(
-                            Box_::new()
+                            View::new()
                                 .flex_grow(1.0)
                                 .height(1.0)
                                 .background(Color::rgb8(55, 55, 70)),

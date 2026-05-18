@@ -14,7 +14,7 @@ fn component_identity(view: ComponentFn) -> usize {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Key(pub u64);
 
-/// Used by Box_, Row, and Column — all three are the same struct.
+/// Shared backing struct for [`View`](crate::element::builders::View), [`Row`](crate::element::builders::Row), and [`Column`](crate::element::builders::Column).
 #[derive(Clone, Default, Debug)]
 pub struct BoxElement {
     pub style: StyleProps,

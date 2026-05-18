@@ -9,7 +9,7 @@ use types::{BoxElement, ButtonElement, ComponentElement, ImageElement, TextEleme
 #[derive(Clone, Debug)]
 pub enum Element {
     Text(TextElement),
-    Box_(BoxElement),
+    View(BoxElement),
     Row(BoxElement),
     Column(BoxElement),
     Button(ButtonElement),

@@ -9,8 +9,20 @@
 //!
 //! Everything here is also available from [`lemon::element::builders`] if you prefer a single
 //! dependency.
+//!
+//! # Migrating from `Box_`
+//!
+//! The generic container builder was renamed to [`View`] in the `lemon` crate (see `cargo doc -p lemon`).
+//! [`Box_`] is still re-exported here as a deprecated alias.
 
-pub use lemon::element::builders::{Box_, Button, Column, Component, Row, Text};
+pub use lemon::element::builders::{Button, Column, Component, Row, Text, View};
+
+/// Deprecated alias for [`View`].
+#[deprecated(
+    since = "0.2.0",
+    note = "renamed to `View`; see the `lemon` crate-level docs"
+)]
+pub use lemon::element::builders::View as Box_;
 
 #[cfg(test)]
 mod tests {
@@ -23,7 +35,7 @@ mod tests {
             Column::new()
                 .child(Row::new().child(Text::new("hello")))
                 .child(Button::new("ok"))
-                .child(Box_::new().child(Text::new("box")))
+                .child(View::new().child(Text::new("view")))
                 .into_element()
         }
     }

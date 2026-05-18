@@ -42,6 +42,20 @@
 //! pointer** (`fn(&Cx) -> Element`), not a capturing closure. For list rows with per-item state,
 //! prefer keyed [`Row`] / [`Column`] children instead of capturing [`Component`]s.
 //!
+//! # Migrating from `Box_`
+//!
+//! The generic flex container builder was renamed to [`View`] (and [`Element::View`]) because
+//! `Box` clashes with [`std::boxed::Box`] in Rust. Update imports and matches:
+//!
+//! | Before | After |
+//! |--------|-------|
+//! | `Box_::new()` | [`View::new()`] |
+//! | `Element::Box_(…)` | `Element::View(…)` |
+//! | `use …::{Box_, …}` | `use …::{View, …}` |
+//!
+//! [`Box_`] remains available as a deprecated type alias for one release cycle. Roadmap issues
+//! and older examples may still mention `Box_`; treat that name as [`View`].
+//!
 //! # Lower-level API
 //!
 //! [`Runtime`], [`RetainedTree`], [`layout_pass`], and [`paint_pass`] are public for tests and
@@ -55,7 +69,15 @@ pub mod platform;
 pub mod retained;
 pub mod runtime;
 
-pub use element::builders::{Box_, Button, Column, Component, Row, Text};
+pub use element::builders::{Button, Column, Component, Row, Text, View};
+
+/// Deprecated alias for [`View`]; use [`View`] in new code.
+#[deprecated(
+    since = "0.2.0",
+    note = "renamed to `View` to avoid clashing with std::boxed::Box; see crate-level docs"
+)]
+pub use element::builders::View as Box_;
+
 pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 pub use element::style::{Color, Overflow, StyleProps};
 pub use layout::{layout_pass, layout_pass_if_dirty, LayoutMap, LayoutRect, Viewport};

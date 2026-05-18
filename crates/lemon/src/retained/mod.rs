@@ -103,7 +103,7 @@ impl std::fmt::Debug for EventHandlers {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum RetainedKind {
-    Box,
+    View,
     Row,
     Column,
     Text,
@@ -214,7 +214,7 @@ impl RetainedTree {
 
     fn build_node(&mut self, element: Element) -> Result<RetainedNode, RetainedError> {
         match element {
-            Element::Box_(node) => self.build_box_node(RetainedKind::Box, node),
+            Element::View(node) => self.build_box_node(RetainedKind::View, node),
             Element::Row(node) => self.build_box_node(RetainedKind::Row, node),
             Element::Column(node) => self.build_box_node(RetainedKind::Column, node),
             Element::Text(node) => self.build_text_node(node),
@@ -721,7 +721,7 @@ mod tests {
     use std::{cell::Cell, rc::Rc};
 
     use crate::diff::{NodePath, Patch};
-    use crate::element::builders::{Box_, Button, Column, Text};
+    use crate::element::builders::{Button, Column, Text, View};
     use crate::element::events::{KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
     use crate::element::style::{Align, Color, Dimension, Edges, Justify, StyleProps};
     use crate::element::types::ComponentElement;
@@ -1025,7 +1025,7 @@ mod tests {
         let e = entered.clone();
         let l = left.clone();
 
-        let element = Box_::new()
+        let element = View::new()
             .width(100.0)
             .height(100.0)
             .on_hover_enter(move || e.set(true))
@@ -1050,7 +1050,7 @@ mod tests {
         let received = Rc::new(RefCell::new(None::<LemonKey>));
         let r = received.clone();
 
-        let element = Box_::new()
+        let element = View::new()
             .width(100.0)
             .height(100.0)
             .focusable()
@@ -1080,7 +1080,7 @@ mod tests {
         let d = delta_received.clone();
 
         let tree = RetainedTree::mount(
-            Box_::new()
+            View::new()
                 .width(200.0)
                 .height(150.0)
                 .on_scroll(move |delta| d.set(delta))

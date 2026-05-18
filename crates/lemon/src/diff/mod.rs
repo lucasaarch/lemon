@@ -80,7 +80,7 @@ pub fn diff(old: Element, new: Element, path: NodePath) -> Vec<Patch> {
         }
         (Column(o), Column(n)) => diff_box(o, n, path, &mut patches),
         (Row(o), Row(n)) => diff_box(o, n, path, &mut patches),
-        (Box_(o), Box_(n)) => diff_box(o, n, path, &mut patches),
+        (View(o), View(n)) => diff_box(o, n, path, &mut patches),
         (Component(o), Component(n)) => {
             if o.identity() == n.identity() && o.key() == n.key() {
                 patches.push(Patch::UpdateComponent {
@@ -189,7 +189,7 @@ pub(crate) fn element_key(element: &Element) -> Option<crate::element::types::Ke
     use Element::*;
     match element {
         Text(text) => text.key.clone(),
-        Column(container) | Row(container) | Box_(container) => container.key.clone(),
+        Column(container) | Row(container) | View(container) => container.key.clone(),
         Button(button) => button.key.clone(),
         Image(image) => image.key.clone(),
         Component(component) => component.key().cloned(),

@@ -548,7 +548,7 @@ fn diff_with_nested_components(
         }
         (Element::Column(old), Element::Column(new))
         | (Element::Row(old), Element::Row(new))
-        | (Element::Box_(old), Element::Box_(new)) => {
+        | (Element::View(old), Element::View(new)) => {
             diff_container_props(&old, &new, &path, patches);
             diff_children_slots(
                 slots,
@@ -574,7 +574,7 @@ fn freeze_element(element: &Element) -> Element {
             style: text.style.clone(),
             key: text.key.clone(),
         }),
-        Element::Box_(container) => Element::Box_(freeze_box(container)),
+        Element::View(container) => Element::View(freeze_box(container)),
         Element::Row(container) => Element::Row(freeze_box(container)),
         Element::Column(container) => Element::Column(freeze_box(container)),
         Element::Button(button) => Element::Button(ButtonElement {

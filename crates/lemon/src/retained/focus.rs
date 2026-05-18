@@ -68,14 +68,14 @@ fn collect_focusable_node(node: &RetainedNode, out: &mut Vec<NodeId>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::element::builders::{Box_, Column};
+    use crate::element::builders::{Column, View};
 
     #[test]
     fn collect_focusable_finds_marked_nodes() {
         let element = Column::new()
-            .child(Box_::new().width(10.0).height(10.0).focusable())
-            .child(Box_::new().width(10.0).height(10.0))
-            .child(Box_::new().width(10.0).height(10.0).focusable())
+            .child(View::new().width(10.0).height(10.0).focusable())
+            .child(View::new().width(10.0).height(10.0))
+            .child(View::new().width(10.0).height(10.0).focusable())
             .into_element();
 
         let tree = RetainedTree::mount(element).unwrap();
@@ -86,8 +86,8 @@ mod tests {
     #[test]
     fn cycle_forward_advances_through_focusable_nodes() {
         let element = Column::new()
-            .child(Box_::new().width(10.0).height(10.0).focusable())
-            .child(Box_::new().width(10.0).height(10.0).focusable())
+            .child(View::new().width(10.0).height(10.0).focusable())
+            .child(View::new().width(10.0).height(10.0).focusable())
             .into_element();
 
         let tree = RetainedTree::mount(element).unwrap();
@@ -107,8 +107,8 @@ mod tests {
     #[test]
     fn cycle_backward_wraps_correctly() {
         let element = Column::new()
-            .child(Box_::new().width(10.0).height(10.0).focusable())
-            .child(Box_::new().width(10.0).height(10.0).focusable())
+            .child(View::new().width(10.0).height(10.0).focusable())
+            .child(View::new().width(10.0).height(10.0).focusable())
             .into_element();
 
         let tree = RetainedTree::mount(element).unwrap();
@@ -122,7 +122,7 @@ mod tests {
     #[test]
     fn no_focusable_nodes_cycle_is_noop() {
         let element = Column::new()
-            .child(Box_::new().width(10.0).height(10.0))
+            .child(View::new().width(10.0).height(10.0))
             .into_element();
         let tree = RetainedTree::mount(element).unwrap();
         let mut fm = FocusManager::new();
