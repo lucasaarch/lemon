@@ -29,11 +29,13 @@ pub use lemon::element::builders::{Button, Column, Component, Row, Text, View};
 pub mod image;
 pub mod scroll;
 pub mod select;
+pub mod slider;
 pub mod text_field_state;
 pub mod text_input;
 pub use image::Image;
 pub use scroll::Scroll;
 pub use select::Select;
+pub use slider::Slider;
 pub use text_field_state::TextFieldState;
 pub use text_input::TextInput;
 
