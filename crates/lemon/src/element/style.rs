@@ -87,6 +87,13 @@ pub struct StyleProps {
     pub height: Option<Dimension>,
     pub padding: Option<Edges<f32>>,
     pub margin: Option<Edges<f32>>,
+    /// Absolute or relative inset offsets in logical points.
+    ///
+    /// For nodes created with [`.absolute()`](crate::element::builders::View::absolute), these
+    /// values position the node relative to its containing flex ancestor. Use builder methods such
+    /// as [`.top()`](crate::element::builders::View::top) and
+    /// [`.left()`](crate::element::builders::View::left) rather than setting this field directly.
+    pub inset: Option<Edges<f32>>,
     pub gap: Option<f32>,
     pub flex_grow: Option<f32>,
     pub flex_shrink: Option<f32>,

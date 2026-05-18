@@ -8,6 +8,8 @@ use lemon::{
     Cx, Signal,
 };
 
+const TRIGGER_HEIGHT: f32 = 40.0;
+
 /// Dropdown select widget backed by user-owned signal state.
 ///
 /// `Select<T>` renders a trigger button that opens a dropdown list of choices. Selecting an option
@@ -117,9 +119,11 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
 
         // Trigger button: toggles the dropdown open/closed on click.
         let open_for_trigger = open.clone();
-        let mut trigger = Button::new(format!("{trigger_label} ▾")).on_click(move || {
-            open_for_trigger.update(|b| *b = !*b);
-        });
+        let mut trigger = Button::new(format!("{trigger_label} ▾"))
+            .height(TRIGGER_HEIGHT)
+            .on_click(move || {
+                open_for_trigger.update(|b| *b = !*b);
+            });
         if let Some(w) = width {
             trigger = trigger.width(w);
         }
@@ -138,6 +142,8 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
             let mut dropdown = Column::new()
                 .z_index(10)
                 .absolute()
+                .top(TRIGGER_HEIGHT)
+                .left(0.0)
                 .background(Color::rgb8(35, 35, 52))
                 .border(Color::rgb8(80, 80, 110), 1.0)
                 .radius(6.0);
@@ -253,6 +259,45 @@ mod tests {
         assert!(
             dropdown.style.position_absolute,
             "dropdown must be absolutely positioned to overlay content"
+        );
+    }
+
+    #[test]
+    fn select_open_dropdown_lays_out_below_trigger() {
+        use lemon::{layout_pass, RetainedTree, Viewport};
+
+        let value = Signal::new(None::<Color>);
+        let open = Signal::new(true);
+        let root = Column::new()
+            .child(
+                Select::with_open(value, open, make_options())
+                    .placeholder("Pick")
+                    .width(180.0),
+            )
+            .child(Text::new("Sibling below"))
+            .into_element();
+        let mut tree = RetainedTree::mount(root).unwrap();
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 400.0,
+            },
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let select = &root.children[0];
+        let trigger = &select.children[0];
+        let dropdown = &select.children[1];
+        let trigger_rect = layout.get(trigger.taffy_id.unwrap()).unwrap();
+        let dropdown_rect = layout.get(dropdown.taffy_id.unwrap()).unwrap();
+
+        assert!(
+            dropdown_rect.y >= trigger_rect.y + trigger_rect.height,
+            "dropdown top ({}) must be at or below trigger bottom ({})",
+            dropdown_rect.y,
+            trigger_rect.y + trigger_rect.height
         );
     }
 
