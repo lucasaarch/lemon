@@ -243,6 +243,11 @@ macro_rules! container_builder {
                 self.0.handlers.on_pointer_move = Some(Rc::new(f));
                 self
             }
+            /// Binds a cell updated after layout for scroll clamping (used by `Scroll` widget).
+            pub fn scroll_layout_max(mut self, cell: std::rc::Rc<std::cell::Cell<f64>>) -> Self {
+                self.0.handlers.scroll_layout_max = Some(cell);
+                self
+            }
             /// Uniform margin on all sides, in logical points.
             pub fn margin(mut self, v: f32) -> Self {
                 self.0.style.margin = Some(Edges::all(v));
@@ -328,6 +333,11 @@ macro_rules! container_builder {
             /// Marks this node as a vertical scroll viewport (scrollbar when content overflows).
             pub fn scroll_viewport(mut self) -> Self {
                 self.0.scroll_viewport = true;
+                self
+            }
+            /// Paints a widget-style scrollbar track and thumb from layout measurements.
+            pub fn scroll_bar(mut self) -> Self {
+                self.0.scroll_bar = true;
                 self
             }
             /// Removes this node from normal flex flow.

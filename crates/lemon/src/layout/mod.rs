@@ -7,7 +7,7 @@ use parley::{
 use taffy::geometry::{Point, Size};
 use taffy::{AvailableSpace, NodeId};
 
-use crate::element::style::TextStyle;
+use crate::element::style::{Overflow, TextStyle};
 use crate::retained::{RetainedError, RetainedKind, RetainedNode, RetainedTree};
 
 type ParleyBrush = [u8; 4];
@@ -137,6 +137,78 @@ pub fn layout_pass(
     fix_absolute_overlay_bounds(root_node, &mut map);
     tree.layout_dirty = false;
     Ok(map)
+}
+
+/// Total scrollable content height inside a clipped viewport (logical points).
+pub fn scroll_content_extent(node: &RetainedNode, layout: &LayoutMap) -> Option<f32> {
+    if node.handlers.on_scroll.is_none() || node.style.overflow != Overflow::Hidden {
+        return None;
+    }
+    let inner = node.children.first()?;
+    // Measure the content subtree only (e.g. the list `Column`), not the offset wrapper.
+    // Using viewport-relative bounds here would shrink as `margin_top` shifts during scroll,
+    // making the thumb appear to grow while scrolling down.
+    let content = inner.children.first().unwrap_or(inner);
+    if let Some(bounds) = union_descendant_bounds(content, layout) {
+        Some(bounds.height)
+    } else {
+        Some(layout.get(content.taffy_id?)?.height)
+    }
+}
+
+/// Maximum scroll offset for a clipped viewport with an inner content wrapper, from layout results.
+pub fn scroll_content_max_offset(node: &RetainedNode, layout: &LayoutMap) -> Option<f64> {
+    if node.handlers.on_scroll.is_none() || node.style.overflow != Overflow::Hidden {
+        return None;
+    }
+    let viewport_rect = layout.get(node.taffy_id?)?;
+    let content_h = scroll_content_extent(node, layout)?;
+    Some(f64::from((content_h - viewport_rect.height).max(0.0)))
+}
+
+/// Writes [`scroll_content_max_offset`](scroll_content_max_offset) into each node's
+/// [`EventHandlers::scroll_layout_max`](crate::retained::EventHandlers::scroll_layout_max) cell.
+pub fn sync_scroll_layout_max(node: &RetainedNode, layout: &LayoutMap) {
+    if let Some(cell) = &node.handlers.scroll_layout_max {
+        if let Some(max) = scroll_content_max_offset(node, layout) {
+            cell.set(max);
+        }
+    }
+    if matches!(node.kind, RetainedKind::Component { .. }) {
+        for child in &node.children {
+            sync_scroll_layout_max(child, layout);
+        }
+        return;
+    }
+    for child in &node.children {
+        sync_scroll_layout_max(child, layout);
+    }
+}
+
+/// Lays out `element` once and returns its root height in logical points (for scroll estimates).
+pub fn measure_element_height(
+    element: crate::element::Element,
+    viewport_width: f32,
+) -> Result<f32, RetainedError> {
+    let mut tree = RetainedTree::mount(element)?;
+    let map = layout_pass(
+        &mut tree,
+        Viewport {
+            width: viewport_width,
+            height: 10_000.0,
+        },
+    )?;
+    let root_id =
+        tree.root
+            .as_ref()
+            .and_then(|n| n.taffy_id)
+            .ok_or(RetainedError::UnsupportedElement(
+                "root without layout node",
+            ))?;
+    Ok(map
+        .get(root_id)
+        .ok_or(RetainedError::UnsupportedElement("missing layout"))?
+        .height)
 }
 
 /// Like [`layout_pass`], but returns `Ok(None)` when the tree is not dirty (cheap no-op).
@@ -400,6 +472,49 @@ mod tests {
             height > 12.0 && height < 26.0,
             "16px logical font should measure near 16px tall, got {height}"
         );
+    }
+
+    #[test]
+    fn scroll_content_max_offset_matches_measured_inner_height() {
+        use crate::element::builders::{Column, Row, Text};
+        use crate::retained::RetainedTree;
+
+        let mut list = Column::new().gap(4.0);
+        for i in 0..12 {
+            list = list.child(
+                Row::new()
+                    .padding(4.0)
+                    .child(Text::new(format!("{:02}. item", i + 1)).font_size(14.0)),
+            );
+        }
+
+        let offset = std::rc::Rc::new(std::cell::Cell::new(f64::MAX));
+        let root = Column::new()
+            .child(
+                View::new()
+                    .height(100.0)
+                    .overflow(Overflow::Hidden)
+                    .scroll_layout_max(offset.clone())
+                    .on_scroll(|_| {})
+                    .child(View::new().child(list)),
+            )
+            .into_element();
+
+        let mut tree = RetainedTree::mount(root).unwrap();
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 300.0,
+                height: 400.0,
+            },
+        )
+        .unwrap();
+        sync_scroll_layout_max(tree.root.as_ref().unwrap(), &layout);
+
+        let viewport = &tree.root.as_ref().unwrap().children[0];
+        let max = scroll_content_max_offset(viewport, &layout).unwrap();
+        assert_eq!(offset.get(), max);
+        assert!(max > 0.0);
     }
 
     #[test]

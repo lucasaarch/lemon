@@ -713,6 +713,7 @@ fn freeze_box(container: &BoxElement) -> BoxElement {
         handlers: container.handlers.clone(),
         text_input: container.text_input.clone(),
         scroll_viewport: container.scroll_viewport,
+        scroll_bar: container.scroll_bar,
     }
 }
 

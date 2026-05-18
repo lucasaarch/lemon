@@ -1,18 +1,13 @@
 //! Scroll widget demo: scrollable list with a proportional scrollbar thumb.
 //!
 //! Thirty items are rendered inside a `Scroll` viewport shorter than the content.
-//! Passing `content_height` enables the scrollbar visual so the thumb tracks position.
+//! The scrollbar thumb tracks scroll position using the measured content height from layout.
 
 use lemon::{run, Color, Cx, WindowConfig};
 use lemon_widgets::{children, Column, Row, Scroll, Text};
 
 fn app(cx: &Cx) -> lemon::element::Element {
     const COUNT: usize = 30;
-    const ROW_VERTICAL_PADDING: f32 = 4.0;
-    const ROW_GAP: f32 = 4.0;
-    const ESTIMATED_TEXT_LINE_HEIGHT: f32 = 18.0;
-    const ROW_HEIGHT: f32 = ESTIMATED_TEXT_LINE_HEIGHT + ROW_VERTICAL_PADDING * 2.0;
-    let content_height = COUNT as f32 * ROW_HEIGHT + (COUNT.saturating_sub(1) as f32) * ROW_GAP;
 
     let mut list = Column::new().gap(4.0);
     for i in 0..COUNT {
@@ -32,10 +27,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
             Text::new("Scrollable viewport with a proportional scrollbar thumb.")
                 .font_size(13.0)
                 .color(Color::rgb8(140, 150, 170)),
-            Scroll::new(cx, list)
-                .height(220.0)
-                .width(400.0)
-                .content_height(content_height),
+            Scroll::new(cx, list).height(220.0).width(400.0),
         ])
         .into_element()
 }

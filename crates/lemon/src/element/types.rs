@@ -33,6 +33,8 @@ pub struct BoxElement {
     pub text_input: Option<TextInputMeta>,
     /// Marks a clipped viewport that may show a vertical scrollbar when content overflows.
     pub scroll_viewport: bool,
+    /// Marks a clipped viewport whose scrollbar track and thumb are painted by the paint pass.
+    pub scroll_bar: bool,
 }
 
 #[derive(Clone)]

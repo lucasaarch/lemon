@@ -29,11 +29,6 @@ fn gradient_image() -> ImageHandle {
 }
 
 fn app(cx: &Cx) -> lemon::element::Element {
-    const ROW_VERTICAL_PADDING: f32 = 4.0;
-    const ROW_GAP: f32 = 4.0;
-    const ESTIMATED_TEXT_LINE_HEIGHT: f32 = 18.0;
-    const ROW_HEIGHT: f32 = ESTIMATED_TEXT_LINE_HEIGHT + ROW_VERTICAL_PADDING * 2.0;
-
     let quality = cx.use_signal(None::<Quality>);
     let volume = cx.use_signal(0.7_f32);
 
@@ -51,9 +46,6 @@ fn app(cx: &Cx) -> lemon::element::Element {
         "11 — Parallel Light",
         "12 — The Return",
     ];
-    let track_content_h =
-        tracks.len() as f32 * ROW_HEIGHT + (tracks.len().saturating_sub(1) as f32) * ROW_GAP;
-
     let mut track_list = Column::new().gap(4.0);
     for (idx, name) in tracks.iter().enumerate() {
         track_list = track_list.child(
@@ -104,10 +96,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
             Text::new("Tracklist")
                 .font_size(16.0)
                 .color(Color::rgb8(200, 210, 230)),
-            Scroll::new(cx, track_list)
-                .height(180.0)
-                .width(480.0)
-                .content_height(track_content_h),
+            Scroll::new(cx, track_list).height(180.0).width(480.0),
         ])
         .into_element()
 }
