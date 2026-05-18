@@ -191,6 +191,26 @@ macro_rules! container_builder {
                 self.0.style.margin = Some(edges);
                 self
             }
+            /// Sets the top inset in logical points.
+            ///
+            /// Use with [`.absolute()`](Self::absolute) to position an overlay relative to its
+            /// containing flex ancestor without taking up normal flex space.
+            pub fn top(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.inset.take().unwrap_or_default();
+                edges.top = v;
+                self.0.style.inset = Some(edges);
+                self
+            }
+            /// Sets the left inset in logical points.
+            ///
+            /// Use with [`.absolute()`](Self::absolute) to pin an overlay's horizontal position
+            /// relative to its containing flex ancestor.
+            pub fn left(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.inset.take().unwrap_or_default();
+                edges.left = v;
+                self.0.style.inset = Some(edges);
+                self
+            }
             /// Includes this node in keyboard focus traversal (Tab / Shift+Tab).
             pub fn focusable(mut self) -> Self {
                 self.0.style.focusable = true;
@@ -209,9 +229,8 @@ macro_rules! container_builder {
             /// Removes this node from normal flex flow.
             ///
             /// The node is positioned by Taffy's absolute-position algorithm relative to its
-            /// nearest flex ancestor. When no explicit inset is provided Taffy uses the
-            /// node's hypothetical static position (where it would sit in normal flow),
-            /// so a dropdown appearing after a fixed-height trigger will land just below it.
+            /// nearest flex ancestor. Pair this with inset builders such as [`.top()`](Self::top)
+            /// and [`.left()`](Self::left) when the absolute node must anchor to a specific edge.
             pub fn absolute(mut self) -> Self {
                 self.0.style.position_absolute = true;
                 self
@@ -487,6 +506,16 @@ mod tests {
             panic!()
         };
         assert_eq!(el.style.z_index, 3);
+    }
+
+    #[test]
+    fn box_builder_sets_absolute_insets() {
+        let Element::View(el) = View::new().top(12.0).left(8.0).into_element() else {
+            panic!()
+        };
+        let inset = el.style.inset.as_ref().expect("expected inset");
+        assert_eq!(inset.top, 12.0);
+        assert_eq!(inset.left, 8.0);
     }
 
     #[test]

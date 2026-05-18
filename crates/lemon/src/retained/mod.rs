@@ -697,6 +697,7 @@ impl StyleProps {
                 .as_ref()
                 .map_or(Rect::zero(), into_taffy_padding),
             margin: self.margin.as_ref().map_or(Rect::zero(), into_taffy_margin),
+            inset: self.inset.as_ref().map_or(Rect::auto(), into_taffy_margin),
             gap: Size {
                 width: self
                     .gap
@@ -865,6 +866,7 @@ mod tests {
             height: Some(Dimension::Percent(0.5)),
             padding: Some(Edges::all(8.0)),
             margin: Some(Edges::all(4.0)),
+            inset: Some(Edges::all(6.0)),
             gap: Some(12.0),
             flex_grow: Some(1.0),
             flex_shrink: Some(0.0),
@@ -895,6 +897,14 @@ mod tests {
         assert_eq!(
             taffy_style.margin.left,
             taffy::style::LengthPercentageAuto::Length(4.0)
+        );
+        assert_eq!(
+            taffy_style.inset.top,
+            taffy::style::LengthPercentageAuto::Length(6.0)
+        );
+        assert_eq!(
+            taffy_style.inset.left,
+            taffy::style::LengthPercentageAuto::Length(6.0)
         );
         assert_eq!(taffy_style.flex_grow, 1.0);
         assert_eq!(taffy_style.flex_shrink, 0.0);
