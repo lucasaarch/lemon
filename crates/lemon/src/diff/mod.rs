@@ -1,5 +1,5 @@
 use crate::element::{
-    style::{PaintData, StyleProps},
+    style::{PaintData, StyleProps, TextStyle},
     Element,
 };
 
@@ -43,6 +43,11 @@ pub enum Patch {
         node: NodePath,
         content: String,
     },
+    /// Updates retained text styling when content is unchanged but metrics or paint attributes change.
+    UpdateTextStyle {
+        node: NodePath,
+        style: TextStyle,
+    },
     UpdateWidgetChrome {
         node: NodePath,
         text_input: Option<crate::element::types::TextInputMeta>,
@@ -78,8 +83,14 @@ pub fn diff(old: Element, new: Element, path: NodePath) -> Vec<Patch> {
             let ns = n.content.resolve();
             if os != ns {
                 patches.push(Patch::UpdateText {
-                    node: path,
+                    node: path.clone(),
                     content: ns,
+                });
+            }
+            if o.style != n.style {
+                patches.push(Patch::UpdateTextStyle {
+                    node: path,
+                    style: n.style,
                 });
             }
         }
@@ -381,6 +392,20 @@ mod tests {
         let patches = diff(txt("old"), txt("new"), NodePath::root());
         assert_eq!(patches.len(), 1);
         assert!(matches!(&patches[0], Patch::UpdateText { content, .. } if content == "new"));
+    }
+
+    #[test]
+    fn changed_text_style_produces_patch() {
+        let old = Text::new("same").font_size(16.0).into_element();
+        let new = Text::new("same").font_size(24.0).into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert_eq!(patches.len(), 1);
+        assert!(matches!(
+            &patches[0],
+            Patch::UpdateTextStyle { style, .. } if style.font_size == 24.0
+        ));
     }
 
     #[test]

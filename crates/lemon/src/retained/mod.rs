@@ -447,6 +447,20 @@ impl RetainedTree {
                     self.taffy.mark_dirty(taffy_id)?;
                 }
             }
+            Patch::UpdateTextStyle { node, style } => {
+                let retained = self.node_mut(&node)?;
+                let text = retained
+                    .text
+                    .as_mut()
+                    .ok_or_else(|| RetainedError::MissingTextCache(node.clone()))?;
+                text.style = style;
+                text.parley_layout = None;
+                text.layout_max_width = None;
+                text.needs_layout = true;
+                if let Some(taffy_id) = retained.taffy_id {
+                    self.taffy.mark_dirty(taffy_id)?;
+                }
+            }
             Patch::InsertChild {
                 parent,
                 index,
@@ -1094,6 +1108,68 @@ mod tests {
         let root = tree.root.as_ref().unwrap();
         assert_eq!(root.text_content(), Some("after"));
         assert!(root.text.as_ref().unwrap().needs_layout);
+    }
+
+    #[test]
+    fn update_text_style_patch_replaces_style_and_reflows_after_layout() {
+        use crate::layout::{layout_pass, Viewport};
+
+        let mut tree =
+            RetainedTree::mount(Text::new("preview").font_size(16.0).into_element()).unwrap();
+        let first_layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 400.0,
+            },
+        )
+        .unwrap();
+        let root_id = tree.root.as_ref().unwrap().taffy_id.unwrap();
+        let initial_height = first_layout.get(root_id).unwrap().height;
+        assert!(!tree.text_needs_reflow());
+        assert!(tree
+            .root
+            .as_ref()
+            .unwrap()
+            .text
+            .as_ref()
+            .unwrap()
+            .parley_layout
+            .is_some());
+
+        let style = TextStyle {
+            font_size: 32.0,
+            ..Default::default()
+        };
+        tree.apply_patch(Patch::UpdateTextStyle {
+            node: NodePath::root(),
+            style,
+        })
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let text = root.text.as_ref().unwrap();
+        assert_eq!(text.style.font_size, 32.0);
+        assert!(text.needs_layout);
+        assert!(text.parley_layout.is_none());
+
+        let second_layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 400.0,
+            },
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let text = root.text.as_ref().unwrap();
+        assert!(!text.needs_layout);
+        assert!(text.parley_layout.is_some());
+        assert!(
+            second_layout.get(root_id).unwrap().height > initial_height,
+            "larger font size should increase measured text height"
+        );
     }
 
     #[test]
