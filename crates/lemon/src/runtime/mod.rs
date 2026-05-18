@@ -267,6 +267,8 @@ fn bootstrap_initial_components(
                     component: component.clone(),
                 });
             } else {
+                // Multi-root or empty output must be mounted through the wrapper first so later
+                // child patches operate against the component wrapper instead of replacing it.
                 patches.push(Patch::MountComponent {
                     node: path.clone(),
                     component: component.clone(),
@@ -308,6 +310,7 @@ fn bootstrap_initial_components(
     }
 }
 
+/// Seeds the retained wrapper for a component that renders zero or multiple top-level children.
 fn bootstrap_component_output(
     slots: &mut Vec<ComponentSlot>,
     children: Vec<Element>,
@@ -380,6 +383,7 @@ fn sync_render(slot: &ComponentSlot) {
     *slot.pending.borrow_mut() = Some(render_without_subscribing(slot));
 }
 
+/// Returns the flattened top-level children produced by a component render.
 fn component_output_children(element: Element) -> Vec<Element> {
     crate::diff::flatten_children(vec![element])
 }
@@ -446,6 +450,7 @@ fn handle_component_pair(
     }
 }
 
+/// Diffs a component render with fragment-aware flattening while preserving single-root paths.
 fn diff_component_output_slots(
     slots: &mut Vec<ComponentSlot>,
     old: Element,
@@ -476,6 +481,7 @@ fn diff_component_output_slots(
     }
 }
 
+/// Diffs flattened component output children, keeping the historical single-child path stable.
 fn diff_component_output_children(
     slots: &mut Vec<ComponentSlot>,
     old_children: &[Element],

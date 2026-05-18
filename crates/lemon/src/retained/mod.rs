@@ -223,18 +223,6 @@ pub struct RetainedTree {
     pub layout_dirty: bool,
 }
 
-fn flatten_elements(elements: Vec<Element>) -> Vec<Element> {
-    let mut flattened = Vec::with_capacity(elements.len());
-    for element in elements {
-        match element {
-            Element::Fragment(children) => flattened.extend(flatten_elements(children)),
-            Element::None => {}
-            other => flattened.push(other),
-        }
-    }
-    flattened
-}
-
 impl RetainedTree {
     /// Returns true if any text node still needs a layout pass (e.g. after `UpdateText`).
     pub fn text_needs_reflow(&self) -> bool {
@@ -310,7 +298,7 @@ impl RetainedTree {
             scroll_viewport,
             scroll_bar,
         } = node;
-        let flat_children = flatten_elements(node_children);
+        let flat_children = crate::diff::flatten_children(node_children);
         let mut children = Vec::with_capacity(flat_children.len());
         for child in flat_children {
             children.push(self.build_node(child)?);
@@ -533,6 +521,7 @@ impl RetainedTree {
             .ok_or_else(|| RetainedError::InvalidNodePath(path.clone()))
     }
 
+    /// Returns the exact retained node at `path` without skipping transparent component wrappers.
     fn node_exact(&self, path: &NodePath) -> Result<&RetainedNode, RetainedError> {
         let root = self
             .root
@@ -626,6 +615,7 @@ impl RetainedTree {
         Ok(())
     }
 
+    /// Rebuilds the nearest owning Taffy child list for mutations under `path`.
     fn sync_layout_children(&mut self, path: &NodePath) -> Result<(), RetainedError> {
         let Some(owner_path) = self.layout_owner_path(path)? else {
             return Ok(());
@@ -642,6 +632,7 @@ impl RetainedTree {
         Ok(())
     }
 
+    /// Finds the nearest ancestor at or above `path` that owns a concrete Taffy node.
     fn layout_owner_path(&self, path: &NodePath) -> Result<Option<NodePath>, RetainedError> {
         let mut current = Some(path.clone());
         while let Some(candidate) = current {
@@ -837,6 +828,7 @@ fn node_mut_from_exact<'a>(
     node_mut_from_exact(child, rest)
 }
 
+/// Traverses a retained subtree using exact child indices without component transparency.
 fn node_from_exact<'a>(node: &'a RetainedNode, path: &[usize]) -> Option<&'a RetainedNode> {
     if path.is_empty() {
         return Some(node);
@@ -846,6 +838,7 @@ fn node_from_exact<'a>(node: &'a RetainedNode, path: &[usize]) -> Option<&'a Ret
     node_from_exact(child, rest)
 }
 
+/// Collects the layout nodes a retained child contributes directly to its Taffy parent.
 fn collect_direct_layout_ids(node: &RetainedNode, child_ids: &mut Vec<NodeId>) {
     if let Some(taffy_id) = node.taffy_id {
         child_ids.push(taffy_id);
