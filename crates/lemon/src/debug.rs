@@ -349,6 +349,9 @@ pub fn format_patch(patch: &Patch) -> String {
         Patch::UpdateText { node, content } => {
             format!("UpdateText path={} content={content:?}", format_path(node))
         }
+        Patch::UpdateTextStyle { node, .. } => {
+            format!("UpdateTextStyle path={}", format_path(node))
+        }
         Patch::UpdateWidgetChrome { node, .. } => {
             format!("UpdateWidgetChrome path={}", format_path(node))
         }

@@ -1,0 +1,6 @@
+[update]
+major = []
+minor = []
+patch = ["lemon"]
+pre = true
+summary = "Diff text style changes for retained text reflow"
