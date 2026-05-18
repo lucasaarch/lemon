@@ -19,12 +19,12 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.2.0-alpha.15"
+version = "0.2.0-alpha.16"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/lucasaarch/lemon"
 
 [workspace.dependencies]
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
-lemon = { path = "crates/lemon", version = "0.2.0-alpha.15" }
-lemon-widgets = { path = "crates/lemon-widgets", version = "0.2.0-alpha.15" }
+lemon = { path = "crates/lemon", version = "0.2.0-alpha.16" }
+lemon-widgets = { path = "crates/lemon-widgets", version = "0.2.0-alpha.16" }
