@@ -80,6 +80,8 @@ pub struct EventHandlers {
     pub on_pointer_down: Option<Rc<dyn Fn(f32, f32)>>,
     /// Called when pointer movement is reported for this retained node with normalized `(x, y)` coordinates.
     pub on_pointer_move: Option<Rc<dyn Fn(f32, f32)>>,
+    /// Called when a pointer release is reported for this retained node with normalized `(x, y)` coordinates.
+    pub on_pointer_up: Option<Rc<dyn Fn(f32, f32)>>,
     /// Updated after each [`layout_pass`](crate::layout::layout_pass) for scroll viewports; used to clamp wheel delta.
     pub scroll_layout_max: Option<Rc<Cell<f64>>>,
 }
@@ -125,6 +127,10 @@ impl std::fmt::Debug for EventHandlers {
                     .on_pointer_move
                     .as_ref()
                     .map(|_| "Rc<dyn Fn(f32, f32)>"),
+            )
+            .field(
+                "on_pointer_up",
+                &self.on_pointer_up.as_ref().map(|_| "Rc<dyn Fn(f32, f32)>"),
             )
             .field(
                 "scroll_layout_max",

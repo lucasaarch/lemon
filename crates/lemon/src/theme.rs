@@ -34,11 +34,15 @@ impl Theme {
             colors: ColorTokens {
                 background: Color::rgb8(248, 250, 252),
                 surface: Color::rgb8(255, 255, 255),
+                surface_hover: Color::rgb8(241, 245, 249),
+                surface_pressed: Color::rgb8(226, 232, 240),
                 foreground: Color::rgb8(15, 23, 42),
                 foreground_secondary: Color::rgb8(71, 85, 105),
+                foreground_disabled: Color::rgb8(148, 163, 184),
                 on_accent: Color::rgb8(255, 255, 255),
                 accent: Color::rgb8(59, 130, 246),
                 accent_hover: Color::rgb8(37, 99, 235),
+                accent_pressed: Color::rgb8(29, 78, 216),
                 error: Color::rgb8(220, 38, 38),
                 border: Color::rgb8(203, 213, 225),
             },
@@ -78,11 +82,15 @@ impl Theme {
             colors: ColorTokens {
                 background: Color::rgb8(0, 0, 0),
                 surface: Color::rgb8(35, 35, 52),
+                surface_hover: Color::rgb8(45, 45, 66),
+                surface_pressed: Color::rgb8(55, 55, 78),
                 foreground: Color::rgb8(255, 255, 255),
                 foreground_secondary: Color::rgb8(156, 163, 175),
+                foreground_disabled: Color::rgb8(107, 114, 128),
                 on_accent: Color::rgb8(255, 255, 255),
                 accent: Color::rgb8(59, 130, 246),
                 accent_hover: Color::rgb8(37, 99, 235),
+                accent_pressed: Color::rgb8(29, 78, 216),
                 error: Color::rgb8(248, 113, 113),
                 border: Color::rgb8(80, 80, 110),
             },
@@ -122,12 +130,20 @@ impl Theme {
 pub struct ColorTokens {
     pub background: Color,
     pub surface: Color,
+    /// Surface fill used for hover states on neutral controls.
+    pub surface_hover: Color,
+    /// Surface fill used for pressed states on neutral controls.
+    pub surface_pressed: Color,
     pub foreground: Color,
     pub foreground_secondary: Color,
+    /// Foreground color for disabled text and icons.
+    pub foreground_disabled: Color,
     /// Text and icons on [`accent`](Self::accent) fills (buttons, select triggers).
     pub on_accent: Color,
     pub accent: Color,
     pub accent_hover: Color,
+    /// Accent fill used for pressed states on accent controls.
+    pub accent_pressed: Color,
     pub error: Color,
     pub border: Color,
 }
@@ -236,6 +252,10 @@ mod tests {
     #[test]
     fn default_light_chrome_tokens_are_set() {
         let theme = Theme::default_light();
+        assert_ne!(theme.colors.surface_hover, theme.colors.surface);
+        assert_ne!(theme.colors.surface_pressed, theme.colors.surface);
+        assert_ne!(theme.colors.accent_pressed, theme.colors.accent);
+        assert_ne!(theme.colors.foreground_disabled, theme.colors.foreground);
         // Focus ring matches the accent blue.
         assert_eq!(theme.chrome.focus_ring, Color::rgb8(59, 130, 246));
         // Caret matches the dark foreground for a light background.
@@ -247,6 +267,10 @@ mod tests {
     #[test]
     fn default_dark_chrome_tokens_are_set() {
         let theme = Theme::default_dark();
+        assert_ne!(theme.colors.surface_hover, theme.colors.surface);
+        assert_ne!(theme.colors.surface_pressed, theme.colors.surface);
+        assert_ne!(theme.colors.accent_pressed, theme.colors.accent);
+        assert_ne!(theme.colors.foreground_disabled, theme.colors.foreground);
         // Focus ring matches the accent blue.
         assert_eq!(theme.chrome.focus_ring, Color::rgb8(59, 130, 246));
         // Caret matches the light foreground for a dark background.
