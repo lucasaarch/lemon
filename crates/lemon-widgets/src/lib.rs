@@ -17,7 +17,9 @@
 
 pub use lemon::element::builders::{Button, Column, Component, Row, Text, View};
 pub mod scroll;
+pub mod text_field_state;
 pub use scroll::Scroll;
+pub use text_field_state::TextFieldState;
 
 /// Deprecated alias for [`View`].
 #[deprecated(
