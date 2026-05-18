@@ -6,8 +6,8 @@ use crate::element::style::Color;
 ///
 /// Use [`Theme::default_light`] or [`Theme::default_dark`] as sensible base palettes.
 ///
-/// [`Theme::default`] and [`run`](crate::platform::run) use [`Theme::default_dark`] so new apps
-/// get light foreground text on the default near-black window clear color.
+/// [`Default`] and [`run`](crate::platform::run) use [`Theme::default_dark`] so new apps get light
+/// foreground text on the default near-black window clear color.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Theme {
     /// Color tokens used for backgrounds, text, accents, and borders.
@@ -22,12 +22,13 @@ pub struct Theme {
     pub radius: RadiusTokens,
 }
 
-impl Theme {
-    /// Default app theme ([`default_dark`](Self::default_dark)).
-    pub fn default() -> Self {
+impl Default for Theme {
+    fn default() -> Self {
         Self::default_dark()
     }
+}
 
+impl Theme {
     /// Returns the default light theme.
     pub fn default_light() -> Self {
         Self {
