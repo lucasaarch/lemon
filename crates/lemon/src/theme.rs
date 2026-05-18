@@ -9,6 +9,8 @@ use crate::element::style::Color;
 pub struct Theme {
     /// Color tokens used for backgrounds, text, accents, and borders.
     pub colors: ColorTokens,
+    /// Widget chrome color tokens for paint-layer decorations (scrollbar, caret, focus ring).
+    pub chrome: WidgetChromeTokens,
     /// Typography scale used by widgets and app-level styles.
     pub typography: TypographyTokens,
     /// Spacing scale used for padding, gaps, and margins.
@@ -30,6 +32,12 @@ impl Theme {
                 accent_hover: Color::rgb8(37, 99, 235),
                 error: Color::rgb8(220, 38, 38),
                 border: Color::rgb8(203, 213, 225),
+            },
+            chrome: WidgetChromeTokens {
+                scrollbar_track: Color::rgb8(229, 231, 235),
+                scrollbar_thumb: Color::rgb8(156, 163, 175),
+                caret: Color::rgb8(15, 23, 42),
+                focus_ring: Color::rgb8(59, 130, 246),
             },
             typography: TypographyTokens {
                 font_size_sm: 12.0,
@@ -68,6 +76,12 @@ impl Theme {
                 error: Color::rgb8(248, 113, 113),
                 border: Color::rgb8(80, 80, 110),
             },
+            chrome: WidgetChromeTokens {
+                scrollbar_track: Color::rgb8(30, 30, 40),
+                scrollbar_thumb: Color::rgb8(120, 120, 140),
+                caret: Color::rgb8(235, 235, 240),
+                focus_ring: Color::rgb8(59, 130, 246),
+            },
             typography: TypographyTokens {
                 font_size_sm: 12.0,
                 font_size_md: 14.0,
@@ -104,6 +118,36 @@ pub struct ColorTokens {
     pub accent_hover: Color,
     pub error: Color,
     pub border: Color,
+}
+
+/// Color tokens for paint-layer widget chrome that is drawn directly in the paint pass.
+///
+/// These tokens control the colors of UI decorations such as scrollbar tracks and thumbs,
+/// the text-input caret, and the focus ring. They are read at paint time via
+/// [`current_theme`], so swapping the active theme with [`set_active_theme`] or
+/// [`run_with_theme`](crate::platform::run_with_theme) changes widget chrome without
+/// recompiling any widget code.
+///
+/// # Example
+///
+/// ```no_run
+/// use lemon::theme::{Theme, WidgetChromeTokens};
+/// use lemon::element::style::Color;
+///
+/// let mut theme = Theme::default_dark();
+/// theme.chrome.focus_ring = Color::rgb8(255, 200, 0); // bright yellow focus ring
+/// lemon::theme::set_active_theme(theme);
+/// ```
+#[derive(Clone, Debug, PartialEq)]
+pub struct WidgetChromeTokens {
+    /// Fill color for the scrollbar track (the background rail behind the thumb).
+    pub scrollbar_track: Color,
+    /// Fill color for the scrollbar thumb (the draggable indicator).
+    pub scrollbar_thumb: Color,
+    /// Stroke color for the text-input cursor/caret line.
+    pub caret: Color,
+    /// Stroke color for the focus ring drawn around focused text inputs.
+    pub focus_ring: Color,
 }
 
 /// Typography token group used by text styles.
@@ -157,7 +201,8 @@ pub fn current_theme() -> Theme {
 
 #[cfg(test)]
 mod tests {
-    use super::{current_theme, set_active_theme, Theme};
+    use super::{current_theme, set_active_theme, Theme, WidgetChromeTokens};
+    use crate::element::style::Color;
 
     #[test]
     fn active_theme_defaults_to_light_on_new_thread() {
@@ -173,6 +218,52 @@ mod tests {
         let dark = Theme::default_dark();
         set_active_theme(dark.clone());
         assert_eq!(current_theme(), dark);
+        set_active_theme(previous);
+    }
+
+    #[test]
+    fn default_light_chrome_tokens_are_set() {
+        let theme = Theme::default_light();
+        // Focus ring matches the accent blue.
+        assert_eq!(theme.chrome.focus_ring, Color::rgb8(59, 130, 246));
+        // Caret matches the dark foreground for a light background.
+        assert_eq!(theme.chrome.caret, Color::rgb8(15, 23, 42));
+        // Scrollbar colors are distinguishable.
+        assert_ne!(theme.chrome.scrollbar_track, theme.chrome.scrollbar_thumb);
+    }
+
+    #[test]
+    fn default_dark_chrome_tokens_are_set() {
+        let theme = Theme::default_dark();
+        // Focus ring matches the accent blue.
+        assert_eq!(theme.chrome.focus_ring, Color::rgb8(59, 130, 246));
+        // Caret matches the light foreground for a dark background.
+        assert_eq!(theme.chrome.caret, Color::rgb8(235, 235, 240));
+        // Scrollbar colors are distinguishable.
+        assert_ne!(theme.chrome.scrollbar_track, theme.chrome.scrollbar_thumb);
+    }
+
+    #[test]
+    fn widget_chrome_tokens_can_be_overridden_independently() {
+        let previous = current_theme();
+
+        let mut custom = Theme::default_light();
+        custom.chrome = WidgetChromeTokens {
+            scrollbar_track: Color::rgb8(1, 2, 3),
+            scrollbar_thumb: Color::rgb8(4, 5, 6),
+            caret: Color::rgb8(7, 8, 9),
+            focus_ring: Color::rgb8(10, 11, 12),
+        };
+        set_active_theme(custom.clone());
+
+        let active = current_theme();
+        assert_eq!(active.chrome.scrollbar_track, Color::rgb8(1, 2, 3));
+        assert_eq!(active.chrome.scrollbar_thumb, Color::rgb8(4, 5, 6));
+        assert_eq!(active.chrome.caret, Color::rgb8(7, 8, 9));
+        assert_eq!(active.chrome.focus_ring, Color::rgb8(10, 11, 12));
+        // Other token groups remain unchanged from the base theme.
+        assert_eq!(active.colors, custom.colors);
+
         set_active_theme(previous);
     }
 }
