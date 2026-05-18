@@ -185,7 +185,7 @@ fn diff_box(
     diff_children(o.children, n.children, &path, patches);
 }
 
-fn element_key(element: &Element) -> Option<crate::element::types::Key> {
+pub(crate) fn element_key(element: &Element) -> Option<crate::element::types::Key> {
     use Element::*;
     match element {
         Text(text) => text.key.clone(),
@@ -198,7 +198,7 @@ fn element_key(element: &Element) -> Option<crate::element::types::Key> {
     }
 }
 
-fn children_are_fully_keyed(children: &[Element]) -> bool {
+pub(crate) fn children_are_fully_keyed(children: &[Element]) -> bool {
     !children.is_empty() && children.iter().all(|child| element_key(child).is_some())
 }
 
@@ -272,8 +272,21 @@ fn diff_children_keyed(
     let new_key_set: std::collections::HashSet<_> = new_order.iter().cloned().collect();
     let old_key_set: std::collections::HashSet<_> = old_by_key.keys().cloned().collect();
 
+    let mut removals: Vec<(usize, Element)> = old_by_key
+        .iter()
+        .filter(|(key, _)| !new_key_set.contains(*key))
+        .map(|(_, (index, element))| (*index, element.clone()))
+        .collect();
+    removals.sort_by(|(a, _), (b, _)| b.cmp(a));
+    for (index, element) in removals {
+        push_remove_child(&element, parent, index, patches);
+    }
+
     if old_key_set == new_key_set {
-        let mut current_order = old_order;
+        let mut current_order: Vec<_> = old_order
+            .into_iter()
+            .filter(|key| new_key_set.contains(key))
+            .collect();
         for (new_index, key) in new_order.iter().enumerate() {
             let current_index = current_order
                 .iter()
@@ -292,28 +305,18 @@ fn diff_children_keyed(
     }
 
     for (new_index, (key, new_child)) in new_items.iter().enumerate() {
+        if !old_key_set.contains(key) {
+            push_insert_child(new_child.clone(), parent, new_index, patches);
+        }
+    }
+
+    for (new_index, (key, new_child)) in new_items.iter().enumerate() {
         if let Some((_, old_child)) = old_by_key.get(key) {
             patches.extend(diff(
                 old_child.clone(),
                 new_child.clone(),
                 parent.child(new_index),
             ));
-        }
-    }
-
-    let mut removals: Vec<(usize, Element)> = old_by_key
-        .into_iter()
-        .filter(|(key, _)| !new_key_set.contains(key))
-        .map(|(_, (index, element))| (index, element))
-        .collect();
-    removals.sort_by(|(a, _), (b, _)| b.cmp(a));
-    for (index, element) in removals {
-        push_remove_child(&element, parent, index, patches);
-    }
-
-    for (new_index, (key, new_child)) in new_items.into_iter().enumerate() {
-        if !old_key_set.contains(&key) {
-            push_insert_child(new_child, parent, new_index, patches);
         }
     }
 }

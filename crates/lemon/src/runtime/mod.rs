@@ -286,6 +286,82 @@ fn diff_children_slots(
     patches: &mut Vec<Patch>,
     deferred_effects: Rc<RefCell<Vec<Effect>>>,
 ) {
+    if crate::diff::children_are_fully_keyed(old_children)
+        && crate::diff::children_are_fully_keyed(new_children)
+    {
+        diff_children_slots_keyed(
+            slots,
+            old_children,
+            new_children,
+            parent,
+            patches,
+            deferred_effects,
+        );
+    } else {
+        diff_children_slots_by_index(
+            slots,
+            old_children,
+            new_children,
+            parent,
+            patches,
+            deferred_effects,
+        );
+    }
+}
+
+fn push_insert_child_slot(
+    slots: &mut Vec<ComponentSlot>,
+    element: &Element,
+    parent: &NodePath,
+    index: usize,
+    patches: &mut Vec<Patch>,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+) {
+    let path = parent.child(index);
+    match element {
+        Element::Component(component) => {
+            patches.push(Patch::MountComponent {
+                node: path.clone(),
+                component: component.clone(),
+            });
+            mount_component_slot(slots, path, component.clone(), Rc::clone(&deferred_effects));
+        }
+        element => patches.push(Patch::InsertChild {
+            parent: parent.clone(),
+            index,
+            element: element.clone(),
+        }),
+    }
+}
+
+fn push_remove_child_slot(
+    slots: &mut Vec<ComponentSlot>,
+    element: &Element,
+    parent: &NodePath,
+    index: usize,
+    patches: &mut Vec<Patch>,
+) {
+    let path = parent.child(index);
+    match element {
+        Element::Component(_) => {
+            unmount_component_slot(slots, &path);
+            patches.push(Patch::UnmountComponent { node: path });
+        }
+        _ => patches.push(Patch::RemoveChild {
+            parent: parent.clone(),
+            index,
+        }),
+    }
+}
+
+fn diff_children_slots_by_index(
+    slots: &mut Vec<ComponentSlot>,
+    old_children: &[Element],
+    new_children: &[Element],
+    parent: &NodePath,
+    patches: &mut Vec<Patch>,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+) {
     let min = old_children.len().min(new_children.len());
     for i in 0..min {
         diff_with_nested_components(
@@ -298,36 +374,110 @@ fn diff_children_slots(
         );
     }
 
-    for (offset, element) in new_children.iter().enumerate().skip(min) {
-        let index = min + offset;
-        let path = parent.child(index);
-        match element {
-            Element::Component(component) => {
-                patches.push(Patch::MountComponent {
-                    node: path.clone(),
-                    component: component.clone(),
-                });
-                mount_component_slot(slots, path, component.clone(), Rc::clone(&deferred_effects));
-            }
-            element => patches.push(Patch::InsertChild {
-                parent: parent.clone(),
-                index,
-                element: element.clone(),
-            }),
-        }
+    for (index, element) in new_children.iter().enumerate().skip(min) {
+        push_insert_child_slot(
+            slots,
+            element,
+            parent,
+            index,
+            patches,
+            Rc::clone(&deferred_effects),
+        );
     }
 
     for i in (min..old_children.len()).rev() {
-        let path = parent.child(i);
-        match &old_children[i] {
-            Element::Component(_) => {
-                unmount_component_slot(slots, &path);
-                patches.push(Patch::UnmountComponent { node: path });
+        push_remove_child_slot(slots, &old_children[i], parent, i, patches);
+    }
+}
+
+fn diff_children_slots_keyed(
+    slots: &mut Vec<ComponentSlot>,
+    old_children: &[Element],
+    new_children: &[Element],
+    parent: &NodePath,
+    patches: &mut Vec<Patch>,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+) {
+    use std::collections::{HashMap, HashSet};
+
+    let mut old_by_key: HashMap<crate::element::types::Key, (usize, Element)> = HashMap::new();
+    let mut old_order = Vec::with_capacity(old_children.len());
+    for (index, element) in old_children.iter().cloned().enumerate() {
+        let key =
+            crate::diff::element_key(&element).expect("keyed diff requires keys on every child");
+        old_by_key.insert(key.clone(), (index, element));
+        old_order.push(key);
+    }
+
+    let new_items: Vec<(crate::element::types::Key, Element)> = new_children
+        .iter()
+        .cloned()
+        .map(|element| {
+            let key = crate::diff::element_key(&element)
+                .expect("keyed diff requires keys on every child");
+            (key, element)
+        })
+        .collect();
+
+    let new_order: Vec<_> = new_items.iter().map(|(key, _)| key.clone()).collect();
+    let new_key_set: HashSet<_> = new_order.iter().cloned().collect();
+    let old_key_set: HashSet<_> = old_by_key.keys().cloned().collect();
+
+    let mut removals: Vec<(usize, Element)> = old_by_key
+        .iter()
+        .filter(|(key, _)| !new_key_set.contains(*key))
+        .map(|(_, (index, element))| (*index, element.clone()))
+        .collect();
+    removals.sort_by(|(a, _), (b, _)| b.cmp(a));
+    for (index, element) in removals {
+        push_remove_child_slot(slots, &element, parent, index, patches);
+    }
+
+    if old_key_set == new_key_set {
+        let mut current_order: Vec<_> = old_order
+            .into_iter()
+            .filter(|key| new_key_set.contains(key))
+            .collect();
+        for (new_index, key) in new_order.iter().enumerate() {
+            let current_index = current_order
+                .iter()
+                .position(|current| current == key)
+                .expect("key present in both lists");
+            if current_index != new_index {
+                patches.push(Patch::MoveChild {
+                    parent: parent.clone(),
+                    from: current_index,
+                    to: new_index,
+                });
+                let moved = current_order.remove(current_index);
+                current_order.insert(new_index, moved);
             }
-            _ => patches.push(Patch::RemoveChild {
-                parent: parent.clone(),
-                index: i,
-            }),
+        }
+    }
+
+    for (new_index, (key, new_child)) in new_items.iter().enumerate() {
+        if !old_key_set.contains(key) {
+            push_insert_child_slot(
+                slots,
+                new_child,
+                parent,
+                new_index,
+                patches,
+                Rc::clone(&deferred_effects),
+            );
+        }
+    }
+
+    for (new_index, (key, new_child)) in new_items.iter().enumerate() {
+        if let Some((_, old_child)) = old_by_key.get(key) {
+            diff_with_nested_components(
+                slots,
+                old_child.clone(),
+                new_child.clone(),
+                parent.child(new_index),
+                patches,
+                Rc::clone(&deferred_effects),
+            );
         }
     }
 }
@@ -595,6 +745,79 @@ mod tests {
         assert!(patches
             .iter()
             .any(|patch| matches!(patch, Patch::UpdateText { content, .. } if content == "2")));
+    }
+
+    #[test]
+    fn keyed_list_add_remove_patches_apply_without_error() {
+        use crate::element::builders::{Button, Column, Row};
+        use crate::element::style::{Align, Color};
+        use crate::retained::RetainedTree;
+
+        #[derive(Clone)]
+        struct Item {
+            id: u64,
+            label: String,
+        }
+
+        let items = Signal::new(Vec::<Item>::new());
+        let items_for_view = items.clone();
+        let mut rt = Runtime::new();
+        rt.mount(move |_cx| {
+            let mut col = Column::new().gap(8.0);
+            for item in items_for_view.get() {
+                let items_remove = items_for_view.clone();
+                let item_id = item.id;
+                let label = item.label.clone();
+                col = col.child(
+                    Row::new()
+                        .key(item.id)
+                        .gap(8.0)
+                        .align_items(Align::Center)
+                        .child(
+                            Text::new(label)
+                                .font_size(15.0)
+                                .color(Color::rgb8(210, 210, 230)),
+                        )
+                        .child(
+                            Button::new("Remove")
+                                .background(Color::rgb8(180, 50, 50))
+                                .on_click(move || {
+                                    items_remove.update(|list| list.retain(|i| i.id != item_id));
+                                }),
+                        ),
+                );
+            }
+            Column::new()
+                .padding(24.0)
+                .gap(12.0)
+                .child(Text::new("Keyed List").font_size(20.0))
+                .child(Button::new("Add item"))
+                .child(col)
+                .into_element()
+        });
+        let mut tree = RetainedTree::mount(rt.root_element().unwrap()).unwrap();
+
+        for step in 0..3u64 {
+            items.update(|list| {
+                list.push(Item {
+                    id: step,
+                    label: format!("Item #{step}"),
+                });
+            });
+            rt.flush_effects();
+            tree.apply_patches(rt.take_patches())
+                .expect("apply_patches after add");
+            assert_eq!(
+                tree.root.as_ref().unwrap().children[2].children.len(),
+                (step + 1) as usize
+            );
+        }
+
+        items.update(|list| list.retain(|item| item.id != 0));
+        rt.flush_effects();
+        tree.apply_patches(rt.take_patches())
+            .expect("apply_patches after remove");
+        assert_eq!(tree.root.as_ref().unwrap().children[2].children.len(), 2);
     }
 
     #[test]
