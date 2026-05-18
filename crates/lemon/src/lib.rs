@@ -66,6 +66,7 @@ mod macros;
 
 pub mod prelude;
 
+pub mod animation;
 pub mod asset;
 pub mod debug;
 pub mod diff;
@@ -76,6 +77,7 @@ pub mod platform;
 pub mod retained;
 pub mod runtime;
 
+pub use animation::{animation_frame_signal, request_animation_frame};
 pub use asset::ImageHandle;
 pub use element::builders::{Button, Column, Component, Row, Text, View};
 

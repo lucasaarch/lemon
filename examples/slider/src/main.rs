@@ -44,15 +44,15 @@ fn app(cx: &Cx) -> lemon::element::Element {
             .color(Color::rgb8(180, 190, 210)),
             Row::new().gap(12.0).children(children![
                 Text::new("R").font_size(14.0),
-                Slider::new(r).width(240.0),
+                Slider::new(cx, r).width(240.0),
             ]),
             Row::new().gap(12.0).children(children![
                 Text::new("G").font_size(14.0),
-                Slider::new(g).width(240.0),
+                Slider::new(cx, g).width(240.0),
             ]),
             Row::new().gap(12.0).children(children![
                 Text::new("B").font_size(14.0),
-                Slider::new(b).width(240.0),
+                Slider::new(cx, b).width(240.0),
             ]),
         ])
         .into_element()

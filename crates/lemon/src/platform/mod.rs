@@ -753,7 +753,16 @@ impl ApplicationHandler for LemonApplication {
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
         if let Some(state) = self.state.as_mut() {
             state.tick_caret_blink();
-            if state.focused_text_input() || state.needs_redraw() {
+            // Advance animation: tick the frame signal (re-renders subscribed components) then
+            // check whether any component re-subscribed for the next frame.
+            let anim = crate::animation::take_animation_pending();
+            if anim {
+                crate::animation::tick_animation_frame();
+            }
+            if state.focused_text_input()
+                || state.needs_redraw()
+                || crate::animation::animation_pending()
+            {
                 state.request_redraw();
             }
         }

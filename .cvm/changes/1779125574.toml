@@ -1,0 +1,6 @@
+[update]
+major = []
+minor = ["lemon", "lemon-widgets"]
+patch = []
+pre = true
+summary = "Add smooth value-change animation to Slider via widget-local lerp and frame-signal loop"
