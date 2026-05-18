@@ -396,6 +396,7 @@ mod tests {
     fn theme_default_light_has_sensible_values() {
         let theme = Theme::default_light();
         assert_eq!(theme.typography.font_size_md, 14.0);
+        assert_eq!(theme.typography.font_family, "system-ui");
         assert_eq!(theme.spacing.lg, 16.0);
         assert_eq!(theme.radius.md, 8.0);
         assert!(theme.colors.accent.r > 0.0 || theme.colors.accent.b > 0.0);

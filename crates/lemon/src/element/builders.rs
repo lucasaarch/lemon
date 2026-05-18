@@ -410,6 +410,9 @@ pub struct Text {
 
 impl Text {
     /// Creates text from static content or a reactive closure (see [`TextContent`]).
+    ///
+    /// Typography defaults (size/family/line-height/letter-spacing) are read from the active
+    /// theme (`Cx::use_theme` / [`crate::theme::current_theme`]) at build time.
     pub fn new(content: impl Into<TextContent>) -> Self {
         Text {
             content: content.into(),
@@ -425,6 +428,16 @@ impl Text {
     /// Font size in logical points.
     pub fn font_size(mut self, size: f32) -> Self {
         self.style.font_size = size;
+        self
+    }
+    /// Preferred font family list (for example `"Inter, system-ui"`).
+    pub fn font_family(mut self, family: impl Into<String>) -> Self {
+        self.style.font_family = family.into();
+        self
+    }
+    /// Unitless line-height multiplier relative to font size.
+    pub fn line_height(mut self, line_height: f32) -> Self {
+        self.style.line_height = line_height;
         self
     }
     pub fn weight(mut self, w: u16) -> Self {
@@ -584,6 +597,7 @@ impl From<Component> for Element {
 mod tests {
     use super::*;
     use crate::element::types::Key;
+    use crate::theme::{current_theme, set_active_theme, Theme};
     use std::cell::Cell;
     use std::rc::Rc;
 
@@ -793,6 +807,42 @@ mod tests {
         assert_eq!(el.content.resolve(), "7");
         value.set(42);
         assert_eq!(el.content.resolve(), "42");
+    }
+
+    #[test]
+    fn text_defaults_follow_active_theme_typography() {
+        let previous = current_theme();
+        let mut custom = Theme::default_dark();
+        custom.typography.font_size_md = 19.0;
+        custom.typography.font_family = "serif".to_string();
+        custom.typography.line_height = 1.9;
+        custom.typography.letter_spacing = 0.3;
+        set_active_theme(custom.clone());
+
+        let Element::Text(el) = Text::new("hello").into_element() else {
+            panic!()
+        };
+
+        assert_eq!(el.style.font_size, custom.typography.font_size_md);
+        assert_eq!(el.style.font_family, custom.typography.font_family);
+        assert_eq!(el.style.line_height, custom.typography.line_height);
+        assert_eq!(el.style.letter_spacing, custom.typography.letter_spacing);
+
+        set_active_theme(previous);
+    }
+
+    #[test]
+    fn text_builder_sets_font_family_and_line_height() {
+        let Element::Text(el) = Text::new("hello")
+            .font_family("Inter, system-ui")
+            .line_height(1.2)
+            .into_element()
+        else {
+            panic!()
+        };
+
+        assert_eq!(el.style.font_family, "Inter, system-ui");
+        assert_eq!(el.style.line_height, 1.2);
     }
 
     #[test]

@@ -36,7 +36,9 @@ impl Theme {
                 font_size_md: 14.0,
                 font_size_lg: 18.0,
                 font_size_xl: 24.0,
+                font_family: "system-ui".to_string(),
                 line_height: 1.5,
+                letter_spacing: 0.0,
             },
             spacing: SpacingTokens {
                 xs: 4.0,
@@ -71,7 +73,9 @@ impl Theme {
                 font_size_md: 14.0,
                 font_size_lg: 18.0,
                 font_size_xl: 24.0,
+                font_family: "system-ui".to_string(),
                 line_height: 1.5,
+                letter_spacing: 0.0,
             },
             spacing: SpacingTokens {
                 xs: 4.0,
@@ -109,7 +113,12 @@ pub struct TypographyTokens {
     pub font_size_md: f32,
     pub font_size_lg: f32,
     pub font_size_xl: f32,
+    /// CSS-like font family list used by default text styles.
+    pub font_family: String,
+    /// Unitless line-height multiplier relative to font size.
     pub line_height: f32,
+    /// Additional glyph spacing in logical points.
+    pub letter_spacing: f32,
 }
 
 /// Spacing token group used by layout spacing.

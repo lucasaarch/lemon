@@ -349,6 +349,9 @@ impl RetainedTree {
         let label_style = TextStyle {
             font_size: 16.0,
             font_weight: 500,
+            font_family: "system-ui".to_string(),
+            line_height: 1.0,
+            letter_spacing: 0.0,
             color: Some(crate::element::style::default_text_color()),
         };
 

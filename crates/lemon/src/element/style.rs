@@ -246,14 +246,21 @@ impl PaintProps {
 pub struct TextStyle {
     pub font_size: f32,
     pub font_weight: u16,
+    pub font_family: String,
+    pub line_height: f32,
+    pub letter_spacing: f32,
     pub color: Option<Color>,
 }
 
 impl Default for TextStyle {
     fn default() -> Self {
+        let typography = crate::theme::current_theme().typography;
         TextStyle {
-            font_size: 16.0,
+            font_size: typography.font_size_md,
             font_weight: 400,
+            font_family: typography.font_family,
+            line_height: typography.line_height,
+            letter_spacing: typography.letter_spacing,
             color: Some(Color::rgb8(235, 235, 240)),
         }
     }
