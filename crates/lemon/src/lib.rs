@@ -76,6 +76,7 @@ pub mod paint;
 pub mod platform;
 pub mod retained;
 pub mod runtime;
+pub mod theme;
 
 pub use animation::{animation_frame_signal, request_animation_frame};
 pub use asset::ImageHandle;
@@ -100,6 +101,10 @@ pub use retained::RetainedTree;
 pub use runtime::cx::Cx;
 pub use runtime::signal::Signal;
 pub use runtime::Runtime;
+pub use theme::{
+    current_theme, set_active_theme, ColorTokens, RadiusTokens, SpacingTokens, Theme,
+    TypographyTokens,
+};
 
 pub use debug::Category as DebugCategory;
 
@@ -385,5 +390,14 @@ mod tests {
     fn crate_root_re_exports_overflow() {
         let hidden = Overflow::Hidden;
         assert_eq!(hidden, element::style::Overflow::Hidden);
+    }
+
+    #[test]
+    fn theme_default_light_has_sensible_values() {
+        let theme = Theme::default_light();
+        assert_eq!(theme.typography.font_size_md, 14.0);
+        assert_eq!(theme.spacing.lg, 16.0);
+        assert_eq!(theme.radius.md, 8.0);
+        assert!(theme.colors.accent.r > 0.0 || theme.colors.accent.b > 0.0);
     }
 }
