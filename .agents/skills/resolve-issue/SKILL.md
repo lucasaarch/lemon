@@ -1,6 +1,6 @@
 ---
 name: resolve-issue
-description: Resolve a GitHub issue end to end in this repository: read and obey AGENTS.md, fetch the issue with the gh CLI, implement the fix, validate with cargo check/fmt/clippy/tests, commit the work, and open a pull request linked to the issue. Use when the user asks to work from a GitHub issue number or URL, fix an assigned issue, or ship issue-scoped Rust changes in this repo.
+description: "Resolve a GitHub issue end to end in this repository: read and obey AGENTS.md, fetch the issue with the gh CLI, implement the fix, validate with cargo check/fmt/clippy/tests, commit the work, and open a pull request linked to the issue. Use when the user asks to work from a GitHub issue number or URL, fix an assigned issue, or ship issue-scoped Rust changes in this repo."
 ---
 
 # Resolve Issue
