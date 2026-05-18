@@ -145,16 +145,10 @@ After implementation and validation succeed, stage a version bump using [CVM](ht
 
 #### 8.1 Install `cvm_cli`
 
-Ensure `cvm` is on `PATH`:
+Requires **cvm_cli 1.1.0+** (non-interactive `--crate` / `--bump` / `--summary`).
 
 ```bash
-cargo install cvm_cli --locked
-```
-
-If `cvm --crate` is not recognized, install a build that includes non-interactive change creation (see [cvm#14](https://github.com/lucasaarch/cvm/issues/14)):
-
-```bash
-cargo install cvm_cli --git https://github.com/lucasaarch/cvm.git --branch alpha --locked
+cargo install cvm_cli --version 1.1.0 --locked
 ```
 
 Verify:
@@ -322,7 +316,7 @@ cargo check --workspace
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
-cargo install cvm_cli --locked
+cargo install cvm_cli --version 1.1.0 --locked
 cvm --crate lemon --crate lemon-widgets --bump patch --summary "<effective one-line changelog>"
 cvm status
 git add .cvm/changes/ <files>
