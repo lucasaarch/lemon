@@ -29,8 +29,9 @@ use crate::retained::focus::FocusManager;
 use crate::retained::RetainedTree;
 use crate::runtime::{cx::Cx, Runtime};
 use hit_test::{
-    dispatch_click, find_node_by_taffy_id, hit_test_focusable, hit_test_hover, hit_test_on_click,
-    hit_test_scroll, LogicalPoint,
+    dispatch_click, dispatch_outside_clicks, find_node_by_taffy_id, hit_test_focusable,
+    hit_test_hover, hit_test_on_click, hit_test_pointer_down, hit_test_scroll, normalize_coords,
+    LogicalPoint,
 };
 
 pub use window::WindowConfig;
@@ -66,6 +67,10 @@ pub struct AppState {
     pub paint_dirty: bool,
     pub focus_manager: FocusManager,
     pub hovered_node_id: Option<taffy::NodeId>,
+    /// The node currently capturing pointer events (set on pointer-down, cleared on pointer-up).
+    pub mouse_capture_node: Option<taffy::NodeId>,
+    /// True while the left mouse button is held down.
+    pub mouse_button_down: bool,
     pub active_modifiers: Modifiers,
     window_config: WindowConfig,
     root_component: Option<RootComponent>,
@@ -90,6 +95,8 @@ impl AppState {
             paint_dirty: true,
             focus_manager: FocusManager::new(),
             hovered_node_id: None,
+            mouse_capture_node: None,
+            mouse_button_down: false,
             active_modifiers: Modifiers::default(),
             window_config: config,
             root_component: Some(Arc::new(root)),
@@ -354,6 +361,66 @@ impl AppState {
             self.apply_runtime_patches();
         }
         handled
+    }
+
+    /// Dispatch `on_pointer_down` to the deepest node under `point` with that handler, set
+    /// mouse capture, and dispatch `on_click_outside` to all qualifying nodes.
+    fn event_pass_pointer_down(&mut self, point: LogicalPoint) -> bool {
+        let Some(root) = self.retained.as_ref().and_then(|t| t.root.as_ref()) else {
+            return false;
+        };
+
+        dispatch_outside_clicks(root, &self.layout_map, point);
+
+        let hit = hit_test_pointer_down(root, &self.layout_map, point);
+        let Some((node, (nx, ny))) = hit else {
+            self.mouse_capture_node = None;
+            self.apply_runtime_patches();
+            return false;
+        };
+
+        let capture_id = node.taffy_id;
+        if let Some(handler) = node.handlers.on_pointer_down.clone() {
+            handler(nx, ny);
+        }
+        self.mouse_capture_node = capture_id;
+        self.apply_runtime_patches();
+        true
+    }
+
+    /// Dispatch `on_pointer_move` to the currently captured node (if any) with normalized coords.
+    fn event_pass_pointer_move(&mut self, point: LogicalPoint) -> bool {
+        if !self.mouse_button_down {
+            return false;
+        }
+        let Some(capture_id) = self.mouse_capture_node else {
+            return false;
+        };
+
+        let (handler, rect) = match self
+            .retained
+            .as_ref()
+            .and_then(|t| t.root.as_ref())
+            .and_then(|root| find_node_by_taffy_id(root, capture_id))
+        {
+            Some(node) => {
+                let h = node.handlers.on_pointer_move.clone();
+                let r = node
+                    .taffy_id
+                    .and_then(|id| self.layout_map.get(id))
+                    .copied();
+                (h, r)
+            }
+            None => return false,
+        };
+
+        if let (Some(handler), Some(rect)) = (handler, rect) {
+            let (nx, ny) = normalize_coords(point, &rect);
+            handler(nx, ny);
+            self.apply_runtime_patches();
+            return true;
+        }
+        false
     }
 
     fn event_pass_keyboard(&mut self, key_event: WinitKeyEvent) {
@@ -631,6 +698,7 @@ impl ApplicationHandler for LemonApplication {
                 let logical = state.cursor_logical(position.x, position.y);
                 state.last_cursor = Some((logical.x, logical.y));
                 state.event_pass_hover(logical);
+                state.event_pass_pointer_move(logical);
                 if state.needs_redraw() {
                     state.request_redraw();
                 }
@@ -644,9 +712,20 @@ impl ApplicationHandler for LemonApplication {
                     .last_cursor
                     .map(|(x, y)| LogicalPoint::new(x, y))
                     .unwrap_or(LogicalPoint::new(0.0, 0.0));
-                if state.event_pass_click(point) {
+                state.mouse_button_down = true;
+                let clicked = state.event_pass_click(point);
+                let pointer_handled = state.event_pass_pointer_down(point);
+                if clicked || pointer_handled {
                     state.request_redraw();
                 }
+            }
+            WindowEvent::MouseInput {
+                state: ElementState::Released,
+                button: MouseButton::Left,
+                ..
+            } => {
+                state.mouse_button_down = false;
+                state.mouse_capture_node = None;
             }
             WindowEvent::MouseWheel { delta, .. } => {
                 // Normalize line-based scroll to pixel delta. One line ≈ 20 logical pixels,
@@ -750,5 +829,7 @@ mod tests {
         assert!(!state.mounted);
         assert!(state.focus_manager.focused.is_none());
         assert!(state.hovered_node_id.is_none());
+        assert!(state.mouse_capture_node.is_none());
+        assert!(!state.mouse_button_down);
     }
 }

@@ -29,6 +29,84 @@ fn point_in_rect(point: LogicalPoint, rect: &LayoutRect) -> bool {
         && point.y < rect.y + rect.height
 }
 
+/// Normalize `point` into the `[0.0, 1.0]` coordinate space of `rect`.
+///
+/// Values outside the rect are clamped so handlers always receive a value in `[0.0, 1.0]`.
+pub fn normalize_coords(point: LogicalPoint, rect: &LayoutRect) -> (f32, f32) {
+    let nx = if rect.width > 0.0 {
+        ((point.x - rect.x) / rect.width).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let ny = if rect.height > 0.0 {
+        ((point.y - rect.y) / rect.height).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    (nx, ny)
+}
+
+/// Walk the retained tree in post-order and return the top-most node under `point` that has
+/// an [`on_pointer_down`](crate::retained::EventHandlers::on_pointer_down) handler,
+/// together with the hit coordinates normalized to `[0.0, 1.0]` within the node's bounds.
+pub fn hit_test_pointer_down<'a>(
+    node: &'a RetainedNode,
+    layout: &LayoutMap,
+    point: LogicalPoint,
+) -> Option<(&'a RetainedNode, (f32, f32))> {
+    if matches!(node.kind, RetainedKind::Component { .. }) {
+        let mut hit = None;
+        for child in &node.children {
+            hit = hit_test_pointer_down(child, layout, point).or(hit);
+        }
+        return hit;
+    }
+
+    let mut hit = None;
+    for child in &node.children {
+        hit = hit_test_pointer_down(child, layout, point).or(hit);
+    }
+
+    if node.handlers.on_pointer_down.is_some() {
+        if let Some(id) = node.taffy_id {
+            if let Some(rect) = layout.get(id) {
+                if point_in_rect(point, rect) {
+                    hit = Some((node, normalize_coords(point, rect)));
+                }
+            }
+        }
+    }
+
+    hit
+}
+
+/// Walk the entire retained tree and call [`on_click_outside`](crate::retained::EventHandlers::on_click_outside)
+/// on every node whose handler is set but whose layout bounds do **not** contain `point`.
+///
+/// Used by the platform layer to close popovers or dropdowns when the user clicks elsewhere.
+pub fn dispatch_outside_clicks(node: &RetainedNode, layout: &LayoutMap, point: LogicalPoint) {
+    if matches!(node.kind, RetainedKind::Component { .. }) {
+        for child in &node.children {
+            dispatch_outside_clicks(child, layout, point);
+        }
+        return;
+    }
+
+    if let Some(handler) = node.handlers.on_click_outside.as_ref() {
+        let is_outside = node
+            .taffy_id
+            .and_then(|id| layout.get(id))
+            .is_none_or(|rect| !point_in_rect(point, rect));
+        if is_outside {
+            handler();
+        }
+    }
+
+    for child in &node.children {
+        dispatch_outside_clicks(child, layout, point);
+    }
+}
+
 /// Walk the retained tree in post-order (children before parents) and return the top-most
 /// node under `point` that has an `on_click` handler.
 pub fn hit_test_on_click<'a>(
@@ -425,5 +503,154 @@ mod tests {
             LogicalPoint::new(focusable_rect.x + 4.0, focusable_rect.y + 60.0),
         );
         assert!(miss.is_none());
+    }
+
+    #[test]
+    fn hit_test_pointer_down_returns_node_with_normalized_coords() {
+        let pressed = Rc::new(Cell::new((0.0_f32, 0.0_f32)));
+        let flag = pressed.clone();
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(200.0)
+                .height(200.0)
+                .child(
+                    View::new()
+                        .width(100.0)
+                        .height(50.0)
+                        .on_pointer_down(move |x, y| flag.set((x, y))),
+                )
+                .into_element(),
+        )
+        .unwrap();
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 200.0,
+                height: 200.0,
+            },
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let rect = layout.get(root.children[0].taffy_id.unwrap()).unwrap();
+
+        // Hit at the center of the node.
+        let cx = rect.x + rect.width * 0.5;
+        let cy = rect.y + rect.height * 0.5;
+        let hit = hit_test_pointer_down(root, &layout, LogicalPoint::new(cx, cy));
+        assert!(hit.is_some());
+        let (node, (nx, ny)) = hit.unwrap();
+        node.handlers.on_pointer_down.as_ref().unwrap()(nx, ny);
+        let (rx, ry) = pressed.get();
+        assert!((rx - 0.5).abs() < 1e-4);
+        assert!((ry - 0.5).abs() < 1e-4);
+
+        // Miss outside the node.
+        let miss = hit_test_pointer_down(
+            root,
+            &layout,
+            LogicalPoint::new(rect.x + rect.width + 10.0, rect.y),
+        );
+        assert!(miss.is_none());
+    }
+
+    #[test]
+    fn dispatch_outside_clicks_fires_for_nodes_outside_point() {
+        let outside_fired = Rc::new(Cell::new(false));
+        let flag = outside_fired.clone();
+
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(200.0)
+                .height(200.0)
+                .child(
+                    View::new()
+                        .width(80.0)
+                        .height(40.0)
+                        .on_click_outside(move || flag.set(true)),
+                )
+                .into_element(),
+        )
+        .unwrap();
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 200.0,
+                height: 200.0,
+            },
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let rect = layout.get(root.children[0].taffy_id.unwrap()).unwrap();
+
+        // Click well outside the node → handler must fire.
+        dispatch_outside_clicks(
+            root,
+            &layout,
+            LogicalPoint::new(rect.x + rect.width + 20.0, rect.y),
+        );
+        assert!(outside_fired.get());
+    }
+
+    #[test]
+    fn dispatch_outside_clicks_skips_node_containing_point() {
+        let outside_fired = Rc::new(Cell::new(false));
+        let flag = outside_fired.clone();
+
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(200.0)
+                .height(200.0)
+                .child(
+                    View::new()
+                        .width(80.0)
+                        .height(40.0)
+                        .on_click_outside(move || flag.set(true)),
+                )
+                .into_element(),
+        )
+        .unwrap();
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 200.0,
+                height: 200.0,
+            },
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let rect = layout.get(root.children[0].taffy_id.unwrap()).unwrap();
+
+        // Click inside the node → handler must NOT fire.
+        dispatch_outside_clicks(root, &layout, LogicalPoint::new(rect.x + 4.0, rect.y + 4.0));
+        assert!(!outside_fired.get());
+    }
+
+    #[test]
+    fn normalize_coords_produces_clamped_fractions() {
+        use crate::layout::LayoutRect;
+        let rect = LayoutRect {
+            x: 10.0,
+            y: 20.0,
+            width: 100.0,
+            height: 50.0,
+        };
+
+        // Center of the rect → (0.5, 0.5)
+        let (nx, ny) = normalize_coords(LogicalPoint::new(60.0, 45.0), &rect);
+        assert!((nx - 0.5).abs() < 1e-4);
+        assert!((ny - 0.5).abs() < 1e-4);
+
+        // Outside the rect → clamped to 1.0
+        let (nx, ny) = normalize_coords(LogicalPoint::new(200.0, 200.0), &rect);
+        assert_eq!(nx, 1.0);
+        assert_eq!(ny, 1.0);
+
+        // Before the rect → clamped to 0.0
+        let (nx, ny) = normalize_coords(LogicalPoint::new(0.0, 0.0), &rect);
+        assert_eq!(nx, 0.0);
+        assert_eq!(ny, 0.0);
     }
 }
