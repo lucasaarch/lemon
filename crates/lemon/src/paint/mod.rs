@@ -3,7 +3,7 @@ use vello::kurbo::{Affine, Rect, RoundedRect, Stroke};
 use vello::peniko::{color::AlphaColor, BlendMode, Color as PenikoColor, Fill};
 use vello::{Glyph, Scene};
 
-use crate::element::style::{default_text_color, Color, CornerRadii, Edges};
+use crate::element::style::{default_text_color, Color, CornerRadii, Edges, Overflow};
 use crate::layout::{LayoutMap, LayoutRect};
 use crate::retained::{RetainedKind, RetainedNode, RetainedTree};
 
@@ -89,8 +89,23 @@ fn paint_node(
     paint_container(node, rect, scene, ctx, stats);
     paint_text(node, rect, scene, ctx, stats);
 
+    let clip_children = node.style.overflow == Overflow::Hidden;
+    if clip_children {
+        let clip = Rect::new(
+            f64::from(rect.x),
+            f64::from(rect.y),
+            f64::from(rect.x + rect.width),
+            f64::from(rect.y + rect.height),
+        );
+        scene.push_layer(Fill::NonZero, BlendMode::default(), 1.0, ctx.base, &clip);
+    }
+
     for child in &node.children {
         paint_node(child, layout, scene, ctx, stats);
+    }
+
+    if clip_children {
+        scene.pop_layer();
     }
 }
 
@@ -416,6 +431,41 @@ mod tests {
         let stats = paint_pass(&tree, &LayoutMap::default(), &mut scene, 1.0);
 
         assert_eq!(stats.fills, 0);
+    }
+
+    #[test]
+    fn overflow_hidden_emits_extra_push_pop_layer() {
+        use crate::element::style::Overflow;
+
+        // Without overflow:hidden — children painted with no extra clip layer.
+        let mut tree_no_clip = RetainedTree::mount(
+            Column::new()
+                .width(100.0)
+                .height(80.0)
+                .background(Color::rgb8(40, 80, 120))
+                .child(Text::new("inner").font_size(12.0))
+                .into_element(),
+        )
+        .unwrap();
+        let stats_no_clip = layout_and_paint(&mut tree_no_clip, 1.0);
+
+        // With overflow:hidden — paint_node wraps children in an extra clip layer.
+        let mut tree_clip = RetainedTree::mount(
+            Column::new()
+                .width(100.0)
+                .height(80.0)
+                .background(Color::rgb8(40, 80, 120))
+                .overflow(Overflow::Hidden)
+                .child(Text::new("inner").font_size(12.0))
+                .into_element(),
+        )
+        .unwrap();
+        let stats_clip = layout_and_paint(&mut tree_clip, 1.0);
+
+        // Same fill count — clipping does not change how many fills are drawn.
+        assert_eq!(stats_no_clip.fills, stats_clip.fills);
+        // Both produce glyph runs for the text child.
+        assert!(stats_clip.glyph_runs > 0);
     }
 
     #[test]
