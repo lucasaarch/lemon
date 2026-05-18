@@ -90,7 +90,7 @@ pub use element::builders::{Button, Column, Component, Row, Text, View};
 pub use element::builders::View as Box_;
 
 pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
-pub use element::style::{Color, Overflow, StyleProps};
+pub use element::style::{BoxShadow, Color, LinearGradient, Overflow, StyleProps};
 pub use layout::{
     layout_pass, layout_pass_if_dirty, measure_element_height, scroll_content_max_offset,
     sync_scroll_layout_max, LayoutMap, LayoutRect, Viewport,

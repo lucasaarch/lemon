@@ -274,7 +274,10 @@ mod text_input_tests {
             panic!("expected View element from TextInput");
         };
         assert!(
-            view.paint.border_color.is_some(),
+            view.paint.border_color.top.is_some()
+                || view.paint.border_color.right.is_some()
+                || view.paint.border_color.bottom.is_some()
+                || view.paint.border_color.left.is_some(),
             "TextInput must always have a border color"
         );
         assert!(

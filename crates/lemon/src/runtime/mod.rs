@@ -903,13 +903,26 @@ fn freeze_paint(paint: &PaintProps) -> PaintProps {
     let resolved = paint.resolve();
     PaintProps {
         background: resolved.background.map(ColorSource::Static),
-        border_color: resolved.border_color.map(ColorSource::Static),
+        background_gradient: resolved.background_gradient,
+        border_color: freeze_border_colors(&resolved.border_color),
         border_width: resolved.border_width,
         radius: resolved.radius,
+        box_shadow: resolved.box_shadow,
         image: resolved.image,
         scroll_track_color: resolved.scroll_track_color.map(ColorSource::Static),
         scroll_thumb_color: resolved.scroll_thumb_color.map(ColorSource::Static),
         focus_ring_color: resolved.focus_ring_color.map(ColorSource::Static),
+    }
+}
+
+fn freeze_border_colors(
+    colors: &crate::element::style::Edges<Option<crate::element::style::Color>>,
+) -> crate::element::style::Edges<Option<ColorSource>> {
+    crate::element::style::Edges {
+        top: colors.top.map(ColorSource::Static),
+        right: colors.right.map(ColorSource::Static),
+        bottom: colors.bottom.map(ColorSource::Static),
+        left: colors.left.map(ColorSource::Static),
     }
 }
 
@@ -998,6 +1011,70 @@ mod tests {
             found,
             "expected UpdateText with 'after'; got {patches:?} (len={})",
             patches.len()
+        );
+    }
+
+    #[test]
+    fn runtime_emits_update_paint_for_gradient_shadow_and_border_colors() {
+        use crate::element::builders::View;
+        use crate::element::style::{BoxShadow, Color, LinearGradient};
+
+        let inactive_gradient = LinearGradient::new(
+            (0.0, 0.0),
+            (1.0, 0.0),
+            Color::rgb8(10, 20, 30),
+            Color::rgb8(40, 50, 60),
+        );
+        let active_gradient = LinearGradient::new(
+            (0.0, 0.0),
+            (0.0, 1.0),
+            Color::rgb8(60, 50, 40),
+            Color::rgb8(30, 20, 10),
+        );
+        let inactive_shadow = BoxShadow::new(Color::rgb8(0, 0, 0).with_alpha(0.2), 0.0, 2.0, 4.0);
+        let active_shadow = BoxShadow::new(Color::rgb8(0, 0, 0).with_alpha(0.3), 1.0, 6.0, 10.0);
+        let trigger = Signal::new(false);
+        let watched = trigger.clone();
+        let mut rt = Runtime::new();
+        rt.mount(move |_cx| {
+            let active = watched.get();
+            let gradient = if active {
+                active_gradient
+            } else {
+                inactive_gradient
+            };
+            let shadow = if active {
+                active_shadow
+            } else {
+                inactive_shadow
+            };
+            let mut view = View::new()
+                .width(80.0)
+                .height(40.0)
+                .linear_gradient(gradient)
+                .box_shadow(shadow)
+                .border(Color::rgb8(80, 80, 80), 2.0);
+            if active {
+                view = view.border_color_top(Color::rgb8(255, 0, 0));
+            }
+            view.into_element()
+        });
+        rt.take_patches();
+
+        trigger.set(true);
+        rt.flush_effects();
+        let patches = rt.take_patches();
+
+        assert!(
+            patches.iter().any(|patch| matches!(
+                patch,
+                Patch::UpdatePaint { paint, .. }
+                    if paint.background_gradient == Some(active_gradient)
+                        && paint.box_shadow == Some(active_shadow)
+                        && paint.border_color.top == Some(Color::rgb8(255, 0, 0))
+                        && paint.border_color.right == Some(Color::rgb8(80, 80, 80))
+            )),
+            "expected UpdatePaint with resolved gradient/shadow/border colors, got {patches:?}"
         );
     }
 

@@ -188,9 +188,11 @@ impl RetainedNode {
             style: StyleProps::default(),
             paint: PaintData {
                 background: None,
-                border_color: None,
+                background_gradient: None,
+                border_color: Edges::default(),
                 border_width: Edges::default(),
                 radius: CornerRadii::default(),
+                box_shadow: None,
                 image: None,
                 scroll_track_color: None,
                 scroll_thumb_color: None,

@@ -1,19 +1,19 @@
 use std::rc::Rc;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct Edges<T: Copy> {
+pub struct Edges<T> {
     pub top: T,
     pub right: T,
     pub bottom: T,
     pub left: T,
 }
 
-impl<T: Copy> Edges<T> {
+impl<T: Clone> Edges<T> {
     pub fn all(v: T) -> Self {
         Edges {
-            top: v,
-            right: v,
-            bottom: v,
+            top: v.clone(),
+            right: v.clone(),
+            bottom: v.clone(),
             left: v,
         }
     }
@@ -233,14 +233,94 @@ impl<F: Fn() -> Color + 'static> From<F> for ColorSource {
     }
 }
 
+/// Two-stop linear gradient painted within a container's layout rect.
+///
+/// `start` and `end` use normalized coordinates where `(0.0, 0.0)` is the top-left corner and
+/// `(1.0, 1.0)` is the bottom-right corner.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct LinearGradient {
+    pub start: (f32, f32),
+    pub end: (f32, f32),
+    pub start_color: Color,
+    pub end_color: Color,
+}
+
+impl LinearGradient {
+    /// Creates a two-stop linear gradient inside the painted rect.
+    ///
+    /// ```
+    /// use lemon::{Color, LinearGradient, View};
+    ///
+    /// let _ = View::new()
+    ///     .linear_gradient(LinearGradient::new(
+    ///         (0.0, 0.0),
+    ///         (1.0, 1.0),
+    ///         Color::rgb8(255, 128, 64),
+    ///         Color::rgb8(64, 128, 255),
+    ///     ))
+    ///     .into_element();
+    /// ```
+    pub fn new(start: (f32, f32), end: (f32, f32), start_color: Color, end_color: Color) -> Self {
+        Self {
+            start,
+            end,
+            start_color,
+            end_color,
+        }
+    }
+}
+
+/// Single outer box shadow painted behind a container.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct BoxShadow {
+    /// Shadow tint and alpha.
+    pub color: Color,
+    /// Horizontal shadow offset in logical points.
+    pub offset_x: f32,
+    /// Vertical shadow offset in logical points.
+    pub offset_y: f32,
+    /// Gaussian blur radius in logical points.
+    pub blur_radius: f32,
+}
+
+impl BoxShadow {
+    /// Creates a blurred outer shadow.
+    ///
+    /// ```
+    /// use lemon::{BoxShadow, Color, View};
+    ///
+    /// let _ = View::new()
+    ///     .box_shadow(BoxShadow::new(
+    ///         Color::rgb8(0, 0, 0).with_alpha(0.25),
+    ///         0.0,
+    ///         8.0,
+    ///         12.0,
+    ///     ))
+    ///     .into_element();
+    /// ```
+    pub fn new(color: Color, offset_x: f32, offset_y: f32, blur_radius: f32) -> Self {
+        Self {
+            color,
+            offset_x,
+            offset_y,
+            blur_radius,
+        }
+    }
+}
+
 /// Visual decoration properties. May contain dynamic closures.
 #[derive(Clone, Default)]
 pub struct PaintProps {
     pub background: Option<ColorSource>,
-    pub border_color: Option<ColorSource>,
+    /// Optional two-stop linear gradient painted instead of [`background`](Self::background).
+    pub background_gradient: Option<LinearGradient>,
+    /// Per-side border colors. `None` skips painting for that side.
+    pub border_color: Edges<Option<ColorSource>>,
     /// Per-side border widths in logical points (`0.0` = no border on that side).
     pub border_width: Edges<f32>,
     pub radius: CornerRadii,
+    /// Optional outer shadow painted before the background and borders.
+    pub box_shadow: Option<BoxShadow>,
     /// Optional image drawn inside the container using object-fit: contain scaling.
     pub image: Option<crate::asset::ImageHandle>,
     /// Optional override for widget scrollbar track painting.
@@ -255,12 +335,11 @@ impl std::fmt::Debug for PaintProps {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PaintProps")
             .field("background", &self.background.as_ref().map(|c| c.resolve()))
-            .field(
-                "border_color",
-                &self.border_color.as_ref().map(|c| c.resolve()),
-            )
+            .field("background_gradient", &self.background_gradient)
+            .field("border_color", &resolve_color_edges(&self.border_color))
             .field("border_width", &self.border_width)
             .field("radius", &self.radius)
+            .field("box_shadow", &self.box_shadow)
             .field("image", &self.image)
             .field(
                 "scroll_track_color",
@@ -282,9 +361,11 @@ impl std::fmt::Debug for PaintProps {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct PaintData {
     pub background: Option<Color>,
-    pub border_color: Option<Color>,
+    pub background_gradient: Option<LinearGradient>,
+    pub border_color: Edges<Option<Color>>,
     pub border_width: Edges<f32>,
     pub radius: CornerRadii,
+    pub box_shadow: Option<BoxShadow>,
     /// Optional image drawn inside the container using object-fit: contain scaling.
     pub image: Option<crate::asset::ImageHandle>,
     pub scroll_track_color: Option<Color>,
@@ -296,14 +377,25 @@ impl PaintProps {
     pub fn resolve(&self) -> PaintData {
         PaintData {
             background: self.background.as_ref().map(|c| c.resolve()),
-            border_color: self.border_color.as_ref().map(|c| c.resolve()),
+            background_gradient: self.background_gradient,
+            border_color: resolve_color_edges(&self.border_color),
             border_width: self.border_width,
             radius: self.radius.clone(),
+            box_shadow: self.box_shadow,
             image: self.image.clone(),
             scroll_track_color: self.scroll_track_color.as_ref().map(|c| c.resolve()),
             scroll_thumb_color: self.scroll_thumb_color.as_ref().map(|c| c.resolve()),
             focus_ring_color: self.focus_ring_color.as_ref().map(|c| c.resolve()),
         }
+    }
+}
+
+fn resolve_color_edges(edges: &Edges<Option<ColorSource>>) -> Edges<Option<Color>> {
+    Edges {
+        top: edges.top.as_ref().map(ColorSource::resolve),
+        right: edges.right.as_ref().map(ColorSource::resolve),
+        bottom: edges.bottom.as_ref().map(ColorSource::resolve),
+        left: edges.left.as_ref().map(ColorSource::resolve),
     }
 }
 

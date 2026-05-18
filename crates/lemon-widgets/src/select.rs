@@ -765,7 +765,10 @@ mod tests {
         };
         let dropdown_paint = dropdown.paint.resolve();
         assert_eq!(dropdown_paint.background, Some(custom.colors.surface));
-        assert_eq!(dropdown_paint.border_color, Some(custom.colors.border));
+        assert_eq!(
+            dropdown_paint.border_color,
+            lemon::element::style::Edges::all(Some(custom.colors.border))
+        );
         assert_eq!(dropdown_paint.radius, CornerRadii::all(custom.radius.md));
 
         let Element::View(option) = &dropdown.children[0] else {
@@ -823,7 +826,7 @@ mod tests {
         assert_eq!(dropdown_paint.background, Some(lemon::Color::rgb8(4, 5, 6)));
         assert_eq!(
             dropdown_paint.border_color,
-            Some(lemon::Color::rgb8(7, 8, 9))
+            lemon::element::style::Edges::all(Some(lemon::Color::rgb8(7, 8, 9)))
         );
         assert_eq!(dropdown_paint.radius, CornerRadii::all(11.0));
 
