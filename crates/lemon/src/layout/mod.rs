@@ -278,13 +278,13 @@ fn measure_text_node(
     let weight = FontWeight::new(snapshot.style.font_weight as f32);
     let line_height = effective_line_height(&snapshot.style);
     let font_family = effective_font_family(&snapshot.style);
-    let letter_spacing = effective_letter_spacing(&snapshot.style);
+    let letter_spacing = snapshot.style.letter_spacing;
 
     let mut builder =
         ctx.layout_cx
             .ranged_builder(ctx.font_cx, &snapshot.content, PARLEY_LAYOUT_SCALE, true);
     builder.push_default(StyleProperty::FontFamily(parley::FontFamily::Source(
-        Cow::Borrowed(font_family.as_ref()),
+        font_family,
     )));
     builder.push_default(StyleProperty::FontSize(font_size));
     builder.push_default(StyleProperty::FontWeight(weight));
@@ -329,10 +329,6 @@ fn effective_line_height(style: &TextStyle) -> f32 {
     }
 }
 
-fn effective_letter_spacing(style: &TextStyle) -> f32 {
-    style.letter_spacing
-}
-
 /// Measures the width of a single-line string using the same defaults as layout.
 pub fn measure_single_line_width(content: &str, style: &TextStyle) -> f32 {
     if content.is_empty() {
@@ -345,11 +341,11 @@ pub fn measure_single_line_width(content: &str, style: &TextStyle) -> f32 {
     let weight = FontWeight::new(style.font_weight as f32);
     let line_height = effective_line_height(style);
     let font_family = effective_font_family(style);
-    let letter_spacing = effective_letter_spacing(style);
+    let letter_spacing = style.letter_spacing;
 
     let mut builder = layout_cx.ranged_builder(&mut font_cx, content, PARLEY_LAYOUT_SCALE, true);
     builder.push_default(StyleProperty::FontFamily(parley::FontFamily::Source(
-        Cow::Borrowed(font_family.as_ref()),
+        font_family,
     )));
     builder.push_default(StyleProperty::FontSize(font_size));
     builder.push_default(StyleProperty::FontWeight(weight));
