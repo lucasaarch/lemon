@@ -960,6 +960,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "images"
+version = "0.2.0-alpha.7"
+dependencies = [
+ "lemon",
+ "lemon-widgets",
+]
+
+[[package]]
 name = "indexmap"
 version = "2.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2064,6 +2072,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "scroll"
+version = "0.2.0-alpha.7"
+dependencies = [
+ "lemon",
+ "lemon-widgets",
+]
+
+[[package]]
 name = "sctk-adwaita"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2074,6 +2090,14 @@ dependencies = [
  "memmap2",
  "smithay-client-toolkit",
  "tiny-skia",
+]
+
+[[package]]
+name = "select"
+version = "0.2.0-alpha.7"
+dependencies = [
+ "lemon",
+ "lemon-widgets",
 ]
 
 [[package]]
@@ -2163,6 +2187,14 @@ name = "slab"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
+
+[[package]]
+name = "slider"
+version = "0.2.0-alpha.7"
+dependencies = [
+ "lemon",
+ "lemon-widgets",
+]
 
 [[package]]
 name = "slotmap"

@@ -11,6 +11,10 @@ members = [
     "examples/layout",
     "examples/form",
     "examples/rich",
+    "examples/slider",
+    "examples/images",
+    "examples/select",
+    "examples/scroll",
 ]
 resolver = "2"
 
