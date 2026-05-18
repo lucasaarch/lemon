@@ -97,6 +97,38 @@ pub fn hit_test_hover<'a>(
     hit
 }
 
+/// Walk the retained tree in post-order and return the top-most focusable node under `point`.
+pub fn hit_test_focusable<'a>(
+    node: &'a RetainedNode,
+    layout: &LayoutMap,
+    point: LogicalPoint,
+) -> Option<&'a RetainedNode> {
+    if matches!(node.kind, RetainedKind::Component { .. }) {
+        let mut hit = None;
+        for child in &node.children {
+            hit = hit_test_focusable(child, layout, point).or(hit);
+        }
+        return hit;
+    }
+
+    let mut hit = None;
+    for child in &node.children {
+        hit = hit_test_focusable(child, layout, point).or(hit);
+    }
+
+    if node.style.focusable {
+        if let Some(id) = node.taffy_id {
+            if let Some(rect) = layout.get(id) {
+                if point_in_rect(point, rect) {
+                    hit = Some(node);
+                }
+            }
+        }
+    }
+
+    hit
+}
+
 pub fn find_node_by_taffy_id(node: &RetainedNode, id: taffy::NodeId) -> Option<&RetainedNode> {
     if node.taffy_id == Some(id) {
         return Some(node);
@@ -358,6 +390,46 @@ mod tests {
         assert!(scrolled.get());
 
         let miss = hit_test_scroll(root, &layout, LogicalPoint::new(300.0, 300.0));
+        assert!(miss.is_none());
+    }
+
+    #[test]
+    fn hit_test_focusable_finds_node_with_focusable_flag() {
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(200.0)
+                .height(200.0)
+                .child(View::new().width(80.0).height(40.0).focusable())
+                .child(View::new().width(80.0).height(40.0))
+                .into_element(),
+        )
+        .unwrap();
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 200.0,
+                height: 200.0,
+            },
+            1.0,
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let focusable_rect = layout.get(root.children[0].taffy_id.unwrap()).unwrap();
+
+        let hit = hit_test_focusable(
+            root,
+            &layout,
+            LogicalPoint::new(focusable_rect.x + 4.0, focusable_rect.y + 4.0),
+        );
+        assert!(hit.is_some());
+        assert_eq!(hit.unwrap().taffy_id, root.children[0].taffy_id);
+
+        let miss = hit_test_focusable(
+            root,
+            &layout,
+            LogicalPoint::new(focusable_rect.x + 4.0, focusable_rect.y + 60.0),
+        );
         assert!(miss.is_none());
     }
 }

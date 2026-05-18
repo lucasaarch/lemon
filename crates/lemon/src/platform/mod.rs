@@ -27,8 +27,8 @@ use crate::retained::focus::FocusManager;
 use crate::retained::RetainedTree;
 use crate::runtime::{cx::Cx, Runtime};
 use hit_test::{
-    dispatch_click, find_node_by_taffy_id, hit_test_hover, hit_test_on_click, hit_test_scroll,
-    LogicalPoint,
+    dispatch_click, find_node_by_taffy_id, hit_test_focusable, hit_test_hover, hit_test_on_click,
+    hit_test_scroll, LogicalPoint,
 };
 
 pub use window::WindowConfig;
@@ -205,9 +205,20 @@ impl AppState {
 
     /// Route a pointer click through hit-test and dispatch `on_click` (logical coordinates).
     fn event_pass_click(&mut self, point: LogicalPoint) -> bool {
-        let Some(root) = self.retained.as_ref().and_then(|t| t.root.as_ref()) else {
+        let Some(tree) = self.retained.as_ref() else {
             return false;
         };
+        let Some(root) = tree.root.as_ref() else {
+            return false;
+        };
+
+        let focusable_id =
+            hit_test_focusable(root, &self.layout_map, point).and_then(|node| node.taffy_id);
+        if let Some(id) = focusable_id {
+            self.focus_manager.focused = Some(id);
+            self.paint_dirty = true;
+        }
+
         let Some(node) = hit_test_on_click(root, &self.layout_map, point) else {
             return false;
         };
