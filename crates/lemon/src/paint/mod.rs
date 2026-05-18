@@ -1,7 +1,10 @@
 use parley::PositionedLayoutItem;
 use taffy::NodeId;
 use vello::kurbo::{Affine, Line, Rect, RoundedRect, Stroke};
-use vello::peniko::{color::AlphaColor, BlendMode, Color as PenikoColor, Fill};
+use vello::peniko::{
+    color::AlphaColor, BlendMode, Blob, Color as PenikoColor, Fill, ImageAlphaType, ImageBrush,
+    ImageData as PenikoImageData, ImageFormat,
+};
 use vello::{Glyph, Scene};
 
 use crate::element::style::{default_text_color, Color, CornerRadii, Edges, Overflow};
@@ -123,6 +126,7 @@ fn paint_node(
 
     paint_container(node, rect, scene, ctx, stats);
     paint_text(node, rect, scene, ctx, stats);
+    paint_image(node, rect, scene, ctx);
     paint_focus_ring(node, rect, taffy_id, focused, scene, ctx, stats);
 
     let clip_children = node.style.overflow == Overflow::Hidden;
@@ -199,6 +203,57 @@ fn paint_container(
             );
         }
     }
+}
+
+/// Draws the image stored in `node.paint.image` into `rect` using object-fit: contain scaling.
+///
+/// The image is scaled uniformly so it fits within `rect` while preserving its aspect ratio,
+/// then centered within the rectangle. No fill stat is recorded; image draws do not count as
+/// fills. Returns early if the node is not a container kind, has no image, or has zero-size
+/// dimensions.
+fn paint_image(node: &RetainedNode, rect: &LayoutRect, scene: &mut Scene, ctx: PaintContext) {
+    let is_container = matches!(
+        node.kind,
+        RetainedKind::View | RetainedKind::Row | RetainedKind::Column | RetainedKind::Button
+    );
+    if !is_container {
+        return;
+    }
+
+    let Some(handle) = node.paint.image.as_ref() else {
+        return;
+    };
+
+    let img_w = handle.width() as f64;
+    let img_h = handle.height() as f64;
+    if img_w <= 0.0 || img_h <= 0.0 {
+        return;
+    }
+
+    let rect_w = f64::from(rect.width);
+    let rect_h = f64::from(rect.height);
+    if rect_w <= 0.0 || rect_h <= 0.0 {
+        return;
+    }
+
+    // Object-fit: contain — uniform scale to fit within the box.
+    let scale = (rect_w / img_w).min(rect_h / img_h);
+    let scaled_w = img_w * scale;
+    let scaled_h = img_h * scale;
+    let offset_x = f64::from(rect.x) + (rect_w - scaled_w) * 0.5;
+    let offset_y = f64::from(rect.y) + (rect_h - scaled_h) * 0.5;
+
+    let transform = ctx.base * Affine::translate((offset_x, offset_y)) * Affine::scale(scale);
+
+    let peniko_data = PenikoImageData {
+        data: Blob::from(handle.pixels().to_vec()),
+        format: ImageFormat::Rgba8,
+        alpha_type: ImageAlphaType::Alpha,
+        width: handle.width(),
+        height: handle.height(),
+    };
+    let brush = ImageBrush::new(peniko_data);
+    scene.draw_image(brush.as_ref(), transform);
 }
 
 fn paint_text(
@@ -752,5 +807,31 @@ mod tests {
         let stats = layout_and_paint(&mut tree, 1.0);
 
         assert_eq!(stats.fills, 1, "only the column background is painted");
+    }
+
+    #[test]
+    fn image_handle_in_paint_data_runs_without_panic() {
+        use crate::asset::image_handle::ImageData;
+        use crate::asset::ImageHandle;
+        use crate::element::builders::View;
+        use std::sync::Arc;
+
+        let handle = ImageHandle::from_arc(Arc::new(ImageData {
+            width: 4,
+            height: 4,
+            pixels: vec![128u8; 4 * 4 * 4],
+        }));
+
+        let mut tree = RetainedTree::mount(
+            View::new()
+                .width(100.0)
+                .height(100.0)
+                .image(handle)
+                .into_element(),
+        )
+        .unwrap();
+
+        let stats = layout_and_paint(&mut tree, 1.0);
+        assert_eq!(stats.fills, 0, "image draw does not count as fill");
     }
 }

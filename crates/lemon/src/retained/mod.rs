@@ -153,6 +153,7 @@ impl RetainedNode {
                 border_color: None,
                 border_width: 0.0,
                 radius: CornerRadii::default(),
+                image: None,
             },
             children: Vec::new(),
             handlers: EventHandlers::default(),

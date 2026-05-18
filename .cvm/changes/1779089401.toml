@@ -1,0 +1,6 @@
+[update]
+major = []
+minor = ["lemon"]
+patch = []
+pre = true
+summary = "Add image field to PaintProps/PaintData and render images with object-fit: contain in paint pass"

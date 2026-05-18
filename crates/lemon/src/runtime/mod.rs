@@ -683,6 +683,7 @@ fn freeze_paint(paint: &PaintProps) -> PaintProps {
         border_color: resolved.border_color.map(ColorSource::Static),
         border_width: resolved.border_width,
         radius: resolved.radius,
+        image: resolved.image,
     }
 }
 
