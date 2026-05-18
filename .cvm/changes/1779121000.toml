@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = ["lemon", "lemon-widgets"]
-patch = []
-pre = true
-summary = "Add absolute insets and anchor Select dropdowns"
