@@ -5,6 +5,7 @@ members = [
     "examples/counter",
     "examples/card",
     "examples/list_keyed",
+    "examples/form",
 ]
 resolver = "2"
 
