@@ -235,6 +235,8 @@ fn diff_box(
             paint: np,
         });
     }
+    diff_children(o.children, n.children, &path, patches);
+    // Apply chrome after child text updates so caret sync sees the new content length.
     if o.text_input != n.text_input
         || o.scroll_viewport != n.scroll_viewport
         || o.scroll_bar != n.scroll_bar
@@ -246,7 +248,6 @@ fn diff_box(
             scroll_bar: n.scroll_bar,
         });
     }
-    diff_children(o.children, n.children, &path, patches);
 }
 
 pub(crate) fn element_key(element: &Element) -> Option<crate::element::types::Key> {
@@ -473,6 +474,37 @@ mod tests {
         );
         assert_eq!(patches.len(), 1);
         assert!(matches!(patches[0], Patch::ReplaceNode { .. }));
+    }
+
+    #[test]
+    fn text_input_typing_emits_text_patch_before_widget_chrome() {
+        use crate::element::builders::{Row, View};
+        use crate::element::types::TextInputMeta;
+
+        let old = View::new()
+            .text_input(TextInputMeta {
+                cursor: 0,
+                value: String::new(),
+            })
+            .child(Row::new().child(Text::new("")))
+            .into_element();
+        let new = View::new()
+            .text_input(TextInputMeta {
+                cursor: 1,
+                value: "a".into(),
+            })
+            .child(Row::new().child(Text::new("a")))
+            .into_element();
+
+        let patches = diff(old, new, NodePath::root());
+        let text_idx = patches.iter().position(|p| matches!(p, Patch::UpdateText { .. }));
+        let chrome_idx = patches
+            .iter()
+            .position(|p| matches!(p, Patch::UpdateWidgetChrome { .. }));
+        assert!(
+            text_idx < chrome_idx,
+            "UpdateText should run before UpdateWidgetChrome, got {patches:?}"
+        );
     }
 
     #[test]

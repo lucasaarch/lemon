@@ -330,7 +330,7 @@ impl RetainedTree {
             scroll_bar,
         };
         if let Some(meta) = &text_input {
-            sync_text_input_caret(&mut retained, meta.cursor);
+            sync_text_input_caret(&mut retained, meta);
         }
         Ok(retained)
     }
@@ -450,7 +450,7 @@ impl RetainedTree {
                 retained.scroll_viewport = scroll_viewport;
                 retained.scroll_bar = scroll_bar;
                 if let Some(meta) = text_input.as_ref() {
-                    sync_text_input_caret(retained, meta.cursor);
+                    sync_text_input_caret(retained, meta);
                 }
             }
             Patch::UpdateText { node, content } => {
@@ -466,6 +466,7 @@ impl RetainedTree {
                 if let Some(taffy_id) = retained.taffy_id {
                     self.taffy.mark_dirty(taffy_id)?;
                 }
+                resync_text_input_caret_from_ancestors(self, &node)?;
             }
             Patch::UpdateTextStyle { node, style } => {
                 let retained = self.node_mut(&node)?;
@@ -773,12 +774,36 @@ fn into_taffy_justify_content(justify: Justify) -> taffy::JustifyContent {
     }
 }
 
-fn sync_text_input_caret(node: &mut RetainedNode, cursor: usize) {
+fn sync_text_input_caret(node: &mut RetainedNode, meta: &crate::element::types::TextInputMeta) {
     if let Some(text_node) = first_text_descendant_mut(node) {
         if let Some(text) = text_node.text.as_mut() {
-            text.caret = cursor.min(text.content.len());
+            let bound = meta.value.len().max(text.content.len());
+            text.caret = meta.cursor.min(bound);
         }
     }
+}
+
+fn resync_text_input_caret_from_ancestors(
+    tree: &mut RetainedTree,
+    text_path: &NodePath,
+) -> Result<(), RetainedError> {
+    let mut indices = text_path.0.clone();
+    while !indices.is_empty() {
+        indices.pop();
+        let parent_path = NodePath(indices.clone());
+        if let Ok(parent) = tree.node_mut(&parent_path) {
+            if let Some(meta) = parent.text_input.clone() {
+                sync_text_input_caret(parent, &meta);
+                return Ok(());
+            }
+        }
+    }
+    if let Some(root) = tree.root.as_mut() {
+        if let Some(meta) = root.text_input.clone() {
+            sync_text_input_caret(root, &meta);
+        }
+    }
+    Ok(())
 }
 
 fn first_text_descendant_mut(node: &mut RetainedNode) -> Option<&mut RetainedNode> {
@@ -864,7 +889,7 @@ mod tests {
     use std::{cell::Cell, rc::Rc};
 
     use crate::diff::{NodePath, Patch};
-    use crate::element::builders::{Button, Column, Text, View};
+    use crate::element::builders::{Button, Column, Row, Text, View};
     use crate::element::events::{KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
     use crate::element::style::{Align, Color, Dimension, Edges, Justify, StyleProps};
     use crate::element::types::ComponentElement;
@@ -1019,6 +1044,42 @@ mod tests {
         let handler = root.handlers.on_click.as_ref().unwrap();
         handler();
         assert!(fired.get());
+    }
+
+    #[test]
+    fn widget_chrome_before_update_text_still_syncs_caret() {
+        use crate::element::types::TextInputMeta;
+
+        let mut tree = RetainedTree::mount(
+            View::new()
+                .text_input(TextInputMeta {
+                    cursor: 0,
+                    value: String::new(),
+                })
+                .child(Row::new().child(Text::new("")))
+                .into_element(),
+        )
+        .unwrap();
+
+        // Simulate old patch order: chrome before text content update.
+        tree.apply_patch(Patch::UpdateWidgetChrome {
+            node: NodePath::root(),
+            text_input: Some(TextInputMeta {
+                cursor: 2,
+                value: "hi".into(),
+            }),
+            scroll_viewport: false,
+            scroll_bar: false,
+        })
+        .unwrap();
+        tree.apply_patch(Patch::UpdateText {
+            node: NodePath(vec![0, 0]),
+            content: "hi".into(),
+        })
+        .unwrap();
+
+        let text = &tree.root.as_ref().unwrap().children[0].children[0];
+        assert_eq!(text.text.as_ref().unwrap().caret, 2);
     }
 
     #[test]

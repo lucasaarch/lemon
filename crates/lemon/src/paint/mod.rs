@@ -538,18 +538,16 @@ fn paint_text_input_caret(
         }
     };
 
-    let (content, cursor) = match first_text_descendant(node) {
-        Some(text_node) => {
-            let text = text_node.text.as_ref();
-            let content = text
-                .map(|t| t.content.as_str())
-                .unwrap_or(meta.value.as_str());
-            let cursor = text.map(|t| t.caret).unwrap_or(meta.cursor);
-            (content, cursor)
-        }
-        None => (meta.value.as_str(), meta.cursor),
+    let content = match first_text_descendant(node) {
+        Some(text_node) => text_node
+            .text
+            .as_ref()
+            .map(|t| t.content.as_str())
+            .unwrap_or(meta.value.as_str()),
+        None => meta.value.as_str(),
     };
-    let cursor = cursor.min(content.len());
+    // `TextInputMeta.cursor` is authoritative; `TextCache.caret` can lag behind `UpdateText`.
+    let cursor = meta.cursor.min(content.len());
     let prefix = &content[..cursor];
     let caret_x = text_rect.x + measure_single_line_width(prefix, &text_style);
     let caret_top = text_rect.y + ((text_rect.height - line_height) * 0.5).max(0.0);
