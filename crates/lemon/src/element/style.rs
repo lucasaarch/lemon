@@ -93,6 +93,10 @@ pub struct StyleProps {
     pub align_items: Option<Align>,
     pub justify_content: Option<Justify>,
     pub overflow: Overflow,
+    /// Paint-only z-order for this node among siblings (`0` = normal flow).
+    ///
+    /// Layout is unaffected; non-zero values are only used during painting.
+    pub z_index: i32,
     /// Cross-axis alignment when this node is a flex child (e.g. avoid stretch in a column).
     pub align_self: Option<Align>,
     pub focusable: bool,
@@ -245,5 +249,10 @@ mod tests {
     #[test]
     fn style_props_default_overflow_is_visible() {
         assert_eq!(StyleProps::default().overflow, Overflow::Visible);
+    }
+
+    #[test]
+    fn style_props_default_z_index_is_zero() {
+        assert_eq!(StyleProps::default().z_index, 0);
     }
 }

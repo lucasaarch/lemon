@@ -89,34 +89,30 @@ fn paint_node(
     stats: &mut PaintStats,
 ) {
     if matches!(node.kind, RetainedKind::Component { .. }) {
-        for child in &node.children {
-            paint_node(
-                child,
-                layout,
-                scene,
-                ctx,
-                scale_factor,
-                focused,
-                caret_visible,
-                stats,
-            );
-        }
+        paint_children(
+            &node.children,
+            layout,
+            scene,
+            ctx,
+            scale_factor,
+            focused,
+            caret_visible,
+            stats,
+        );
         return;
     }
 
     let Some(taffy_id) = node.taffy_id else {
-        for child in &node.children {
-            paint_node(
-                child,
-                layout,
-                scene,
-                ctx,
-                scale_factor,
-                focused,
-                caret_visible,
-                stats,
-            );
-        }
+        paint_children(
+            &node.children,
+            layout,
+            scene,
+            ctx,
+            scale_factor,
+            focused,
+            caret_visible,
+            stats,
+        );
         return;
     };
 
@@ -140,18 +136,16 @@ fn paint_node(
         scene.push_layer(Fill::NonZero, BlendMode::default(), 1.0, ctx.base, &clip);
     }
 
-    for child in &node.children {
-        paint_node(
-            child,
-            layout,
-            scene,
-            ctx,
-            scale_factor,
-            focused,
-            caret_visible,
-            stats,
-        );
-    }
+    paint_children(
+        &node.children,
+        layout,
+        scene,
+        ctx,
+        scale_factor,
+        focused,
+        caret_visible,
+        stats,
+    );
 
     if clip_children {
         scene.pop_layer();
@@ -168,6 +162,50 @@ fn paint_node(
         stats,
     );
     paint_scrollbar(node, rect, layout, scene, ctx, stats);
+}
+
+#[allow(clippy::too_many_arguments)]
+fn paint_children(
+    children: &[RetainedNode],
+    layout: &LayoutMap,
+    scene: &mut Scene,
+    ctx: PaintContext,
+    scale_factor: f32,
+    focused: Option<NodeId>,
+    caret_visible: bool,
+    stats: &mut PaintStats,
+) {
+    let mut deferred = Vec::new();
+    for child in children {
+        if child.style.z_index == 0 {
+            paint_node(
+                child,
+                layout,
+                scene,
+                ctx,
+                scale_factor,
+                focused,
+                caret_visible,
+                stats,
+            );
+        } else {
+            deferred.push(child);
+        }
+    }
+
+    deferred.sort_by_key(|child| child.style.z_index);
+    for child in deferred {
+        paint_node(
+            child,
+            layout,
+            scene,
+            ctx,
+            scale_factor,
+            focused,
+            caret_visible,
+            stats,
+        );
+    }
 }
 
 fn paint_container(
@@ -601,7 +639,7 @@ fn paint_scrollbar(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::element::builders::{Button, Column, Text};
+    use crate::element::builders::{Button, Column, Text, View};
     use crate::layout::{layout_pass, Viewport};
     use crate::retained::RetainedTree;
 
@@ -774,6 +812,63 @@ mod tests {
         assert_eq!(stats_no_clip.fills, stats_clip.fills);
         // Both produce glyph runs for the text child.
         assert!(stats_clip.glyph_runs > 0);
+    }
+
+    #[test]
+    fn z_index_children_are_painted_without_panic() {
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(120.0)
+                .height(120.0)
+                .child(
+                    View::new()
+                        .width(80.0)
+                        .height(40.0)
+                        .background(Color::rgb8(255, 0, 0)),
+                )
+                .child(
+                    View::new()
+                        .width(80.0)
+                        .height(40.0)
+                        .background(Color::rgb8(0, 255, 0))
+                        .z_index(1),
+                )
+                .into_element(),
+        )
+        .unwrap();
+
+        let stats = layout_and_paint(&mut tree, 1.0);
+        assert_eq!(stats.fills, 2, "both children must be painted");
+    }
+
+    #[test]
+    fn z_index_children_with_overflow_hidden_are_painted_without_panic() {
+        use crate::element::style::Overflow;
+
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(120.0)
+                .height(120.0)
+                .overflow(Overflow::Hidden)
+                .child(
+                    View::new()
+                        .width(80.0)
+                        .height(40.0)
+                        .background(Color::rgb8(255, 0, 0)),
+                )
+                .child(
+                    View::new()
+                        .width(80.0)
+                        .height(40.0)
+                        .background(Color::rgb8(0, 255, 0))
+                        .z_index(2),
+                )
+                .into_element(),
+        )
+        .unwrap();
+
+        let stats = layout_and_paint(&mut tree, 1.0);
+        assert_eq!(stats.fills, 2, "overflow clipping should keep both fills");
     }
 
     #[test]

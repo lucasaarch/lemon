@@ -56,6 +56,13 @@ macro_rules! container_builder {
                 self.0.style.overflow = v;
                 self
             }
+            /// Paint-only z-order among siblings (`0` keeps normal traversal order).
+            ///
+            /// Non-zero values are deferred to a sorted paint pass and do not affect layout.
+            pub fn z_index(mut self, z: i32) -> Self {
+                self.0.style.z_index = z;
+                self
+            }
             pub fn background(mut self, c: impl Into<ColorSource>) -> Self {
                 self.0.paint.background = Some(c.into());
                 self
@@ -433,6 +440,14 @@ mod tests {
             panic!()
         };
         assert_eq!(el.style.overflow, Overflow::Hidden);
+    }
+
+    #[test]
+    fn box_builder_sets_z_index() {
+        let Element::View(el) = View::new().z_index(3).into_element() else {
+            panic!()
+        };
+        assert_eq!(el.style.z_index, 3);
     }
 
     #[test]
