@@ -1,8 +1,8 @@
 use lemon::{
     element::{
-        builders::{Button as CoreButton, Column, Text, View},
+        builders::{Column, Text, View},
         events::Cursor,
-        style::Color,
+        style::{Align, Color, ColorSource, Justify},
         Element,
     },
     Cx, Signal,
@@ -118,19 +118,27 @@ impl SelectStyle {
 pub struct Select<T> {
     value: Signal<Option<T>>,
     open: Signal<bool>,
+    trigger_hovered: Signal<bool>,
+    trigger_pressed: Signal<bool>,
     options: Vec<(T, String)>,
     width: Option<f32>,
     placeholder: String,
     trigger_height: f32,
     trigger_padding: f32,
     trigger_background: Color,
+    trigger_background_hover: Color,
+    trigger_background_pressed: Color,
+    trigger_background_disabled: Color,
     trigger_radius: f32,
+    trigger_text_color: Color,
+    trigger_text_color_disabled: Color,
     dropdown_background: Color,
     dropdown_border: Color,
     dropdown_radius: f32,
     item_padding: f32,
     item_text_color: Color,
     style: SelectStyle,
+    disabled: bool,
 }
 
 impl<T: Clone + PartialEq + 'static> Select<T> {
@@ -158,19 +166,27 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
         Self {
             value,
             open,
+            trigger_hovered: cx.use_signal(false),
+            trigger_pressed: cx.use_signal(false),
             options,
             width: None,
             placeholder: "Select…".to_string(),
             trigger_height: theme.spacing.sm * 5.0,
             trigger_padding: theme.spacing.sm,
             trigger_background: theme.colors.accent,
+            trigger_background_hover: theme.colors.accent_hover,
+            trigger_background_pressed: theme.colors.accent_pressed,
+            trigger_background_disabled: theme.colors.surface,
             trigger_radius: theme.radius.md,
+            trigger_text_color: theme.colors.on_accent,
+            trigger_text_color_disabled: theme.colors.foreground_disabled,
             dropdown_background: theme.colors.surface,
             dropdown_border: theme.colors.border,
             dropdown_radius: theme.radius.md,
             item_padding: theme.spacing.sm,
             item_text_color: theme.colors.foreground,
             style: SelectStyle::default(),
+            disabled: false,
         }
     }
 
@@ -191,6 +207,12 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
     /// Replaces all select style overrides.
     pub fn style(mut self, style: SelectStyle) -> Self {
         self.style = style;
+        self
+    }
+
+    /// Marks this select as disabled, preventing trigger and option interactions.
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
         self
     }
 
@@ -216,17 +238,25 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
     ///
     /// Call this at the end of the builder chain to insert the widget into a parent container.
     pub fn into_element(self) -> Element {
-        let is_open = self.open.get();
+        let is_open = !self.disabled && self.open.get();
         let current = self.value.get();
         let open = self.open;
+        let trigger_hovered = self.trigger_hovered;
+        let trigger_pressed = self.trigger_pressed;
         let value = self.value;
         let options = self.options;
         let width = self.width;
         let placeholder = self.placeholder;
+        let disabled = self.disabled;
         let trigger_height = self.trigger_height;
         let trigger_padding = self.trigger_padding;
         let trigger_background = self.trigger_background;
+        let trigger_background_hover = self.trigger_background_hover;
+        let trigger_background_pressed = self.trigger_background_pressed;
+        let trigger_background_disabled = self.trigger_background_disabled;
         let trigger_radius = self.trigger_radius;
+        let trigger_text_color = self.trigger_text_color;
+        let trigger_text_color_disabled = self.trigger_text_color_disabled;
         let dropdown_background = self.dropdown_background;
         let dropdown_border = self.dropdown_border;
         let dropdown_radius = self.dropdown_radius;
@@ -254,23 +284,75 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
             })
             .unwrap_or(placeholder);
 
-        // Trigger button: toggles the dropdown open/closed on click.
-        let open_for_trigger = open.clone();
-        let mut trigger = CoreButton::new(format!("{trigger_label} ▾"))
+        let trigger_text_color = if disabled {
+            trigger_text_color_disabled
+        } else {
+            trigger_text_color
+        };
+        let trigger_hovered_for_bg = trigger_hovered.clone();
+        let trigger_pressed_for_bg = trigger_pressed.clone();
+        let trigger_background =
+            style
+                .trigger_background
+                .map(ColorSource::Static)
+                .unwrap_or(ColorSource::Dynamic(std::rc::Rc::new(move || {
+                    if disabled {
+                        trigger_background_disabled
+                    } else if trigger_pressed_for_bg.get() {
+                        trigger_background_pressed
+                    } else if trigger_hovered_for_bg.get() {
+                        trigger_background_hover
+                    } else {
+                        trigger_background
+                    }
+                })));
+
+        let mut trigger = View::new()
             .padding(trigger_padding)
             .background(trigger_background)
             .radius(trigger_radius)
             .height(trigger_height)
-            .on_click(move || {
-                open_for_trigger.update(|b| *b = !*b);
-            });
+            .align_items(Align::Center)
+            .justify_content(Justify::Center)
+            .cursor(if disabled {
+                Cursor::NotAllowed
+            } else {
+                Cursor::Pointer
+            })
+            .child(
+                Text::new(format!("{trigger_label} ▾"))
+                    .font_size(14.0)
+                    .color(trigger_text_color),
+            );
         if let Some(w) = width {
             trigger = trigger.width(w);
         }
+        if !disabled {
+            let open_for_trigger = open.clone();
+            let hovered_enter = trigger_hovered.clone();
+            let hovered_leave = trigger_hovered.clone();
+            let pressed_down = trigger_pressed.clone();
+            let pressed_up = trigger_pressed.clone();
+            let pressed_leave = trigger_pressed.clone();
+            trigger = trigger
+                .on_click(move || {
+                    open_for_trigger.update(|b| *b = !*b);
+                })
+                .on_hover_enter(move || hovered_enter.set(true))
+                .on_hover_leave(move || {
+                    hovered_leave.set(false);
+                    pressed_leave.set(false);
+                })
+                .on_pointer_down(move |_, _| pressed_down.set(true))
+                .on_pointer_up(move |_, _| pressed_up.set(false));
+        }
 
         // Outer container: on_click_outside closes the dropdown when the user clicks elsewhere.
-        let open_for_outside = open.clone();
-        let mut container = Column::new().on_click_outside(move || open_for_outside.set(false));
+        let mut container = Column::new();
+        if !disabled {
+            let open_for_outside = open.clone();
+            container = container.on_click_outside(move || open_for_outside.set(false));
+        }
         if let Some(w) = width {
             container = container.width(w);
         }
@@ -297,11 +379,13 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
                 let mut item = View::new()
                     .padding(item_padding)
                     .cursor(Cursor::Pointer)
-                    .on_click(move || {
+                    .child(Text::new(label).font_size(14.0).color(item_text_color));
+                if !disabled {
+                    item = item.on_click(move || {
                         val_c.set(Some(opt.clone()));
                         open_c.set(false);
-                    })
-                    .child(Text::new(label).font_size(14.0).color(item_text_color));
+                    });
+                }
                 if let Some(w) = width {
                     item = item.width(w);
                 }
@@ -352,10 +436,13 @@ mod tests {
         };
         // Closed: only the trigger child
         assert_eq!(col.children.len(), 1);
-        let Element::Button(trigger) = &col.children[0] else {
-            panic!("expected Button trigger");
+        let Element::View(trigger) = &col.children[0] else {
+            panic!("expected View trigger");
         };
-        let label = trigger.label.resolve();
+        let Element::Text(label) = &trigger.children[0] else {
+            panic!("expected trigger Text");
+        };
+        let label = label.content.resolve();
         assert!(
             label.contains("Select"),
             "trigger should contain placeholder, got: {label}"
@@ -372,10 +459,13 @@ mod tests {
         let Element::Column(col) = el else {
             panic!("expected Column container");
         };
-        let Element::Button(trigger) = &col.children[0] else {
-            panic!("expected Button trigger");
+        let Element::View(trigger) = &col.children[0] else {
+            panic!("expected View trigger");
         };
-        let label = trigger.label.resolve();
+        let Element::Text(label) = &trigger.children[0] else {
+            panic!("expected trigger Text");
+        };
+        let label = label.content.resolve();
         assert!(
             label.contains("Green"),
             "trigger should show selected label, got: {label}"
@@ -549,10 +639,11 @@ mod tests {
         let Element::Column(col) = el else {
             panic!("expected Column container");
         };
-        let Element::Button(trigger) = &col.children[0] else {
-            panic!("expected Button trigger");
+        let Element::View(trigger) = &col.children[0] else {
+            panic!("expected View trigger");
         };
         let on_click = trigger
+            .handlers
             .on_click
             .as_ref()
             .expect("trigger must have on_click");
@@ -622,10 +713,13 @@ mod tests {
         let Element::Column(col) = el else {
             panic!("expected Column container");
         };
-        let Element::Button(trigger) = &col.children[0] else {
-            panic!("expected Button trigger");
+        let Element::View(trigger) = &col.children[0] else {
+            panic!("expected View trigger");
         };
-        let label = trigger.label.resolve();
+        let Element::Text(label) = &trigger.children[0] else {
+            panic!("expected trigger Text");
+        };
+        let label = label.content.resolve();
         assert!(
             label.contains("Pick a color"),
             "trigger should show custom placeholder, got: {label}"
@@ -658,8 +752,8 @@ mod tests {
             panic!("expected Column");
         };
 
-        let Element::Button(trigger) = &root.children[0] else {
-            panic!("expected trigger Button");
+        let Element::View(trigger) = &root.children[0] else {
+            panic!("expected trigger View");
         };
         assert_eq!(trigger.style.padding, Some(Edges::all(custom.spacing.sm)));
         let trigger_paint = trigger.paint.resolve();
@@ -714,8 +808,8 @@ mod tests {
             panic!("expected Column");
         };
 
-        let Element::Button(trigger) = &root.children[0] else {
-            panic!("expected trigger Button");
+        let Element::View(trigger) = &root.children[0] else {
+            panic!("expected trigger View");
         };
         assert_eq!(trigger.style.padding, Some(Edges::all(9.0)));
         let trigger_paint = trigger.paint.resolve();
@@ -734,5 +828,86 @@ mod tests {
         assert_eq!(dropdown_paint.radius, CornerRadii::all(11.0));
 
         set_active_theme(previous);
+    }
+
+    #[test]
+    fn select_trigger_hover_and_press_update_background() {
+        use lemon::current_theme;
+
+        let previous = current_theme();
+        let mut custom = lemon::Theme::default_dark();
+        custom.colors.accent = lemon::Color::rgb8(1, 2, 3);
+        custom.colors.accent_hover = lemon::Color::rgb8(4, 5, 6);
+        custom.colors.accent_pressed = lemon::Color::rgb8(7, 8, 9);
+        lemon::set_active_theme(custom.clone());
+
+        let value = Signal::new(None::<Color>);
+        let open = Signal::new(false);
+        let cx = Cx::new();
+        let Element::Column(root) =
+            Select::with_open(&cx, value, open, make_options()).into_element()
+        else {
+            panic!("expected Column");
+        };
+        let Element::View(trigger) = &root.children[0] else {
+            panic!("expected trigger View");
+        };
+
+        assert_eq!(
+            trigger.paint.resolve().background,
+            Some(custom.colors.accent)
+        );
+        trigger
+            .handlers
+            .on_hover_enter
+            .as_ref()
+            .expect("hover enter handler")();
+        assert_eq!(
+            trigger.paint.resolve().background,
+            Some(custom.colors.accent_hover)
+        );
+        trigger
+            .handlers
+            .on_pointer_down
+            .as_ref()
+            .expect("pointer down handler")(0.5, 0.5);
+        assert_eq!(
+            trigger.paint.resolve().background,
+            Some(custom.colors.accent_pressed)
+        );
+        trigger
+            .handlers
+            .on_pointer_up
+            .as_ref()
+            .expect("pointer up handler")(0.5, 0.5);
+        assert_eq!(
+            trigger.paint.resolve().background,
+            Some(custom.colors.accent_hover)
+        );
+
+        lemon::set_active_theme(previous);
+    }
+
+    #[test]
+    fn disabled_select_has_no_interaction_handlers() {
+        let value = Signal::new(None::<Color>);
+        let open = Signal::new(false);
+        let cx = Cx::new();
+        let Element::Column(root) = Select::with_open(&cx, value, open.clone(), make_options())
+            .disabled(true)
+            .into_element()
+        else {
+            panic!("expected Column");
+        };
+
+        let Element::View(trigger) = &root.children[0] else {
+            panic!("expected trigger View");
+        };
+        assert!(trigger.handlers.on_click.is_none());
+        assert!(trigger.handlers.on_hover_enter.is_none());
+        assert!(trigger.handlers.on_pointer_down.is_none());
+        assert!(root.handlers.on_click_outside.is_none());
+
+        assert!(!open.get(), "disabled select should not toggle open state");
     }
 }

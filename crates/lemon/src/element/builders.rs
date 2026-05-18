@@ -243,6 +243,11 @@ macro_rules! container_builder {
                 self.0.handlers.on_pointer_move = Some(Rc::new(f));
                 self
             }
+            /// Pointer release handler with normalized coordinates in this node's bounds (`0.0..=1.0`).
+            pub fn on_pointer_up(mut self, f: impl Fn(f32, f32) + 'static) -> Self {
+                self.0.handlers.on_pointer_up = Some(Rc::new(f));
+                self
+            }
             /// Binds a cell updated after layout for scroll clamping (used by `Scroll` widget).
             pub fn scroll_layout_max(mut self, cell: std::rc::Rc<std::cell::Cell<f64>>) -> Self {
                 self.0.handlers.scroll_layout_max = Some(cell);

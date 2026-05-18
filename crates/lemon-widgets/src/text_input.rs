@@ -78,16 +78,23 @@ impl TextInputStyle {
 /// ```
 pub struct TextInput {
     state: Signal<TextFieldState>,
+    hovered: Signal<bool>,
+    pressed: Signal<bool>,
     placeholder: String,
     width: Option<f32>,
     placeholder_color: Color,
     text_color: Color,
     surface_color: Color,
+    surface_color_hover: Color,
+    surface_color_pressed: Color,
+    surface_color_disabled: Color,
     border_color: Color,
+    text_color_disabled: Color,
     padding: f32,
     radius: f32,
     focus_ring_color: Color,
     style: TextInputStyle,
+    disabled: bool,
 }
 
 impl TextInput {
@@ -99,16 +106,23 @@ impl TextInput {
         let theme = cx.use_theme();
         TextInput {
             state,
+            hovered: cx.use_signal(false),
+            pressed: cx.use_signal(false),
             placeholder: String::new(),
             width: None,
             placeholder_color: theme.colors.foreground_secondary,
             text_color: theme.colors.foreground,
             surface_color: theme.colors.surface,
+            surface_color_hover: theme.colors.surface_hover,
+            surface_color_pressed: theme.colors.surface_pressed,
+            surface_color_disabled: theme.colors.surface,
             border_color: theme.colors.border,
+            text_color_disabled: theme.colors.foreground_disabled,
             padding: theme.spacing.sm,
             radius: theme.radius.sm,
             focus_ring_color: theme.chrome.focus_ring,
             style: TextInputStyle::default(),
+            disabled: false,
         }
     }
 
@@ -160,11 +174,18 @@ impl TextInput {
         self
     }
 
+    /// Marks this text input as disabled, preventing focus and keyboard input.
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
+        self
+    }
+
     /// Builds and returns the [`Element`] for this input field.
     ///
     /// Call this at the end of the builder chain to insert the widget into a parent container.
     pub fn into_element(self) -> Element {
         let field = self.state.get();
+        let disabled = self.disabled;
         let current_value = field.value.clone();
         let placeholder = self.placeholder.clone();
         let placeholder_color = self
@@ -175,6 +196,35 @@ impl TextInput {
         let padding = self.style.padding.unwrap_or(self.padding);
         let radius = self.style.radius.unwrap_or(self.radius);
         let focus_ring_color = self.style.focus_ring_color.unwrap_or(self.focus_ring_color);
+        let surface_color = {
+            let hovered = self.hovered.clone();
+            let pressed = self.pressed.clone();
+            let surface_color = self.surface_color;
+            let surface_color_hover = self.surface_color_hover;
+            let surface_color_pressed = self.surface_color_pressed;
+            let surface_color_disabled = self.surface_color_disabled;
+            ColorSource::Dynamic(std::rc::Rc::new(move || {
+                if disabled {
+                    surface_color_disabled
+                } else if pressed.get() {
+                    surface_color_pressed
+                } else if hovered.get() {
+                    surface_color_hover
+                } else {
+                    surface_color
+                }
+            }))
+        };
+        let text_color = if disabled {
+            self.text_color_disabled
+        } else {
+            self.text_color
+        };
+        let placeholder_color = if disabled {
+            self.text_color_disabled
+        } else {
+            placeholder_color
+        };
 
         // Text shown in the field: current value or placeholder (dimmed).
         let text_child: Element = if current_value.is_empty() {
@@ -182,26 +232,19 @@ impl TextInput {
                 .color(placeholder_color)
                 .into_element()
         } else {
-            Text::new(current_value)
-                .color(self.text_color)
-                .into_element()
+            Text::new(current_value).color(text_color).into_element()
         };
 
         let mut container = View::new()
-            .background(self.surface_color)
+            .background(surface_color)
             .padding(padding)
             .border(border_color, 1.5)
             .radius(radius)
             .overflow(Overflow::Hidden)
-            .focusable()
-            .cursor(Cursor::Text)
-            .text_input(TextInputMeta {
-                cursor: field.cursor,
-                value: field.value,
-            })
-            .on_key_down({
-                let state = self.state.clone();
-                move |ev| state.update(|s| s.handle_key(&ev))
+            .cursor(if disabled {
+                Cursor::NotAllowed
+            } else {
+                Cursor::Text
             })
             .child(
                 Row::new()
@@ -209,6 +252,31 @@ impl TextInput {
                     .flex_grow(1.0)
                     .child(text_child),
             );
+        if !disabled {
+            container = container
+                .focusable()
+                .text_input(TextInputMeta {
+                    cursor: field.cursor,
+                    value: field.value,
+                })
+                .on_key_down({
+                    let state = self.state.clone();
+                    move |ev| state.update(|s| s.handle_key(&ev))
+                });
+            let hovered_enter = self.hovered.clone();
+            let hovered_leave = self.hovered.clone();
+            let pressed_down = self.pressed.clone();
+            let pressed_up = self.pressed.clone();
+            let pressed_leave = self.pressed.clone();
+            container = container
+                .on_hover_enter(move || hovered_enter.set(true))
+                .on_hover_leave(move || {
+                    hovered_leave.set(false);
+                    pressed_leave.set(false);
+                })
+                .on_pointer_down(move |_, _| pressed_down.set(true))
+                .on_pointer_up(move |_, _| pressed_up.set(false));
+        }
 
         if let Some(w) = self.width {
             container = container.width(w);
@@ -336,6 +404,84 @@ mod tests {
             Some(Color::rgb8(120, 121, 122)),
             "unset placeholder color should fall back to theme default"
         );
+
+        set_active_theme(previous);
+    }
+
+    #[test]
+    fn text_input_hover_and_press_states_update_surface_color() {
+        let previous = current_theme();
+        let mut custom = Theme::default_dark();
+        custom.colors.surface = Color::rgb8(1, 2, 3);
+        custom.colors.surface_hover = Color::rgb8(4, 5, 6);
+        custom.colors.surface_pressed = Color::rgb8(7, 8, 9);
+        set_active_theme(custom.clone());
+
+        let cx = Cx::new();
+        let state = Signal::new(TextFieldState::new(""));
+        let Element::View(view) = TextInput::new(&cx, state).into_element() else {
+            panic!("expected View element");
+        };
+
+        assert_eq!(view.paint.resolve().background, Some(custom.colors.surface));
+        view.handlers
+            .on_hover_enter
+            .as_ref()
+            .expect("hover enter handler")();
+        assert_eq!(
+            view.paint.resolve().background,
+            Some(custom.colors.surface_hover)
+        );
+        view.handlers
+            .on_pointer_down
+            .as_ref()
+            .expect("pointer down handler")(0.5, 0.5);
+        assert_eq!(
+            view.paint.resolve().background,
+            Some(custom.colors.surface_pressed)
+        );
+        view.handlers
+            .on_pointer_up
+            .as_ref()
+            .expect("pointer up handler")(0.5, 0.5);
+        assert_eq!(
+            view.paint.resolve().background,
+            Some(custom.colors.surface_hover)
+        );
+
+        set_active_theme(previous);
+    }
+
+    #[test]
+    fn disabled_text_input_ignores_keyboard_and_uses_disabled_colors() {
+        let previous = current_theme();
+        let mut custom = Theme::default_dark();
+        custom.colors.foreground_disabled = Color::rgb8(9, 10, 11);
+        set_active_theme(custom.clone());
+
+        let cx = Cx::new();
+        let state = Signal::new(TextFieldState::new(""));
+        let Element::View(view) = TextInput::new(&cx, state.clone())
+            .placeholder("Type here")
+            .disabled(true)
+            .into_element()
+        else {
+            panic!("expected View element");
+        };
+
+        assert!(!view.style.focusable);
+        assert!(view.text_input.is_none());
+        assert!(view.handlers.on_key_down.is_none());
+        assert!(view.handlers.on_pointer_down.is_none());
+
+        let Element::Row(row) = &view.children[0] else {
+            panic!("expected inner Row");
+        };
+        let Element::Text(text) = &row.children[0] else {
+            panic!("expected placeholder Text");
+        };
+        assert_eq!(text.style.color, Some(custom.colors.foreground_disabled));
+        assert_eq!(state.get().value, "");
 
         set_active_theme(previous);
     }

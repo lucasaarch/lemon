@@ -2,7 +2,12 @@ use std::time::Instant;
 
 use lemon::{
     animation_frame_signal,
-    element::{builders::View, events::Cursor, style::Color, Element},
+    element::{
+        builders::View,
+        events::Cursor,
+        style::{Color, ColorSource},
+        Element,
+    },
     request_animation_frame, Cx, Signal,
 };
 
@@ -99,11 +104,20 @@ impl SliderStyle {
 pub struct Slider {
     value: Signal<f32>,
     anim: Signal<AnimState>,
+    hovered: Signal<bool>,
+    pressed: Signal<bool>,
     width: f32,
     height: f32,
     track_color: Color,
+    track_color_hover: Color,
+    track_color_pressed: Color,
+    track_color_disabled: Color,
     fill_color: Color,
+    fill_color_hover: Color,
+    fill_color_pressed: Color,
+    fill_color_disabled: Color,
     style: SliderStyle,
+    disabled: bool,
 }
 
 impl Slider {
@@ -137,11 +151,20 @@ impl Slider {
         Self {
             value,
             anim,
+            hovered: cx.use_signal(false),
+            pressed: cx.use_signal(false),
             width: 200.0,
             height: theme.spacing.sm * 2.0,
             track_color: theme.colors.border,
+            track_color_hover: theme.colors.surface_hover,
+            track_color_pressed: theme.colors.surface_pressed,
+            track_color_disabled: theme.colors.surface,
             fill_color: theme.colors.accent,
+            fill_color_hover: theme.colors.accent_hover,
+            fill_color_pressed: theme.colors.accent_pressed,
+            fill_color_disabled: theme.colors.foreground_disabled,
             style: SliderStyle::default(),
+            disabled: false,
         }
     }
 
@@ -175,6 +198,12 @@ impl Slider {
         self
     }
 
+    /// Marks this slider as disabled, preventing pointer interactions.
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
+        self
+    }
+
     /// Builds and returns the [`Element`] for this slider.
     ///
     /// Call this at the end of the builder chain to insert the widget into a parent container.
@@ -183,8 +212,45 @@ impl Slider {
         let display = anim.display().clamp(0.0, 1.0);
         let fill_width = display * self.width;
         let radius = self.height / 2.0;
-        let track_color = self.style.track_color.unwrap_or(self.track_color);
-        let fill_color = self.style.fill_color.unwrap_or(self.fill_color);
+        let disabled = self.disabled;
+        let track_color = self.style.track_color.map(ColorSource::Static).unwrap_or({
+            let hovered = self.hovered.clone();
+            let pressed = self.pressed.clone();
+            let track_color = self.track_color;
+            let track_color_hover = self.track_color_hover;
+            let track_color_pressed = self.track_color_pressed;
+            let track_color_disabled = self.track_color_disabled;
+            ColorSource::Dynamic(std::rc::Rc::new(move || {
+                if disabled {
+                    track_color_disabled
+                } else if pressed.get() {
+                    track_color_pressed
+                } else if hovered.get() {
+                    track_color_hover
+                } else {
+                    track_color
+                }
+            }))
+        });
+        let fill_color = self.style.fill_color.map(ColorSource::Static).unwrap_or({
+            let hovered = self.hovered.clone();
+            let pressed = self.pressed.clone();
+            let fill_color = self.fill_color;
+            let fill_color_hover = self.fill_color_hover;
+            let fill_color_pressed = self.fill_color_pressed;
+            let fill_color_disabled = self.fill_color_disabled;
+            ColorSource::Dynamic(std::rc::Rc::new(move || {
+                if disabled {
+                    fill_color_disabled
+                } else if pressed.get() {
+                    fill_color_pressed
+                } else if hovered.get() {
+                    fill_color_hover
+                } else {
+                    fill_color
+                }
+            }))
+        });
 
         // Subscribe to the frame clock while animating so the platform drives re-renders.
         if anim.is_animating() {
@@ -196,23 +262,15 @@ impl Slider {
         let val_down = self.value.clone();
         let anim_move = self.anim.clone();
         let val_move = self.value.clone();
-
-        View::new()
+        let mut slider = View::new()
             .width(self.width)
             .height(self.height)
             .radius(radius)
             .background(track_color)
-            .cursor(Cursor::Pointer)
-            .on_pointer_down(move |nx, _| {
-                let v = nx.clamp(0.0, 1.0);
-                // Update anim first so the effect sees anim.to == v and skips animation.
-                anim_down.set(AnimState::settled(v));
-                val_down.set(v);
-            })
-            .on_pointer_move(move |nx, _| {
-                let v = nx.clamp(0.0, 1.0);
-                anim_move.set(AnimState::settled(v));
-                val_move.set(v);
+            .cursor(if disabled {
+                Cursor::NotAllowed
+            } else {
+                Cursor::Pointer
             })
             .child(
                 View::new()
@@ -220,8 +278,34 @@ impl Slider {
                     .height(self.height)
                     .radius(radius)
                     .background(fill_color),
-            )
-            .into_element()
+            );
+        if !disabled {
+            let hovered_enter = self.hovered.clone();
+            let hovered_leave = self.hovered.clone();
+            let pressed_down = self.pressed.clone();
+            let pressed_up = self.pressed.clone();
+            let pressed_leave = self.pressed.clone();
+            slider = slider
+                .on_hover_enter(move || hovered_enter.set(true))
+                .on_hover_leave(move || {
+                    hovered_leave.set(false);
+                    pressed_leave.set(false);
+                })
+                .on_pointer_down(move |nx, _| {
+                    let v = nx.clamp(0.0, 1.0);
+                    pressed_down.set(true);
+                    // Update anim first so the effect sees anim.to == v and skips animation.
+                    anim_down.set(AnimState::settled(v));
+                    val_down.set(v);
+                })
+                .on_pointer_move(move |nx, _| {
+                    let v = nx.clamp(0.0, 1.0);
+                    anim_move.set(AnimState::settled(v));
+                    val_move.set(v);
+                })
+                .on_pointer_up(move |_, _| pressed_up.set(false));
+        }
+        slider.into_element()
     }
 }
 
@@ -456,6 +540,95 @@ mod tests {
         assert_eq!(fill.paint.resolve().background, Some(custom.colors.accent));
 
         lemon::set_active_theme(previous);
+    }
+
+    #[test]
+    fn slider_hover_and_press_states_update_colors() {
+        let previous = lemon::current_theme();
+        let mut custom = lemon::Theme::default_dark();
+        custom.colors.border = Color::rgb8(1, 2, 3);
+        custom.colors.surface_hover = Color::rgb8(4, 5, 6);
+        custom.colors.surface_pressed = Color::rgb8(7, 8, 9);
+        custom.colors.accent = Color::rgb8(10, 11, 12);
+        custom.colors.accent_hover = Color::rgb8(13, 14, 15);
+        custom.colors.accent_pressed = Color::rgb8(16, 17, 18);
+        lemon::set_active_theme(custom.clone());
+
+        let value = Signal::new(0.25_f32);
+        let (el, _) = make_slider(value);
+
+        let Element::View(track) = el else {
+            panic!("expected View element from Slider");
+        };
+        assert_eq!(track.paint.resolve().background, Some(custom.colors.border));
+        let Element::View(fill) = &track.children[0] else {
+            panic!("expected View fill child");
+        };
+        assert_eq!(fill.paint.resolve().background, Some(custom.colors.accent));
+
+        track
+            .handlers
+            .on_hover_enter
+            .as_ref()
+            .expect("hover enter handler")();
+        assert_eq!(
+            track.paint.resolve().background,
+            Some(custom.colors.surface_hover)
+        );
+        let Element::View(fill) = &track.children[0] else {
+            panic!("expected View fill child");
+        };
+        assert_eq!(
+            fill.paint.resolve().background,
+            Some(custom.colors.accent_hover)
+        );
+
+        track
+            .handlers
+            .on_pointer_down
+            .as_ref()
+            .expect("pointer down handler")(0.5, 0.0);
+        assert_eq!(
+            track.paint.resolve().background,
+            Some(custom.colors.surface_pressed)
+        );
+        let Element::View(fill) = &track.children[0] else {
+            panic!("expected View fill child");
+        };
+        assert_eq!(
+            fill.paint.resolve().background,
+            Some(custom.colors.accent_pressed)
+        );
+
+        track
+            .handlers
+            .on_pointer_up
+            .as_ref()
+            .expect("pointer up handler")(0.5, 0.0);
+        assert_eq!(
+            track.paint.resolve().background,
+            Some(custom.colors.surface_hover)
+        );
+
+        lemon::set_active_theme(previous);
+    }
+
+    #[test]
+    fn disabled_slider_ignores_pointer_interactions() {
+        let value = Signal::new(0.25_f32);
+        let cx = lemon::Cx::new();
+        let el = Slider::new(&cx, value.clone())
+            .disabled(true)
+            .into_element();
+
+        let Element::View(track) = el else {
+            panic!("expected View element from Slider");
+        };
+        assert!(track.handlers.on_pointer_down.is_none());
+        assert!(track.handlers.on_pointer_move.is_none());
+        assert!(track.handlers.on_hover_enter.is_none());
+        assert!(track.handlers.on_pointer_up.is_none());
+        assert_eq!(value.get(), 0.25);
     }
 
     #[test]

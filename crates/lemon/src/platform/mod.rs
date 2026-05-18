@@ -444,6 +444,38 @@ impl AppState {
         false
     }
 
+    /// Dispatch `on_pointer_up` to the currently captured node (if any) with normalized coords.
+    fn event_pass_pointer_up(&mut self, point: LogicalPoint) -> bool {
+        let Some(capture_id) = self.mouse_capture_node else {
+            return false;
+        };
+
+        let (handler, rect) = match self
+            .retained
+            .as_ref()
+            .and_then(|t| t.root.as_ref())
+            .and_then(|root| find_node_by_taffy_id(root, capture_id))
+        {
+            Some(node) => {
+                let h = node.handlers.on_pointer_up.clone();
+                let r = node
+                    .taffy_id
+                    .and_then(|id| self.layout_map.get(id))
+                    .copied();
+                (h, r)
+            }
+            None => return false,
+        };
+
+        if let (Some(handler), Some(rect)) = (handler, rect) {
+            let (nx, ny) = normalize_coords(point, &rect);
+            handler(nx, ny);
+            self.apply_runtime_patches();
+            return true;
+        }
+        false
+    }
+
     fn event_pass_keyboard(&mut self, key_event: WinitKeyEvent) {
         let lemon_key = winit_key_to_lemon(&key_event.logical_key);
         let state = if key_event.state == ElementState::Pressed {
@@ -745,8 +777,16 @@ impl ApplicationHandler for LemonApplication {
                 button: MouseButton::Left,
                 ..
             } => {
+                let point = state
+                    .last_cursor
+                    .map(|(x, y)| LogicalPoint::new(x, y))
+                    .unwrap_or(LogicalPoint::new(0.0, 0.0));
+                let pointer_released = state.event_pass_pointer_up(point);
                 state.mouse_button_down = false;
                 state.mouse_capture_node = None;
+                if pointer_released || state.needs_redraw() {
+                    state.request_redraw();
+                }
             }
             WindowEvent::MouseWheel { delta, .. } => {
                 // Normalize line-based scroll to pixel delta. One line ≈ 20 logical pixels,
