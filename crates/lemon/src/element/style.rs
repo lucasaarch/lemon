@@ -105,7 +105,8 @@ pub struct StyleProps {
     pub row_gap: Option<f32>,
     /// Opacity multiplier applied to this node's painted output and descendants.
     ///
-    /// `1.0` is fully opaque. Container builders clamp values to the valid `0.0..=1.0` range.
+    /// `0.0` is fully transparent and `1.0` is fully opaque.
+    /// Container builders clamp values to the valid `0.0..=1.0` range.
     pub opacity: f32,
     pub flex_grow: Option<f32>,
     pub flex_shrink: Option<f32>,

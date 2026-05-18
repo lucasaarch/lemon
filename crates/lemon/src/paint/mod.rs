@@ -145,6 +145,7 @@ fn paint_node<'a>(
     let opacity = resolved_opacity(node.style.opacity);
     let use_opacity_layer = opacity < 1.0;
     if use_opacity_layer {
+        // Keep overflow-visible descendants paintable outside the node's layout bounds.
         scene.push_layer(
             Fill::NonZero,
             BlendMode::default(),
