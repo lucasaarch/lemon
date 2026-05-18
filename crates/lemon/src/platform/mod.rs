@@ -212,11 +212,11 @@ impl AppState {
             return false;
         };
 
-        let focusable_id =
-            hit_test_focusable(root, &self.layout_map, point).and_then(|node| node.taffy_id);
-        if let Some(id) = focusable_id {
-            self.focus_manager.focused = Some(id);
-            self.paint_dirty = true;
+        if let Some(node) = hit_test_focusable(root, &self.layout_map, point) {
+            if let Some(id) = node.taffy_id {
+                self.focus_manager.focused = Some(id);
+                self.paint_dirty = true;
+            }
         }
 
         let Some(node) = hit_test_on_click(root, &self.layout_map, point) else {
