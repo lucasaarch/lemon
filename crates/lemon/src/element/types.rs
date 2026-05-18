@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{any::Any, rc::Rc};
 
 use crate::element::{
     content::TextContent,
@@ -9,6 +9,35 @@ pub type ComponentFn = fn(&crate::runtime::cx::Cx) -> crate::element::Element;
 
 fn component_identity(view: ComponentFn) -> usize {
     view as *const () as usize
+}
+
+/// Type-erased component props stored on [`ComponentElement`].
+///
+/// This enables comparing and cloning typed props without exposing their concrete type.
+pub trait AnyProps: 'static {
+    /// Clones this props value into a boxed trait object.
+    fn clone_box(&self) -> Box<dyn AnyProps>;
+    /// Compares this props value against another type-erased props value.
+    fn eq_box(&self, other: &dyn AnyProps) -> bool;
+    /// Returns this props value as [`Any`] for downcasting.
+    fn as_any(&self) -> &dyn Any;
+}
+
+impl<T: Clone + PartialEq + 'static> AnyProps for T {
+    fn clone_box(&self) -> Box<dyn AnyProps> {
+        Box::new(self.clone())
+    }
+
+    fn eq_box(&self, other: &dyn AnyProps) -> bool {
+        other
+            .as_any()
+            .downcast_ref::<T>()
+            .is_some_and(|other| self == other)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -92,13 +121,13 @@ impl std::fmt::Debug for ImageElement {
     }
 }
 
-#[derive(Clone)]
 pub struct ComponentElement {
     /// Closure that captures props and calls the component function.
     view: Rc<dyn Fn(&crate::runtime::cx::Cx) -> crate::element::Element>,
     type_id: std::any::TypeId,
     identity: usize,
     key: Option<Key>,
+    props: Option<Box<dyn AnyProps>>,
 }
 
 impl ComponentElement {
@@ -112,6 +141,7 @@ impl ComponentElement {
             type_id,
             identity,
             key: None,
+            props: None,
         }
     }
 
@@ -121,6 +151,25 @@ impl ComponentElement {
             component_identity(view),
             Rc::new(view),
         )
+    }
+
+    /// Creates a component element from a function pointer and typed props.
+    ///
+    /// `view` keeps function-pointer identity semantics while `props` are stored for
+    /// typed equality checks and cloning.
+    pub fn from_component_fn_with_props<P: Clone + PartialEq + 'static>(
+        view: fn(&crate::runtime::cx::Cx, &P) -> crate::element::Element,
+        props: P,
+    ) -> Self {
+        let identity = view as *const () as usize;
+        let props_for_view = props.clone();
+        Self {
+            view: Rc::new(move |cx| view(cx, &props_for_view)),
+            type_id: std::any::TypeId::of::<fn(&crate::runtime::cx::Cx, &P) -> crate::element::Element>(),
+            identity,
+            key: None,
+            props: Some(Box::new(props)),
+        }
     }
 
     pub fn type_id(&self) -> std::any::TypeId {
@@ -139,9 +188,29 @@ impl ComponentElement {
         self.view.clone()
     }
 
+    pub(crate) fn props_eq(&self, other: &Self) -> bool {
+        match (&self.props, &other.props) {
+            (Some(left), Some(right)) => left.eq_box(right.as_ref()),
+            (None, None) => true,
+            _ => false,
+        }
+    }
+
     pub(crate) fn with_key(mut self, key: Key) -> Self {
         self.key = Some(key);
         self
+    }
+}
+
+impl Clone for ComponentElement {
+    fn clone(&self) -> Self {
+        Self {
+            view: self.view.clone(),
+            type_id: self.type_id,
+            identity: self.identity,
+            key: self.key.clone(),
+            props: self.props.as_ref().map(|props| props.clone_box()),
+        }
     }
 }
 
@@ -153,6 +222,7 @@ impl std::fmt::Debug for ComponentElement {
             .field("type_id", &self.type_id)
             .field("identity", &self.identity)
             .field("key", &self.key)
+            .field("props", &self.props.as_ref().map(|_| "Box<dyn AnyProps>"))
             .finish()
     }
 }
@@ -160,7 +230,7 @@ impl std::fmt::Debug for ComponentElement {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::element::builders::Text;
+    use crate::element::builders::{Component, Text};
     use crate::element::content::TextContent;
     use crate::element::Element;
 
@@ -224,5 +294,53 @@ mod tests {
 
         assert_eq!(first_component.type_id(), second_component.type_id());
         assert_ne!(first_component.identity(), second_component.identity());
+    }
+
+    #[test]
+    fn component_element_with_props_stores_and_compares_props() {
+        #[derive(Clone, PartialEq)]
+        struct MyProps {
+            value: i32,
+        }
+
+        fn child(_cx: &crate::runtime::cx::Cx, props: &MyProps) -> Element {
+            Text::new(props.value.to_string()).into_element()
+        }
+        fn child_no_props(_cx: &crate::runtime::cx::Cx) -> Element {
+            Text::new("no props").into_element()
+        }
+
+        let a = ComponentElement::from_component_fn_with_props(child, MyProps { value: 1 });
+        let b = ComponentElement::from_component_fn_with_props(child, MyProps { value: 1 });
+        let c = ComponentElement::from_component_fn_with_props(child, MyProps { value: 2 });
+        let d = ComponentElement::from_component_fn(child_no_props);
+
+        assert_eq!(a.identity(), b.identity());
+        assert!(a.props_eq(&b));
+        assert!(!a.props_eq(&c));
+        assert!(!a.props_eq(&d));
+    }
+
+    #[test]
+    fn component_new_with_props_renders_with_props() {
+        #[derive(Clone, PartialEq)]
+        struct Props {
+            label: String,
+        }
+
+        fn child(_cx: &crate::runtime::cx::Cx, props: &Props) -> Element {
+            Text::new(props.label.clone()).into_element()
+        }
+
+        let Element::Component(component) =
+            Component::new_with_props(child, Props { label: "hi".into() }).into_element()
+        else {
+            panic!("expected component element");
+        };
+
+        let Element::Text(rendered) = (component.view())(&crate::runtime::cx::Cx::new()) else {
+            panic!("expected text element");
+        };
+        assert_eq!(rendered.content.resolve(), "hi");
     }
 }
