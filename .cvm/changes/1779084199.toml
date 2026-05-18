@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = ["lemon"]
-patch = []
-pre = true
-summary = "Add ImageHandle asset type with PNG/JPEG decoding via the image crate"
