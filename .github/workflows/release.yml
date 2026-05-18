@@ -1,0 +1,74 @@
+name: "Publish to Crates.io"
+
+on:
+  repository_dispatch:
+    types: [release-trigger]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Publish crates
+        id: publish
+        uses: lucasaarch/cvm-action@v1
+        with:
+          command: "publish"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Create and push tag
+        if: steps.publish.outputs.published == 'true' && steps.publish.outputs.version != ''
+        run: |
+          VERSION="v${{ steps.publish.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Check if tag already exists
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists, skipping tag creation"
+          else
+            git tag "$VERSION"
+            git push origin "$VERSION"
+          fi
+
+      - name: Check if prerelease
+        id: check_prerelease
+        if: steps.publish.outputs.published == 'true' && steps.publish.outputs.version != ''
+        run: |
+          VERSION="${{ steps.publish.outputs.version }}"
+          if [[ "$VERSION" =~ -[0-9]+\. ]] || [[ "$VERSION" =~ -(alpha) ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        if: steps.publish.outputs.published == 'true' && steps.publish.outputs.version != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.publish.outputs.version }}
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ steps.check_prerelease.outputs.is_prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish Summary
+        if: steps.publish.outputs.published == 'true'
+        run: |
+          echo "### 🚀 Publishing Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Published: **${{ steps.publish.outputs.published }}**" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.publish.outputs.version }}" ]; then
+            echo "- Version: **v${{ steps.publish.outputs.version }}**" >> $GITHUB_STEP_SUMMARY
+            echo "- Tag: **v${{ steps.publish.outputs.version }}**" >> $GITHUB_STEP_SUMMARY
+            echo "- Release: **[v${{ steps.publish.outputs.version }}](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.publish.outputs.version }})**" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Successfully published to crates.io!" >> $GITHUB_STEP_SUMMARY

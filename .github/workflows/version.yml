@@ -1,0 +1,45 @@
+name: Version Management
+
+on:
+  push:
+    branches:
+      - alpha
+    paths:
+      - ".cvm/changes/**"
+  workflow_dispatch:
+
+jobs:
+  version-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply version changes
+        id: apply
+        uses: lucasaarch/cvm-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          pr-title: "chore: bump versions"
+          pr-labels: "version-bump"
+
+      - name: Trigger Release Workflow
+        if: steps.apply.outputs.has-changes == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createDispatchEvent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event_type: 'release-trigger',
+              client_payload: {
+                version: 'v${{ steps.apply.outputs.current-version }}',
+                sha: context.sha
+              }
+            })
