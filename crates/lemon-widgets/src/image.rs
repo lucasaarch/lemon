@@ -1,5 +1,5 @@
 use lemon::{
-    element::{builders::View, style::Dimension, Element},
+    element::{builders::View, Element},
     ImageHandle,
 };
 
@@ -76,6 +76,7 @@ impl From<Image> for Element {
 mod tests {
     use super::*;
     use lemon::asset::image_handle::ImageData;
+    use lemon::element::style::Dimension;
     use std::sync::Arc;
 
     #[test]
