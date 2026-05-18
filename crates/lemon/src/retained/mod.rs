@@ -700,6 +700,11 @@ impl StyleProps {
             justify_content: self.justify_content.clone().map(into_taffy_justify_content),
             flex_grow: self.flex_grow.unwrap_or(0.0),
             flex_shrink: self.flex_shrink.unwrap_or(1.0),
+            position: if self.position_absolute {
+                taffy::Position::Absolute
+            } else {
+                taffy::Position::Relative
+            },
             ..Default::default()
         }
     }

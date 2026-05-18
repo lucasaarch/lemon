@@ -102,6 +102,12 @@ pub struct StyleProps {
     pub align_self: Option<Align>,
     pub focusable: bool,
     pub cursor: crate::element::events::Cursor,
+    /// When `true` the node is removed from normal flow and positioned by Taffy's
+    /// absolute-position algorithm relative to its nearest flex ancestor.
+    ///
+    /// Use the builder method [`.absolute()`](crate::element::builders::View::absolute) rather
+    /// than setting this field directly.
+    pub position_absolute: bool,
 }
 
 /// sRGB color with components in `0.0..=1.0`.

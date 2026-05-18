@@ -1,6 +1,8 @@
 use lemon::{
     element::{
-        builders::{Button, Column},
+        builders::{Button, Column, Text, View},
+        events::Cursor,
+        style::Color,
         Element,
     },
     Cx, Signal,
@@ -10,6 +12,9 @@ use lemon::{
 ///
 /// `Select<T>` renders a trigger button that opens a dropdown list of choices. Selecting an option
 /// updates the value signal and closes the dropdown; clicking outside the widget also closes it.
+///
+/// The dropdown list is rendered as an **overlay** — it is absolutely positioned so it floats
+/// above surrounding content and does not shift sibling elements when opened.
 ///
 /// The open/closed state is internal by default ([`Select::new`]) or caller-supplied for advanced
 /// use ([`Select::with_open`]).
@@ -128,18 +133,33 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
         container = container.child(trigger);
 
         if is_open {
-            // Dropdown list: z_index=10 so it paints above siblings in the same container.
-            let mut dropdown = Column::new().z_index(10);
+            // Dropdown list: absolutely positioned so it overlays content without shifting
+            // siblings, and z_index=10 so it paints above them.
+            let mut dropdown = Column::new()
+                .z_index(10)
+                .absolute()
+                .background(Color::rgb8(35, 35, 52))
+                .border(Color::rgb8(80, 80, 110), 1.0)
+                .radius(6.0);
             if let Some(w) = width {
                 dropdown = dropdown.width(w);
             }
+
             for (opt, label) in options {
                 let open_c = open.clone();
                 let val_c = value.clone();
-                dropdown = dropdown.child(Button::new(label).on_click(move || {
-                    val_c.set(Some(opt.clone()));
-                    open_c.set(false);
-                }));
+                let mut item = View::new()
+                    .padding(8.0)
+                    .cursor(Cursor::Pointer)
+                    .on_click(move || {
+                        val_c.set(Some(opt.clone()));
+                        open_c.set(false);
+                    })
+                    .child(Text::new(label).font_size(14.0));
+                if let Some(w) = width {
+                    item = item.width(w);
+                }
+                dropdown = dropdown.child(item);
             }
             container = container.child(dropdown);
         }
@@ -230,6 +250,10 @@ mod tests {
         };
         assert_eq!(dropdown.children.len(), 3, "dropdown should have 3 options");
         assert_eq!(dropdown.style.z_index, 10);
+        assert!(
+            dropdown.style.position_absolute,
+            "dropdown must be absolutely positioned to overlay content"
+        );
     }
 
     #[test]
@@ -264,10 +288,12 @@ mod tests {
         let Element::Column(dropdown) = &col.children[1] else {
             panic!("expected Column dropdown");
         };
-        let Element::Button(opt_btn) = &dropdown.children[1] else {
-            panic!("expected Button option");
+        // Options are now View items; on_click lives in handlers.
+        let Element::View(opt_view) = &dropdown.children[1] else {
+            panic!("expected View option");
         };
-        let on_click = opt_btn
+        let on_click = opt_view
+            .handlers
             .on_click
             .as_ref()
             .expect("option must have on_click");
