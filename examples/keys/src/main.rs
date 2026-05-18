@@ -27,7 +27,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
                 .gap(8.0)
                 .align_items(lemon::element::style::Align::Center)
                 .children(children![
-                    Text::new(item.label).font_size(15.0),
+                    Text::new(item.label).font_size(16.0),
                     Button::new("Remove")
                         .background(Color::rgb8(180, 60, 60))
                         .on_click(move || {
@@ -41,24 +41,22 @@ fn app(cx: &Cx) -> lemon::element::Element {
         .padding(24.0)
         .gap(12.0)
         .children(children![
-            Text::new("keys").font_size(22.0),
+            Text::new("keys").font_size(18.0),
             Text::new(
                 "Give each dynamic sibling a stable .key(id). Add/remove/reorder without resetting unrelated row state.",
             )
             .font_size(14.0)
             .color(Color::rgb8(140, 150, 170)),
-            Button::new("Add item")
-                .on_click(move || {
-                    let id = next_id_add.get();
-                    next_id_add.update(|n| *n += 1);
-                    items_add.update(|list| {
-                        list.push(Item {
-                            id,
-                            label: format!("Item #{id}"),
-                        });
+            Button::new("Add item").on_click(move || {
+                let id = next_id_add.get();
+                next_id_add.update(|n| *n += 1);
+                items_add.update(|list| {
+                    list.push(Item {
+                        id,
+                        label: format!("Item #{id}"),
                     });
-                })
-                .width(120.0),
+                });
+            }),
             list,
         ])
         .into_element()
@@ -68,7 +66,7 @@ fn main() {
     run(
         WindowConfig::default()
             .title("Lemon — keys")
-            .size(520.0, 560.0),
+            .size(560.0, 580.0),
         app,
     );
 }

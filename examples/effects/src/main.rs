@@ -27,21 +27,19 @@ fn app(cx: &Cx) -> lemon::element::Element {
         .padding(24.0)
         .gap(14.0)
         .children(children![
-            Text::new("use_effect").font_size(22.0),
+            Text::new("use_effect").font_size(18.0),
             Text::new(
                 "Effects run once after the first frame, then again whenever a signal read inside the closure changes.",
             )
             .font_size(14.0)
             .color(Color::rgb8(140, 150, 170)),
-            Text::new(move || format!("trigger signal: {}", trigger_display.get())).font_size(18.0),
+            Text::new(move || format!("trigger signal: {}", trigger_display.get())).font_size(16.0),
             Text::new(move || format!("effect executed: {} times", runs_display.get()))
-                .font_size(18.0)
+                .font_size(16.0)
                 .color(Color::rgb8(120, 200, 160)),
             Text::new(move || format!("last trigger value seen: {}", last_display.get()))
-                .font_size(16.0),
-            Button::new("Bump trigger")
-                .on_click(move || bump.update(|n| *n += 1))
-                .width(140.0),
+                .font_size(15.0),
+            Button::new("Bump trigger").on_click(move || bump.update(|n| *n += 1)),
             Text::new("Do not call hooks inside the effect body.")
                 .font_size(13.0)
                 .color(Color::rgb8(100, 110, 130)),
@@ -53,7 +51,7 @@ fn main() {
     run(
         WindowConfig::default()
             .title("Lemon — use_effect")
-            .size(480.0, 380.0),
+            .size(520.0, 420.0),
         app,
     );
 }

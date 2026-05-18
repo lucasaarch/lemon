@@ -5,6 +5,7 @@ mod window;
 
 use std::num::NonZeroUsize;
 use std::sync::Arc;
+use std::time::Instant;
 
 use parley::FontContext;
 use vello::peniko::Color;
@@ -19,6 +20,7 @@ use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::keyboard::{Key, NamedKey as WinitNamedKey};
 use winit::window::{CursorIcon, Window, WindowId};
 
+use crate::diff::Patch;
 use crate::element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 use crate::element::Element;
 use crate::layout::{layout_pass, LayoutMap, Viewport};
@@ -32,6 +34,15 @@ use hit_test::{
 };
 
 pub use window::WindowConfig;
+
+fn patches_need_layout(patches: &[Patch]) -> bool {
+    patches.iter().any(|patch| {
+        !matches!(
+            patch,
+            Patch::UpdateWidgetChrome { .. } | Patch::UpdateComponent { .. }
+        )
+    })
+}
 
 /// Root view function type used by [`AppState`].
 pub type RootComponent = Arc<dyn Fn(&Cx) -> Element>;
@@ -60,6 +71,7 @@ pub struct AppState {
     root_component: Option<RootComponent>,
     last_cursor: Option<(f32, f32)>,
     mounted: bool,
+    last_caret_activity: Instant,
 }
 
 impl AppState {
@@ -83,7 +95,50 @@ impl AppState {
             root_component: Some(Arc::new(root)),
             last_cursor: None,
             mounted: false,
+            last_caret_activity: Instant::now(),
         }
+    }
+
+    fn caret_visible_now(&self) -> bool {
+        let elapsed = self.last_caret_activity.elapsed().as_millis();
+        if elapsed < 150 {
+            return true;
+        }
+        (elapsed / 530).is_multiple_of(2)
+    }
+
+    fn focused_text_input(&self) -> bool {
+        let Some(focused_id) = self.focus_manager.focused else {
+            return false;
+        };
+        let Some(root) = self.retained.as_ref().and_then(|t| t.root.as_ref()) else {
+            return false;
+        };
+        find_node_by_taffy_id(root, focused_id).is_some_and(|node| node.text_input.is_some())
+    }
+
+    fn tick_caret_blink(&mut self) {
+        if self.focused_text_input() {
+            self.paint_dirty = true;
+        }
+    }
+
+    fn apply_runtime_patches(&mut self) {
+        self.runtime.flush_effects();
+        let patches = self.runtime.take_patches();
+        if patches.is_empty() {
+            return;
+        }
+        let needs_layout = patches_need_layout(&patches);
+        if let Some(tree) = self.retained.as_mut() {
+            if let Err(err) = tree.apply_patches(patches) {
+                eprintln!("apply_patches: {err:?}");
+            }
+        }
+        if needs_layout {
+            self.layout_dirty = true;
+        }
+        self.paint_dirty = true;
     }
 
     fn window_config(&self) -> &WindowConfig {
@@ -132,7 +187,13 @@ impl AppState {
             .runtime
             .root_element()
             .expect("root element after mount");
-        self.retained = Some(RetainedTree::mount(element).expect("retained mount"));
+        let bootstrap_patches = self.runtime.take_patches();
+        let mut tree = RetainedTree::mount(element).expect("retained mount");
+        if !bootstrap_patches.is_empty() {
+            tree.apply_patches(bootstrap_patches)
+                .expect("apply bootstrap patches");
+        }
+        self.retained = Some(tree);
         self.mounted = true;
         self.layout_dirty = true;
         self.paint_dirty = true;
@@ -157,15 +218,20 @@ impl AppState {
 
     fn update_frame(&mut self) {
         self.ensure_mounted();
+        self.tick_caret_blink();
 
         self.runtime.flush_effects();
         let patches = self.runtime.take_patches();
         if !patches.is_empty() {
+            let needs_layout = patches_need_layout(&patches);
             let tree = self.retained.as_mut().expect("retained tree");
             if let Err(err) = tree.apply_patches(patches) {
                 eprintln!("apply_patches: {err:?}");
             }
-            self.layout_dirty = true;
+            if needs_layout {
+                self.layout_dirty = true;
+            }
+            self.paint_dirty = true;
         }
 
         if self.layout_dirty {
@@ -185,6 +251,7 @@ impl AppState {
         if self.paint_dirty {
             self.scene.reset();
             let scale = self.scale_factor();
+            let caret_visible = self.caret_visible_now();
             if let Some(tree) = self.retained.as_ref() {
                 paint_pass(
                     tree,
@@ -192,6 +259,7 @@ impl AppState {
                     &mut self.scene,
                     scale,
                     self.focus_manager.focused,
+                    caret_visible,
                 );
             }
             self.paint_dirty = false;
@@ -221,6 +289,7 @@ impl AppState {
         if let Some(node) = hit_test_focusable(root, &self.layout_map, point) {
             if let Some(id) = node.taffy_id {
                 self.focus_manager.focused = Some(id);
+                self.last_caret_activity = Instant::now();
                 self.paint_dirty = true;
             }
         }
@@ -230,8 +299,7 @@ impl AppState {
         };
         let handled = dispatch_click(node);
         if handled {
-            self.layout_dirty = true;
-            self.paint_dirty = true;
+            self.apply_runtime_patches();
         }
         handled
     }
@@ -251,6 +319,7 @@ impl AppState {
             if let Some(tree) = self.retained.as_ref() {
                 self.focus_manager.cycle(tree, !self.active_modifiers.shift);
             }
+            self.last_caret_activity = Instant::now();
             self.paint_dirty = true;
             return;
         }
@@ -279,8 +348,8 @@ impl AppState {
             repeat: key_event.repeat,
             state,
         });
-        self.layout_dirty = true;
-        self.paint_dirty = true;
+        self.last_caret_activity = Instant::now();
+        self.apply_runtime_patches();
     }
 
     fn event_pass_hover(&mut self, point: LogicalPoint) {
@@ -348,8 +417,7 @@ impl AppState {
         };
         if let Some(handler) = node.handlers.on_scroll.clone() {
             handler(delta_y);
-            self.layout_dirty = true;
-            self.paint_dirty = true;
+            self.apply_runtime_patches();
             true
         } else {
             false
@@ -549,8 +617,9 @@ impl ApplicationHandler for LemonApplication {
     }
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        if let Some(state) = self.state.as_ref() {
-            if state.needs_redraw() {
+        if let Some(state) = self.state.as_mut() {
+            state.tick_caret_blink();
+            if state.focused_text_input() || state.needs_redraw() {
                 state.request_redraw();
             }
         }

@@ -24,7 +24,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
         .padding(24.0)
         .gap(14.0)
         .children(children![
-            Text::new("use_memo").font_size(22.0),
+            Text::new("use_memo").font_size(18.0),
             Text::new(
                 "Memos cache a computed value. They re-run only when signals read inside the closure change.",
             )
@@ -32,16 +32,14 @@ fn app(cx: &Cx) -> lemon::element::Element {
             .color(Color::rgb8(140, 150, 170)),
             number_row("a", a.clone()),
             number_row("b", b.clone()),
-            Text::new(move || format!("a + b = {} (memo)", sum_display.get())).font_size(18.0),
-            Text::new(move || format!("a × b = {} (memo)", product_display.get())).font_size(18.0),
+            Text::new(move || format!("a + b = {} (memo)", sum_display.get())).font_size(16.0),
+            Text::new(move || format!("a × b = {} (memo)", product_display.get())).font_size(16.0),
             section_label("Unrelated signal — memos above should not change"),
             Text::new(move || format!("noise = {}", noise_display.get())).font_size(16.0),
-            Button::new("Bump noise")
-                .on_click({
-                    let n = noise.clone();
-                    move || n.update(|v| *v += 1)
-                })
-                .width(120.0),
+            Button::new("Bump noise").on_click({
+                let n = noise.clone();
+                move || n.update(|v| *v += 1)
+            }),
         ])
         .into_element()
 }
@@ -59,7 +57,7 @@ fn number_row(label: &'static str, signal: lemon::Signal<i32>) -> lemon::element
             Button::new("−")
                 .on_click(move || dec.update(|n| *n -= 1))
                 .width(44.0),
-            Text::new(move || read.get().to_string()).font_size(18.0),
+            Text::new(move || read.get().to_string()).font_size(16.0),
             Button::new("+")
                 .on_click(move || inc.update(|n| *n += 1))
                 .width(44.0),
@@ -78,7 +76,7 @@ fn main() {
     run(
         WindowConfig::default()
             .title("Lemon — use_memo")
-            .size(480.0, 460.0),
+            .size(520.0, 480.0),
         app,
     );
 }

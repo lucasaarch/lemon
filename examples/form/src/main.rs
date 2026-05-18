@@ -41,7 +41,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
         .padding(24.0)
         .gap(12.0)
         .children(children![
-            Text::new("Widgets — form").font_size(22.0),
+            Text::new("Widgets — form").font_size(18.0),
             Text::new("TextInput + Scroll from lemon-widgets; combines signals, keys, and layout.")
                 .font_size(14.0)
                 .color(Color::rgb8(140, 150, 170)),
@@ -62,14 +62,8 @@ fn app(cx: &Cx) -> lemon::element::Element {
                         items.push(Entry { name, email });
                     });
 
-                    name_submit.update(|s| {
-                        s.value.clear();
-                        s.cursor = 0;
-                    });
-                    email_submit.update(|s| {
-                        s.value.clear();
-                        s.cursor = 0;
-                    });
+                    name_submit.update(|s| s.clear());
+                    email_submit.update(|s| s.clear());
                 })
                 .width(120.0),
             Text::new(move || format!("Submitted entries ({})", entries.get().len()))

@@ -39,6 +39,7 @@ pub fn paint_pass(
     scene: &mut Scene,
     scale_factor: f32,
     focused: Option<NodeId>,
+    caret_visible: bool,
 ) -> PaintStats {
     let mut stats = PaintStats::default();
     let base = if scale_factor == 1.0 {
@@ -57,13 +58,23 @@ pub fn paint_pass(
     );
 
     if let Some(root) = tree.root.as_ref() {
-        paint_node(root, layout, scene, ctx, scale_factor, focused, &mut stats);
+        paint_node(
+            root,
+            layout,
+            scene,
+            ctx,
+            scale_factor,
+            focused,
+            caret_visible,
+            &mut stats,
+        );
     }
 
     scene.pop_layer();
     stats
 }
 
+#[allow(clippy::too_many_arguments)]
 fn paint_node(
     node: &RetainedNode,
     layout: &LayoutMap,
@@ -71,18 +82,37 @@ fn paint_node(
     ctx: PaintContext,
     scale_factor: f32,
     focused: Option<NodeId>,
+    caret_visible: bool,
     stats: &mut PaintStats,
 ) {
     if matches!(node.kind, RetainedKind::Component { .. }) {
         for child in &node.children {
-            paint_node(child, layout, scene, ctx, scale_factor, focused, stats);
+            paint_node(
+                child,
+                layout,
+                scene,
+                ctx,
+                scale_factor,
+                focused,
+                caret_visible,
+                stats,
+            );
         }
         return;
     }
 
     let Some(taffy_id) = node.taffy_id else {
         for child in &node.children {
-            paint_node(child, layout, scene, ctx, scale_factor, focused, stats);
+            paint_node(
+                child,
+                layout,
+                scene,
+                ctx,
+                scale_factor,
+                focused,
+                caret_visible,
+                stats,
+            );
         }
         return;
     };
@@ -107,14 +137,32 @@ fn paint_node(
     }
 
     for child in &node.children {
-        paint_node(child, layout, scene, ctx, scale_factor, focused, stats);
+        paint_node(
+            child,
+            layout,
+            scene,
+            ctx,
+            scale_factor,
+            focused,
+            caret_visible,
+            stats,
+        );
     }
 
     if clip_children {
         scene.pop_layer();
     }
 
-    paint_text_input_caret(node, layout, scale_factor, focused, scene, ctx, stats);
+    paint_text_input_caret(
+        node,
+        layout,
+        scale_factor,
+        focused,
+        caret_visible,
+        scene,
+        ctx,
+        stats,
+    );
     paint_scrollbar(node, rect, layout, scene, ctx, stats);
 }
 
@@ -330,59 +378,75 @@ fn first_text_descendant(node: &RetainedNode) -> Option<&RetainedNode> {
     None
 }
 
+#[allow(clippy::too_many_arguments)]
 fn paint_text_input_caret(
     node: &RetainedNode,
     layout: &LayoutMap,
     scale_factor: f32,
     focused: Option<NodeId>,
+    caret_visible: bool,
     scene: &mut Scene,
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
+    if !caret_visible {
+        return;
+    }
+
     let Some(meta) = node.text_input.as_ref() else {
         return;
     };
     let Some(field_id) = node.taffy_id else {
         return;
     };
-    let Some(field_rect) = layout.get(field_id) else {
-        return;
-    };
     if focused != Some(field_id) {
         return;
     }
+    let Some(field_rect) = layout.get(field_id).copied() else {
+        return;
+    };
 
-    let (text_rect, text_style) = match first_text_descendant(node) {
+    let (text_rect, text_style, line_height) = match first_text_descendant(node) {
         Some(text_node) => match text_node.taffy_id.and_then(|id| layout.get(id).copied()) {
             Some(rect) => {
-                let style = text_node
-                    .text
-                    .as_ref()
-                    .map(|t| t.style.clone())
-                    .unwrap_or_default();
-                (rect, style)
+                let text = text_node.text.as_ref();
+                let style = text.map(|t| t.style.clone()).unwrap_or_default();
+                let height = text
+                    .and_then(|t| t.parley_layout.as_ref())
+                    .map(|layout| layout.height())
+                    .filter(|h| *h > 0.0)
+                    .unwrap_or_else(|| effective_text_line_height(&style));
+                (rect, style, height)
             }
             None => {
                 let padding = node.style.padding.clone().unwrap_or_default();
-                (inset_rect(field_rect, &padding), Default::default())
+                let style = Default::default();
+                let height = effective_text_line_height(&style);
+                (inset_rect(&field_rect, &padding), style, height)
             }
         },
         None => {
             let padding = node.style.padding.clone().unwrap_or_default();
-            (inset_rect(field_rect, &padding), Default::default())
+            let style = Default::default();
+            let height = effective_text_line_height(&style);
+            (inset_rect(&field_rect, &padding), style, height)
         }
     };
 
-    let prefix = if meta.cursor == 0 {
-        String::new()
-    } else {
-        meta.value
-            .get(..meta.cursor.min(meta.value.len()))
-            .unwrap_or("")
-            .to_string()
+    let (content, cursor) = match first_text_descendant(node) {
+        Some(text_node) => {
+            let text = text_node.text.as_ref();
+            let content = text
+                .map(|t| t.content.as_str())
+                .unwrap_or(meta.value.as_str());
+            let cursor = text.map(|t| t.caret).unwrap_or(meta.cursor);
+            (content, cursor)
+        }
+        None => (meta.value.as_str(), meta.cursor),
     };
-    let caret_x = text_rect.x + measure_single_line_width(&prefix, &text_style, scale_factor);
-    let line_height = text_style.font_size.max(16.0);
+    let cursor = cursor.min(content.len());
+    let prefix = &content[..cursor];
+    let caret_x = text_rect.x + measure_single_line_width(prefix, &text_style, scale_factor);
     let caret_top = text_rect.y + ((text_rect.height - line_height) * 0.5).max(0.0);
     let caret_bottom = caret_top + line_height;
 
@@ -398,6 +462,14 @@ fn paint_text_input_caret(
         &line,
     );
     stats.strokes += 1;
+}
+
+fn effective_text_line_height(style: &crate::element::style::TextStyle) -> f32 {
+    if style.font_size > 0.0 {
+        style.font_size
+    } else {
+        16.0
+    }
 }
 
 fn paint_scrollbar(
@@ -489,7 +561,7 @@ mod tests {
         )
         .unwrap();
         let mut scene = Scene::new();
-        paint_pass(tree, &layout, &mut scene, scale_factor, None)
+        paint_pass(tree, &layout, &mut scene, scale_factor, None, true)
     }
 
     #[test]
@@ -562,7 +634,7 @@ mod tests {
             .parley_layout = None;
 
         let mut scene = Scene::new();
-        let stats = paint_pass(&tree, &layout, &mut scene, 1.0, None);
+        let stats = paint_pass(&tree, &layout, &mut scene, 1.0, None, true);
 
         assert_eq!(stats.glyph_runs, 0);
     }
@@ -611,7 +683,7 @@ mod tests {
         .unwrap();
 
         let mut scene = Scene::new();
-        let stats = paint_pass(&tree, &LayoutMap::default(), &mut scene, 1.0, None);
+        let stats = paint_pass(&tree, &LayoutMap::default(), &mut scene, 1.0, None, true);
 
         assert_eq!(stats.fills, 0);
     }

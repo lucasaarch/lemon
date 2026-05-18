@@ -2,7 +2,7 @@ use lemon::{
     element::{
         builders::{Row, Text, View},
         events::Cursor,
-        style::Color,
+        style::{Color, Overflow},
         types::TextInputMeta,
         Element,
     },
@@ -85,6 +85,7 @@ impl TextInput {
             .padding(6.0)
             .border(Color::rgb8(156, 163, 175), 1.5)
             .radius(4.0)
+            .overflow(Overflow::Hidden)
             .focusable()
             .cursor(Cursor::Text)
             .text_input(TextInputMeta {
@@ -95,7 +96,12 @@ impl TextInput {
                 let state = self.state.clone();
                 move |ev| state.update(|s| s.handle_key(&ev))
             })
-            .child(Row::new().child(text_child));
+            .child(
+                Row::new()
+                    .overflow(Overflow::Hidden)
+                    .flex_grow(1.0)
+                    .child(text_child),
+            );
 
         if let Some(w) = self.width {
             container = container.width(w);

@@ -9,4 +9,5 @@ keywords = ["ui", "gui", "widgets", "reactive"]
 categories = ["gui"]
 
 [dependencies]
+arboard = "3.4"
 lemon = { workspace = true }

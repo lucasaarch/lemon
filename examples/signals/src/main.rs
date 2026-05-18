@@ -19,7 +19,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
         .padding(24.0)
         .gap(14.0)
         .children(children![
-            Text::new("use_signal").font_size(22.0),
+            Text::new("use_signal").font_size(18.0),
             Text::new("Signals survive re-renders. Cloning a Signal shares the same cell.")
                 .font_size(14.0)
                 .color(Color::rgb8(140, 150, 170)),
@@ -31,7 +31,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
                     format!("Hello, {}!", name_display.get())
                 }
             })
-            .font_size(18.0),
+            .font_size(16.0),
             Row::new().gap(8.0).children(children![
                 Button::new("Alice").on_click({
                     let s = name_set.clone();
@@ -45,9 +45,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
             ]),
             section_label("2. .update() for in-place mutation"),
             Text::new(move || format!("Button clicks: {}", clicks_display.get())).font_size(16.0),
-            Button::new("Click me")
-                .on_click(move || clicks_inc.update(|n| *n += 1))
-                .width(120.0),
+            Button::new("Click me").on_click(move || clicks_inc.update(|n| *n += 1)),
             section_label("3. Multiple independent signals"),
             Text::new(move || {
                 if enabled_read.get() {
@@ -58,9 +56,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
             })
             .font_size(16.0)
             .color(Color::rgb8(120, 200, 140)),
-            Button::new("Toggle flag")
-                .on_click(move || enabled_toggle.update(|v| *v = !*v))
-                .width(120.0),
+            Button::new("Toggle flag").on_click(move || enabled_toggle.update(|v| *v = !*v)),
         ])
         .into_element()
 }
@@ -76,7 +72,7 @@ fn main() {
     run(
         WindowConfig::default()
             .title("Lemon — use_signal")
-            .size(560.0, 520.0),
+            .size(600.0, 560.0),
         app,
     );
 }

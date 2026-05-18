@@ -60,10 +60,20 @@ impl Runtime {
             false,
             Rc::clone(&self.deferred_effects),
         );
-        if let Some(initial) = slot.pending.borrow_mut().take() {
-            slot.previous = Some(initial);
+        let initial = slot.pending.borrow_mut().take();
+        if let Some(initial) = initial {
+            slot.previous = Some(initial.clone());
         }
         self.slots.push(slot);
+        if let Some(initial) = self.slots.first().and_then(|s| s.previous.clone()) {
+            bootstrap_initial_components(
+                &mut self.slots,
+                &initial,
+                NodePath::root(),
+                &mut self.patch_queue,
+                Rc::clone(&self.deferred_effects),
+            );
+        }
     }
 
     /// Re-runs dirty views, diffs against the previous tree, and queues patches.
@@ -71,7 +81,7 @@ impl Runtime {
     /// Call after changing a [`Signal`] (or other tracked state), then [`take_patches`](Self::take_patches).
     pub fn flush_effects(&mut self) {
         for slot in &mut self.slots {
-            render_slot(slot, &mut self.patch_queue);
+            flush_slot_subtree(slot, &mut self.patch_queue);
         }
     }
 
@@ -136,6 +146,13 @@ fn create_component_slot(
     }
 }
 
+fn flush_slot_subtree(slot: &mut ComponentSlot, patches: &mut Vec<Patch>) {
+    render_slot(slot, patches);
+    for child in &mut slot.children {
+        flush_slot_subtree(child, patches);
+    }
+}
+
 fn render_slot(slot: &mut ComponentSlot, patches: &mut Vec<Patch>) {
     if let Some(new_tree) = slot.pending.borrow_mut().take() {
         let next_previous = new_tree.clone();
@@ -186,6 +203,60 @@ fn unmount_component_slot(slots: &mut Vec<ComponentSlot>, path: &NodePath) -> bo
         }
     }
     false
+}
+
+fn bootstrap_initial_components(
+    slots: &mut Vec<ComponentSlot>,
+    element: &Element,
+    path: NodePath,
+    patches: &mut Vec<Patch>,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+) {
+    match element {
+        Element::Component(component) => {
+            mount_component_slot(
+                slots,
+                path.clone(),
+                component.clone(),
+                Rc::clone(&deferred_effects),
+            );
+            if let Some(slot) = find_slot_mut(slots, &path) {
+                let rendered = render_without_subscribing(slot);
+                patches.push(Patch::ReplaceNode {
+                    node: path.clone(),
+                    new_element: rendered,
+                });
+                patches.push(Patch::MountComponent {
+                    node: path.clone(),
+                    component: component.clone(),
+                });
+                render_slot(slot, patches);
+            }
+        }
+        Element::Column(container) | Element::Row(container) | Element::View(container) => {
+            for (index, child) in container.children.iter().enumerate() {
+                bootstrap_initial_components(
+                    slots,
+                    child,
+                    path.child(index),
+                    patches,
+                    Rc::clone(&deferred_effects),
+                );
+            }
+        }
+        Element::Fragment(children) => {
+            for (index, child) in children.iter().enumerate() {
+                bootstrap_initial_components(
+                    slots,
+                    child,
+                    path.child(index),
+                    patches,
+                    Rc::clone(&deferred_effects),
+                );
+            }
+        }
+        _ => {}
+    }
 }
 
 fn mount_component_slot(
@@ -689,6 +760,39 @@ mod tests {
             .iter()
             .any(|p| matches!(p, Patch::UpdateText { content, .. } if content == "2"));
         assert!(found, "expected UpdateText with '2'");
+    }
+
+    #[test]
+    fn flush_effects_processes_nested_component_slot_patches() {
+        use crate::element::builders::{Column, Component};
+
+        fn child(_cx: &Cx) -> Element {
+            Text::new("0").into_element()
+        }
+
+        let mut runtime = Runtime::new();
+        runtime.mount(move |_cx| {
+            Column::new()
+                .child(Component::new(child).key(1))
+                .into_element()
+        });
+
+        let child_slot = find_slot_mut(&mut runtime.slots, &NodePath(vec![0])).expect("nested slot");
+        child_slot.previous = Some(Text::new("0").into_element());
+        *child_slot.pending.borrow_mut() = Some(Text::new("1").into_element());
+
+        runtime.flush_effects();
+        let patches = runtime.take_patches();
+
+        assert!(
+            patches.iter().any(|patch| {
+                matches!(
+                    patch,
+                    Patch::UpdateText { content, .. } if content == "1"
+                )
+            }),
+            "expected nested slot diff to emit UpdateText, got {patches:?}"
+        );
     }
 
     #[test]

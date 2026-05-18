@@ -12,7 +12,7 @@ fn mini_counter(cx: &Cx) -> lemon::element::Element {
         .gap(8.0)
         .align_items(lemon::element::style::Align::Center)
         .children(children![
-            Text::new(move || format!("{}", label.get())).font_size(20.0),
+            Text::new(move || format!("{}", label.get())).font_size(16.0),
             Button::new("+")
                 .on_click(move || inc.update(|v| *v += 1))
                 .width(44.0),
@@ -29,7 +29,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
         .padding(24.0)
         .gap(14.0)
         .children(children![
-            Text::new("Component").font_size(22.0),
+            Text::new("Component").font_size(18.0),
             Text::new(
                 "Component::new(fn) uses a function pointer — no capturing closures. Give each instance a .key when you have siblings of the same function.",
             )
@@ -39,10 +39,8 @@ fn app(cx: &Cx) -> lemon::element::Element {
                 .font_size(15.0)
                 .color(Color::rgb8(160, 170, 190)),
             Row::new().gap(8.0).children(children![
-                Text::new(move || format!("parent = {}", parent_label.get())).font_size(18.0),
-                Button::new("+ parent")
-                    .on_click(move || parent_inc.update(|v| *v += 1))
-                    .width(100.0),
+                Text::new(move || format!("parent = {}", parent_label.get())).font_size(16.0),
+                Button::new("+ parent").on_click(move || parent_inc.update(|v| *v += 1)),
             ]),
             Text::new("Two child components — separate hook slots:")
                 .font_size(15.0)
@@ -57,7 +55,7 @@ fn main() {
     run(
         WindowConfig::default()
             .title("Lemon — Component")
-            .size(480.0, 400.0),
+            .size(520.0, 440.0),
         app,
     );
 }

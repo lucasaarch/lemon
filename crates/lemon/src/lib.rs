@@ -301,7 +301,7 @@ mod tests {
         .unwrap();
 
         let mut scene = Scene::new();
-        let stats = paint_pass(&tree, &layout, &mut scene, 1.0, None);
+        let stats = paint_pass(&tree, &layout, &mut scene, 1.0, None, true);
 
         assert!(stats.glyph_runs > 0, "counter label should paint glyphs");
         assert!(stats.fills >= 1, "button should paint a background fill");
@@ -336,7 +336,7 @@ mod tests {
 
         let mut scene = Scene::new();
         let layout = layout_pass(&mut tree, viewport, 1.0).unwrap();
-        let _stats = paint_pass(&tree, &layout, &mut scene, 1.0, None);
+        let _stats = paint_pass(&tree, &layout, &mut scene, 1.0, None, true);
 
         count.set(1);
         rt.flush_effects();
@@ -344,7 +344,7 @@ mod tests {
         let layout = layout_pass_if_dirty(&mut tree, viewport, 1.0)
             .unwrap()
             .expect("layout after patch");
-        let _stats = paint_pass(&tree, &layout, &mut scene, 2.0, None);
+        let _stats = paint_pass(&tree, &layout, &mut scene, 2.0, None, true);
     }
 
     #[test]

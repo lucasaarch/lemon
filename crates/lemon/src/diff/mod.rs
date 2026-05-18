@@ -395,6 +395,37 @@ mod tests {
     }
 
     #[test]
+    fn text_input_cursor_change_emits_update_widget_chrome() {
+        use crate::element::builders::View;
+        use crate::element::types::TextInputMeta;
+
+        let old = View::new()
+            .text_input(TextInputMeta {
+                cursor: 0,
+                value: "hi".into(),
+            })
+            .into_element();
+        let new = View::new()
+            .text_input(TextInputMeta {
+                cursor: 2,
+                value: "hi".into(),
+            })
+            .into_element();
+
+        let patches = diff(old, new, NodePath::root());
+        assert!(
+            patches.iter().any(|patch| matches!(
+                patch,
+                Patch::UpdateWidgetChrome {
+                    text_input: Some(meta),
+                    ..
+                } if meta.cursor == 2
+            )),
+            "expected UpdateWidgetChrome for cursor move, got {patches:?}"
+        );
+    }
+
+    #[test]
     fn style_change_produces_update_style() {
         let old = Column::new().gap(4.0).into_element();
         let new = Column::new().gap(8.0).into_element();

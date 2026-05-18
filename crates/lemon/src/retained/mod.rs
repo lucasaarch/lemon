@@ -32,6 +32,8 @@ impl From<taffy::TaffyError> for RetainedError {
 pub struct TextCache {
     pub content: String,
     pub style: TextStyle,
+    /// Caret byte offset for text-input fields (synced from [`TextInputMeta`](crate::element::types::TextInputMeta)).
+    pub caret: usize,
     pub needs_layout: bool,
     pub parley_layout: Option<parley::Layout<[u8; 4]>>,
     pub layout_max_width: Option<f32>,
@@ -157,6 +159,7 @@ impl RetainedNode {
             text: Some(TextCache {
                 content,
                 style,
+                caret: 0,
                 needs_layout: true,
                 parley_layout: None,
                 layout_max_width: None,
@@ -224,7 +227,13 @@ impl RetainedTree {
             Element::Text(node) => self.build_text_node(node),
             Element::Button(node) => self.build_button_node(node),
             Element::Image(node) => self.build_image_node(node),
-            Element::Component(_) => Err(RetainedError::UnsupportedElement("Component")),
+            Element::Component(_component) => {
+                self.build_text_node(crate::element::types::TextElement {
+                    content: crate::element::content::TextContent::Static(String::new()),
+                    style: TextStyle::default(),
+                    key: None,
+                })
+            }
             Element::Fragment(_) => Err(RetainedError::UnsupportedElement("Fragment")),
             Element::None => Err(RetainedError::UnsupportedElement("None")),
         }
@@ -262,7 +271,7 @@ impl RetainedTree {
             .collect();
         let taffy_id = self.taffy.new_with_children(style, &child_ids)?;
 
-        Ok(RetainedNode {
+        let mut retained = RetainedNode {
             kind,
             taffy_id: Some(taffy_id),
             style: node_style,
@@ -270,9 +279,13 @@ impl RetainedTree {
             children,
             handlers,
             text: None,
-            text_input,
+            text_input: text_input.clone(),
             scroll_viewport,
-        })
+        };
+        if let Some(meta) = &text_input {
+            sync_text_input_caret(&mut retained, meta.cursor);
+        }
+        Ok(retained)
     }
 
     fn build_text_node(&mut self, node: TextElement) -> Result<RetainedNode, RetainedError> {
@@ -287,7 +300,7 @@ impl RetainedTree {
         let label = node.label.resolve();
         let taffy_id = self.taffy.new_leaf(node.style.to_taffy_style())?;
         let label_style = TextStyle {
-            font_size: 14.0,
+            font_size: 16.0,
             font_weight: 500,
             color: Some(crate::element::style::default_text_color()),
         };
@@ -305,6 +318,7 @@ impl RetainedTree {
             text: Some(TextCache {
                 content: label,
                 style: label_style,
+                caret: 0,
                 needs_layout: true,
                 parley_layout: None,
                 layout_max_width: None,
@@ -377,8 +391,11 @@ impl RetainedTree {
                 scroll_viewport,
             } => {
                 let retained = self.node_mut(&node)?;
-                retained.text_input = text_input;
+                retained.text_input = text_input.clone();
                 retained.scroll_viewport = scroll_viewport;
+                if let Some(meta) = text_input.as_ref() {
+                    sync_text_input_caret(retained, meta.cursor);
+                }
             }
             Patch::UpdateText { node, content } => {
                 let retained = self.node_mut(&node)?;
@@ -701,6 +718,26 @@ fn into_taffy_justify_content(justify: Justify) -> taffy::JustifyContent {
     }
 }
 
+fn sync_text_input_caret(node: &mut RetainedNode, cursor: usize) {
+    if let Some(text_node) = first_text_descendant_mut(node) {
+        if let Some(text) = text_node.text.as_mut() {
+            text.caret = cursor.min(text.content.len());
+        }
+    }
+}
+
+fn first_text_descendant_mut(node: &mut RetainedNode) -> Option<&mut RetainedNode> {
+    if node.text.is_some() {
+        return Some(node);
+    }
+    for child in &mut node.children {
+        if let Some(found) = first_text_descendant_mut(child) {
+            return Some(found);
+        }
+    }
+    None
+}
+
 fn node_mut_from<'a>(node: &'a mut RetainedNode, path: &[usize]) -> Option<&'a mut RetainedNode> {
     let node = resolve_transparent_mut(node);
     if path.is_empty() {
@@ -863,6 +900,51 @@ mod tests {
         let handler = root.handlers.on_click.as_ref().unwrap();
         handler();
         assert!(fired.get());
+    }
+
+    #[test]
+    fn update_widget_chrome_syncs_caret_to_text_child() {
+        use crate::element::types::TextInputMeta;
+
+        let mut tree = RetainedTree::mount(
+            View::new()
+                .text_input(TextInputMeta {
+                    cursor: 0,
+                    value: String::new(),
+                })
+                .child(Text::new(""))
+                .into_element(),
+        )
+        .unwrap();
+
+        tree.apply_patch(Patch::UpdateWidgetChrome {
+            node: NodePath::root(),
+            text_input: Some(TextInputMeta {
+                cursor: 0,
+                value: "hi".into(),
+            }),
+            scroll_viewport: false,
+        })
+        .unwrap();
+        tree.apply_patch(Patch::UpdateText {
+            node: NodePath(vec![0]),
+            content: "hi".into(),
+        })
+        .unwrap();
+        tree.apply_patch(Patch::UpdateWidgetChrome {
+            node: NodePath::root(),
+            text_input: Some(TextInputMeta {
+                cursor: 2,
+                value: "hi".into(),
+            }),
+            scroll_viewport: false,
+        })
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let text = &root.children[0];
+        assert_eq!(text.text_content(), Some("hi"));
+        assert_eq!(text.text.as_ref().unwrap().caret, 2);
     }
 
     #[test]

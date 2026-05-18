@@ -8,7 +8,7 @@ fn app(_cx: &Cx) -> lemon::element::Element {
         .padding(24.0)
         .gap(16.0)
         .children(children![
-            Text::new("Layout").font_size(22.0),
+            Text::new("Layout").font_size(18.0),
             Text::new("Containers compose with Taffy flexbox under the hood.")
                 .font_size(14.0)
                 .color(Color::rgb8(140, 150, 170)),
@@ -58,7 +58,7 @@ fn main() {
     run(
         WindowConfig::default()
             .title("Lemon — layout")
-            .size(520.0, 420.0),
+            .size(560.0, 460.0),
         app,
     );
 }
