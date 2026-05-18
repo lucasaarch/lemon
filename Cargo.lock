@@ -227,7 +227,7 @@ dependencies = [
 
 [[package]]
 name = "card"
-version = "0.1.0"
+version = "0.2.0-alpha.0"
 dependencies = [
  "lemon",
  "lemon-widgets",
@@ -344,7 +344,7 @@ dependencies = [
 
 [[package]]
 name = "counter"
-version = "0.1.0"
+version = "0.2.0-alpha.0"
 dependencies = [
  "lemon",
  "lemon-widgets",
@@ -556,7 +556,7 @@ checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 
 [[package]]
 name = "form"
-version = "0.1.0"
+version = "0.2.0-alpha.0"
 dependencies = [
  "lemon",
  "lemon-widgets",
@@ -1030,7 +1030,7 @@ dependencies = [
 
 [[package]]
 name = "lemon"
-version = "0.1.0"
+version = "0.2.0-alpha.0"
 dependencies = [
  "image",
  "parley",
@@ -1043,7 +1043,7 @@ dependencies = [
 
 [[package]]
 name = "lemon-widgets"
-version = "0.1.0"
+version = "0.2.0-alpha.0"
 dependencies = [
  "lemon",
 ]
@@ -1102,7 +1102,7 @@ checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
 
 [[package]]
 name = "list_keyed"
-version = "0.1.0"
+version = "0.2.0-alpha.0"
 dependencies = [
  "lemon",
  "lemon-widgets",
