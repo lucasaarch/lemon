@@ -1,0 +1,6 @@
+[update]
+major = []
+minor = ["lemon-widgets"]
+patch = []
+pre = true
+summary = "Add scrollbar visual to Scroll widget via content_height builder method"
