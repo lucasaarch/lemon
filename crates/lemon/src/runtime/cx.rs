@@ -92,9 +92,10 @@ impl Cx {
         // On re-render, the effect already lives in hooks; f is dropped
     }
 
-    /// Returns the active theme for the current thread.
+    /// Returns the active thread-local theme.
     ///
     /// This does not consume a hook slot and can be called anywhere during render.
+    /// The platform entry points activate the app theme before mount and frame/update work.
     pub fn use_theme(&self) -> crate::theme::Theme {
         crate::theme::current_theme()
     }
