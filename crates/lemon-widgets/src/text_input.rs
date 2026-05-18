@@ -77,9 +77,6 @@ impl TextInput {
         let current_value = self.state.get().value.clone();
         let placeholder = self.placeholder.clone();
 
-        let state = self.state.clone();
-        let focused = self.focused.clone();
-
         // Border color: blue when focused, gray when not.
         let border_color = if is_focused {
             Color::rgb8(59, 130, 246) // blue-500
@@ -102,11 +99,13 @@ impl TextInput {
             .radius(4.0)
             .focusable()
             .cursor(Cursor::Text)
-            .on_click(move || {
-                focused.set(true);
+            .on_click({
+                let focused = self.focused.clone();
+                move || focused.set(true)
             })
-            .on_key_down(move |ev| {
-                state.update(|s| s.handle_key(&ev));
+            .on_key_down({
+                let state = self.state.clone();
+                move |ev| state.update(|s| s.handle_key(&ev))
             })
             .child(Row::new().child(text_child));
 

@@ -33,7 +33,7 @@ pub use lemon::element::builders::View as Box_;
 #[cfg(test)]
 mod text_input_tests {
     use super::*;
-    use lemon::{element::Element, Cx, Signal};
+    use lemon::{element::Element, Cursor, Cx, Signal};
 
     #[test]
     fn text_input_renders_placeholder_when_value_is_empty() {
@@ -70,7 +70,7 @@ mod text_input_tests {
         assert!(view.style.focusable, "TextInput must be focusable");
         assert_eq!(
             view.style.cursor,
-            lemon::Cursor::Text,
+            Cursor::Text,
             "TextInput must use Text cursor"
         );
     }
