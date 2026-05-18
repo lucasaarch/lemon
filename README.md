@@ -1,47 +1,70 @@
 # Lemon
 
-A cross-platform UI toolkit for building native graphical applications in Rust.
+A reactive UI toolkit for native desktop apps in Rust.
 
-Lemon aims to give you the ergonomics of a modern widget framework—think along the lines of [Iced](https://iced.rs/) or GPU-driven toolkits like [GPUI](https://www.gpui.rs/)—while staying close to a small, composable stack you can understand and extend.
+Describe UI with components and fluent builders; state flows through **signals**. When something changes, Lemon diffs the virtual element tree and updates only what changed—layout, paint, and GPU present follow in one frame loop.
 
-## Vision
+**Stack:** [winit](https://github.com/rust-windowing/winit) · [wgpu](https://github.com/gfx-rs/wgpu) · [Vello](https://github.com/linebender/vello) · [Taffy](https://github.com/DioxusLabs/taffy) · [Parley](https://github.com/linebender/parley)
 
-Desktop UI toolkits usually split into three concerns:
+## Quick start
 
-1. **Windowing & input** — connect to the OS event loop, keyboards, pointers, and displays.
-2. **Layout** — turn a tree of elements and style rules into positions and sizes.
-3. **Rendering** — paint backgrounds, borders, vector shapes, images, and text on the GPU.
+```rust
+use lemon::{run, Button, Column, Cx, Text, WindowConfig};
 
-Lemon is being built around that model explicitly, rather than hiding it behind a monolithic runtime. The goal is a toolkit that feels native on macOS, Windows, and Linux, scales with Retina/high-DPI displays, and stays fast enough for interactive tools, editors, and utilities—not only static forms.
+fn counter(cx: &Cx) -> lemon::element::Element {
+    let count = cx.use_signal(0i32);
+    let label = count.clone();
+    let btn = count.clone();
 
-## Stack
+    Column::new()
+        .gap(12.0)
+        .padding(24.0)
+        .child(Text::new(move || label.get().to_string()).font_size(24.0))
+        .child(Button::new("Increment").on_click(move || btn.update(|n| *n += 1)))
+        .into_element()
+}
 
-| Layer | Crate | Role |
-|-------|--------|------|
-| Windowing | [winit](https://github.com/rust-windowing/winit) | Cross-platform windows and events |
-| GPU | [wgpu](https://github.com/gfx-rs/wgpu) | Safe graphics API (Vulkan, Metal, DX12, …) |
-| 2D render | [Vello](https://github.com/linebender/vello) | GPU vector rendering (paths, fills, layers) |
-| Layout | [Taffy](https://github.com/DioxusLabs/taffy) | Flexbox & grid (CSS-like layout) |
-| Text | [Parley](https://github.com/linebender/parley) | Rich text layout and shaping |
-| Async glue | [pollster](https://github.com/RustAsync/pollster) | Block on wgpu initialization on the main thread |
+fn main() {
+    run(
+        WindowConfig::default().title("Lemon").size(900.0, 600.0),
+        counter,
+    );
+}
+```
 
-Together, these pieces mirror how many production UI engines work internally: **element tree → layout pass → paint pass → present**.
+```bash
+cargo run --example counter
+```
+
+## Architecture
+
+Eight layers, inside-out:
+
+1. **Reactive runtime** — `Signal`, `Derived`, `Effect`, hooks (`use_signal`, `use_memo`, `use_effect`)
+2. **Components** — `fn(&Cx) -> Element`
+3. **Element tree** — virtual tree built with builders
+4. **Diff** — patches (`UpdateText`, `InsertChild`, `MoveChild`, …)
+5. **Retained tree** — live nodes + Taffy layout IDs
+6. **Layout** — flexbox + Parley text measurement
+7. **Paint** — Vello scene (fills, borders, glyphs)
+8. **Platform** — window, input, GPU present
+
+Layers 1–4 are pure Rust and covered by unit tests. Layers 5–8 run when you call `lemon::run`.
 
 ## Project status
 
-Early exploration. The public API, widget set, and application model are not defined yet.
+**v1** ships a working desktop shell: window, layout, paint, mouse click, and the counter example. Not yet included: text fields, keyboard focus, scroll, image rendering, or overflow clipping.
 
-A small graphics bootstrap (window, Vello scene, Taffy flex layout, Parley text) lives under [`archive/bootstrap-wgpu-vello-taffy/`](archive/bootstrap-wgpu-vello-taffy/) for reference. It is not part of the crate and is ignored by rust-analyzer.
-
-## Building
+## Development
 
 ```bash
+cargo test          # 98 unit tests
 cargo build
-cargo run
+cargo run --example counter
 ```
 
-Requires a recent stable Rust toolchain and a GPU with compute shader support (for Vello).
+Requires a recent stable Rust toolchain and GPU compute support (Vello).
 
 ## License
 
-Not specified yet.
+MIT OR Apache-2.0
