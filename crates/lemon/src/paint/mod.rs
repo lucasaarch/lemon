@@ -570,11 +570,17 @@ fn paint_text_input_caret(
 }
 
 fn effective_text_line_height(style: &crate::element::style::TextStyle) -> f32 {
-    if style.font_size > 0.0 {
+    let font_size = if style.font_size > 0.0 {
         style.font_size
     } else {
-        16.0
-    }
+        crate::theme::current_theme().typography.font_size_md
+    };
+    let line_height = if style.line_height > 0.0 {
+        style.line_height
+    } else {
+        crate::theme::current_theme().typography.line_height
+    };
+    font_size * line_height
 }
 
 const WIDGET_SCROLLBAR_WIDTH: f32 = 8.0;

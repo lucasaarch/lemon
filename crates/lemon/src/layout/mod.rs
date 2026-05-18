@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
 use parley::{
-    Alignment, AlignmentOptions, FontContext, FontWeight, GenericFamily, Layout, LayoutContext,
+    Alignment, AlignmentOptions, FontContext, FontWeight, Layout, LayoutContext, LineHeight,
     StyleProperty,
 };
+use std::borrow::Cow;
 use taffy::geometry::{Point, Size};
 use taffy::{AvailableSpace, NodeId};
 
@@ -275,13 +276,22 @@ fn measure_text_node(
 
     let font_size = effective_font_size(&snapshot.style);
     let weight = FontWeight::new(snapshot.style.font_weight as f32);
+    let line_height = effective_line_height(&snapshot.style);
+    let font_family = effective_font_family(&snapshot.style);
+    let letter_spacing = effective_letter_spacing(&snapshot.style);
 
     let mut builder =
         ctx.layout_cx
             .ranged_builder(ctx.font_cx, &snapshot.content, PARLEY_LAYOUT_SCALE, true);
-    builder.push_default(GenericFamily::SystemUi);
+    builder.push_default(StyleProperty::FontFamily(parley::FontFamily::Source(
+        Cow::Borrowed(font_family.as_ref()),
+    )));
     builder.push_default(StyleProperty::FontSize(font_size));
     builder.push_default(StyleProperty::FontWeight(weight));
+    builder.push_default(StyleProperty::LineHeight(LineHeight::FontSizeRelative(
+        line_height,
+    )));
+    builder.push_default(StyleProperty::LetterSpacing(letter_spacing));
     let mut layout = builder.build(&snapshot.content);
     layout.break_all_lines(max_width);
     layout.align(Alignment::Start, AlignmentOptions::default());
@@ -299,8 +309,28 @@ fn effective_font_size(style: &TextStyle) -> f32 {
     if style.font_size > 0.0 {
         style.font_size
     } else {
-        16.0
+        crate::theme::current_theme().typography.font_size_md
     }
+}
+
+fn effective_font_family(style: &TextStyle) -> Cow<'_, str> {
+    if style.font_family.trim().is_empty() {
+        Cow::Owned(crate::theme::current_theme().typography.font_family)
+    } else {
+        Cow::Borrowed(style.font_family.as_str())
+    }
+}
+
+fn effective_line_height(style: &TextStyle) -> f32 {
+    if style.line_height > 0.0 {
+        style.line_height
+    } else {
+        crate::theme::current_theme().typography.line_height
+    }
+}
+
+fn effective_letter_spacing(style: &TextStyle) -> f32 {
+    style.letter_spacing
 }
 
 /// Measures the width of a single-line string using the same defaults as layout.
@@ -313,11 +343,20 @@ pub fn measure_single_line_width(content: &str, style: &TextStyle) -> f32 {
     let mut layout_cx = LayoutContext::<ParleyBrush>::new();
     let font_size = effective_font_size(style);
     let weight = FontWeight::new(style.font_weight as f32);
+    let line_height = effective_line_height(style);
+    let font_family = effective_font_family(style);
+    let letter_spacing = effective_letter_spacing(style);
 
     let mut builder = layout_cx.ranged_builder(&mut font_cx, content, PARLEY_LAYOUT_SCALE, true);
-    builder.push_default(GenericFamily::SystemUi);
+    builder.push_default(StyleProperty::FontFamily(parley::FontFamily::Source(
+        Cow::Borrowed(font_family.as_ref()),
+    )));
     builder.push_default(StyleProperty::FontSize(font_size));
     builder.push_default(StyleProperty::FontWeight(weight));
+    builder.push_default(StyleProperty::LineHeight(LineHeight::FontSizeRelative(
+        line_height,
+    )));
+    builder.push_default(StyleProperty::LetterSpacing(letter_spacing));
     let mut layout = builder.build(content);
     layout.break_all_lines(None);
     layout.align(Alignment::Start, AlignmentOptions::default());
@@ -471,6 +510,52 @@ mod tests {
         assert!(
             height > 12.0 && height < 26.0,
             "16px logical font should measure near 16px tall, got {height}"
+        );
+    }
+
+    #[test]
+    fn larger_line_height_increases_wrapped_text_height() {
+        let content = "line one line two line three line four";
+        let mut compact = RetainedTree::mount(
+            View::new()
+                .width(100.0)
+                .child(Text::new(content).font_size(14.0).line_height(1.0))
+                .into_element(),
+        )
+        .unwrap();
+        let mut loose = RetainedTree::mount(
+            View::new()
+                .width(100.0)
+                .child(Text::new(content).font_size(14.0).line_height(2.0))
+                .into_element(),
+        )
+        .unwrap();
+
+        let compact_map = layout_pass(
+            &mut compact,
+            Viewport {
+                width: 200.0,
+                height: 600.0,
+            },
+        )
+        .unwrap();
+        let loose_map = layout_pass(
+            &mut loose,
+            Viewport {
+                width: 200.0,
+                height: 600.0,
+            },
+        )
+        .unwrap();
+
+        let compact_text = compact.root.as_ref().unwrap().children[0].taffy_id.unwrap();
+        let loose_text = loose.root.as_ref().unwrap().children[0].taffy_id.unwrap();
+        let compact_height = compact_map.get(compact_text).unwrap().height;
+        let loose_height = loose_map.get(loose_text).unwrap().height;
+
+        assert!(
+            loose_height > compact_height,
+            "expected larger line height to increase measured height ({compact_height} -> {loose_height})"
         );
     }
 
