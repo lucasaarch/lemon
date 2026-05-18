@@ -108,6 +108,24 @@ macro_rules! container_builder {
                 self.0.handlers.on_hover_leave = Some(Rc::new(f));
                 self
             }
+            /// Mouse wheel handler; `delta` is the vertical scroll amount in logical pixels.
+            ///
+            /// Used by scrollable regions (see `Scroll` in `lemon-widgets`). The platform
+            /// dispatches wheel events to the deepest node under the cursor with this handler.
+            pub fn on_scroll(mut self, f: impl Fn(f64) + 'static) -> Self {
+                self.0.handlers.on_scroll = Some(Rc::new(f));
+                self
+            }
+            /// Sets top margin in logical points (other sides unchanged).
+            ///
+            /// Negative values shift content up without changing layout size — useful for
+            /// scroll offsets on inner content inside a clipped viewport.
+            pub fn margin_top(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.margin.take().unwrap_or_default();
+                edges.top = v;
+                self.0.style.margin = Some(edges);
+                self
+            }
             /// Includes this node in keyboard focus traversal (Tab / Shift+Tab).
             pub fn focusable(mut self) -> Self {
                 self.0.style.focusable = true;

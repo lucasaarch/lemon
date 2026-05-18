@@ -61,6 +61,7 @@ impl PartialEq for TextCache {
     }
 }
 
+/// Input callbacks attached to a retained node (populated from container builders).
 #[derive(Clone, Default)]
 pub struct EventHandlers {
     pub on_click: Option<Rc<dyn Fn()>>,
@@ -68,6 +69,8 @@ pub struct EventHandlers {
     pub on_key_up: Option<Rc<dyn Fn(crate::element::events::KeyEvent)>>,
     pub on_hover_enter: Option<Rc<dyn Fn()>>,
     pub on_hover_leave: Option<Rc<dyn Fn()>>,
+    /// Vertical wheel delta in logical pixels; set via [`.on_scroll`](crate::element::builders::Column::on_scroll).
+    pub on_scroll: Option<Rc<dyn Fn(f64)>>,
 }
 
 impl std::fmt::Debug for EventHandlers {
@@ -89,6 +92,10 @@ impl std::fmt::Debug for EventHandlers {
             .field(
                 "on_hover_leave",
                 &self.on_hover_leave.as_ref().map(|_| "Rc<dyn Fn()>"),
+            )
+            .field(
+                "on_scroll",
+                &self.on_scroll.as_ref().map(|_| "Rc<dyn Fn(f64)>"),
             )
             .finish()
     }
@@ -1064,5 +1071,26 @@ mod tests {
             state: KeyState::Pressed,
         });
         assert_eq!(*received.borrow(), Some(LemonKey::Named(NamedKey::Enter)));
+    }
+
+    #[test]
+    fn box_on_scroll_handler_is_stored_in_retained_node() {
+        use std::cell::Cell;
+        let delta_received = Rc::new(Cell::new(0.0f64));
+        let d = delta_received.clone();
+
+        let tree = RetainedTree::mount(
+            Box_::new()
+                .width(200.0)
+                .height(150.0)
+                .on_scroll(move |delta| d.set(delta))
+                .into_element(),
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        assert!(root.handlers.on_scroll.is_some());
+        root.handlers.on_scroll.as_ref().unwrap()(42.0);
+        assert_eq!(delta_received.get(), 42.0);
     }
 }

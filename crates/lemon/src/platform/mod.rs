@@ -12,7 +12,9 @@ use vello::util::{RenderContext, RenderSurface};
 use vello::{AaConfig, Renderer, RendererOptions, Scene};
 use winit::application::ApplicationHandler;
 use winit::dpi::LogicalSize;
-use winit::event::{ElementState, KeyEvent as WinitKeyEvent, MouseButton, WindowEvent};
+use winit::event::{
+    ElementState, KeyEvent as WinitKeyEvent, MouseButton, MouseScrollDelta, WindowEvent,
+};
 use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::keyboard::{Key, NamedKey as WinitNamedKey};
 use winit::window::{CursorIcon, Window, WindowId};
@@ -25,7 +27,8 @@ use crate::retained::focus::FocusManager;
 use crate::retained::RetainedTree;
 use crate::runtime::{cx::Cx, Runtime};
 use hit_test::{
-    dispatch_click, find_node_by_taffy_id, hit_test_hover, hit_test_on_click, LogicalPoint,
+    dispatch_click, find_node_by_taffy_id, hit_test_hover, hit_test_on_click, hit_test_scroll,
+    LogicalPoint,
 };
 
 pub use window::WindowConfig;
@@ -318,6 +321,24 @@ impl AppState {
         hit_test::physical_to_logical(physical_x, physical_y, self.scale_factor())
     }
 
+    /// Route a scroll event through hit-test and dispatch `on_scroll` (logical coordinates).
+    fn event_pass_scroll(&mut self, point: LogicalPoint, delta_y: f64) -> bool {
+        let Some(root) = self.retained.as_ref().and_then(|t| t.root.as_ref()) else {
+            return false;
+        };
+        let Some(node) = hit_test_scroll(root, &self.layout_map, point) else {
+            return false;
+        };
+        if let Some(handler) = node.handlers.on_scroll.clone() {
+            handler(delta_y);
+            self.layout_dirty = true;
+            self.paint_dirty = true;
+            true
+        } else {
+            false
+        }
+    }
+
     fn present(&mut self) {
         let Some(window) = self.window.as_ref() else {
             return;
@@ -487,6 +508,21 @@ impl ApplicationHandler for LemonApplication {
                     .map(|(x, y)| LogicalPoint::new(x, y))
                     .unwrap_or(LogicalPoint::new(0.0, 0.0));
                 if state.event_pass_click(point) {
+                    state.request_redraw();
+                }
+            }
+            WindowEvent::MouseWheel { delta, .. } => {
+                // Normalize line-based scroll to pixel delta. One line ≈ 20 logical pixels,
+                // matching common conventions on platforms that report in line units.
+                let delta_y = match delta {
+                    MouseScrollDelta::LineDelta(_, y) => f64::from(y) * 20.0,
+                    MouseScrollDelta::PixelDelta(pos) => pos.y,
+                };
+                let point = state
+                    .last_cursor
+                    .map(|(x, y)| LogicalPoint::new(x, y))
+                    .unwrap_or(LogicalPoint::new(0.0, 0.0));
+                if state.event_pass_scroll(point, delta_y) {
                     state.request_redraw();
                 }
             }
