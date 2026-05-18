@@ -1,0 +1,6 @@
+[update]
+major = []
+minor = []
+patch = ["lemon-widgets"]
+pre = true
+summary = "Add rich example showcasing image, Select, Slider, and Scroll with scrollbar"
