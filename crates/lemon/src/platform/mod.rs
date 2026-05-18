@@ -28,6 +28,7 @@ use crate::paint::paint_pass;
 use crate::retained::focus::FocusManager;
 use crate::retained::RetainedTree;
 use crate::runtime::{cx::Cx, Runtime};
+use crate::theme::{set_active_theme, Theme};
 use hit_test::{
     dispatch_click, dispatch_outside_clicks, find_node_by_taffy_id, hit_test_focusable,
     hit_test_hover, hit_test_on_click, hit_test_pointer_down, hit_test_scroll, normalize_coords,
@@ -73,6 +74,7 @@ pub struct AppState {
     pub mouse_button_down: bool,
     pub active_modifiers: Modifiers,
     window_config: WindowConfig,
+    theme: Theme,
     root_component: Option<RootComponent>,
     last_cursor: Option<(f32, f32)>,
     mounted: bool,
@@ -81,6 +83,14 @@ pub struct AppState {
 
 impl AppState {
     pub fn new(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) -> Self {
+        Self::with_theme(config, Theme::default_light(), root)
+    }
+
+    fn with_theme(
+        config: WindowConfig,
+        theme: Theme,
+        root: impl Fn(&Cx) -> Element + 'static,
+    ) -> Self {
         Self {
             window: None,
             render_cx: RenderContext::new(),
@@ -99,11 +109,16 @@ impl AppState {
             mouse_button_down: false,
             active_modifiers: Modifiers::default(),
             window_config: config,
+            theme,
             root_component: Some(Arc::new(root)),
             last_cursor: None,
             mounted: false,
             last_caret_activity: Instant::now(),
         }
+    }
+
+    fn activate_theme(&self) {
+        set_active_theme(self.theme.clone());
     }
 
     fn caret_visible_now(&self) -> bool {
@@ -131,6 +146,7 @@ impl AppState {
     }
 
     fn apply_runtime_patches(&mut self) {
+        self.activate_theme();
         crate::lemon_trace!(
             Runtime,
             "{} apply_runtime_patches: flush",
@@ -235,6 +251,7 @@ impl AppState {
         if self.mounted {
             return;
         }
+        self.activate_theme();
         let root = Arc::clone(self.root_component.as_ref().expect("root component"));
         self.runtime.mount(move |cx| root(cx));
         let element = self
@@ -272,6 +289,7 @@ impl AppState {
 
     fn update_frame(&mut self) {
         self.ensure_mounted();
+        self.activate_theme();
         self.tick_caret_blink();
 
         let frame = crate::debug::next_frame();
@@ -780,10 +798,19 @@ impl ApplicationHandler for LemonApplication {
 ///
 /// See the `counter` example in the repository or the crate-level docs in [`crate`].
 pub fn run(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) {
+    run_with_theme(config, Theme::default_light(), root);
+}
+
+/// Opens a native window and runs `root` with `theme` as the active theme.
+///
+/// The provided theme is injected before mount and before each frame/update pass, so calls to
+/// [`Cx::use_theme`](crate::Cx::use_theme) and [`current_theme`](crate::current_theme) during
+/// reactive work see this theme consistently.
+pub fn run_with_theme(config: WindowConfig, theme: Theme, root: impl Fn(&Cx) -> Element + 'static) {
     crate::debug::configure_from_env();
     let event_loop = EventLoop::new().expect("create event loop");
     let mut app = LemonApplication {
-        state: Some(AppState::new(config, root)),
+        state: Some(AppState::with_theme(config, theme, root)),
     };
     event_loop.run_app(&mut app).expect("run event loop");
 }

@@ -91,6 +91,13 @@ impl Cx {
         }
         // On re-render, the effect already lives in hooks; f is dropped
     }
+
+    /// Returns the active theme for the current thread.
+    ///
+    /// This does not consume a hook slot and can be called anywhere during render.
+    pub fn use_theme(&self) -> crate::theme::Theme {
+        crate::theme::current_theme()
+    }
 }
 
 pub(crate) fn flush_deferred_sink(sink: &Rc<RefCell<Vec<Effect>>>) {
@@ -195,5 +202,20 @@ mod tests {
 
         trigger.set(1);
         assert_eq!(run_count.get(), 2);
+    }
+
+    #[test]
+    fn use_theme_returns_active_theme() {
+        use crate::theme::{current_theme, set_active_theme, Theme};
+
+        let previous = current_theme();
+        let dark = Theme::default_dark();
+        set_active_theme(dark.clone());
+
+        let cx = Cx::new();
+        let active = cx.use_theme();
+        assert_eq!(active, dark);
+
+        set_active_theme(previous);
     }
 }
