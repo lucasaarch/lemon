@@ -545,6 +545,26 @@ fn diff_container_props(
     }
 }
 
+/// Widget chrome (caret metadata, scroll flags) after child updates so caret sync sees new text.
+fn diff_container_chrome(
+    old: &BoxElement,
+    new: &BoxElement,
+    path: &NodePath,
+    patches: &mut Vec<Patch>,
+) {
+    if old.text_input != new.text_input
+        || old.scroll_viewport != new.scroll_viewport
+        || old.scroll_bar != new.scroll_bar
+    {
+        patches.push(Patch::UpdateWidgetChrome {
+            node: path.clone(),
+            text_input: new.text_input.clone(),
+            scroll_viewport: new.scroll_viewport,
+            scroll_bar: new.scroll_bar,
+        });
+    }
+}
+
 fn diff_children_slots(
     slots: &mut Vec<ComponentSlot>,
     old_children: &[Element],
@@ -830,6 +850,7 @@ fn diff_with_nested_components(
                 patches,
                 deferred_effects,
             );
+            diff_container_chrome(&old, &new, &path, patches);
         }
         (old, new) => {
             let emitted = diff(old, new, path);
@@ -902,6 +923,40 @@ mod tests {
         let mut rt = Runtime::new();
         rt.mount(|_cx| Text::new("hello").into_element());
         assert!(rt.take_patches().is_empty());
+    }
+
+    #[test]
+    fn runtime_emits_widget_chrome_when_text_input_meta_changes() {
+        use crate::element::builders::{Row, View};
+        use crate::element::types::TextInputMeta;
+
+        let state = Signal::new((String::new(), 0usize));
+        let field = state.clone();
+        let mut rt = Runtime::new();
+        rt.mount(move |_cx| {
+            let (value, cursor) = field.get();
+            View::new()
+                .text_input(TextInputMeta {
+                    cursor,
+                    value: value.clone(),
+                })
+                .child(Row::new().child(Text::new(value)))
+                .into_element()
+        });
+
+        state.set(("hi".into(), 2));
+        rt.flush_effects();
+        let patches = rt.take_patches();
+        assert!(
+            patches.iter().any(|patch| matches!(
+                patch,
+                Patch::UpdateWidgetChrome {
+                    text_input: Some(meta),
+                    ..
+                } if meta.cursor == 2 && meta.value == "hi"
+            )),
+            "runtime diff must emit UpdateWidgetChrome for caret metadata, got {patches:?}"
+        );
     }
 
     #[test]

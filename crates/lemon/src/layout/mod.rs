@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use parley::{
-    Alignment, AlignmentOptions, FontContext, FontWeight, Layout, LayoutContext, LineHeight,
-    StyleProperty,
+    Affinity, Alignment, AlignmentOptions, Cursor, FontContext, FontWeight, Layout, LayoutContext,
+    LineHeight, StyleProperty,
 };
 use std::borrow::Cow;
 use taffy::geometry::{Point, Size};
@@ -357,6 +357,24 @@ pub fn measure_single_line_width(content: &str, style: &TextStyle) -> f32 {
     layout.break_all_lines(None);
     layout.align(Alignment::Start, AlignmentOptions::default());
     layout.width()
+}
+
+/// Caret bounds in layout-local coordinates for a UTF-8 byte insertion index.
+///
+/// Uses Parley's cursor model so trailing spaces and soft line breaks position the caret on the
+/// same line as the glyphs, instead of treating multi-line layout height as caret height.
+pub fn caret_geometry_in_layout(
+    layout: &Layout<ParleyBrush>,
+    content: &str,
+    byte_index: usize,
+    stroke_width: f32,
+) -> parley::BoundingBox {
+    let affinity = if byte_index >= content.len() {
+        Affinity::Upstream
+    } else {
+        Affinity::Downstream
+    };
+    Cursor::from_byte_index(layout, byte_index, affinity).geometry(layout, stroke_width)
 }
 
 fn apply_text_measurements(node: &mut RetainedNode, results: &HashMap<NodeId, TextMeasureOutput>) {
@@ -1011,6 +1029,35 @@ mod tests {
             child_rect.y, 16.0,
             "child should be offset by margin_top=16, got y={}",
             child_rect.y
+        );
+    }
+
+    #[test]
+    fn caret_geometry_after_trailing_space_stays_on_first_line() {
+        let content = "Lucas Larangeira ";
+        let mut font_cx = FontContext::new();
+        let mut layout_cx = LayoutContext::<ParleyBrush>::new();
+        let mut builder =
+            layout_cx.ranged_builder(&mut font_cx, content, PARLEY_LAYOUT_SCALE, true);
+        builder.push_default(StyleProperty::FontSize(14.0));
+        builder.push_default(StyleProperty::FontWeight(FontWeight::NORMAL));
+        builder.push_default(StyleProperty::LineHeight(LineHeight::FontSizeRelative(1.5)));
+        let mut layout = builder.build(content);
+        layout.break_all_lines(Some(360.0));
+        layout.align(Alignment::Start, AlignmentOptions::default());
+
+        let geom = caret_geometry_in_layout(&layout, content, content.len(), 1.5);
+        let line_height = 21.0;
+        assert!(
+            (geom.y1 - geom.y0) <= line_height + 1.0,
+            "caret height should match one line, got y0={} y1={}",
+            geom.y0,
+            geom.y1
+        );
+        assert!(
+            geom.y0 < line_height,
+            "caret should stay on the first line, got y0={}",
+            geom.y0
         );
     }
 }

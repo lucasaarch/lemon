@@ -497,7 +497,9 @@ mod tests {
             .into_element();
 
         let patches = diff(old, new, NodePath::root());
-        let text_idx = patches.iter().position(|p| matches!(p, Patch::UpdateText { .. }));
+        let text_idx = patches
+            .iter()
+            .position(|p| matches!(p, Patch::UpdateText { .. }));
         let chrome_idx = patches
             .iter()
             .position(|p| matches!(p, Patch::UpdateWidgetChrome { .. }));

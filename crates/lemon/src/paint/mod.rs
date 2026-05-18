@@ -8,7 +8,7 @@ use vello::peniko::{
 use vello::{Glyph, Scene};
 
 use crate::element::style::{Color, CornerRadii, Edges, Overflow};
-use crate::layout::{measure_single_line_width, LayoutMap, LayoutRect};
+use crate::layout::{caret_geometry_in_layout, measure_single_line_width, LayoutMap, LayoutRect};
 use crate::retained::{RetainedKind, RetainedNode, RetainedTree};
 
 type ParleyLayout = parley::Layout<[u8; 4]>;
@@ -516,47 +516,56 @@ fn paint_text_input_caret(
         return;
     };
 
-    let (text_rect, text_style, line_height) = match first_text_descendant(node) {
-        Some(text_node) => match text_node.taffy_id.and_then(|id| layout.get(id).copied()) {
-            Some(rect) => {
-                let text = text_node.text.as_ref();
-                let style = text.map(|t| t.style.clone()).unwrap_or_default();
-                let height = text
-                    .and_then(|t| t.parley_layout.as_ref())
-                    .map(|layout| layout.height())
-                    .filter(|h| *h > 0.0)
-                    .unwrap_or_else(|| effective_text_line_height(&style));
-                (rect, style, height)
-            }
-            None => {
-                let padding = node.style.padding.clone().unwrap_or_default();
-                let style = Default::default();
-                let height = effective_text_line_height(&style);
-                (inset_rect(&field_rect, &padding), style, height)
-            }
-        },
-        None => {
+    let text_node = first_text_descendant(node);
+    let text_rect = text_node
+        .and_then(|n| n.taffy_id.and_then(|id| layout.get(id).copied()))
+        .unwrap_or_else(|| {
             let padding = node.style.padding.clone().unwrap_or_default();
-            let style = Default::default();
-            let height = effective_text_line_height(&style);
-            (inset_rect(&field_rect, &padding), style, height)
-        }
-    };
+            inset_rect(&field_rect, &padding)
+        });
+    let text_style = text_node
+        .and_then(|n| n.text.as_ref())
+        .map(|t| t.style.clone())
+        .unwrap_or_default();
+    let parley_layout = text_node
+        .and_then(|n| n.text.as_ref())
+        .and_then(|t| t.parley_layout.as_ref());
+    let content = text_node
+        .and_then(|n| n.text.as_ref())
+        .map(|t| t.content.as_str())
+        .unwrap_or(meta.value.as_str());
 
-    let content = match first_text_descendant(node) {
-        Some(text_node) => text_node
-            .text
-            .as_ref()
-            .map(|t| t.content.as_str())
-            .unwrap_or(meta.value.as_str()),
-        None => meta.value.as_str(),
-    };
     // `TextInputMeta.cursor` is authoritative; `TextCache.caret` can lag behind `UpdateText`.
     let cursor = meta.cursor.min(content.len());
-    let prefix = &content[..cursor];
-    let caret_x = text_rect.x + measure_single_line_width(prefix, &text_style);
-    let caret_top = text_rect.y + ((text_rect.height - line_height) * 0.5).max(0.0);
-    let caret_bottom = caret_top + line_height;
+    const CARET_STROKE: f32 = 1.0;
+    /// Caret height as a fraction of the text font size (not the full line box).
+    const CARET_HEIGHT_RATIO: f32 = 0.88;
+    /// Extra length below center so the caret sits slightly lower without moving the top.
+    const CARET_BOTTOM_EXTEND_RATIO: f32 = 0.1;
+    let font_size = effective_font_size(&text_style);
+    let caret_height = font_size * CARET_HEIGHT_RATIO;
+    let caret_bottom_extend = font_size * CARET_BOTTOM_EXTEND_RATIO;
+
+    let (caret_x, caret_top, caret_bottom) = if let Some(parley_layout) = parley_layout {
+        let geom = caret_geometry_in_layout(parley_layout, content, cursor, CARET_STROKE);
+        let line_top = text_rect.y + geom.y0 as f32;
+        let line_bottom = text_rect.y + geom.y1 as f32;
+        let line_center = (line_top + line_bottom) * 0.5;
+        (
+            text_rect.x + geom.x0 as f32,
+            line_center - caret_height * 0.5,
+            line_center + caret_height * 0.5 + caret_bottom_extend,
+        )
+    } else {
+        let prefix = &content[..cursor];
+        let caret_x = text_rect.x + measure_single_line_width(prefix, &text_style);
+        let line_center = text_rect.y + text_rect.height * 0.5;
+        (
+            caret_x,
+            line_center - caret_height * 0.5,
+            line_center + caret_height * 0.5 + caret_bottom_extend,
+        )
+    };
 
     let line = Line::new(
         (f64::from(caret_x), f64::from(caret_top)),
@@ -566,7 +575,7 @@ fn paint_text_input_caret(
     // caret stays visible when the app background does not match the active theme palette.
     let caret_color = crate::element::style::resolved_text_color(&text_style);
     scene.stroke(
-        &Stroke::new(1.5),
+        &Stroke::new(f64::from(CARET_STROKE)),
         ctx.base,
         to_peniko_color(caret_color),
         None,
@@ -575,18 +584,12 @@ fn paint_text_input_caret(
     stats.strokes += 1;
 }
 
-fn effective_text_line_height(style: &crate::element::style::TextStyle) -> f32 {
-    let font_size = if style.font_size > 0.0 {
+fn effective_font_size(style: &crate::element::style::TextStyle) -> f32 {
+    if style.font_size > 0.0 {
         style.font_size
     } else {
         crate::theme::current_theme().typography.font_size_md
-    };
-    let line_height = if style.line_height > 0.0 {
-        style.line_height
-    } else {
-        crate::theme::current_theme().typography.line_height
-    };
-    font_size * line_height
+    }
 }
 
 const WIDGET_SCROLLBAR_WIDTH: f32 = 8.0;

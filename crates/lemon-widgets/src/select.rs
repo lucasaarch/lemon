@@ -301,11 +301,7 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
                         val_c.set(Some(opt.clone()));
                         open_c.set(false);
                     })
-                    .child(
-                        Text::new(label)
-                            .font_size(14.0)
-                            .color(item_text_color),
-                    );
+                    .child(Text::new(label).font_size(14.0).color(item_text_color));
                 if let Some(w) = width {
                     item = item.width(w);
                 }
