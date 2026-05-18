@@ -3,3 +3,5 @@ enabled = true
 identifier = "alpha"
 
 [pre.base_versions]
+lemon = "0.1.0"
+lemon-widgets = "0.1.0"
