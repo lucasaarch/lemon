@@ -24,9 +24,10 @@ fn app(cx: &Cx) -> lemon::element::Element {
                 .font_size(14.0),
         );
     } else {
-        for entry in entries_snapshot {
+        for (idx, entry) in entries_snapshot.into_iter().enumerate() {
             list_content = list_content.child(
                 Row::new()
+                    .key(idx as u64)
                     .gap(8.0)
                     .child(Text::new(entry.name).font_size(14.0))
                     .child(
@@ -69,11 +70,8 @@ fn app(cx: &Cx) -> lemon::element::Element {
                         return;
                     }
 
-                    entries_submit.update(|items| {
-                        items.push(Entry {
-                            name: name.clone(),
-                            email: email.clone(),
-                        });
+                    entries_submit.update(move |items| {
+                        items.push(Entry { name, email });
                     });
 
                     name_submit.update(|s| {
