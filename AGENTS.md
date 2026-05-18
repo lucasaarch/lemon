@@ -88,13 +88,32 @@ If an agent changes app-facing APIs, it MUST also verify:
 - examples still compile
 - tests still pass
 
-### 4. Behavior changes require verification
+### 4. Document public APIs
+
+Agents MUST add or update Rust doc comments (`///`) for every public API they introduce or materially change.
+
+**Public API** means anything reachable from app code, including:
+
+- items re-exported from `crates/lemon/src/lib.rs` or `crates/lemon-widgets/src/lib.rs`
+- `pub` types, traits, functions, constants, and enum variants in those crates
+- builder methods and hook APIs on `Cx`, widgets, and configuration types (`WindowConfig`, events, styles)
+
+Documentation MUST:
+
+- state what the API does and when to use it
+- document parameters, return values, and important defaults or panics
+- include at least one runnable or compilable example for non-trivial APIs (use `` ``` `` in doc comments; prefer `no_run` when a full window loop is required)
+- call out non-obvious constraints already enforced by the codebase (e.g. `Component::new` function-pointer limits, key requirements for lists)
+
+Agents MUST NOT merge public API changes that leave new or changed symbols undocumented. Updating `README.md` does not satisfy this rule; docs live on the Rust items in source.
+
+### 5. Behavior changes require verification
 
 If behavior changes, agents MUST add or update tests unless the affected layer has no meaningful unit-test surface.
 
 At minimum, agents MUST run the smallest relevant test or build command before claiming success.
 
-### 5. Final quality gates are mandatory
+### 6. Final quality gates are mandatory
 
 Before considering non-trivial work complete, agents MUST run:
 
@@ -140,6 +159,12 @@ Agents SHOULD think of Lemon as this pipeline:
 When debugging, agents MUST identify which stage is failing before editing code.
 
 ## API Contract
+
+### Public documentation
+
+Follow Non-Negotiable Policy **4. Document public APIs**. Match the tone and depth of existing crate-level and builder docs in `crates/lemon/src/lib.rs` and `element/builders.rs`: short lead sentence, behavior notes, migration hints when renaming, and examples for entry-point APIs.
+
+When exposing a symbol through `lib.rs` or `lemon-widgets`, document it at the definition site (or on the re-export with `#[doc(inline)]` only if the underlying docs are already complete).
 
 ### Builders
 
@@ -313,10 +338,12 @@ Agents MUST NOT start patching random downstream files before locating the faili
 
 1. implement the core data or behavior in `crates/lemon`
 2. expose the builder or type from the appropriate module
-3. re-export from `crates/lemon/src/lib.rs` if public
-4. re-export from `crates/lemon-widgets` if end-user-facing
-5. update or add an example if the feature is visible to users
-6. run builds for affected examples
+3. add or update `///` documentation on every new or changed public item
+4. re-export from `crates/lemon/src/lib.rs` if public
+5. re-export from `crates/lemon-widgets` if end-user-facing
+6. update or add an example if the feature is visible to users
+7. run builds for affected examples
+8. confirm `cargo doc -p lemon --no-deps` (and `lemon-widgets` if touched) builds without doc warnings when practical
 
 ### Playbook D: when reviewing a proposed change
 
@@ -327,8 +354,9 @@ Review in this order:
 3. dirty-flag correctness
 4. keyed identity correctness
 5. public API breakage
-6. missing tests
-7. formatting/lint/test status
+6. missing or stale public API documentation
+7. missing tests
+8. formatting/lint/test status
 
 ## Completion Standard
 
@@ -336,6 +364,7 @@ An agent SHOULD only consider work complete when all of the following are true:
 
 - the change is in the correct architectural layer
 - tests covering the changed behavior exist or were updated
+- every new or changed public API has accurate `///` documentation
 - examples still build if the public surface changed
 - `cargo fmt --all -- --check` passes
 - `cargo clippy --workspace --all-targets -- -D warnings` passes
@@ -350,5 +379,6 @@ If an agent reads nothing else, it MUST remember this:
 - keep changes small and local
 - propagate new fields everywhere
 - do not misuse `Component::new(...)` as if it accepted arbitrary captured closures
+- document every public API you add or change (`///`, with examples when non-trivial)
 - verify examples after public API changes
 - never skip `fmt`, `clippy`, or workspace tests
