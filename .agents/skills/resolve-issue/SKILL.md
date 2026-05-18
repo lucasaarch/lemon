@@ -1,6 +1,6 @@
 ---
 name: resolve-issue
-description: "Resolve a GitHub issue end to end in this repository: read and obey AGENTS.md, fetch the issue with the gh CLI, implement the fix, validate with cargo check/fmt/clippy/tests, commit the work, and open a pull request linked to the issue. Use when the user asks to work from a GitHub issue number or URL, fix an assigned issue, or ship issue-scoped Rust changes in this repo."
+description: "Resolve a GitHub issue end to end in this repository: read and obey AGENTS.md, fetch the issue with the gh CLI, implement the fix, validate with cargo check/fmt/clippy/tests, record a CVM version change, commit the work, and open a pull request linked to the issue. Use when the user asks to work from a GitHub issue number or URL, fix an assigned issue, or ship issue-scoped Rust changes in this repo."
 ---
 
 # Resolve Issue
@@ -10,6 +10,8 @@ description: "Resolve a GitHub issue end to end in this repository: read and obe
 Use this skill to take a GitHub issue from intake to pull request in the Lemon repository.
 
 This is a workflow skill. Follow the sequence strictly. Do not skip `AGENTS.md`, do not guess at issue scope if the issue text is available through `gh`, and do not claim completion without running the full validation gates.
+
+After implementation and validation, you MUST stage a CVM change file so the release pipeline can version the crates.
 
 ## Workflow
 
@@ -118,7 +120,7 @@ Do not wait until the very end to discover a basic compile failure.
 
 ### Step 7: Run mandatory final validation
 
-Before opening a pull request, run all required checks.
+Before recording a version change or opening a pull request, run all required checks.
 
 Run:
 
@@ -137,20 +139,115 @@ If any command fails:
 
 Do not open a PR with known failing validation unless the user explicitly asked for that.
 
-### Step 8: Commit the work
+### Step 8: Record version change with CVM (required)
 
-Stage only the files relevant to the issue.
+After implementation and validation succeed, stage a version bump using [CVM](https://github.com/lucasaarch/cvm) **non-interactive** mode. Do this from the **repository root** (where `.cvm/` lives).
+
+#### 8.1 Install `cvm_cli`
+
+Ensure `cvm` is on `PATH`:
+
+```bash
+cargo install cvm_cli --locked
+```
+
+If `cvm --crate` is not recognized, install a build that includes non-interactive change creation (see [cvm#14](https://github.com/lucasaarch/cvm/issues/14)):
+
+```bash
+cargo install cvm_cli --git https://github.com/lucasaarch/cvm.git --branch alpha --locked
+```
+
+Verify:
+
+```bash
+cvm --crate lemon --bump patch --summary "dry-run check" --dry-run
+```
+
+#### 8.2 Decide bump level
+
+Choose **one** bump type per staged change based on what you shipped. Use your judgment from the actual diff, not the issue title alone.
+
+| Bump | When to use |
+|------|-------------|
+| **patch** | Bug fixes, regressions, internal refactors, tests-only, CI/docs, performance fixes without API changes |
+| **minor** | New backward-compatible features, new public types/builders/exports, new widgets in `lemon-widgets`, new optional behavior |
+| **major** | Breaking public API changes, removed or renamed exports, intentional semantic breaks consumers must react to |
+
+If unsure between patch and minor, prefer **patch** for fixes and **minor** for user-visible additions.
+
+#### 8.3 Choose crates
+
+This workspace publishes **`lemon`** and **`lemon-widgets`**. Examples (`counter`, `card`, `list_keyed`) use `publish = false` — do **not** use `--crate all`.
+
+| What changed | Crates to bump |
+|--------------|----------------|
+| Only `crates/lemon` (no public widget surface) | `--crate lemon` |
+| Only `crates/lemon-widgets` | `--crate lemon-widgets` |
+| Public API / widgets / re-exports in both crates | `--crate lemon --crate lemon-widgets` (same `--bump` for both) |
+
+When both library crates need the same bump, pass one `--bump` and multiple `--crate` flags.
+
+#### 8.4 Write an effective `--summary`
+
+The summary is the changelog line for this release. It MUST be:
+
+- **Specific** — what changed, not "fix issue" or "implement feature"
+- **User- or maintainer-facing** — outcome, not file names
+- **One line** — concise TL;DR (roughly 8–120 characters)
+
+Good examples:
+
+- `Fix hover hit-testing for nested retained nodes`
+- `Add TextFieldState and wire keyboard input for text fields`
+- `Export Scroll widget from lemon-widgets`
+
+Bad examples:
+
+- `Fix #123`
+- `Update code`
+- `WIP`
+
+#### 8.5 Run CVM
+
+```bash
+cvm --crate lemon --crate lemon-widgets --bump minor --summary "Add TextFieldState for controlled text input"
+```
+
+Adjust `--crate` and `--bump` to match your decision.
+
+Optional preview:
+
+```bash
+cvm --crate lemon --bump patch --summary "..." --dry-run
+```
+
+Confirm:
+
+```bash
+cvm status   # should report pending changes (exit 1)
+ls .cvm/changes/
+```
+
+Do **not** run `cvm apply` — CI on branch `alpha` applies bumps and opens the version PR. Only stage the change file.
+
+#### 8.6 Include CVM files in the commit
+
+The new file under `.cvm/changes/` MUST be committed with the implementation (same PR).
+
+### Step 9: Commit the work
+
+Stage implementation files **and** the new `.cvm/changes/*.toml` file.
 
 Use a focused commit message, for example:
 
 ```bash
-git add <relevant-files>
+git add <relevant-files> .cvm/changes/
 git commit -m "fix: handle hover hit-testing for retained nodes"
 ```
 
 Do not sweep unrelated local changes into the commit.
 
-### Step 9: Open the pull request and associate it with the issue
+### Step 10: Open the pull request and associate it with the issue
 
 Push the branch, then create the PR with `gh`.
 
@@ -160,6 +257,7 @@ Use a body that contains at least:
 
 - a short summary
 - validation performed
+- CVM change staged (bump level, crates, summary text)
 - `Closes #<issue-number>`
 
 Example flow:
@@ -179,14 +277,18 @@ gh pr create \
 - cargo clippy --workspace --all-targets -- -D warnings
 - cargo test --workspace
 
+## Version (CVM)
+- **Bump:** patch on `lemon`
+- **Summary:** Fix hover hit-testing for nested retained nodes
+
 Closes #123
 EOF
 )"
 ```
 
-If the repository has a PR template, use `gh pr create --fill` only if the filled result still includes the issue-closing line and an accurate validation section.
+If the repository has a PR template, use `gh pr create --fill` only if the filled result still includes the issue-closing line, the CVM section, and an accurate validation section.
 
-### Step 10: Report completion
+### Step 11: Report completion
 
 When done, report:
 
@@ -194,6 +296,8 @@ When done, report:
 - commit SHA
 - PR URL
 - exact validation commands run
+- CVM bump level, crate(s), and summary used
+- path to the staged `.cvm/changes/` file
 - any notable assumptions or follow-up risks
 
 ## Guardrails
@@ -201,6 +305,9 @@ When done, report:
 - Read `AGENTS.md` before implementation.
 - Use `gh` to fetch issue details; do not rely on memory.
 - Do not skip the full validation set.
+- Do not skip CVM change staging after successful validation.
+- Do not run `cvm apply` or `cvm publish` in this workflow unless the user explicitly asked.
+- Do not use `--crate all` in Lemon (it includes non-publishable examples).
 - Do not open a PR without linking it to the issue with `Closes #<n>` or equivalent.
 - Do not revert unrelated user changes.
 - Do not broaden scope beyond the issue unless that is necessary to make the fix correct.
@@ -215,6 +322,11 @@ cargo check --workspace
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
+cargo install cvm_cli --locked
+cvm --crate lemon --crate lemon-widgets --bump patch --summary "<effective one-line changelog>"
+cvm status
+git add .cvm/changes/ <files>
+git commit -m "<type>: <description>"
 git push -u origin <branch-name>
-gh pr create --title "<title>" --body "<body with Closes #<issue-number>>"
+gh pr create --title "<title>" --body "<body with CVM section and Closes #<issue-number>>"
 ```

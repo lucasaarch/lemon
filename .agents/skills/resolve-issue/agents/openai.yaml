@@ -1,4 +1,4 @@
 interface:
   display_name: "Resolve Issue"
-  short_description: "Implement and ship a GitHub issue fix"
-  default_prompt: "Use $resolve-issue to resolve GitHub issue work end to end in this repository."
+  short_description: "Implement, validate, stage CVM version bump, and open PR for a GitHub issue"
+  default_prompt: "Use $resolve-issue to resolve GitHub issue work end to end in this repository (including a CVM change file with the right semver bump)."
