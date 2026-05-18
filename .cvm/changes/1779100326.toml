@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = []
-patch = ["lemon"]
-pre = true
-summary = "Fix sibling component mount orphaning Taffy rows and text relayout after UpdateText"

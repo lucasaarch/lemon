@@ -307,7 +307,7 @@ dependencies = [
 
 [[package]]
 name = "components"
-version = "0.2.0-alpha.0"
+version = "0.2.0-alpha.1"
 dependencies = [
  "lemon",
  "lemon-widgets",
@@ -373,7 +373,7 @@ dependencies = [
 
 [[package]]
 name = "counter"
-version = "0.2.0-alpha.0"
+version = "0.2.0-alpha.1"
 dependencies = [
  "lemon",
  "lemon-widgets",
@@ -465,7 +465,7 @@ checksum = "d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76"
 
 [[package]]
 name = "effects"
-version = "0.2.0-alpha.0"
+version = "0.2.0-alpha.1"
 dependencies = [
  "lemon",
  "lemon-widgets",
@@ -605,7 +605,7 @@ checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 
 [[package]]
 name = "form"
-version = "0.2.0-alpha.0"
+version = "0.2.0-alpha.1"
 dependencies = [
  "lemon",
  "lemon-widgets",
@@ -1051,7 +1051,7 @@ dependencies = [
 
 [[package]]
 name = "keys"
-version = "0.2.0-alpha.0"
+version = "0.2.0-alpha.1"
 dependencies = [
  "lemon",
  "lemon-widgets",
@@ -1088,7 +1088,7 @@ dependencies = [
 
 [[package]]
 name = "layout"
-version = "0.2.0-alpha.0"
+version = "0.2.0-alpha.1"
 dependencies = [
  "lemon",
  "lemon-widgets",
@@ -1096,7 +1096,7 @@ dependencies = [
 
 [[package]]
 name = "lemon"
-version = "0.2.0-alpha.0"
+version = "0.2.0-alpha.1"
 dependencies = [
  "image",
  "parley",
@@ -1109,7 +1109,7 @@ dependencies = [
 
 [[package]]
 name = "lemon-widgets"
-version = "0.2.0-alpha.0"
+version = "0.2.0-alpha.1"
 dependencies = [
  "arboard",
  "lemon",
@@ -1211,7 +1211,7 @@ dependencies = [
 
 [[package]]
 name = "memo"
-version = "0.2.0-alpha.0"
+version = "0.2.0-alpha.1"
 dependencies = [
  "lemon",
  "lemon-widgets",
@@ -2112,7 +2112,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "signals"
-version = "0.2.0-alpha.0"
+version = "0.2.0-alpha.1"
 dependencies = [
  "lemon",
  "lemon-widgets",
