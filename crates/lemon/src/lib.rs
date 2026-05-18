@@ -103,7 +103,7 @@ pub use runtime::signal::Signal;
 pub use runtime::Runtime;
 pub use theme::{
     current_theme, set_active_theme, ColorTokens, RadiusTokens, SpacingTokens, Theme,
-    TypographyTokens,
+    TypographyTokens, WidgetChromeTokens,
 };
 
 pub use debug::Category as DebugCategory;

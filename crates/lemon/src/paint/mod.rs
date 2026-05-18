@@ -450,10 +450,6 @@ fn to_peniko_color(color: Color) -> PenikoColor {
     AlphaColor::new([color.r, color.g, color.b, color.a])
 }
 
-const FOCUS_RING: Color = Color::rgb8(59, 130, 246);
-const SCROLLBAR_TRACK: Color = Color::rgb8(229, 231, 235);
-const SCROLLBAR_THUMB: Color = Color::rgb8(156, 163, 175);
-
 fn paint_focus_ring(
     node: &RetainedNode,
     rect: &LayoutRect,
@@ -468,7 +464,14 @@ fn paint_focus_ring(
     }
 
     let shape = layout_rect_to_rounded(rect, &node.paint.radius);
-    stroke_rounded_rect(scene, ctx, &shape, FOCUS_RING, 2.0, stats);
+    stroke_rounded_rect(
+        scene,
+        ctx,
+        &shape,
+        crate::theme::current_theme().chrome.focus_ring,
+        2.0,
+        stats,
+    );
 }
 
 fn first_text_descendant(node: &RetainedNode) -> Option<&RetainedNode> {
@@ -560,7 +563,7 @@ fn paint_text_input_caret(
     scene.stroke(
         &Stroke::new(1.5),
         ctx.base,
-        to_peniko_color(default_text_color()),
+        to_peniko_color(crate::theme::current_theme().chrome.caret),
         None,
         &line,
     );
@@ -623,7 +626,7 @@ fn paint_widget_scroll_bar(
     scene.fill(
         Fill::NonZero,
         ctx.base,
-        to_peniko_color(Color::rgb8(30, 30, 40)),
+        to_peniko_color(crate::theme::current_theme().chrome.scrollbar_track),
         None,
         &track,
     );
@@ -642,7 +645,7 @@ fn paint_widget_scroll_bar(
     scene.fill(
         Fill::NonZero,
         ctx.base,
-        to_peniko_color(Color::rgb8(120, 120, 140)),
+        to_peniko_color(crate::theme::current_theme().chrome.scrollbar_thumb),
         None,
         &thumb,
     );
@@ -690,7 +693,7 @@ fn paint_scrollbar(
     scene.fill(
         Fill::NonZero,
         ctx.base,
-        to_peniko_color(SCROLLBAR_TRACK),
+        to_peniko_color(crate::theme::current_theme().chrome.scrollbar_track),
         None,
         &track,
     );
@@ -709,7 +712,7 @@ fn paint_scrollbar(
     scene.fill(
         Fill::NonZero,
         ctx.base,
-        to_peniko_color(SCROLLBAR_THUMB),
+        to_peniko_color(crate::theme::current_theme().chrome.scrollbar_thumb),
         None,
         &thumb,
     );
@@ -1132,5 +1135,136 @@ mod tests {
 
         let stats = layout_and_paint(&mut tree, 1.0);
         assert_eq!(stats.fills, 0, "image draw does not count as fill");
+    }
+
+    /// Verify that the active theme's `chrome.scrollbar_track` and `chrome.scrollbar_thumb`
+    /// tokens are read by the paint pass.  We switch to a custom theme, run paint, then
+    /// restore the original theme.  If paint panics or the hardcoded constants were still
+    /// used the fill counts would be wrong.
+    #[test]
+    fn scrollbar_paints_two_fills_with_custom_chrome_theme() {
+        use crate::element::style::Overflow;
+        use crate::theme::{set_active_theme, Theme, WidgetChromeTokens};
+
+        let original = crate::theme::current_theme();
+
+        let mut custom = Theme::default_dark();
+        custom.chrome = WidgetChromeTokens {
+            scrollbar_track: Color::rgb8(10, 20, 30),
+            scrollbar_thumb: Color::rgb8(50, 60, 70),
+            caret: Color::rgb8(255, 255, 255),
+            focus_ring: Color::rgb8(255, 0, 0),
+        };
+        set_active_theme(custom);
+
+        // Build a scroll-bar viewport whose content is taller than the viewport.
+        // Structure mirrors the Scroll widget: viewport -> inner wrapper -> content.
+        // The viewport must have scroll_bar, overflow: hidden, and on_scroll so that
+        // scroll_content_extent returns a height and the scrollbar is drawn.
+        let content = View::new()
+            .width(100.0)
+            .height(300.0)
+            .background(Color::rgb8(200, 200, 200));
+        let inner = View::new().child(content);
+        let viewport = View::new()
+            .width(100.0)
+            .height(80.0)
+            .overflow(Overflow::Hidden)
+            .scroll_bar()
+            .on_scroll(|_| {})
+            .child(inner);
+
+        let mut tree = RetainedTree::mount(viewport.into_element()).unwrap();
+        let stats = layout_and_paint(&mut tree, 1.0);
+
+        set_active_theme(original);
+
+        // The scrollbar contributes 2 fills (track + thumb); the child background adds 1.
+        assert_eq!(
+            stats.fills, 3,
+            "track + thumb + child background must be painted"
+        );
+        assert_eq!(stats.strokes, 0);
+    }
+
+    /// Verify that the active theme's `chrome.focus_ring` token is read by paint when a
+    /// text-input node is focused.
+    #[test]
+    fn focus_ring_uses_theme_chrome_token() {
+        use crate::element::types::TextInputMeta;
+        use crate::theme::{set_active_theme, Theme, WidgetChromeTokens};
+
+        let original = crate::theme::current_theme();
+
+        let mut custom = Theme::default_light();
+        custom.chrome = WidgetChromeTokens {
+            scrollbar_track: Color::rgb8(200, 200, 200),
+            scrollbar_thumb: Color::rgb8(150, 150, 150),
+            caret: Color::rgb8(0, 0, 0),
+            focus_ring: Color::rgb8(255, 128, 0),
+        };
+        set_active_theme(custom);
+
+        // Build a text-input node so that paint_focus_ring is exercised.
+        let mut tree =
+            RetainedTree::mount(View::new().width(120.0).height(40.0).into_element()).unwrap();
+
+        // Inject text_input meta onto the root node so paint_focus_ring activates.
+        if let Some(root) = tree.root.as_mut() {
+            root.text_input = Some(TextInputMeta {
+                value: String::new(),
+                cursor: 0,
+            });
+        }
+
+        let root_taffy_id = tree.root.as_ref().unwrap().taffy_id;
+
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 300.0,
+            },
+        )
+        .unwrap();
+        let mut scene = Scene::new();
+        let stats = paint_pass(&tree, &layout, &mut scene, 1.0, root_taffy_id, false);
+
+        set_active_theme(original);
+
+        // Focus ring is painted as a stroke.
+        assert_eq!(stats.strokes, 1, "focus ring must emit exactly one stroke");
+    }
+
+    /// Verify that switching the active theme between calls to paint_pass does not panic
+    /// and that the fill/stroke counts are stable.
+    #[test]
+    fn paint_is_stable_across_theme_switch() {
+        use crate::theme::{set_active_theme, Theme};
+
+        let original = crate::theme::current_theme();
+
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(100.0)
+                .height(80.0)
+                .background(Color::rgb8(40, 80, 120))
+                .into_element(),
+        )
+        .unwrap();
+
+        let stats_light = layout_and_paint(&mut tree, 1.0);
+
+        set_active_theme(Theme::default_dark());
+        let stats_dark = layout_and_paint(&mut tree, 1.0);
+
+        set_active_theme(original);
+
+        assert_eq!(stats_light.fills, 1, "light theme: one background fill");
+        assert_eq!(stats_dark.fills, 1, "dark theme: one background fill");
+        assert_eq!(
+            stats_light.strokes, stats_dark.strokes,
+            "stroke count unchanged across themes"
+        );
     }
 }
