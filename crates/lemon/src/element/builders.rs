@@ -20,14 +20,76 @@ macro_rules! container_builder {
                 $name(BoxElement::default())
             }
 
-            /// Spacing between flex children, in logical points.
+            /// Uniform gap between flex children, in logical points (both row and column axes).
             pub fn gap(mut self, v: f32) -> Self {
                 self.0.style.gap = Some(v);
                 self
             }
-            /// Uniform padding on all sides.
+            /// Gap between columns (Taffy `gap.width`), overriding the uniform [`gap`](Self::gap)
+            /// for this axis.
+            ///
+            /// In a `Column` container this is the cross-axis gap; in a `Row` it is the main-axis
+            /// gap between children.
+            pub fn column_gap(mut self, v: f32) -> Self {
+                self.0.style.column_gap = Some(v);
+                self
+            }
+            /// Gap between rows (Taffy `gap.height`), overriding the uniform [`gap`](Self::gap)
+            /// for this axis.
+            ///
+            /// In a `Column` container this is the main-axis gap between children; in a `Row` it
+            /// is the cross-axis gap.
+            pub fn row_gap(mut self, v: f32) -> Self {
+                self.0.style.row_gap = Some(v);
+                self
+            }
+            /// Uniform padding on all sides, in logical points.
             pub fn padding(mut self, v: f32) -> Self {
                 self.0.style.padding = Some(Edges::all(v));
+                self
+            }
+            /// Padding on the left and right sides, in logical points.
+            pub fn padding_x(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.padding.take().unwrap_or_default();
+                edges.left = v;
+                edges.right = v;
+                self.0.style.padding = Some(edges);
+                self
+            }
+            /// Padding on the top and bottom sides, in logical points.
+            pub fn padding_y(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.padding.take().unwrap_or_default();
+                edges.top = v;
+                edges.bottom = v;
+                self.0.style.padding = Some(edges);
+                self
+            }
+            /// Padding on the top side only, in logical points.
+            pub fn padding_top(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.padding.take().unwrap_or_default();
+                edges.top = v;
+                self.0.style.padding = Some(edges);
+                self
+            }
+            /// Padding on the right side only, in logical points.
+            pub fn padding_right(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.padding.take().unwrap_or_default();
+                edges.right = v;
+                self.0.style.padding = Some(edges);
+                self
+            }
+            /// Padding on the bottom side only, in logical points.
+            pub fn padding_bottom(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.padding.take().unwrap_or_default();
+                edges.bottom = v;
+                self.0.style.padding = Some(edges);
+                self
+            }
+            /// Padding on the left side only, in logical points.
+            pub fn padding_left(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.padding.take().unwrap_or_default();
+                edges.left = v;
+                self.0.style.padding = Some(edges);
                 self
             }
             /// Fixed width in logical points.
@@ -181,6 +243,27 @@ macro_rules! container_builder {
                 self.0.handlers.on_pointer_move = Some(Rc::new(f));
                 self
             }
+            /// Uniform margin on all sides, in logical points.
+            pub fn margin(mut self, v: f32) -> Self {
+                self.0.style.margin = Some(Edges::all(v));
+                self
+            }
+            /// Margin on the left and right sides, in logical points.
+            pub fn margin_x(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.margin.take().unwrap_or_default();
+                edges.left = v;
+                edges.right = v;
+                self.0.style.margin = Some(edges);
+                self
+            }
+            /// Margin on the top and bottom sides, in logical points.
+            pub fn margin_y(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.margin.take().unwrap_or_default();
+                edges.top = v;
+                edges.bottom = v;
+                self.0.style.margin = Some(edges);
+                self
+            }
             /// Sets top margin in logical points (other sides unchanged).
             ///
             /// Negative values shift content up without changing layout size — useful for
@@ -188,6 +271,27 @@ macro_rules! container_builder {
             pub fn margin_top(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.margin.take().unwrap_or_default();
                 edges.top = v;
+                self.0.style.margin = Some(edges);
+                self
+            }
+            /// Sets right margin in logical points (other sides unchanged).
+            pub fn margin_right(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.margin.take().unwrap_or_default();
+                edges.right = v;
+                self.0.style.margin = Some(edges);
+                self
+            }
+            /// Sets bottom margin in logical points (other sides unchanged).
+            pub fn margin_bottom(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.margin.take().unwrap_or_default();
+                edges.bottom = v;
+                self.0.style.margin = Some(edges);
+                self
+            }
+            /// Sets left margin in logical points (other sides unchanged).
+            pub fn margin_left(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.margin.take().unwrap_or_default();
+                edges.left = v;
                 self.0.style.margin = Some(edges);
                 self
             }
@@ -453,6 +557,100 @@ mod tests {
             panic!()
         };
         assert_eq!(el.style.gap, Some(8.0));
+    }
+
+    #[test]
+    fn column_builder_sets_row_gap_and_column_gap() {
+        let Element::Column(el) = Column::new().row_gap(6.0).column_gap(3.0).into_element() else {
+            panic!()
+        };
+        assert_eq!(el.style.row_gap, Some(6.0));
+        assert_eq!(el.style.column_gap, Some(3.0));
+        assert_eq!(el.style.gap, None);
+    }
+
+    #[test]
+    fn column_builder_sets_padding_per_side() {
+        let Element::Column(el) = Column::new()
+            .padding_top(1.0)
+            .padding_right(2.0)
+            .padding_bottom(3.0)
+            .padding_left(4.0)
+            .into_element()
+        else {
+            panic!()
+        };
+        let p = el.style.padding.as_ref().expect("padding");
+        assert_eq!(p.top, 1.0);
+        assert_eq!(p.right, 2.0);
+        assert_eq!(p.bottom, 3.0);
+        assert_eq!(p.left, 4.0);
+    }
+
+    #[test]
+    fn column_builder_padding_x_and_y() {
+        let Element::Column(el) = Column::new().padding_x(8.0).padding_y(4.0).into_element() else {
+            panic!()
+        };
+        let p = el.style.padding.as_ref().expect("padding");
+        assert_eq!(p.left, 8.0);
+        assert_eq!(p.right, 8.0);
+        assert_eq!(p.top, 4.0);
+        assert_eq!(p.bottom, 4.0);
+    }
+
+    #[test]
+    fn column_builder_sets_margin_uniform() {
+        let Element::Column(el) = Column::new().margin(10.0).into_element() else {
+            panic!()
+        };
+        let m = el.style.margin.as_ref().expect("margin");
+        assert_eq!(m.top, 10.0);
+        assert_eq!(m.right, 10.0);
+        assert_eq!(m.bottom, 10.0);
+        assert_eq!(m.left, 10.0);
+    }
+
+    #[test]
+    fn column_builder_sets_margin_per_side() {
+        let Element::Column(el) = Column::new()
+            .margin_top(1.0)
+            .margin_right(2.0)
+            .margin_bottom(3.0)
+            .margin_left(4.0)
+            .into_element()
+        else {
+            panic!()
+        };
+        let m = el.style.margin.as_ref().expect("margin");
+        assert_eq!(m.top, 1.0);
+        assert_eq!(m.right, 2.0);
+        assert_eq!(m.bottom, 3.0);
+        assert_eq!(m.left, 4.0);
+    }
+
+    #[test]
+    fn column_builder_margin_x_and_y() {
+        let Element::Column(el) = Column::new().margin_x(6.0).margin_y(2.0).into_element() else {
+            panic!()
+        };
+        let m = el.style.margin.as_ref().expect("margin");
+        assert_eq!(m.left, 6.0);
+        assert_eq!(m.right, 6.0);
+        assert_eq!(m.top, 2.0);
+        assert_eq!(m.bottom, 2.0);
+    }
+
+    #[test]
+    fn margin_top_does_not_overwrite_other_sides() {
+        let Element::Column(el) = Column::new().margin(5.0).margin_top(20.0).into_element() else {
+            panic!()
+        };
+        let m = el.style.margin.as_ref().expect("margin");
+        assert_eq!(m.top, 20.0);
+        assert_eq!(m.right, 5.0);
+        assert_eq!(m.bottom, 5.0);
+        assert_eq!(m.left, 5.0);
     }
 
     #[test]

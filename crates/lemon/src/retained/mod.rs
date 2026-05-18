@@ -700,14 +700,16 @@ impl StyleProps {
             inset: self.inset.as_ref().map_or(Rect::auto(), into_taffy_margin),
             gap: Size {
                 width: self
-                    .gap
-                    .map_or(taffy::LengthPercentage::Length(0.0), |value| {
-                        taffy::LengthPercentage::Length(value)
+                    .column_gap
+                    .or(self.gap)
+                    .map_or(taffy::LengthPercentage::Length(0.0), |v| {
+                        taffy::LengthPercentage::Length(v)
                     }),
                 height: self
-                    .gap
-                    .map_or(taffy::LengthPercentage::Length(0.0), |value| {
-                        taffy::LengthPercentage::Length(value)
+                    .row_gap
+                    .or(self.gap)
+                    .map_or(taffy::LengthPercentage::Length(0.0), |v| {
+                        taffy::LengthPercentage::Length(v)
                     }),
             },
             align_items: self.align_items.clone().map(into_taffy_align_items),
@@ -888,7 +890,13 @@ mod tests {
         );
         assert_eq!(
             taffy_style.gap.width,
-            taffy::style::LengthPercentage::Length(12.0)
+            taffy::style::LengthPercentage::Length(12.0),
+            "gap.width (column_gap) should default to uniform gap"
+        );
+        assert_eq!(
+            taffy_style.gap.height,
+            taffy::style::LengthPercentage::Length(12.0),
+            "gap.height (row_gap) should default to uniform gap"
         );
         assert_eq!(
             taffy_style.padding.left,
@@ -915,6 +923,27 @@ mod tests {
         assert_eq!(
             taffy_style.justify_content,
             Some(taffy::style::JustifyContent::SpaceBetween)
+        );
+    }
+
+    #[test]
+    fn per_axis_gap_overrides_uniform_gap() {
+        let style = StyleProps {
+            gap: Some(5.0),
+            row_gap: Some(10.0),
+            column_gap: Some(2.0),
+            ..Default::default()
+        };
+        let taffy_style = style.to_taffy_style();
+        assert_eq!(
+            taffy_style.gap.height,
+            taffy::style::LengthPercentage::Length(10.0),
+            "row_gap should override gap for gap.height"
+        );
+        assert_eq!(
+            taffy_style.gap.width,
+            taffy::style::LengthPercentage::Length(2.0),
+            "column_gap should override gap for gap.width"
         );
     }
 

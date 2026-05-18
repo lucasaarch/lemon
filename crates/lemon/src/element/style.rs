@@ -95,6 +95,14 @@ pub struct StyleProps {
     /// [`.left()`](crate::element::builders::View::left) rather than setting this field directly.
     pub inset: Option<Edges<f32>>,
     pub gap: Option<f32>,
+    /// Per-axis gap overrides. When set, take precedence over [`gap`](Self::gap) for that axis.
+    ///
+    /// `column_gap` is the gap between columns (Taffy `gap.width`).
+    /// `row_gap` is the gap between rows (Taffy `gap.height`).
+    /// Use the builder methods [`column_gap`](crate::element::builders::Column::column_gap) and
+    /// [`row_gap`](crate::element::builders::Column::row_gap) rather than setting these directly.
+    pub column_gap: Option<f32>,
+    pub row_gap: Option<f32>,
     pub flex_grow: Option<f32>,
     pub flex_shrink: Option<f32>,
     pub align_items: Option<Align>,
