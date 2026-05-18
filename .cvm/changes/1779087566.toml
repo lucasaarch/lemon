@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = ["lemon", "lemon-widgets"]
-patch = []
-pre = true
-summary = "Add children! macro, prelude, native text focus/caret, scroll widgets, and teaching examples"
