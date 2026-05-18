@@ -778,7 +778,8 @@ mod tests {
                 .into_element()
         });
 
-        let child_slot = find_slot_mut(&mut runtime.slots, &NodePath(vec![0])).expect("nested slot");
+        let child_slot =
+            find_slot_mut(&mut runtime.slots, &NodePath(vec![0])).expect("nested slot");
         child_slot.previous = Some(Text::new("0").into_element());
         *child_slot.pending.borrow_mut() = Some(Text::new("1").into_element());
 
