@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = ["lemon-widgets"]
-patch = []
-pre = true
-summary = "Add Slider widget with pointer-down/move drag support"
