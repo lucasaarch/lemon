@@ -153,6 +153,34 @@ macro_rules! container_builder {
                 self.0.handlers.on_scroll = Some(Rc::new(f));
                 self
             }
+            /// Called when a click lands outside this node's layout bounds while it is mounted.
+            pub fn on_click_outside(mut self, f: impl Fn() + 'static) -> Self {
+                self.0.handlers.on_click_outside = Some(Rc::new(f));
+                self
+            }
+            /// Pointer press handler with normalized coordinates in this node's bounds (`0.0..=1.0`).
+            ///
+            /// ```no_run
+            /// # use lemon::{View, Color};
+            /// View::new()
+            ///     .width(200.0)
+            ///     .height(100.0)
+            ///     .on_pointer_down(|x, y| {
+            ///         let local_px_x = x * 200.0;
+            ///         let local_px_y = y * 100.0;
+            ///         let _ = (local_px_x, local_px_y, Color::rgb8(255, 0, 0));
+            ///     })
+            ///     .into_element();
+            /// ```
+            pub fn on_pointer_down(mut self, f: impl Fn(f32, f32) + 'static) -> Self {
+                self.0.handlers.on_pointer_down = Some(Rc::new(f));
+                self
+            }
+            /// Pointer move handler with normalized coordinates in this node's bounds (`0.0..=1.0`).
+            pub fn on_pointer_move(mut self, f: impl Fn(f32, f32) + 'static) -> Self {
+                self.0.handlers.on_pointer_move = Some(Rc::new(f));
+                self
+            }
             /// Sets top margin in logical points (other sides unchanged).
             ///
             /// Negative values shift content up without changing layout size — useful for

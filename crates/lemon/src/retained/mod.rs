@@ -73,6 +73,12 @@ pub struct EventHandlers {
     pub on_hover_leave: Option<Rc<dyn Fn()>>,
     /// Vertical wheel delta in logical pixels; set via [`.on_scroll`](crate::element::builders::Column::on_scroll).
     pub on_scroll: Option<Rc<dyn Fn(f64)>>,
+    /// Called when a click is dispatched outside this retained node's bounds.
+    pub on_click_outside: Option<Rc<dyn Fn()>>,
+    /// Called when a pointer press lands inside this retained node with normalized `(x, y)` coordinates.
+    pub on_pointer_down: Option<Rc<dyn Fn(f32, f32)>>,
+    /// Called when pointer movement is reported for this retained node with normalized `(x, y)` coordinates.
+    pub on_pointer_move: Option<Rc<dyn Fn(f32, f32)>>,
 }
 
 impl std::fmt::Debug for EventHandlers {
@@ -98,6 +104,24 @@ impl std::fmt::Debug for EventHandlers {
             .field(
                 "on_scroll",
                 &self.on_scroll.as_ref().map(|_| "Rc<dyn Fn(f64)>"),
+            )
+            .field(
+                "on_click_outside",
+                &self.on_click_outside.as_ref().map(|_| "Rc<dyn Fn()>"),
+            )
+            .field(
+                "on_pointer_down",
+                &self
+                    .on_pointer_down
+                    .as_ref()
+                    .map(|_| "Rc<dyn Fn(f32, f32)>"),
+            )
+            .field(
+                "on_pointer_move",
+                &self
+                    .on_pointer_move
+                    .as_ref()
+                    .map(|_| "Rc<dyn Fn(f32, f32)>"),
             )
             .finish()
     }
@@ -1338,5 +1362,56 @@ mod tests {
         assert!(root.handlers.on_scroll.is_some());
         root.handlers.on_scroll.as_ref().unwrap()(42.0);
         assert_eq!(delta_received.get(), 42.0);
+    }
+
+    #[test]
+    fn box_on_click_outside_handler_is_stored_in_retained_node() {
+        use std::cell::Cell;
+
+        let fired = Rc::new(Cell::new(false));
+        let f = fired.clone();
+
+        let tree = RetainedTree::mount(
+            View::new()
+                .width(100.0)
+                .height(100.0)
+                .on_click_outside(move || f.set(true))
+                .into_element(),
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        assert!(root.handlers.on_click_outside.is_some());
+        root.handlers.on_click_outside.as_ref().unwrap()();
+        assert!(fired.get());
+    }
+
+    #[test]
+    fn box_on_pointer_down_and_move_handlers_are_stored_in_retained_node() {
+        use std::cell::Cell;
+
+        let down_x = Rc::new(Cell::new(0.0f32));
+        let move_x = Rc::new(Cell::new(0.0f32));
+        let dx = down_x.clone();
+        let mx = move_x.clone();
+
+        let tree = RetainedTree::mount(
+            View::new()
+                .width(200.0)
+                .height(50.0)
+                .on_pointer_down(move |frac_x, _| dx.set(frac_x))
+                .on_pointer_move(move |frac_x, _| mx.set(frac_x))
+                .into_element(),
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        assert!(root.handlers.on_pointer_down.is_some());
+        assert!(root.handlers.on_pointer_move.is_some());
+
+        root.handlers.on_pointer_down.as_ref().unwrap()(0.5, 0.5);
+        assert_eq!(down_x.get(), 0.5);
+        root.handlers.on_pointer_move.as_ref().unwrap()(0.75, 0.25);
+        assert_eq!(move_x.get(), 0.75);
     }
 }
