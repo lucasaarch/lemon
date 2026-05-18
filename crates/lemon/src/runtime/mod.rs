@@ -168,7 +168,7 @@ fn render_slot(slot: &mut ComponentSlot, patches: &mut Vec<Patch>) {
                 crate::debug::element_kind(&new_tree)
             );
             let deferred = Rc::clone(&slot.deferred_effects);
-            diff_with_nested_components(
+            diff_component_output_slots(
                 &mut slot.children,
                 old_tree,
                 new_tree,
@@ -245,23 +245,46 @@ fn bootstrap_initial_components(
                 component.clone(),
                 Rc::clone(&deferred_effects),
             );
-            if let Some(slot) = find_slot_mut(slots, &path) {
-                let rendered = slot
-                    .previous
-                    .clone()
-                    .expect("component slot must render on mount");
+            let rendered = find_slot_mut(slots, &path)
+                .and_then(|slot| slot.previous.clone())
+                .expect("component slot must render on mount");
+            let rendered_children = component_output_children(rendered.clone());
+            if rendered_children.len() == 1 {
+                let child = rendered_children.into_iter().next().expect("single child");
                 patches.push(Patch::ReplaceNode {
                     node: path.clone(),
-                    new_element: rendered,
+                    new_element: child.clone(),
                 });
+                bootstrap_initial_components(
+                    slots,
+                    &child,
+                    path.clone(),
+                    patches,
+                    Rc::clone(&deferred_effects),
+                );
+                patches.push(Patch::MountComponent {
+                    node: path,
+                    component: component.clone(),
+                });
+            } else {
+                // Multi-root or empty output must be mounted through the wrapper first so later
+                // child patches operate against the component wrapper instead of replacing it.
                 patches.push(Patch::MountComponent {
                     node: path.clone(),
                     component: component.clone(),
                 });
+                bootstrap_component_output(
+                    slots,
+                    rendered_children,
+                    path,
+                    patches,
+                    Rc::clone(&deferred_effects),
+                );
             }
         }
         Element::Column(container) | Element::Row(container) | Element::View(container) => {
-            for (index, child) in container.children.iter().enumerate() {
+            let children = crate::diff::flatten_children(container.children.clone());
+            for (index, child) in children.iter().enumerate() {
                 bootstrap_initial_components(
                     slots,
                     child,
@@ -272,6 +295,7 @@ fn bootstrap_initial_components(
             }
         }
         Element::Fragment(children) => {
+            let children = crate::diff::flatten_children(children.clone());
             for (index, child) in children.iter().enumerate() {
                 bootstrap_initial_components(
                     slots,
@@ -283,6 +307,44 @@ fn bootstrap_initial_components(
             }
         }
         _ => {}
+    }
+}
+
+/// Seeds the retained wrapper for a component that renders zero or multiple top-level children.
+fn bootstrap_component_output(
+    slots: &mut Vec<ComponentSlot>,
+    children: Vec<Element>,
+    path: NodePath,
+    patches: &mut Vec<Patch>,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+) {
+    match children.as_slice() {
+        [] => patches.push(Patch::RemoveChild {
+            parent: path,
+            index: 0,
+        }),
+        _ => {
+            patches.push(Patch::ReplaceNode {
+                node: path.child(0),
+                new_element: children[0].clone(),
+            });
+            for (index, child) in children.iter().enumerate().skip(1) {
+                patches.push(Patch::InsertChild {
+                    parent: path.clone(),
+                    index,
+                    element: child.clone(),
+                });
+            }
+            for (index, child) in children.iter().enumerate() {
+                bootstrap_initial_components(
+                    slots,
+                    child,
+                    path.child(index),
+                    patches,
+                    Rc::clone(&deferred_effects),
+                );
+            }
+        }
     }
 }
 
@@ -319,6 +381,11 @@ fn render_without_subscribing(slot: &ComponentSlot) -> Element {
 /// Re-render a slot for a parent-driven update without re-entering the slot's effect.
 fn sync_render(slot: &ComponentSlot) {
     *slot.pending.borrow_mut() = Some(render_without_subscribing(slot));
+}
+
+/// Returns the flattened top-level children produced by a component render.
+fn component_output_children(element: Element) -> Vec<Element> {
+    crate::diff::flatten_children(vec![element])
 }
 
 fn handle_component_pair(
@@ -383,6 +450,79 @@ fn handle_component_pair(
     }
 }
 
+/// Diffs a component render with fragment-aware flattening while preserving single-root paths.
+fn diff_component_output_slots(
+    slots: &mut Vec<ComponentSlot>,
+    old: Element,
+    new: Element,
+    path: NodePath,
+    patches: &mut Vec<Patch>,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+) {
+    let old_children = component_output_children(old);
+    let new_children = component_output_children(new);
+    match (old_children.as_slice(), new_children.as_slice()) {
+        ([old_child], [new_child]) => diff_with_nested_components(
+            slots,
+            old_child.clone(),
+            new_child.clone(),
+            path,
+            patches,
+            deferred_effects,
+        ),
+        _ => diff_component_output_children(
+            slots,
+            &old_children,
+            &new_children,
+            &path,
+            patches,
+            deferred_effects,
+        ),
+    }
+}
+
+/// Diffs flattened component output children, keeping the historical single-child path stable.
+fn diff_component_output_children(
+    slots: &mut Vec<ComponentSlot>,
+    old_children: &[Element],
+    new_children: &[Element],
+    parent: &NodePath,
+    patches: &mut Vec<Patch>,
+    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+) {
+    let min = old_children.len().min(new_children.len());
+    for i in 0..min {
+        let child_path = if i == 0 && old_children.len() == 1 {
+            parent.clone()
+        } else {
+            parent.child(i)
+        };
+        diff_with_nested_components(
+            slots,
+            old_children[i].clone(),
+            new_children[i].clone(),
+            child_path,
+            patches,
+            Rc::clone(&deferred_effects),
+        );
+    }
+
+    for (index, element) in new_children.iter().enumerate().skip(min) {
+        push_insert_child_slot(
+            slots,
+            element,
+            parent,
+            index,
+            patches,
+            Rc::clone(&deferred_effects),
+        );
+    }
+
+    for i in (min..old_children.len()).rev() {
+        push_remove_child_slot(slots, &old_children[i], parent, i, patches);
+    }
+}
+
 fn diff_container_props(
     old: &BoxElement,
     new: &BoxElement,
@@ -413,13 +553,15 @@ fn diff_children_slots(
     patches: &mut Vec<Patch>,
     deferred_effects: Rc<RefCell<Vec<Effect>>>,
 ) {
-    if crate::diff::children_are_fully_keyed(old_children)
-        && crate::diff::children_are_fully_keyed(new_children)
+    let old_children = crate::diff::flatten_children(old_children.to_vec());
+    let new_children = crate::diff::flatten_children(new_children.to_vec());
+    if crate::diff::children_are_fully_keyed(&old_children)
+        && crate::diff::children_are_fully_keyed(&new_children)
     {
         diff_children_slots_keyed(
             slots,
-            old_children,
-            new_children,
+            &old_children,
+            &new_children,
             parent,
             patches,
             deferred_effects,
@@ -427,8 +569,8 @@ fn diff_children_slots(
     } else {
         diff_children_slots_by_index(
             slots,
-            old_children,
-            new_children,
+            &old_children,
+            &new_children,
             parent,
             patches,
             deferred_effects,
@@ -1115,6 +1257,59 @@ mod tests {
         tree.apply_patches(rt.take_patches())
             .expect("apply_patches after remove");
         assert_eq!(tree.root.as_ref().unwrap().children[2].children.len(), 2);
+    }
+
+    #[test]
+    fn component_fragment_output_mounts_and_updates_in_retained_tree() {
+        use std::cell::RefCell;
+
+        use crate::element::builders::{Column, Component};
+        use crate::retained::RetainedTree;
+
+        thread_local! {
+            static LABELS: RefCell<Option<Signal<Vec<String>>>> = const { RefCell::new(None) };
+        }
+
+        fn list(_cx: &Cx) -> Element {
+            let labels = LABELS.with(|cell| cell.borrow().clone().expect("labels signal"));
+            Element::Fragment(
+                labels
+                    .get()
+                    .into_iter()
+                    .map(|label| Text::new(label).into_element())
+                    .collect(),
+            )
+        }
+
+        let labels = Signal::new(vec!["a".to_owned(), "b".to_owned()]);
+        LABELS.with(|cell| *cell.borrow_mut() = Some(labels.clone()));
+
+        let mut runtime = Runtime::new();
+        runtime.mount(|_cx| {
+            Column::new()
+                .child(Component::new(list).key(1))
+                .into_element()
+        });
+
+        let mut tree = RetainedTree::mount(runtime.root_element().expect("root")).expect("mount");
+        tree.apply_patches(runtime.take_patches())
+            .expect("bootstrap fragment component");
+
+        let wrapper = &tree.root.as_ref().expect("root").children[0];
+        assert_eq!(wrapper.children.len(), 2);
+        assert_eq!(wrapper.children[0].text_content(), Some("a"));
+        assert_eq!(wrapper.children[1].text_content(), Some("b"));
+
+        labels.set(vec!["a".to_owned(), "c".to_owned(), "d".to_owned()]);
+        runtime.flush_effects();
+        tree.apply_patches(runtime.take_patches())
+            .expect("update fragment component");
+
+        let wrapper = &tree.root.as_ref().expect("root").children[0];
+        assert_eq!(wrapper.children.len(), 3);
+        assert_eq!(wrapper.children[0].text_content(), Some("a"));
+        assert_eq!(wrapper.children[1].text_content(), Some("c"));
+        assert_eq!(wrapper.children[2].text_content(), Some("d"));
     }
 
     #[test]
