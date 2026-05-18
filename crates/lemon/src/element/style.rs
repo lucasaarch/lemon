@@ -378,7 +378,7 @@ impl PaintProps {
         PaintData {
             background: self.background.as_ref().map(|c| c.resolve()),
             background_gradient: self.background_gradient,
-            border_color: resolve_color_source_edges(&self.border_color),
+            border_color: resolve_color_edges(&self.border_color),
             border_width: self.border_width,
             radius: self.radius.clone(),
             box_shadow: self.box_shadow,
@@ -397,10 +397,6 @@ fn resolve_color_edges(edges: &Edges<Option<ColorSource>>) -> Edges<Option<Color
         bottom: edges.bottom.as_ref().map(ColorSource::resolve),
         left: edges.left.as_ref().map(ColorSource::resolve),
     }
-}
-
-fn resolve_color_source_edges(edges: &Edges<Option<ColorSource>>) -> Edges<Option<Color>> {
-    resolve_color_edges(edges)
 }
 
 #[derive(Clone, Debug, PartialEq)]

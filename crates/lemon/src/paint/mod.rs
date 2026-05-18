@@ -309,7 +309,7 @@ fn paint_box_shadow(
     shadow: crate::element::style::BoxShadow,
     stats: &mut PaintStats,
 ) {
-    if shadow.color.a <= 0.0 {
+    if shadow.color.a <= f32::EPSILON {
         return;
     }
 
