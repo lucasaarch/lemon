@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = []
-patch = ["lemon"]
-pre = true
-summary = "Add form example with TextInput, Scroll, and submit list flow"
