@@ -74,6 +74,18 @@ pub enum Patch {
     },
 }
 
+pub(crate) fn flatten_children(elements: Vec<Element>) -> Vec<Element> {
+    let mut flattened = Vec::with_capacity(elements.len());
+    for element in elements {
+        match element {
+            Element::Fragment(children) => flattened.extend(flatten_children(children)),
+            Element::None => {}
+            other => flattened.push(other),
+        }
+    }
+    flattened
+}
+
 pub fn diff(old: Element, new: Element, path: NodePath) -> Vec<Patch> {
     use Element::*;
     let mut patches = Vec::new();
@@ -98,6 +110,30 @@ pub fn diff(old: Element, new: Element, path: NodePath) -> Vec<Patch> {
         (Column(o), Column(n)) => diff_box(o, n, path, &mut patches),
         (Row(o), Row(n)) => diff_box(o, n, path, &mut patches),
         (View(o), View(n)) => diff_box(o, n, path, &mut patches),
+        (Fragment(old_children), Fragment(new_children)) => {
+            diff_children(
+                flatten_children(old_children),
+                flatten_children(new_children),
+                &path,
+                &mut patches,
+            );
+        }
+        (Fragment(old_children), new) => {
+            diff_children(
+                flatten_children(old_children),
+                flatten_children(vec![new]),
+                &path,
+                &mut patches,
+            );
+        }
+        (old, Fragment(new_children)) => {
+            diff_children(
+                flatten_children(vec![old]),
+                flatten_children(new_children),
+                &path,
+                &mut patches,
+            );
+        }
         (Component(o), Component(n)) => {
             if o.identity() == n.identity() && o.key() == n.key() {
                 patches.push(Patch::UpdateComponent {
@@ -236,6 +272,8 @@ fn diff_children(
     parent: &NodePath,
     patches: &mut Vec<Patch>,
 ) {
+    let old = flatten_children(old);
+    let new = flatten_children(new);
     if children_are_fully_keyed(&old) && children_are_fully_keyed(&new) {
         diff_children_keyed(old, new, parent, patches);
     } else {
@@ -351,10 +389,16 @@ fn diff_children_keyed(
 
 fn push_insert_child(element: Element, parent: &NodePath, index: usize, patches: &mut Vec<Patch>) {
     match element {
+        Element::Fragment(children) => {
+            for (offset, child) in flatten_children(children).into_iter().enumerate() {
+                push_insert_child(child, parent, index + offset, patches);
+            }
+        }
         Element::Component(component) => patches.push(Patch::MountComponent {
             node: parent.child(index),
             component,
         }),
+        Element::None => {}
         element => patches.push(Patch::InsertChild {
             parent: parent.clone(),
             index,
@@ -365,9 +409,16 @@ fn push_insert_child(element: Element, parent: &NodePath, index: usize, patches:
 
 fn push_remove_child(element: &Element, parent: &NodePath, index: usize, patches: &mut Vec<Patch>) {
     match element {
+        Element::Fragment(children) => {
+            let flattened = flatten_children(children.clone());
+            for (offset, child) in flattened.iter().enumerate().rev() {
+                push_remove_child(child, parent, index + offset, patches);
+            }
+        }
         Element::Component(_) => patches.push(Patch::UnmountComponent {
             node: parent.child(index),
         }),
+        Element::None => {}
         _ => patches.push(Patch::RemoveChild {
             parent: parent.clone(),
             index,
@@ -745,6 +796,26 @@ mod tests {
             patches.first(),
             Some(Patch::RemoveChild { index: 1, .. })
         ));
+    }
+
+    #[test]
+    fn fragment_children_are_flattened_before_diffing() {
+        let old = Column::new()
+            .child(Element::Fragment(vec![txt("a"), txt("b")]))
+            .into_element();
+        let new = Column::new()
+            .child(Element::Fragment(vec![txt("a"), txt("c"), txt("d")]))
+            .into_element();
+
+        let patches = diff(old, new, NodePath::root());
+
+        assert!(patches.iter().any(|patch| matches!(
+            patch,
+            Patch::UpdateText { node, content } if node.0 == [1] && content == "c"
+        )));
+        assert!(patches
+            .iter()
+            .any(|patch| matches!(patch, Patch::InsertChild { index: 2, .. })));
     }
 
     #[test]

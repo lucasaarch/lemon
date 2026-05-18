@@ -223,6 +223,18 @@ pub struct RetainedTree {
     pub layout_dirty: bool,
 }
 
+fn flatten_elements(elements: Vec<Element>) -> Vec<Element> {
+    let mut flattened = Vec::with_capacity(elements.len());
+    for element in elements {
+        match element {
+            Element::Fragment(children) => flattened.extend(flatten_elements(children)),
+            Element::None => {}
+            other => flattened.push(other),
+        }
+    }
+    flattened
+}
+
 impl RetainedTree {
     /// Returns true if any text node still needs a layout pass (e.g. after `UpdateText`).
     pub fn text_needs_reflow(&self) -> bool {
@@ -298,8 +310,9 @@ impl RetainedTree {
             scroll_viewport,
             scroll_bar,
         } = node;
-        let mut children = Vec::with_capacity(node_children.len());
-        for child in node_children {
+        let flat_children = flatten_elements(node_children);
+        let mut children = Vec::with_capacity(flat_children.len());
+        for child in flat_children {
             children.push(self.build_node(child)?);
         }
 
@@ -310,10 +323,10 @@ impl RetainedTree {
             _ => style.flex_direction,
         };
 
-        let child_ids: Vec<_> = children
-            .iter()
-            .filter_map(|child| child.layout_node_id())
-            .collect();
+        let mut child_ids = Vec::new();
+        for child in &children {
+            collect_direct_layout_ids(child, &mut child_ids);
+        }
         let taffy_id = self.taffy.new_with_children(style, &child_ids)?;
 
         let mut retained = RetainedNode {
@@ -483,27 +496,13 @@ impl RetainedTree {
                 element,
             } => {
                 let child = self.build_node(element)?;
-                let parent_id = self
-                    .node_mut(&parent)?
-                    .layout_node_id()
-                    .ok_or_else(|| RetainedError::InvalidNodePath(parent.clone()))?;
-                let child_id = child
-                    .layout_node_id()
-                    .ok_or(RetainedError::UnsupportedElement(
-                        "child without layout node",
-                    ))?;
-                self.taffy
-                    .insert_child_at_index(parent_id, index, child_id)?;
-                self.node_mut(&parent)?.children.insert(index, child);
+                self.node_mut_exact(&parent)?.children.insert(index, child);
+                self.sync_layout_children(&parent)?;
             }
             Patch::RemoveChild { parent, index } => {
-                let parent_id = self
-                    .node_mut(&parent)?
-                    .layout_node_id()
-                    .ok_or_else(|| RetainedError::InvalidNodePath(parent.clone()))?;
-                let removed = self.node_mut(&parent)?.children.remove(index);
-                self.taffy.remove_child_at_index(parent_id, index)?;
+                let removed = self.node_mut_exact(&parent)?.children.remove(index);
                 self.remove_subtree_from_taffy(removed)?;
+                self.sync_layout_children(&parent)?;
             }
             Patch::ReplaceNode { node, new_element } => {
                 self.replace_node(node, new_element)?;
@@ -534,6 +533,14 @@ impl RetainedTree {
             .ok_or_else(|| RetainedError::InvalidNodePath(path.clone()))
     }
 
+    fn node_exact(&self, path: &NodePath) -> Result<&RetainedNode, RetainedError> {
+        let root = self
+            .root
+            .as_ref()
+            .ok_or_else(|| RetainedError::InvalidNodePath(path.clone()))?;
+        node_from_exact(root, &path.0).ok_or_else(|| RetainedError::InvalidNodePath(path.clone()))
+    }
+
     fn replace_node(&mut self, path: NodePath, new_element: Element) -> Result<(), RetainedError> {
         let replacement = self.build_node(new_element)?;
 
@@ -545,24 +552,12 @@ impl RetainedTree {
         }
 
         let (parent_path, index) = split_parent_path(&path)?;
-        let parent_id = self
-            .node_mut(&parent_path)?
-            .layout_node_id()
-            .ok_or_else(|| RetainedError::InvalidNodePath(parent_path.clone()))?;
-        let removed = self.node_mut(&parent_path)?.children.remove(index);
-        self.taffy.remove_child_at_index(parent_id, index)?;
-        self.remove_subtree_from_taffy(removed)?;
-        let replacement_id =
-            replacement
-                .layout_node_id()
-                .ok_or(RetainedError::UnsupportedElement(
-                    "replacement without layout node",
-                ))?;
-        self.taffy
-            .insert_child_at_index(parent_id, index, replacement_id)?;
-        self.node_mut(&parent_path)?
+        let removed = self.node_mut_exact(&parent_path)?.children.remove(index);
+        self.node_mut_exact(&parent_path)?
             .children
             .insert(index, replacement);
+        self.remove_subtree_from_taffy(removed)?;
+        self.sync_layout_children(&parent_path)?;
         Ok(())
     }
 
@@ -580,28 +575,12 @@ impl RetainedTree {
         }
 
         let (parent_path, index) = split_parent_path(&path)?;
-        let removed = self.node_mut(&parent_path)?.children.remove(index);
+        let removed = self.node_mut_exact(&parent_path)?.children.remove(index);
         wrapper.children.push(removed);
-
-        let parent_id = self
-            .node_mut(&parent_path)?
-            .layout_node_id()
-            .ok_or_else(|| RetainedError::InvalidNodePath(parent_path.clone()))?;
-
-        if let Some(child_id) = wrapper.children[0].layout_node_id() {
-            // `ReplaceNode` (bootstrap) already attached the subtree to `parent_id`. Re-inserting
-            // detaches the node in Taffy 0.7 while leaving retained children intact.
-            let needs_insert = match self.taffy.parent(child_id) {
-                None => true,
-                Some(existing_parent) => existing_parent != parent_id,
-            };
-            if needs_insert {
-                self.taffy
-                    .insert_child_at_index(parent_id, index, child_id)?;
-            }
-        }
-
-        self.node_mut(&parent_path)?.children.insert(index, wrapper);
+        self.node_mut_exact(&parent_path)?
+            .children
+            .insert(index, wrapper);
+        self.sync_layout_children(&parent_path)?;
         Ok(())
     }
 
@@ -620,37 +599,17 @@ impl RetainedTree {
         }
 
         let (parent_path, index) = split_parent_path(&path)?;
-        let removed = self.node_mut(&parent_path)?.children.remove(index);
+        let removed = self.node_mut_exact(&parent_path)?.children.remove(index);
         let RetainedKind::Component { .. } = removed.kind else {
             return Err(RetainedError::InvalidNodePath(path));
         };
 
-        let parent_id = self
-            .node_mut(&parent_path)?
-            .layout_node_id()
-            .ok_or_else(|| RetainedError::InvalidNodePath(parent_path.clone()))?;
-        self.taffy.remove_child_at_index(parent_id, index)?;
-
-        let mut children = removed.children;
-        if children.len() == 1 {
-            let child = children.remove(0);
-            if let Some(child_id) = child.layout_node_id() {
-                self.taffy
-                    .insert_child_at_index(parent_id, index, child_id)?;
-            }
-            self.node_mut(&parent_path)?.children.insert(index, child);
-        } else {
-            for (offset, child) in children.into_iter().enumerate() {
-                if let Some(child_id) = child.layout_node_id() {
-                    self.taffy
-                        .insert_child_at_index(parent_id, index + offset, child_id)?;
-                }
-                self.node_mut(&parent_path)?
-                    .children
-                    .insert(index + offset, child);
-            }
+        for (offset, child) in removed.children.into_iter().enumerate() {
+            self.node_mut_exact(&parent_path)?
+                .children
+                .insert(index + offset, child);
         }
-
+        self.sync_layout_children(&parent_path)?;
         Ok(())
     }
 
@@ -660,22 +619,42 @@ impl RetainedTree {
         from: usize,
         to: usize,
     ) -> Result<(), RetainedError> {
-        let parent_id = self
-            .node_mut(&parent)?
-            .layout_node_id()
-            .ok_or_else(|| RetainedError::InvalidNodePath(parent.clone()))?;
-        let child_ids = {
-            let parent_node = self.node_mut(&parent)?;
-            let child = parent_node.children.remove(from);
-            parent_node.children.insert(to, child);
-            parent_node
-                .children
-                .iter()
-                .filter_map(|child| child.layout_node_id())
-                .collect::<Vec<_>>()
-        };
-        self.taffy.set_children(parent_id, &child_ids)?;
+        let parent_node = self.node_mut_exact(&parent)?;
+        let child = parent_node.children.remove(from);
+        parent_node.children.insert(to, child);
+        self.sync_layout_children(&parent)?;
         Ok(())
+    }
+
+    fn sync_layout_children(&mut self, path: &NodePath) -> Result<(), RetainedError> {
+        let Some(owner_path) = self.layout_owner_path(path)? else {
+            return Ok(());
+        };
+        let owner_id = self
+            .node_exact(&owner_path)?
+            .taffy_id
+            .ok_or_else(|| RetainedError::InvalidNodePath(owner_path.clone()))?;
+        let mut child_ids = Vec::new();
+        for child in &self.node_exact(&owner_path)?.children {
+            collect_direct_layout_ids(child, &mut child_ids);
+        }
+        self.taffy.set_children(owner_id, &child_ids)?;
+        Ok(())
+    }
+
+    fn layout_owner_path(&self, path: &NodePath) -> Result<Option<NodePath>, RetainedError> {
+        let mut current = Some(path.clone());
+        while let Some(candidate) = current {
+            if self.node_exact(&candidate)?.taffy_id.is_some() {
+                return Ok(Some(candidate));
+            }
+            current = if candidate.0.is_empty() {
+                None
+            } else {
+                Some(NodePath(candidate.0[..candidate.0.len() - 1].to_vec()))
+            };
+        }
+        Ok(None)
     }
 
     fn remove_subtree_from_taffy(&mut self, node: RetainedNode) -> Result<(), RetainedError> {
@@ -856,6 +835,25 @@ fn node_mut_from_exact<'a>(
     let (index, rest) = path.split_first()?;
     let child = node.children.get_mut(*index)?;
     node_mut_from_exact(child, rest)
+}
+
+fn node_from_exact<'a>(node: &'a RetainedNode, path: &[usize]) -> Option<&'a RetainedNode> {
+    if path.is_empty() {
+        return Some(node);
+    }
+    let (index, rest) = path.split_first()?;
+    let child = node.children.get(*index)?;
+    node_from_exact(child, rest)
+}
+
+fn collect_direct_layout_ids(node: &RetainedNode, child_ids: &mut Vec<NodeId>) {
+    if let Some(taffy_id) = node.taffy_id {
+        child_ids.push(taffy_id);
+        return;
+    }
+    for child in &node.children {
+        collect_direct_layout_ids(child, child_ids);
+    }
 }
 
 fn split_parent_path(path: &NodePath) -> Result<(NodePath, usize), RetainedError> {
@@ -1288,6 +1286,26 @@ mod tests {
         assert!(matches!(root.children[0].kind, RetainedKind::Column));
         assert_eq!(root.children[0].children[0].text_content(), Some("new"));
         assert_eq!(root.children[1].text_content(), Some("keep"));
+    }
+
+    #[test]
+    fn fragment_children_mount_into_retained_tree() {
+        use crate::element::Element;
+
+        let tree = RetainedTree::mount(
+            Column::new()
+                .child(Element::Fragment(vec![
+                    Text::new("a").into_element(),
+                    Text::new("b").into_element(),
+                ]))
+                .into_element(),
+        )
+        .expect("fragment children should mount");
+
+        let root = tree.root.as_ref().expect("root");
+        assert_eq!(root.children.len(), 2);
+        assert_eq!(root.children[0].text_content(), Some("a"));
+        assert_eq!(root.children[1].text_content(), Some("b"));
     }
 
     #[test]
