@@ -61,28 +61,20 @@ impl TextFieldState {
                     self.cursor += ch.len_utf8();
                 }
             }
-            LemonKey::Named(NamedKey::Backspace) => {
-                if self.cursor > 0 {
-                    let prev = self.prev_char_boundary(self.cursor);
-                    self.value.drain(prev..self.cursor);
-                    self.cursor = prev;
-                }
+            LemonKey::Named(NamedKey::Backspace) if self.cursor > 0 => {
+                let prev = self.prev_char_boundary(self.cursor);
+                self.value.drain(prev..self.cursor);
+                self.cursor = prev;
             }
-            LemonKey::Named(NamedKey::Delete) => {
-                if self.cursor < self.value.len() {
-                    let next = self.next_char_boundary(self.cursor);
-                    self.value.drain(self.cursor..next);
-                }
+            LemonKey::Named(NamedKey::Delete) if self.cursor < self.value.len() => {
+                let next = self.next_char_boundary(self.cursor);
+                self.value.drain(self.cursor..next);
             }
-            LemonKey::Named(NamedKey::ArrowLeft) => {
-                if self.cursor > 0 {
-                    self.cursor = self.prev_char_boundary(self.cursor);
-                }
+            LemonKey::Named(NamedKey::ArrowLeft) if self.cursor > 0 => {
+                self.cursor = self.prev_char_boundary(self.cursor);
             }
-            LemonKey::Named(NamedKey::ArrowRight) => {
-                if self.cursor < self.value.len() {
-                    self.cursor = self.next_char_boundary(self.cursor);
-                }
+            LemonKey::Named(NamedKey::ArrowRight) if self.cursor < self.value.len() => {
+                self.cursor = self.next_char_boundary(self.cursor);
             }
             LemonKey::Named(NamedKey::Home) => self.cursor = 0,
             LemonKey::Named(NamedKey::End) => self.cursor = self.value.len(),
