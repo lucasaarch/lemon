@@ -55,9 +55,9 @@ impl std::error::Error for ImageError {}
 impl ImageHandle {
     /// Decode `bytes` as a PNG or JPEG image and return an `ImageHandle`.
     ///
-    /// The bytes are decoded into RGBA8 format regardless of the source colour
+    /// The bytes are decoded into RGBA8 format regardless of the source color
     /// space or channel count. Returns [`ImageError`] if the data is not a
-    /// recognised image format or is malformed.
+    /// recognized image format or is malformed.
     ///
     /// # Errors
     ///
@@ -107,7 +107,19 @@ impl ImageHandle {
     /// Wrap an existing [`Arc<ImageData>`] in an `ImageHandle`.
     ///
     /// Useful in tests and in the paint layer where decoded pixel data is
-    /// already available in an `Arc`.
+    /// already available in an `Arc`. Both resulting handles share the same
+    /// backing allocation, so they compare equal.
+    ///
+    /// ```
+    /// use lemon::ImageHandle;
+    /// use lemon::asset::image_handle::ImageData;
+    /// use std::sync::Arc;
+    ///
+    /// let data = Arc::new(ImageData { width: 2, height: 2, pixels: vec![0u8; 16] });
+    /// let handle = ImageHandle::from_arc(data);
+    /// assert_eq!(handle.width(), 2);
+    /// assert_eq!(handle.height(), 2);
+    /// ```
     pub fn from_arc(data: Arc<ImageData>) -> Self {
         Self(data)
     }
@@ -140,28 +152,24 @@ impl std::fmt::Debug for ImageHandle {
 mod tests {
     use super::*;
 
-    /// Smallest valid 1×1 RGBA PNG (hand-crafted bytes).
+    /// Generate a valid 1×1 white RGBA PNG using the `image` crate encoder.
     fn minimal_rgba_png() -> Vec<u8> {
-        vec![
-            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
-            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR length + type
-            0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // 1×1
-            0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89, // depth 8, RGBA, CRC
-            0x00, 0x00, 0x00, 0x0B, 0x49, 0x44, 0x41, 0x54, // IDAT length + type
-            0x78, 0x9C, 0x62, 0xF8, 0xFF, 0xFF, 0xFF, 0x00, 0x05, 0xFE, 0x02, 0xFE, 0xDC, 0xCC,
-            0x59, 0xE7, // IDAT CRC
-            0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82, // IEND
-        ]
+        use image::{ImageBuffer, ImageFormat, Rgba};
+        let img: ImageBuffer<Rgba<u8>, Vec<u8>> =
+            ImageBuffer::from_pixel(1, 1, Rgba([255u8, 255, 255, 255]));
+        let mut buf = Vec::new();
+        img.write_to(&mut std::io::Cursor::new(&mut buf), ImageFormat::Png)
+            .expect("in-memory PNG encode should not fail");
+        buf
     }
 
     #[test]
     fn from_bytes_decodes_png() {
-        let handle = ImageHandle::from_bytes(&minimal_rgba_png());
-        // The hand-crafted bytes may or may not decode correctly depending on
-        // zlib details. We only require that the function compiles and runs
-        // without a panic; the invalid-bytes test is the authoritative
-        // correctness check.
-        let _ = handle;
+        let handle = ImageHandle::from_bytes(&minimal_rgba_png())
+            .expect("hand-crafted 1×1 RGBA PNG should decode successfully");
+        assert_eq!(handle.width(), 1);
+        assert_eq!(handle.height(), 1);
+        assert_eq!(handle.pixels().len(), 4, "1×1 RGBA image has 4 bytes");
     }
 
     #[test]
