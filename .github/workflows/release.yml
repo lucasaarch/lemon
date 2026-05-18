@@ -21,7 +21,7 @@ jobs:
 
       - name: Publish crates
         id: publish
-        uses: lucasaarch/cvm-action@v1
+        uses: lucasaarch/cvm-action@v1.0.1
         with:
           command: "publish"
         env:
