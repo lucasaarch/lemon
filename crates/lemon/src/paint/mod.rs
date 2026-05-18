@@ -259,16 +259,76 @@ fn paint_container(
     }
 
     if let Some(border_color) = node.paint.border_color {
-        if node.paint.border_width > 0.0 {
-            stroke_rounded_rect(
-                scene,
-                ctx,
-                &shape,
-                border_color,
-                f64::from(node.paint.border_width),
-                stats,
-            );
+        let widths = &node.paint.border_width;
+        if widths.any_positive() {
+            if widths.is_uniform() {
+                stroke_rounded_rect(
+                    scene,
+                    ctx,
+                    &shape,
+                    border_color,
+                    f64::from(widths.top),
+                    stats,
+                );
+            } else {
+                paint_per_side_borders(
+                    scene,
+                    ctx,
+                    rect,
+                    &node.paint.radius,
+                    *widths,
+                    border_color,
+                    stats,
+                );
+            }
         }
+    }
+}
+
+/// Fills rectangular strips for each side that has a positive border width.
+fn paint_per_side_borders(
+    scene: &mut Scene,
+    ctx: PaintContext,
+    rect: &LayoutRect,
+    radii: &CornerRadii,
+    widths: Edges<f32>,
+    color: Color,
+    stats: &mut PaintStats,
+) {
+    let brush = to_peniko_color(color);
+    let x = f64::from(rect.x);
+    let y = f64::from(rect.y);
+    let w = f64::from(rect.width);
+    let h = f64::from(rect.height);
+
+    let tl = f64::from(radii.top_left.min(rect.width * 0.5));
+    let tr = f64::from(radii.top_right.min(rect.width * 0.5));
+    let br = f64::from(radii.bottom_right.min(rect.width * 0.5));
+    let bl = f64::from(radii.bottom_left.min(rect.width * 0.5));
+
+    if widths.top > 0.0 {
+        let t = f64::from(widths.top);
+        let bar = Rect::new(x + tl, y, x + w - tr, y + t);
+        scene.fill(Fill::NonZero, ctx.base, brush, None, &bar);
+        stats.fills += 1;
+    }
+    if widths.bottom > 0.0 {
+        let b = f64::from(widths.bottom);
+        let bar = Rect::new(x + bl, y + h - b, x + w - br, y + h);
+        scene.fill(Fill::NonZero, ctx.base, brush, None, &bar);
+        stats.fills += 1;
+    }
+    if widths.left > 0.0 {
+        let l = f64::from(widths.left);
+        let bar = Rect::new(x, y + tl, x + l, y + h - bl);
+        scene.fill(Fill::NonZero, ctx.base, brush, None, &bar);
+        stats.fills += 1;
+    }
+    if widths.right > 0.0 {
+        let r = f64::from(widths.right);
+        let bar = Rect::new(x + w - r, y + tr, x + w, y + h - br);
+        scene.fill(Fill::NonZero, ctx.base, brush, None, &bar);
+        stats.fills += 1;
     }
 }
 
@@ -545,7 +605,7 @@ fn paint_text_input_caret(
     let text_rect = text_node
         .and_then(|n| n.taffy_id.and_then(|id| layout.get(id).copied()))
         .unwrap_or_else(|| {
-            let padding = node.style.padding.clone().unwrap_or_default();
+            let padding = node.style.padding.unwrap_or_default();
             inset_rect(&field_rect, &padding)
         });
     let text_style = text_node
@@ -820,6 +880,23 @@ mod tests {
 
         assert_eq!(stats.fills, 0);
         assert_eq!(stats.strokes, 1);
+    }
+
+    #[test]
+    fn container_border_top_only_paints_one_side() {
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(100.0)
+                .height(80.0)
+                .border_top(Color::rgb8(255, 0, 0), 2.0)
+                .into_element(),
+        )
+        .unwrap();
+
+        let stats = layout_and_paint(&mut tree, 1.0);
+
+        assert_eq!(stats.fills, 1, "top border strip is a fill");
+        assert_eq!(stats.strokes, 0);
     }
 
     #[test]

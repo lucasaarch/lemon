@@ -141,13 +141,117 @@ macro_rules! container_builder {
                 self.0.paint.background = Some(c.into());
                 self
             }
+            /// Border color and uniform width on all sides, in logical points.
             pub fn border(mut self, color: Color, width: f32) -> Self {
                 self.0.paint.border_color = Some(ColorSource::Static(color));
-                self.0.paint.border_width = width;
+                self.0.paint.border_width = Edges::all(width);
                 self
             }
+            /// Border on the top side only (sets color and width for that side).
+            pub fn border_top(mut self, color: Color, width: f32) -> Self {
+                self.0.paint.border_color = Some(ColorSource::Static(color));
+                self.0.paint.border_width.top = width;
+                self
+            }
+            /// Border on the right side only.
+            pub fn border_right(mut self, color: Color, width: f32) -> Self {
+                self.0.paint.border_color = Some(ColorSource::Static(color));
+                self.0.paint.border_width.right = width;
+                self
+            }
+            /// Border on the bottom side only.
+            pub fn border_bottom(mut self, color: Color, width: f32) -> Self {
+                self.0.paint.border_color = Some(ColorSource::Static(color));
+                self.0.paint.border_width.bottom = width;
+                self
+            }
+            /// Border on the left side only.
+            pub fn border_left(mut self, color: Color, width: f32) -> Self {
+                self.0.paint.border_color = Some(ColorSource::Static(color));
+                self.0.paint.border_width.left = width;
+                self
+            }
+            /// Border on the left and right sides.
+            pub fn border_x(mut self, color: Color, width: f32) -> Self {
+                self.0.paint.border_color = Some(ColorSource::Static(color));
+                self.0.paint.border_width.left = width;
+                self.0.paint.border_width.right = width;
+                self
+            }
+            /// Border on the top and bottom sides.
+            pub fn border_y(mut self, color: Color, width: f32) -> Self {
+                self.0.paint.border_color = Some(ColorSource::Static(color));
+                self.0.paint.border_width.top = width;
+                self.0.paint.border_width.bottom = width;
+                self
+            }
+            /// Top border width only (other sides unchanged; set [`border`](Self::border) color first).
+            pub fn border_width_top(mut self, width: f32) -> Self {
+                self.0.paint.border_width.top = width;
+                self
+            }
+            /// Right border width only.
+            pub fn border_width_right(mut self, width: f32) -> Self {
+                self.0.paint.border_width.right = width;
+                self
+            }
+            /// Bottom border width only.
+            pub fn border_width_bottom(mut self, width: f32) -> Self {
+                self.0.paint.border_width.bottom = width;
+                self
+            }
+            /// Left border width only.
+            pub fn border_width_left(mut self, width: f32) -> Self {
+                self.0.paint.border_width.left = width;
+                self
+            }
+            /// Uniform corner radius on all four corners, in logical points.
             pub fn radius(mut self, r: f32) -> Self {
                 self.0.paint.radius = CornerRadii::all(r);
+                self
+            }
+            /// Top-left corner radius only.
+            pub fn radius_top_left(mut self, r: f32) -> Self {
+                self.0.paint.radius.top_left = r;
+                self
+            }
+            /// Top-right corner radius only.
+            pub fn radius_top_right(mut self, r: f32) -> Self {
+                self.0.paint.radius.top_right = r;
+                self
+            }
+            /// Bottom-right corner radius only.
+            pub fn radius_bottom_right(mut self, r: f32) -> Self {
+                self.0.paint.radius.bottom_right = r;
+                self
+            }
+            /// Bottom-left corner radius only.
+            pub fn radius_bottom_left(mut self, r: f32) -> Self {
+                self.0.paint.radius.bottom_left = r;
+                self
+            }
+            /// Radius on both top corners (left and right).
+            pub fn radius_top(mut self, r: f32) -> Self {
+                self.0.paint.radius.top_left = r;
+                self.0.paint.radius.top_right = r;
+                self
+            }
+            /// Radius on both bottom corners.
+            pub fn radius_bottom(mut self, r: f32) -> Self {
+                self.0.paint.radius.bottom_left = r;
+                self.0.paint.radius.bottom_right = r;
+                self
+            }
+            /// Radius on both left corners (top and bottom).
+            pub fn radius_left(mut self, r: f32) -> Self {
+                self.0.paint.radius.top_left = r;
+                self.0.paint.radius.bottom_left = r;
+                self
+            }
+            /// Radius on both right corners (top and bottom).
+            pub fn radius_right(mut self, r: f32) -> Self {
+                self.0.paint.radius.top_right = r;
+                self.0.paint.radius.bottom_right = r;
                 self
             }
             /// Sets an image to draw inside this container using object-fit: contain scaling.
@@ -722,6 +826,34 @@ mod tests {
         assert_eq!(m.right, 5.0);
         assert_eq!(m.bottom, 5.0);
         assert_eq!(m.left, 5.0);
+    }
+
+    #[test]
+    fn border_top_does_not_overwrite_other_sides() {
+        let Element::Column(el) = Column::new()
+            .border(Color::rgb8(1, 2, 3), 5.0)
+            .border_top(Color::rgb8(1, 2, 3), 2.0)
+            .into_element()
+        else {
+            panic!()
+        };
+        let b = el.paint.border_width;
+        assert_eq!(b.top, 2.0);
+        assert_eq!(b.right, 5.0);
+        assert_eq!(b.bottom, 5.0);
+        assert_eq!(b.left, 5.0);
+    }
+
+    #[test]
+    fn radius_top_sets_both_top_corners() {
+        let Element::Column(el) = Column::new().radius(4.0).radius_top(12.0).into_element() else {
+            panic!()
+        };
+        let r = el.paint.radius;
+        assert_eq!(r.top_left, 12.0);
+        assert_eq!(r.top_right, 12.0);
+        assert_eq!(r.bottom_right, 4.0);
+        assert_eq!(r.bottom_left, 4.0);
     }
 
     #[test]

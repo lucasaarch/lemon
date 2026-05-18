@@ -189,7 +189,7 @@ impl RetainedNode {
             paint: PaintData {
                 background: None,
                 border_color: None,
-                border_width: 0.0,
+                border_width: Edges::default(),
                 radius: CornerRadii::default(),
                 image: None,
                 scroll_track_color: None,

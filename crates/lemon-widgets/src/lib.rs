@@ -278,7 +278,7 @@ mod text_input_tests {
             "TextInput must always have a border color"
         );
         assert!(
-            view.paint.border_width > 0.0,
+            view.paint.border_width.any_positive(),
             "TextInput must have a non-zero border width"
         );
     }
