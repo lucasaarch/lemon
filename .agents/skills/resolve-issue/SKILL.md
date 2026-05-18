@@ -145,10 +145,10 @@ After implementation and validation succeed, stage a version bump using [CVM](ht
 
 #### 8.1 Install `cvm_cli`
 
-Requires **cvm_cli 1.1.1+** (non-interactive `--crate` / `--bump` / `--summary`, workspace `version.workspace = true` apply).
+Requires **cvm_cli 1.1.2+** (non-interactive `--crate` / `--bump` / `--summary`, workspace `version.workspace = true` apply).
 
 ```bash
-cargo install cvm_cli --version 1.1.1 --locked
+cargo install cvm_cli --version 1.1.2 --locked
 ```
 
 Verify:
@@ -316,7 +316,7 @@ cargo check --workspace
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
-cargo install cvm_cli --version 1.1.1 --locked
+cargo install cvm_cli --version 1.1.2 --locked
 cvm --crate lemon --crate lemon-widgets --bump patch --summary "<effective one-line changelog>"
 cvm status
 git add .cvm/changes/ <files>
