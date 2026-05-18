@@ -8,4 +8,4 @@
 
 pub use lemon::prelude::*;
 
-pub use crate::{Image, Scroll, Select, TextFieldState, TextInput};
+pub use crate::{Image, Scroll, Select, Slider, TextFieldState, TextInput};
