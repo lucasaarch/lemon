@@ -5,6 +5,11 @@ use std::any::Any;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
+/// Reactive context passed to your root view and to [`Component`](crate::element::builders::Component) views.
+///
+/// Call hook methods in a **fixed order** on every render (same rules as React hooks).
+/// Use [`use_signal`](Self::use_signal) for mutable app state and [`use_effect`](Self::use_effect) for
+/// side effects that should run after mount or when tracked signals change.
 pub struct Cx {
     hooks: RefCell<Vec<Box<dyn Any>>>,
     index: Cell<usize>,
@@ -29,6 +34,10 @@ impl Cx {
         self.index.set(0);
     }
 
+    /// Returns persistent reactive state for this component instance.
+    ///
+    /// The same hook index on later renders returns the same [`Signal`]; changing hook order
+    /// between renders will panic.
     pub fn use_signal<T: Clone + 'static>(&self, initial: T) -> Signal<T> {
         let idx = self.index.get();
         self.index.set(idx + 1);
@@ -45,6 +54,7 @@ impl Cx {
         }
     }
 
+    /// Cached value recomputed only when signals read inside `f` change.
     pub fn use_memo<T: Clone + PartialEq + 'static>(
         &self,
         f: impl Fn() -> T + 'static,
@@ -64,6 +74,10 @@ impl Cx {
         }
     }
 
+    /// Registers a side effect. The closure runs once after the first paint, then again when
+    /// any signal read inside it changes.
+    ///
+    /// Do not call hooks inside the effect body.
     pub fn use_effect(&self, f: impl Fn() + 'static) {
         let idx = self.index.get();
         self.index.set(idx + 1);

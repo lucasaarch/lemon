@@ -61,6 +61,7 @@ impl PartialEq for TextCache {
     }
 }
 
+/// Input callbacks attached to a retained node (populated from container builders).
 #[derive(Clone, Default)]
 pub struct EventHandlers {
     pub on_click: Option<Rc<dyn Fn()>>,
@@ -68,6 +69,7 @@ pub struct EventHandlers {
     pub on_key_up: Option<Rc<dyn Fn(crate::element::events::KeyEvent)>>,
     pub on_hover_enter: Option<Rc<dyn Fn()>>,
     pub on_hover_leave: Option<Rc<dyn Fn()>>,
+    /// Vertical wheel delta in logical pixels; set via [`.on_scroll`](crate::element::builders::Column::on_scroll).
     pub on_scroll: Option<Rc<dyn Fn(f64)>>,
 }
 
@@ -165,14 +167,23 @@ impl RetainedNode {
     }
 }
 
+/// Mutable UI tree synchronized with Taffy layout nodes and Vello paint data.
+///
+/// Built from an [`Element`] via [`mount`](Self::mount), then updated with
+/// patches from [`Runtime::take_patches`](crate::Runtime::take_patches). [`run`](crate::platform::run)
+/// manages this internally; use it directly in integration tests or custom hosts.
 #[derive(Debug)]
 pub struct RetainedTree {
+    /// Shared Taffy tree backing flex layout for this UI.
     pub taffy: TaffyTree<()>,
+    /// Root retained node, if [`mount`](Self::mount) succeeded.
     pub root: Option<RetainedNode>,
+    /// When `true`, [`layout_pass`](crate::layout::layout_pass) should run before painting.
     pub layout_dirty: bool,
 }
 
 impl RetainedTree {
+    /// Empty tree with no root node.
     pub fn new() -> Self {
         Self {
             taffy: TaffyTree::new(),
@@ -181,6 +192,7 @@ impl RetainedTree {
         }
     }
 
+    /// Builds the initial retained tree from a frozen element tree (e.g. [`Runtime::root_element`](crate::Runtime::root_element)).
     pub fn mount(element: Element) -> Result<Self, RetainedError> {
         let mut tree = Self::new();
         let root = tree.build_node(element)?;
@@ -189,6 +201,7 @@ impl RetainedTree {
         Ok(tree)
     }
 
+    /// Applies a batch of diff patches and marks layout dirty.
     pub fn apply_patches(
         &mut self,
         patches: impl IntoIterator<Item = Patch>,

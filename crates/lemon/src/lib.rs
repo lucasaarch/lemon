@@ -1,3 +1,52 @@
+//! Lemon — reactive native desktop UI in Rust.
+//!
+//! # Getting started
+//!
+//! Most apps only need [`run`], [`WindowConfig`], [`Cx`], and the layout widgets
+//! ([`Column`], [`Row`], [`Text`], [`Button`], …) re-exported below.
+//!
+//! ```no_run
+//! use lemon::{run, Cx, WindowConfig};
+//! use lemon::{Button, Column, Text};
+//!
+//! fn app(cx: &Cx) -> lemon::element::Element {
+//!     let count = cx.use_signal(0i32);
+//!     let label = count.clone();
+//!     let inc = count.clone();
+//!     Column::new()
+//!         .child(Text::new(move || label.get().to_string()))
+//!         .child(Button::new("+").on_click(move || inc.update(|n| *n += 1)))
+//!         .into_element()
+//! }
+//!
+//! fn main() {
+//!     run(WindowConfig::default().title("Counter"), app);
+//! }
+//! ```
+//!
+//! # How an update flows
+//!
+//! 1. Your root function (`app`) returns an [`element::Element`] tree built with builders.
+//! 2. [`Cx::use_signal`] and dynamic [`Text::new`] closures subscribe to reactive state.
+//! 3. When state changes, the runtime diffs the previous tree against the new one and emits patches.
+//! 4. The platform layer applies patches to a retained tree, runs layout (Taffy), then paints (Vello).
+//!
+//! # Keys and lists
+//!
+//! Give stable [`.key(id)`](Column::key) values to siblings that are inserted, removed, or reordered
+//! (see the `list_keyed` example). Without keys, children are reconciled by index only.
+//!
+//! # Components
+//!
+//! [`Component::new`] wraps a sub-view with its own [`Cx`] hooks. It currently takes a **function
+//! pointer** (`fn(&Cx) -> Element`), not a capturing closure. For list rows with per-item state,
+//! prefer keyed [`Row`] / [`Column`] children instead of capturing [`Component`]s.
+//!
+//! # Lower-level API
+//!
+//! [`Runtime`], [`RetainedTree`], [`layout_pass`], and [`paint_pass`] are public for tests and
+//! custom hosts; normal apps should use [`run`] and never touch those directly.
+
 pub mod diff;
 pub mod element;
 pub mod layout;

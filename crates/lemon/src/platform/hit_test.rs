@@ -121,8 +121,9 @@ pub fn dispatch_click(node: &RetainedNode) -> bool {
     }
 }
 
-/// Walk the retained tree in post-order and return the top-most node under
-/// `point` that has an `on_scroll` handler.
+/// Returns the deepest node under `point` that has an [`on_scroll`](crate::element::builders::Column::on_scroll) handler.
+///
+/// Used by the platform layer to route `MouseWheel` events before paint.
 pub fn hit_test_scroll<'a>(
     node: &'a RetainedNode,
     layout: &LayoutMap,

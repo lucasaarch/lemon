@@ -32,6 +32,10 @@ struct ComponentSlot {
     _effect: Effect,
 }
 
+/// Reactive renderer: mounts a root view, diffs trees, and collects [`Patch`]es.
+///
+/// [`run`](crate::platform::run) owns a `Runtime` for you. Use this type directly only in tests or
+/// custom hosts that call [`flush_effects`](Self::flush_effects) and apply patches themselves.
 pub struct Runtime {
     slots: Vec<ComponentSlot>,
     patch_queue: Vec<Patch>,
@@ -39,6 +43,7 @@ pub struct Runtime {
 }
 
 impl Runtime {
+    /// Empty runtime with no mounted root.
     pub fn new() -> Self {
         Runtime {
             slots: Vec::new(),
@@ -47,6 +52,7 @@ impl Runtime {
         }
     }
 
+    /// Mounts a single root view function (same shape as the closure passed to [`run`](crate::platform::run)).
     pub fn mount(&mut self, f: impl Fn(&Cx) -> Element + 'static) {
         let mut slot = create_component_slot(
             NodePath::root(),
@@ -60,13 +66,16 @@ impl Runtime {
         self.slots.push(slot);
     }
 
-    /// Apply any pending re-renders: diff old vs new tree, accumulate patches.
+    /// Re-runs dirty views, diffs against the previous tree, and queues patches.
+    ///
+    /// Call after changing a [`Signal`] (or other tracked state), then [`take_patches`](Self::take_patches).
     pub fn flush_effects(&mut self) {
         for slot in &mut self.slots {
             render_slot(slot, &mut self.patch_queue);
         }
     }
 
+    /// Returns and clears patches produced since the last `take_patches`.
     pub fn take_patches(&mut self) -> Vec<Patch> {
         std::mem::take(&mut self.patch_queue)
     }
@@ -76,7 +85,7 @@ impl Runtime {
         cx::flush_deferred_sink(&self.deferred_effects);
     }
 
-    /// Current root element tree after the last render (mount or flush).
+    /// Frozen element tree after the last successful render (for [`RetainedTree::mount`](crate::retained::RetainedTree::mount)).
     pub fn root_element(&self) -> Option<Element> {
         self.slots.first()?.previous.clone()
     }

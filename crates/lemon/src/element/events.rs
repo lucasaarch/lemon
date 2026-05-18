@@ -1,3 +1,6 @@
+//! Keyboard and pointer types surfaced to widget event handlers.
+
+/// Physical or logical key in a [`KeyEvent`].
 #[derive(Clone, Debug, PartialEq)]
 pub enum LemonKey {
     Character(String),
@@ -5,6 +8,7 @@ pub enum LemonKey {
     Other,
 }
 
+/// Non-printable keys with stable names (arrows, Enter, Tab, …).
 #[derive(Clone, Debug, PartialEq)]
 pub enum NamedKey {
     Tab,
@@ -23,6 +27,7 @@ pub enum NamedKey {
     PageDown,
 }
 
+/// Modifier keys held during a keyboard event.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Modifiers {
     pub shift: bool,
@@ -31,12 +36,15 @@ pub struct Modifiers {
     pub meta: bool,
 }
 
+/// Whether a key transitioned to down or up.
 #[derive(Clone, Debug, PartialEq)]
 pub enum KeyState {
     Pressed,
     Released,
 }
 
+/// Keyboard input delivered to [`Column::on_key_down`](crate::element::builders::Column::on_key_down)
+/// / `on_key_up` on focusable nodes.
 #[derive(Clone, Debug)]
 pub struct KeyEvent {
     pub key: LemonKey,
@@ -45,6 +53,7 @@ pub struct KeyEvent {
     pub state: KeyState,
 }
 
+/// Mouse cursor shape for [`Column::cursor`](crate::element::builders::Column::cursor) and similar.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum Cursor {
     #[default]

@@ -48,10 +48,13 @@ pub enum Justify {
     SpaceEvenly,
 }
 
+/// How children are clipped when they exceed a container’s bounds.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum Overflow {
+    /// Children may paint outside the box (default).
     #[default]
     Visible,
+    /// Clip painting to the container’s border box.
     Hidden,
 }
 
@@ -74,6 +77,10 @@ impl CornerRadii {
     }
 }
 
+/// Low-level layout and interaction fields for a node.
+///
+/// App code usually sets these through builder methods ([`Column::gap`](crate::element::builders::Column::gap), etc.)
+/// rather than constructing `StyleProps` directly.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct StyleProps {
     pub width: Option<Dimension>,
@@ -92,7 +99,9 @@ pub struct StyleProps {
     pub cursor: crate::element::events::Cursor,
 }
 
-/// Color as RGBA floats in 0.0–1.0.
+/// sRGB color with components in `0.0..=1.0`.
+///
+/// Prefer [`Color::rgb8`] for byte values from design tools.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Color {
     pub r: f32,
@@ -102,6 +111,7 @@ pub struct Color {
 }
 
 impl Color {
+    /// Builds an opaque color from 8-bit sRGB channels (`0..=255`).
     pub const fn rgb8(r: u8, g: u8, b: u8) -> Self {
         Color {
             r: r as f32 / 255.0,
@@ -110,6 +120,7 @@ impl Color {
             a: 1.0,
         }
     }
+    /// Sets alpha (`0.0` = transparent, `1.0` = opaque).
     pub fn with_alpha(mut self, a: f32) -> Self {
         self.a = a;
         self

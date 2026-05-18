@@ -1,3 +1,15 @@
+//! App-facing re-exports of Lemon’s UI builders.
+//!
+//! Use this crate in examples and applications so imports stay short:
+//!
+//! ```no_run
+//! use lemon::{run, Cx, WindowConfig};
+//! use lemon_widgets::{Button, Column, Text};
+//! ```
+//!
+//! Everything here is also available from [`lemon::element::builders`] if you prefer a single
+//! dependency.
+
 pub use lemon::element::builders::{Box_, Button, Column, Component, Row, Text};
 
 #[cfg(test)]
