@@ -70,6 +70,22 @@ macro_rules! container_builder {
                 self
             }
             /// Sets an image to draw inside this container using object-fit: contain scaling.
+            ///
+            /// The image is scaled uniformly to fit within the container's layout rectangle while
+            /// preserving its aspect ratio, then centered. This is equivalent to CSS
+            /// `object-fit: contain`.
+            ///
+            /// ```no_run
+            /// use lemon::{Column, ImageHandle};
+            ///
+            /// # fn example(handle: ImageHandle) {
+            /// Column::new()
+            ///     .width(200.0)
+            ///     .height(150.0)
+            ///     .image(handle)
+            ///     .into_element();
+            /// # }
+            /// ```
             pub fn image(mut self, handle: crate::asset::ImageHandle) -> Self {
                 self.0.paint.image = Some(handle);
                 self

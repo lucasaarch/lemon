@@ -157,6 +157,12 @@ fn paint_container(
     }
 }
 
+/// Draws the image stored in `node.paint.image` into `rect` using object-fit: contain scaling.
+///
+/// The image is scaled uniformly so it fits within `rect` while preserving its aspect ratio,
+/// then centered within the rectangle. No fill stat is recorded; image draws do not count as
+/// fills. Returns early if the node is not a container kind, has no image, or has zero-size
+/// dimensions.
 fn paint_image(node: &RetainedNode, rect: &LayoutRect, scene: &mut Scene, ctx: PaintContext) {
     let is_container = matches!(
         node.kind,
