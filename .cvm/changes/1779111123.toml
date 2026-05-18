@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = []
-patch = ["lemon"]
-pre = true
-summary = "Measure text in logical px so font-size matches system UI on HiDPI displays"
