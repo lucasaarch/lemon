@@ -88,7 +88,10 @@ pub use element::builders::View as Box_;
 
 pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 pub use element::style::{Color, Overflow, StyleProps};
-pub use layout::{layout_pass, layout_pass_if_dirty, LayoutMap, LayoutRect, Viewport};
+pub use layout::{
+    layout_pass, layout_pass_if_dirty, measure_element_height, scroll_content_max_offset,
+    sync_scroll_layout_max, LayoutMap, LayoutRect, Viewport,
+};
 pub use paint::{paint_pass, PaintStats};
 pub use platform::{run, AppState, WindowConfig};
 pub use retained::RetainedTree;

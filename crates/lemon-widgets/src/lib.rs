@@ -147,7 +147,8 @@ mod tests {
         };
 
         assert_eq!(viewport.style.overflow, Overflow::Hidden);
-        assert!(viewport.scroll_viewport);
+        assert!(viewport.scroll_bar);
+        assert!(!viewport.scroll_viewport);
         assert!(viewport.handlers.on_scroll.is_some());
         assert_eq!(viewport.children.len(), 1);
 

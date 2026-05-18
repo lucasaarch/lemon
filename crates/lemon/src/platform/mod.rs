@@ -23,7 +23,7 @@ use winit::window::{CursorIcon, Window, WindowId};
 use crate::diff::Patch;
 use crate::element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 use crate::element::Element;
-use crate::layout::{layout_pass, LayoutMap, Viewport};
+use crate::layout::{layout_pass, sync_scroll_layout_max, LayoutMap, Viewport};
 use crate::paint::paint_pass;
 use crate::retained::focus::FocusManager;
 use crate::retained::RetainedTree;
@@ -174,6 +174,9 @@ impl AppState {
         match layout_pass(tree, viewport) {
             Ok(map) => {
                 self.layout_map = map;
+                if let Some(root) = tree.root.as_ref() {
+                    sync_scroll_layout_max(root, &self.layout_map);
+                }
                 self.layout_dirty = false;
                 if tree.text_needs_reflow() {
                     crate::lemon_trace!(

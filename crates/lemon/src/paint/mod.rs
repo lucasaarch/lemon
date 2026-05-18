@@ -185,6 +185,7 @@ fn paint_node<'a>(
         stats,
     );
     paint_scrollbar(node, rect, layout, scene, ctx, stats);
+    paint_widget_scroll_bar(node, rect, layout, scene, ctx, stats);
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -576,6 +577,74 @@ fn effective_text_line_height(style: &crate::element::style::TextStyle) -> f32 {
     }
 }
 
+const WIDGET_SCROLLBAR_WIDTH: f32 = 8.0;
+const WIDGET_SCROLLBAR_THUMB_MIN: f32 = 20.0;
+
+fn scroll_offset_from_inner(node: &RetainedNode) -> f32 {
+    node.children
+        .first()
+        .and_then(|inner| inner.style.margin.as_ref())
+        .map(|m| (-m.top).max(0.0))
+        .unwrap_or(0.0)
+}
+
+fn paint_widget_scroll_bar(
+    node: &RetainedNode,
+    viewport_rect: &LayoutRect,
+    layout: &LayoutMap,
+    scene: &mut Scene,
+    ctx: PaintContext,
+    stats: &mut PaintStats,
+) {
+    if !node.scroll_bar {
+        return;
+    }
+    let Some(content_height) = crate::layout::scroll_content_extent(node, layout) else {
+        return;
+    };
+    let viewport_height = viewport_rect.height;
+    if content_height <= viewport_height + 1.0 {
+        return;
+    }
+
+    let scroll_offset = scroll_offset_from_inner(node);
+    let max_offset = (content_height - viewport_height).max(1.0);
+    let track_x = viewport_rect.x + viewport_rect.width - WIDGET_SCROLLBAR_WIDTH;
+    let track = Rect::new(
+        f64::from(track_x),
+        f64::from(viewport_rect.y),
+        f64::from(track_x + WIDGET_SCROLLBAR_WIDTH),
+        f64::from(viewport_rect.y + viewport_height),
+    );
+    scene.fill(
+        Fill::NonZero,
+        ctx.base,
+        to_peniko_color(Color::rgb8(30, 30, 40)),
+        None,
+        &track,
+    );
+    stats.fills += 1;
+
+    let thumb_height = (viewport_height / content_height * viewport_height)
+        .clamp(WIDGET_SCROLLBAR_THUMB_MIN, viewport_height);
+    let thumb_travel = (viewport_height - thumb_height).max(0.0);
+    let thumb_y = viewport_rect.y + (scroll_offset / max_offset).clamp(0.0, 1.0) * thumb_travel;
+    let thumb = Rect::new(
+        f64::from(track_x),
+        f64::from(thumb_y),
+        f64::from(track_x + WIDGET_SCROLLBAR_WIDTH),
+        f64::from(thumb_y + thumb_height),
+    );
+    scene.fill(
+        Fill::NonZero,
+        ctx.base,
+        to_peniko_color(Color::rgb8(120, 120, 140)),
+        None,
+        &thumb,
+    );
+    stats.fills += 1;
+}
+
 fn paint_scrollbar(
     node: &RetainedNode,
     viewport_rect: &LayoutRect,
@@ -590,25 +659,21 @@ fn paint_scrollbar(
     let Some(inner) = node.children.first() else {
         return;
     };
-    let Some(inner_id) = inner.taffy_id else {
+    let content = inner.children.first().unwrap_or(inner);
+    let Some(content_id) = content.taffy_id else {
         return;
     };
-    let Some(inner_rect) = layout.get(inner_id) else {
+    let Some(content_rect) = layout.get(content_id) else {
         return;
     };
 
-    let content_height = inner_rect.height;
+    let content_height = content_rect.height;
     let viewport_height = viewport_rect.height;
     if content_height <= viewport_height + 1.0 {
         return;
     }
 
-    let scroll_offset = inner
-        .style
-        .margin
-        .as_ref()
-        .map(|m| (-m.top).max(0.0))
-        .unwrap_or(0.0);
+    let scroll_offset = scroll_offset_from_inner(node);
     let max_offset = (content_height - viewport_height).max(1.0);
     let track_width = 6.0;
     let track_x = viewport_rect.x + viewport_rect.width - track_width - 2.0;

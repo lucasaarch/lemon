@@ -1,5 +1,6 @@
 pub mod focus;
 
+use std::cell::Cell;
 use std::rc::Rc;
 
 use taffy::{NodeId, Rect, Size, Style, TaffyTree};
@@ -79,6 +80,8 @@ pub struct EventHandlers {
     pub on_pointer_down: Option<Rc<dyn Fn(f32, f32)>>,
     /// Called when pointer movement is reported for this retained node with normalized `(x, y)` coordinates.
     pub on_pointer_move: Option<Rc<dyn Fn(f32, f32)>>,
+    /// Updated after each [`layout_pass`](crate::layout::layout_pass) for scroll viewports; used to clamp wheel delta.
+    pub scroll_layout_max: Option<Rc<Cell<f64>>>,
 }
 
 impl std::fmt::Debug for EventHandlers {
@@ -123,6 +126,10 @@ impl std::fmt::Debug for EventHandlers {
                     .as_ref()
                     .map(|_| "Rc<dyn Fn(f32, f32)>"),
             )
+            .field(
+                "scroll_layout_max",
+                &self.scroll_layout_max.as_ref().map(|_| "Rc<Cell<f64>>"),
+            )
             .finish()
     }
 }
@@ -154,6 +161,7 @@ pub struct RetainedNode {
     pub text: Option<TextCache>,
     pub text_input: Option<crate::element::types::TextInputMeta>,
     pub scroll_viewport: bool,
+    pub scroll_bar: bool,
 }
 
 impl RetainedNode {
@@ -191,6 +199,7 @@ impl RetainedNode {
             }),
             text_input: None,
             scroll_viewport: false,
+            scroll_bar: false,
         }
     }
 
@@ -287,6 +296,7 @@ impl RetainedTree {
             handlers,
             text_input,
             scroll_viewport,
+            scroll_bar,
         } = node;
         let mut children = Vec::with_capacity(node_children.len());
         for child in node_children {
@@ -316,6 +326,7 @@ impl RetainedTree {
             text: None,
             text_input: text_input.clone(),
             scroll_viewport,
+            scroll_bar,
         };
         if let Some(meta) = &text_input {
             sync_text_input_caret(&mut retained, meta.cursor);
@@ -360,6 +371,7 @@ impl RetainedTree {
             }),
             text_input: None,
             scroll_viewport: false,
+            scroll_bar: false,
         })
     }
 
@@ -376,6 +388,7 @@ impl RetainedTree {
             text: None,
             text_input: None,
             scroll_viewport: false,
+            scroll_bar: false,
         })
     }
 
@@ -404,6 +417,7 @@ impl RetainedTree {
                     text: None,
                     text_input: None,
                     scroll_viewport: false,
+                    scroll_bar: false,
                 };
                 self.replace_with_wrapper(node, wrapper)?;
             }
@@ -425,10 +439,12 @@ impl RetainedTree {
                 node,
                 text_input,
                 scroll_viewport,
+                scroll_bar,
             } => {
                 let retained = self.node_mut(&node)?;
                 retained.text_input = text_input.clone();
                 retained.scroll_viewport = scroll_viewport;
+                retained.scroll_bar = scroll_bar;
                 if let Some(meta) = text_input.as_ref() {
                     sync_text_input_caret(retained, meta.cursor);
                 }
@@ -1033,6 +1049,7 @@ mod tests {
                 value: "hi".into(),
             }),
             scroll_viewport: false,
+            scroll_bar: false,
         })
         .unwrap();
         tree.apply_patch(Patch::UpdateText {
@@ -1047,6 +1064,7 @@ mod tests {
                 value: "hi".into(),
             }),
             scroll_viewport: false,
+            scroll_bar: false,
         })
         .unwrap();
 
@@ -1348,6 +1366,7 @@ mod tests {
             text: None,
             text_input: None,
             scroll_viewport: false,
+            scroll_bar: false,
         };
 
         assert_eq!(wrapper.children[0].text_content(), Some("child"));

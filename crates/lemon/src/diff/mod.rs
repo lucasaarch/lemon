@@ -52,6 +52,7 @@ pub enum Patch {
         node: NodePath,
         text_input: Option<crate::element::types::TextInputMeta>,
         scroll_viewport: bool,
+        scroll_bar: bool,
     },
     ReplaceNode {
         node: NodePath,
@@ -198,11 +199,15 @@ fn diff_box(
             paint: np,
         });
     }
-    if o.text_input != n.text_input || o.scroll_viewport != n.scroll_viewport {
+    if o.text_input != n.text_input
+        || o.scroll_viewport != n.scroll_viewport
+        || o.scroll_bar != n.scroll_bar
+    {
         patches.push(Patch::UpdateWidgetChrome {
             node: path.clone(),
             text_input: n.text_input,
             scroll_viewport: n.scroll_viewport,
+            scroll_bar: n.scroll_bar,
         });
     }
     diff_children(o.children, n.children, &path, patches);
