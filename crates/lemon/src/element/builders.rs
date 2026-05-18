@@ -47,7 +47,11 @@ macro_rules! container_builder {
             ///
             /// Values are clamped to `0.0..=1.0`; non-finite inputs fall back to `1.0`.
             pub fn opacity(mut self, v: f32) -> Self {
-                self.0.style.opacity = if v.is_finite() { v.clamp(0.0, 1.0) } else { 1.0 };
+                self.0.style.opacity = if v.is_finite() {
+                    v.clamp(0.0, 1.0)
+                } else {
+                    1.0
+                };
                 self
             }
             /// Uniform padding on all sides, in logical points.
