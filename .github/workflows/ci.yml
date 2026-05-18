@@ -7,7 +7,7 @@ on:
 
 jobs:
   check:
-    name: Check, fmt, clippy, test
+    name: make check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,14 +23,5 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: fmt
-        run: cargo fmt --all -- --check
-
-      - name: clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
-
-      - name: test
-        run: cargo test --workspace
-
-      - name: build examples
-        run: make build-examples
+      - name: make check
+        run: make check

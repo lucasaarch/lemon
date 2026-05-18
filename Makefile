@@ -2,7 +2,7 @@
 # Run `make` or `make help` for targets.
 
 CARGO := cargo
-EXAMPLES := counter signals memo effects keys components layout form
+EXAMPLES := counter signals memo effects keys components layout form rich slider images select scroll
 
 .PHONY: help check ci fmt fmt-check clippy test build build-examples doc doc-open clean
 
