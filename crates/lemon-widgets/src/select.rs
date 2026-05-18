@@ -299,6 +299,97 @@ mod tests {
             dropdown_rect.y,
             trigger_rect.y + trigger_rect.height
         );
+        assert!(
+            dropdown_rect.height > 0.0 && dropdown_rect.width > 0.0,
+            "dropdown must have non-zero size for background paint, got {:?}",
+            dropdown_rect
+        );
+    }
+
+    #[test]
+    fn mount_open_select_root_dropdown_has_nonzero_height() {
+        use lemon::{layout_pass, RetainedTree, Viewport};
+
+        let value = Signal::new(None::<Color>);
+        let open = Signal::new(true);
+        let el = Select::with_open(value, open, make_options())
+            .width(180.0)
+            .into_element();
+        let mut tree = RetainedTree::mount(el).unwrap();
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 400.0,
+            },
+        )
+        .unwrap();
+        let dropdown = &tree.root.as_ref().unwrap().children[1];
+        let rect = layout.get(dropdown.taffy_id.unwrap()).unwrap();
+        assert!(rect.height > 0.0, "mount-open dropdown height: {:?}", rect);
+    }
+
+    #[test]
+    fn select_runtime_open_dropdown_has_layout_and_paint_after_diff() {
+        use lemon::diff::{diff, NodePath};
+        use lemon::{layout_pass, RetainedTree, Viewport};
+
+        let value = Signal::new(None::<Color>);
+        let open = Signal::new(false);
+        let closed = Select::with_open(value.clone(), open.clone(), make_options())
+            .width(180.0)
+            .into_element();
+        let mut tree = RetainedTree::mount(closed.clone()).unwrap();
+
+        open.set(true);
+        let opened = Select::with_open(value, open, make_options())
+            .width(180.0)
+            .into_element();
+        let patches = diff(closed, opened, NodePath::root());
+        tree.apply_patches(patches).unwrap();
+
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 400.0,
+            },
+        )
+        .unwrap();
+        let dropdown = &tree.root.as_ref().unwrap().children[1];
+        let dropdown_rect = layout.get(dropdown.taffy_id.unwrap()).unwrap();
+        assert!(
+            dropdown_rect.height > 0.0,
+            "dropdown layout height after diff: {:?}",
+            dropdown_rect
+        );
+        assert!(dropdown.paint.background.is_some());
+    }
+
+    #[test]
+    fn select_open_dropdown_retains_background_paint() {
+        use lemon::{layout_pass, RetainedTree, Viewport};
+
+        let value = Signal::new(None::<Color>);
+        let open = Signal::new(true);
+        let root = Select::with_open(value, open, make_options())
+            .width(180.0)
+            .into_element();
+        let mut tree = RetainedTree::mount(root).unwrap();
+        layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 400.0,
+            },
+        )
+        .unwrap();
+
+        let dropdown = &tree.root.as_ref().unwrap().children[1];
+        assert!(
+            dropdown.paint.background.is_some(),
+            "dropdown retained node must carry background paint"
+        );
     }
 
     #[test]

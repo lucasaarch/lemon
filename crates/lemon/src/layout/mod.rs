@@ -134,6 +134,7 @@ pub fn layout_pass(
         .ok_or(RetainedError::UnsupportedElement("empty retained tree"))?;
     let mut map = LayoutMap::default();
     collect_layouts(&tree.taffy, root_node, Point::ZERO, &mut map);
+    fix_absolute_overlay_bounds(root_node, &mut map);
     tree.layout_dirty = false;
     Ok(map)
 }
@@ -301,6 +302,78 @@ fn collect_layouts(
     }
 }
 
+/// Taffy often reports `0` height for absolutely positioned flex containers whose size should
+/// follow their children (e.g. `Select` dropdown panels). Expand those rects so paint can fill a
+/// background over the full option list.
+fn fix_absolute_overlay_bounds(node: &RetainedNode, map: &mut LayoutMap) {
+    if matches!(node.kind, RetainedKind::Component { .. }) {
+        for child in &node.children {
+            fix_absolute_overlay_bounds(child, map);
+        }
+        return;
+    }
+
+    if let Some(taffy_id) = node.taffy_id {
+        if node.style.position_absolute {
+            if let Some(rect) = map.rects.get(&taffy_id).copied() {
+                if let Some(content) = union_descendant_bounds(node, map) {
+                    let height = (content.y + content.height) - rect.y;
+                    let width = (content.x + content.width) - rect.x;
+                    if height > rect.height || width > rect.width {
+                        map.rects.insert(
+                            taffy_id,
+                            LayoutRect {
+                                x: rect.x,
+                                y: rect.y,
+                                width: rect.width.max(width),
+                                height: rect.height.max(height),
+                            },
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    for child in &node.children {
+        fix_absolute_overlay_bounds(child, map);
+    }
+}
+
+fn union_descendant_bounds(node: &RetainedNode, map: &LayoutMap) -> Option<LayoutRect> {
+    let mut union: Option<LayoutRect> = None;
+    for child in &node.children {
+        if let Some(child_id) = child.taffy_id {
+            if let Some(rect) = map.get(child_id) {
+                union = Some(match union {
+                    None => *rect,
+                    Some(u) => union_layout_rects(u, *rect),
+                });
+            }
+        }
+        if let Some(desc) = union_descendant_bounds(child, map) {
+            union = Some(match union {
+                None => desc,
+                Some(u) => union_layout_rects(u, desc),
+            });
+        }
+    }
+    union
+}
+
+fn union_layout_rects(a: LayoutRect, b: LayoutRect) -> LayoutRect {
+    let left = a.x.min(b.x);
+    let top = a.y.min(b.y);
+    let right = (a.x + a.width).max(b.x + b.width);
+    let bottom = (a.y + a.height).max(b.y + b.height);
+    LayoutRect {
+        x: left,
+        y: top,
+        width: right - left,
+        height: bottom - top,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -326,6 +399,51 @@ mod tests {
         assert!(
             height > 12.0 && height < 26.0,
             "16px logical font should measure near 16px tall, got {height}"
+        );
+    }
+
+    #[test]
+    fn absolute_column_overlay_expands_to_descendant_bounds() {
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(100.0)
+                .child(View::new().width(100.0).height(40.0))
+                .child(
+                    Column::new()
+                        .absolute()
+                        .top(40.0)
+                        .left(0.0)
+                        .width(100.0)
+                        .child(
+                            View::new()
+                                .padding(8.0)
+                                .child(Text::new("A").font_size(14.0)),
+                        )
+                        .child(
+                            View::new()
+                                .padding(8.0)
+                                .child(Text::new("B").font_size(14.0)),
+                        ),
+                )
+                .into_element(),
+        )
+        .unwrap();
+
+        let map = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 400.0,
+            },
+        )
+        .unwrap();
+
+        let dropdown = &tree.root.as_ref().unwrap().children[1];
+        let rect = map.get(dropdown.taffy_id.unwrap()).unwrap();
+        assert!(
+            rect.height > 40.0,
+            "absolute dropdown column should cover option rows, got {:?}",
+            rect
         );
     }
 

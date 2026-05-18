@@ -958,6 +958,57 @@ mod tests {
     }
 
     #[test]
+    fn z_index_absolute_column_dropdown_paints_background() {
+        // Mirrors lemon_widgets::Select open dropdown: Column + absolute + z_index + background.
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(200.0)
+                .height(200.0)
+                .child(
+                    Column::new()
+                        .width(100.0)
+                        .child(
+                            View::new()
+                                .width(100.0)
+                                .height(40.0)
+                                .background(Color::rgb8(55, 120, 220)),
+                        )
+                        .child(
+                            Column::new()
+                                .z_index(10)
+                                .absolute()
+                                .top(40.0)
+                                .left(0.0)
+                                .width(100.0)
+                                .background(Color::rgb8(35, 35, 52))
+                                .border(Color::rgb8(80, 80, 110), 1.0)
+                                .radius(6.0)
+                                .child(
+                                    View::new()
+                                        .padding(8.0)
+                                        .child(Text::new("Option A").font_size(14.0)),
+                                )
+                                .child(
+                                    View::new()
+                                        .padding(8.0)
+                                        .child(Text::new("Option B").font_size(14.0)),
+                                ),
+                        ),
+                )
+                .child(Text::new("Sibling below"))
+                .into_element(),
+        )
+        .unwrap();
+
+        let stats = layout_and_paint(&mut tree, 1.0);
+        assert!(
+            stats.fills >= 2,
+            "trigger and dropdown panel must emit fills, got {}",
+            stats.fills
+        );
+    }
+
+    #[test]
     fn component_wrapper_is_transparent_to_paint() {
         use crate::diff::{NodePath, Patch};
         use crate::element::types::ComponentElement;
