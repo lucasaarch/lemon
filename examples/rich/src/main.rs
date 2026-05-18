@@ -90,7 +90,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
                     Text::new("Volume")
                         .font_size(13.0)
                         .color(Color::rgb8(160, 170, 190)),
-                    Slider::new(volume).width(180.0),
+                    Slider::new(cx, volume).width(180.0),
                 ]),
             ]),
             Text::new("Tracklist")

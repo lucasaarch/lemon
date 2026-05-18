@@ -40,6 +40,15 @@ impl<T: Clone + 'static> Signal<T> {
         self.notify();
     }
 
+    /// Returns a copy of the current value **without** recording a dependency.
+    ///
+    /// Use when you need to read a signal's value inside an effect or render but do not want the
+    /// current scope to re-run when the signal later changes. Prefer [`get`](Self::get) for
+    /// normal reactive reads.
+    pub fn peek(&self) -> T {
+        self.0.borrow().value.clone()
+    }
+
     /// Mutates the value in place, then notifies subscribers (same as [`set`](Self::set) after `f`).
     pub fn update(&self, f: impl FnOnce(&mut T)) {
         crate::debug::trace(crate::debug::Category::Signal, "signal update");
