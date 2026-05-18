@@ -79,7 +79,10 @@ pub mod runtime;
 pub mod theme;
 pub mod widget;
 
-pub use animation::{animation_frame_signal, request_animation_frame};
+pub use animation::{
+    animation_frame_signal, request_animation_frame, AnimRegistry, AnimSlot, AnimationConfig,
+    AnimationHandle, Easing,
+};
 pub use asset::ImageHandle;
 pub use element::builders::{Column, Component, Row, Text, View};
 pub use widget::{
@@ -372,10 +375,21 @@ mod tests {
         fn _app(cx: &Cx) -> Element {
             let n = cx.use_signal(0);
             let n2 = n.clone();
+            let anim: AnimationHandle =
+                cx.use_animation(AnimationConfig::default().easing(Easing::Linear));
+            anim.reset();
             Column::new()
                 .children(children![Text::new(move || n2.get().to_string())])
                 .into_element()
         }
+    }
+
+    #[test]
+    fn crate_root_re_exports_animation_types() {
+        let registry = AnimRegistry::default();
+        let handle = registry.register(AnimSlot::new(AnimationConfig::default()));
+        handle.play();
+        assert!(handle.is_playing());
     }
 
     #[test]
