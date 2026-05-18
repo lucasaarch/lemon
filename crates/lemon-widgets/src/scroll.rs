@@ -68,18 +68,24 @@ impl Scroll {
         let offset = self.offset.clone();
         let viewport_h = self.height;
         let width = self.width;
+        let has_custom_scrollbar = self.content_height.is_some();
 
         let inner = View::new().margin_top(-offset_value).child(self.child);
 
+        // scroll_viewport enables the paint-pass auto-scrollbar; suppress it when a
+        // custom scrollbar track is rendered alongside the viewport to avoid doubling.
         let mut viewport = View::new()
             .height(viewport_h)
             .overflow(Overflow::Hidden)
-            .scroll_viewport()
             .on_scroll(move |delta| {
                 let next = (offset.get() - delta).max(0.0);
                 offset.set(next);
             })
             .child(inner);
+
+        if !has_custom_scrollbar {
+            viewport = viewport.scroll_viewport();
+        }
 
         let Some(content_h) = self.content_height else {
             // Backward-compatible: no scrollbar.
@@ -186,7 +192,9 @@ mod tests {
         let Element::View(viewport) = &row.children[0] else {
             panic!("expected View viewport as first child");
         };
-        assert!(viewport.scroll_viewport);
+        // scroll_viewport is suppressed when a custom scrollbar track is present
+        // to avoid the paint pass rendering a second auto-scrollbar.
+        assert!(!viewport.scroll_viewport);
         assert!(viewport.handlers.on_scroll.is_some());
         assert_eq!(viewport.style.overflow, Overflow::Hidden);
 

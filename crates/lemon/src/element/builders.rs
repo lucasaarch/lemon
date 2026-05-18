@@ -206,6 +206,16 @@ macro_rules! container_builder {
                 self.0.scroll_viewport = true;
                 self
             }
+            /// Removes this node from normal flex flow.
+            ///
+            /// The node is positioned by Taffy's absolute-position algorithm relative to its
+            /// nearest flex ancestor. When no explicit inset is provided Taffy uses the
+            /// node's hypothetical static position (where it would sit in normal flow),
+            /// so a dropdown appearing after a fixed-height trigger will land just below it.
+            pub fn absolute(mut self) -> Self {
+                self.0.style.position_absolute = true;
+                self
+            }
             /// Cursor shown when the pointer is over this node.
             pub fn cursor(mut self, c: crate::element::events::Cursor) -> Self {
                 self.0.style.cursor = c;
