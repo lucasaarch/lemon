@@ -45,11 +45,13 @@ fn app(cx: &Cx) -> lemon::element::Element {
             Text::new("TextInput + Scroll from lemon-widgets; combines signals, keys, and layout.")
                 .font_size(14.0)
                 .color(Color::rgb8(140, 150, 170)),
-            TextInput::new(name_state).placeholder("Name").width(360.0),
-            TextInput::new(email_state)
+            TextInput::new(cx, name_state)
+                .placeholder("Name")
+                .width(360.0),
+            TextInput::new(cx, email_state)
                 .placeholder("Email")
                 .width(360.0),
-            Button::new("Submit")
+            Button::new(cx, "Submit")
                 .on_click(move || {
                     let name = name_submit.get().value.trim().to_string();
                     let email = email_submit.get().value.trim().to_string();

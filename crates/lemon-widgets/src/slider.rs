@@ -69,6 +69,8 @@ pub struct Slider {
     anim: Signal<AnimState>,
     width: f32,
     height: f32,
+    track_color: Color,
+    fill_color: Color,
 }
 
 impl Slider {
@@ -77,6 +79,7 @@ impl Slider {
     /// `cx` is used to allocate internal hook state for the animation.  Pass the same `&Cx`
     /// received by your view function.
     pub fn new(cx: &Cx, value: Signal<f32>) -> Self {
+        let theme = cx.use_theme();
         let initial = value.peek().clamp(0.0, 1.0);
         let anim = cx.use_signal(AnimState::settled(initial));
 
@@ -102,7 +105,9 @@ impl Slider {
             value,
             anim,
             width: 200.0,
-            height: 16.0,
+            height: theme.spacing.sm * 2.0,
+            track_color: theme.colors.border,
+            fill_color: theme.colors.accent,
         }
     }
 
@@ -142,7 +147,7 @@ impl Slider {
             .width(self.width)
             .height(self.height)
             .radius(radius)
-            .background(Color::rgb8(55, 65, 81))
+            .background(self.track_color)
             .cursor(Cursor::Pointer)
             .on_pointer_down(move |nx, _| {
                 let v = nx.clamp(0.0, 1.0);
@@ -160,7 +165,7 @@ impl Slider {
                     .width(fill_width)
                     .height(self.height)
                     .radius(radius)
-                    .background(Color::rgb8(59, 130, 246)),
+                    .background(self.fill_color),
             )
             .into_element()
     }
@@ -264,6 +269,11 @@ mod tests {
 
     #[test]
     fn slider_default_dimensions() {
+        let previous = lemon::current_theme();
+        let mut custom = lemon::Theme::default_dark();
+        custom.spacing.sm = 9.0;
+        lemon::set_active_theme(custom.clone());
+
         let value = Signal::new(0.0_f32);
         let (el, _) = make_slider(value);
 
@@ -271,7 +281,12 @@ mod tests {
             panic!("expected View element from Slider");
         };
         assert_eq!(track.style.width, Some(Dimension::Points(200.0)));
-        assert_eq!(track.style.height, Some(Dimension::Points(16.0)));
+        assert_eq!(
+            track.style.height,
+            Some(Dimension::Points(custom.spacing.sm * 2.0))
+        );
+
+        lemon::set_active_theme(previous);
     }
 
     #[test]
@@ -308,6 +323,29 @@ mod tests {
             Cursor::Pointer,
             "Slider track should use Pointer cursor"
         );
+    }
+
+    #[test]
+    fn slider_defaults_follow_active_theme_colors() {
+        let previous = lemon::current_theme();
+        let mut custom = lemon::Theme::default_dark();
+        custom.colors.border = Color::rgb8(11, 22, 33);
+        custom.colors.accent = Color::rgb8(44, 55, 66);
+        lemon::set_active_theme(custom.clone());
+
+        let value = Signal::new(0.25_f32);
+        let (el, _) = make_slider(value);
+
+        let Element::View(track) = el else {
+            panic!("expected View element from Slider");
+        };
+        assert_eq!(track.paint.resolve().background, Some(custom.colors.border));
+        let Element::View(fill) = &track.children[0] else {
+            panic!("expected View fill child");
+        };
+        assert_eq!(fill.paint.resolve().background, Some(custom.colors.accent));
+
+        lemon::set_active_theme(previous);
     }
 
     #[test]

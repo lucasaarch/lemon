@@ -19,13 +19,13 @@ fn app(cx: &Cx) -> Element {
                 .color(Color::rgb8(140, 150, 170)),
             Text::new(move || format!("Count: {}", label.get())).font_size(20.0),
             Row::new().gap(8.0).children(children![
-                Button::new("−")
+                Button::new(cx, "−")
                     .on_click(move || dec.update(|n| *n -= 1))
                     .width(44.0),
-                Button::new("+")
+                Button::new(cx, "+")
                     .on_click(move || inc.update(|n| *n += 1))
                     .width(44.0),
-                Button::new("Reset").on_click(move || reset.set(0)),
+                Button::new(cx, "Reset").on_click(move || reset.set(0)),
             ]),
         ])
         .into_element()

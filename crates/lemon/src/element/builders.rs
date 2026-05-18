@@ -497,6 +497,11 @@ impl Button {
         self.on_click = Some(Rc::new(f));
         self
     }
+    /// Uniform padding on all sides, in logical points.
+    pub fn padding(mut self, v: f32) -> Self {
+        self.style.padding = Some(Edges::all(v));
+        self
+    }
     /// Fill color behind the label ([`Color`] or reactive [`ColorSource`]).
     pub fn background(mut self, c: impl Into<ColorSource>) -> Self {
         self.paint.background = Some(c.into());
@@ -857,6 +862,14 @@ mod tests {
         };
         el.on_click.unwrap()();
         assert!(fired.get());
+    }
+
+    #[test]
+    fn button_builder_sets_padding() {
+        let Element::Button(el) = Button::new("OK").padding(12.0).into_element() else {
+            panic!()
+        };
+        assert_eq!(el.style.padding, Some(Edges::all(12.0)));
     }
 
     #[test]

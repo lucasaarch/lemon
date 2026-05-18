@@ -30,13 +30,13 @@ fn app(cx: &Cx) -> lemon::element::Element {
             )
             .font_size(14.0)
             .color(Color::rgb8(140, 150, 170)),
-            number_row("a", a.clone()),
-            number_row("b", b.clone()),
+            number_row(cx, "a", a.clone()),
+            number_row(cx, "b", b.clone()),
             Text::new(move || format!("a + b = {} (memo)", sum_display.get())).font_size(16.0),
             Text::new(move || format!("a × b = {} (memo)", product_display.get())).font_size(16.0),
             section_label("Unrelated signal — memos above should not change"),
             Text::new(move || format!("noise = {}", noise_display.get())).font_size(16.0),
-            Button::new("Bump noise").on_click({
+            Button::new(cx, "Bump noise").on_click({
                 let n = noise.clone();
                 move || n.update(|v| *v += 1)
             }),
@@ -44,7 +44,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
         .into_element()
 }
 
-fn number_row(label: &'static str, signal: lemon::Signal<i32>) -> lemon::element::Element {
+fn number_row(cx: &Cx, label: &'static str, signal: lemon::Signal<i32>) -> lemon::element::Element {
     let read = signal.clone();
     let dec = signal.clone();
     let inc = signal.clone();
@@ -54,11 +54,11 @@ fn number_row(label: &'static str, signal: lemon::Signal<i32>) -> lemon::element
         .align_items(lemon::element::style::Align::Center)
         .children(children![
             Text::new(label).font_size(16.0),
-            Button::new("−")
+            Button::new(cx, "−")
                 .on_click(move || dec.update(|n| *n -= 1))
                 .width(44.0),
             Text::new(move || read.get().to_string()).font_size(16.0),
-            Button::new("+")
+            Button::new(cx, "+")
                 .on_click(move || inc.update(|n| *n += 1))
                 .width(44.0),
         ])

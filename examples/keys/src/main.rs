@@ -28,7 +28,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
                 .align_items(lemon::element::style::Align::Center)
                 .children(children![
                     Text::new(item.label).font_size(16.0),
-                    Button::new("Remove")
+                    Button::new(cx, "Remove")
                         .background(Color::rgb8(180, 60, 60))
                         .on_click(move || {
                             items_remove.update(|list| list.retain(|i| i.id != item_id));
@@ -47,7 +47,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
             )
             .font_size(14.0)
             .color(Color::rgb8(140, 150, 170)),
-            Button::new("Add item").on_click(move || {
+            Button::new(cx, "Add item").on_click(move || {
                 let id = next_id_add.get();
                 next_id_add.update(|n| *n += 1);
                 items_add.update(|list| {
