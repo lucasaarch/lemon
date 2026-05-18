@@ -18,8 +18,10 @@
 pub use lemon::element::builders::{Button, Column, Component, Row, Text, View};
 pub mod scroll;
 pub mod text_field_state;
+pub mod text_input;
 pub use scroll::Scroll;
 pub use text_field_state::TextFieldState;
+pub use text_input::TextInput;
 
 /// Deprecated alias for [`View`].
 #[deprecated(
@@ -27,6 +29,124 @@ pub use text_field_state::TextFieldState;
     note = "renamed to `View`; see the `lemon` crate-level docs"
 )]
 pub use lemon::element::builders::View as Box_;
+
+#[cfg(test)]
+mod text_input_tests {
+    use super::*;
+    use lemon::{element::Element, Cursor, Cx, Signal};
+
+    #[test]
+    fn text_input_renders_placeholder_when_value_is_empty() {
+        fn root(cx: &Cx) -> Element {
+            let state = cx.use_signal(TextFieldState::new(""));
+            let focused = cx.use_signal(false);
+            TextInput::new(state, focused)
+                .placeholder("Enter text...")
+                .into_element()
+        }
+        // Compile-only check: builder API is correct and returns Element.
+        let _ = root;
+    }
+
+    #[test]
+    fn text_input_with_value_compiles() {
+        fn root(cx: &Cx) -> Element {
+            let state = cx.use_signal(TextFieldState::new("hello"));
+            let focused = cx.use_signal(false);
+            TextInput::new(state, focused).into_element()
+        }
+        let _ = root;
+    }
+
+    #[test]
+    fn text_input_is_focusable_and_has_text_cursor() {
+        let state = Signal::new(TextFieldState::new(""));
+        let focused = Signal::new(false);
+        let el = TextInput::new(state, focused).into_element();
+
+        let Element::View(view) = el else {
+            panic!("expected View element from TextInput");
+        };
+        assert!(view.style.focusable, "TextInput must be focusable");
+        assert_eq!(
+            view.style.cursor,
+            Cursor::Text,
+            "TextInput must use Text cursor"
+        );
+    }
+
+    #[test]
+    fn text_input_on_click_sets_focused() {
+        let state = Signal::new(TextFieldState::new(""));
+        let focused = Signal::new(false);
+        let el = TextInput::new(state, focused.clone()).into_element();
+
+        let Element::View(view) = el else {
+            panic!("expected View element from TextInput");
+        };
+        let on_click = view.handlers.on_click.as_ref().expect("must have on_click");
+        on_click();
+        assert!(focused.get(), "on_click must set focused to true");
+    }
+
+    #[test]
+    fn text_input_on_key_down_updates_state() {
+        use lemon::{KeyEvent, KeyState, LemonKey, Modifiers};
+
+        let state = Signal::new(TextFieldState::new(""));
+        let focused = Signal::new(true);
+        let el = TextInput::new(state.clone(), focused).into_element();
+
+        let Element::View(view) = el else {
+            panic!("expected View element from TextInput");
+        };
+        let on_key_down = view
+            .handlers
+            .on_key_down
+            .as_ref()
+            .expect("must have on_key_down");
+        on_key_down(KeyEvent {
+            key: LemonKey::Character("a".into()),
+            modifiers: Modifiers::default(),
+            repeat: false,
+            state: KeyState::Pressed,
+        });
+        assert_eq!(state.get().value, "a");
+    }
+
+    #[test]
+    fn text_input_has_border() {
+        let state = Signal::new(TextFieldState::new(""));
+        let focused = Signal::new(false);
+        let el = TextInput::new(state, focused).into_element();
+
+        let Element::View(view) = el else {
+            panic!("expected View element from TextInput");
+        };
+        assert!(
+            view.paint.border_color.is_some(),
+            "TextInput must always have a border color"
+        );
+        assert!(
+            view.paint.border_width > 0.0,
+            "TextInput must have a non-zero border width"
+        );
+    }
+
+    #[test]
+    fn text_input_width_builder_sets_width() {
+        use lemon::element::style::Dimension;
+
+        let state = Signal::new(TextFieldState::new(""));
+        let focused = Signal::new(false);
+        let el = TextInput::new(state, focused).width(200.0).into_element();
+
+        let Element::View(view) = el else {
+            panic!("expected View element from TextInput");
+        };
+        assert_eq!(view.style.width, Some(Dimension::Points(200.0)));
+    }
+}
 
 #[cfg(test)]
 mod tests {
