@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = ["lemon-widgets"]
-patch = []
-pre = true
-summary = "Add Select<T> dropdown widget to lemon-widgets"
