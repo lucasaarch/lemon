@@ -192,6 +192,20 @@ fn find_slot_mut<'a>(
     None
 }
 
+/// Child component slots for `path` live in the parent slot's `children` list.
+fn slots_bucket_mut<'a>(
+    roots: &'a mut Vec<ComponentSlot>,
+    path: &NodePath,
+) -> &'a mut Vec<ComponentSlot> {
+    if path.0.is_empty() {
+        return roots;
+    }
+    let parent = NodePath(path.0[..path.0.len() - 1].to_vec());
+    &mut find_slot_mut(roots, &parent)
+        .expect("parent component slot must exist")
+        .children
+}
+
 fn unmount_component_slot(slots: &mut Vec<ComponentSlot>, path: &NodePath) -> bool {
     if let Some(index) = slots.iter().position(|slot| &slot.path == path) {
         slots.remove(index);
@@ -214,14 +228,18 @@ fn bootstrap_initial_components(
 ) {
     match element {
         Element::Component(component) => {
+            let bucket = slots_bucket_mut(slots, &path);
             mount_component_slot(
-                slots,
+                bucket,
                 path.clone(),
                 component.clone(),
                 Rc::clone(&deferred_effects),
             );
             if let Some(slot) = find_slot_mut(slots, &path) {
-                let rendered = render_without_subscribing(slot);
+                let rendered = slot
+                    .previous
+                    .clone()
+                    .expect("component slot must render on mount");
                 patches.push(Patch::ReplaceNode {
                     node: path.clone(),
                     new_element: rendered,
@@ -230,7 +248,6 @@ fn bootstrap_initial_components(
                     node: path.clone(),
                     component: component.clone(),
                 });
-                render_slot(slot, patches);
             }
         }
         Element::Column(container) | Element::Row(container) | Element::View(container) => {
@@ -265,27 +282,25 @@ fn mount_component_slot(
     component: ComponentElement,
     deferred_effects: Rc<RefCell<Vec<Effect>>>,
 ) {
-    let mut slot = create_component_slot(path, component.view(), true, deferred_effects);
-    bootstrap_nested_slot(&mut slot);
+    // Nested components must run their effect on mount so signal reads register subscribers.
+    // A lazy effect never runs until dirty, but it cannot become dirty until it has run once.
+    let mut slot = create_component_slot(path, component.view(), false, deferred_effects);
+    if let Some(initial) = slot.pending.borrow_mut().take() {
+        slot.previous = Some(initial);
+    }
     parent_slots.push(slot);
 }
 
 fn render_without_subscribing(slot: &ComponentSlot) -> Element {
-    slot.cx.borrow().reset_hooks();
-    freeze_element(&slot.view.borrow()(&slot.cx.borrow()))
+    crate::runtime::observer::without_observer(|| {
+        slot.cx.borrow().reset_hooks();
+        freeze_element(&slot.view.borrow()(&slot.cx.borrow()))
+    })
 }
 
 /// Re-render a slot for a parent-driven update without re-entering the slot's effect.
 fn sync_render(slot: &ComponentSlot) {
     *slot.pending.borrow_mut() = Some(render_without_subscribing(slot));
-}
-
-/// First mount of a nested slot: simulate the parent mount render plus the current flush.
-fn bootstrap_nested_slot(slot: &mut ComponentSlot) {
-    let first = render_without_subscribing(slot);
-    let second = render_without_subscribing(slot);
-    slot.previous = Some(first);
-    *slot.pending.borrow_mut() = Some(second);
 }
 
 fn handle_component_pair(
@@ -571,7 +586,7 @@ fn sync_slots_for_emitted_patches(
         match patch {
             Patch::MountComponent { node, component } if find_slot_mut(slots, node).is_none() => {
                 mount_component_slot(
-                    slots,
+                    slots_bucket_mut(slots, node),
                     node.clone(),
                     component.clone(),
                     Rc::clone(&deferred_effects),
@@ -586,7 +601,7 @@ fn sync_slots_for_emitted_patches(
                     sync_render(slot);
                 } else {
                     mount_component_slot(
-                        slots,
+                        slots_bucket_mut(slots, node),
                         node.clone(),
                         component.clone(),
                         Rc::clone(&deferred_effects),
@@ -764,6 +779,47 @@ mod tests {
     }
 
     #[test]
+    fn nested_component_effect_subscribes_to_signal_on_mount() {
+        use std::cell::RefCell;
+
+        use crate::element::builders::{Column, Component};
+
+        thread_local! {
+            static SIGNAL: RefCell<Option<Signal<i32>>> = const { RefCell::new(None) };
+        }
+
+        fn child(cx: &Cx) -> Element {
+            let n = cx.use_signal(0i32);
+            SIGNAL.with(|cell| *cell.borrow_mut() = Some(n.clone()));
+            let read = n.clone();
+            Text::new(move || read.get().to_string()).into_element()
+        }
+
+        let mut runtime = Runtime::new();
+        runtime.mount(|_cx| {
+            Column::new()
+                .child(Component::new(child).key(1))
+                .into_element()
+        });
+
+        let signal = SIGNAL.with(|cell| cell.borrow_mut().take().expect("signal captured"));
+        signal.set(1);
+
+        runtime.flush_effects();
+        let patches = runtime.take_patches();
+
+        assert!(
+            patches.iter().any(|patch| {
+                matches!(
+                    patch,
+                    Patch::UpdateText { content, .. } if content == "1"
+                )
+            }),
+            "expected nested component to react to signal, got {patches:?}"
+        );
+    }
+
+    #[test]
     fn flush_effects_processes_nested_component_slot_patches() {
         use crate::element::builders::{Column, Component};
 
@@ -816,6 +872,7 @@ mod tests {
                 .child(Component::new(child).key(1))
                 .into_element()
         });
+        runtime.take_patches();
 
         trigger.set(1);
         runtime.flush_effects();
@@ -823,7 +880,7 @@ mod tests {
 
         assert!(patches
             .iter()
-            .any(|patch| matches!(patch, Patch::UpdateText { content, .. } if content == "2")));
+            .any(|patch| { matches!(patch, Patch::UpdateText { content, .. } if content == "2") }));
     }
 
     #[test]
@@ -845,23 +902,45 @@ mod tests {
         let mut runtime = Runtime::new();
         runtime.mount(move |_cx| {
             let view = match p2.get() {
-                0 | 2 => counting_child,
+                0 | 2 | 3 => counting_child,
                 _ => child_b,
             };
             Column::new()
                 .child(Component::new(view).key(1))
                 .into_element()
         });
+        runtime.take_patches();
 
         phase.set(1);
         runtime.flush_effects();
+        runtime.take_patches();
+
         phase.set(2);
         runtime.flush_effects();
-        let patches = runtime.take_patches();
+        let remount_patches = runtime.take_patches();
+        assert!(
+            remount_patches
+                .iter()
+                .any(|patch| matches!(patch, Patch::UnmountComponent { .. })),
+            "expected unmount when swapping back to counting_child, got {remount_patches:?}"
+        );
+        assert!(
+            remount_patches
+                .iter()
+                .any(|patch| matches!(patch, Patch::MountComponent { .. })),
+            "expected remount when swapping back to counting_child, got {remount_patches:?}"
+        );
 
-        assert!(patches
-            .iter()
-            .any(|patch| matches!(patch, Patch::UpdateText { content, .. } if content == "2")));
+        // Fresh hook state after remount: first parent-driven sync should go 1 -> 2.
+        phase.set(3);
+        runtime.flush_effects();
+        let patches = runtime.take_patches();
+        assert!(
+            patches.iter().any(|patch| {
+                matches!(patch, Patch::UpdateText { content, .. } if content == "2")
+            }),
+            "expected UpdateText \"2\" after remount, got {patches:?}"
+        );
     }
 
     #[test]

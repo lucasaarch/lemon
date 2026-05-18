@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Weak;
 
 pub trait Subscriber {
@@ -7,6 +7,28 @@ pub trait Subscriber {
 
 thread_local! {
     static OBSERVER_STACK: RefCell<Vec<Weak<dyn Subscriber>>> = RefCell::new(Vec::new());
+    static SUPPRESS_NOTIFY: Cell<bool> = const { Cell::new(false) };
+}
+
+/// Runs `f` without recording signal dependencies or notifying subscribers on writes.
+pub fn without_observer<R>(f: impl FnOnce() -> R) -> R {
+    let prev_notify = SUPPRESS_NOTIFY.with(|flag| {
+        let prev = flag.get();
+        flag.set(true);
+        prev
+    });
+    let result = OBSERVER_STACK.with(|stack| {
+        let stack_len = stack.borrow().len();
+        let out = f();
+        stack.borrow_mut().truncate(stack_len);
+        out
+    });
+    SUPPRESS_NOTIFY.with(|flag| flag.set(prev_notify));
+    result
+}
+
+pub(crate) fn notifications_suppressed() -> bool {
+    SUPPRESS_NOTIFY.with(|flag| flag.get())
 }
 
 struct StackGuard;

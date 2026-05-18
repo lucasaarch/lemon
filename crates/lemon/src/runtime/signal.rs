@@ -46,6 +46,9 @@ impl<T: Clone + 'static> Signal<T> {
     }
 
     fn notify(&self) {
+        if crate::runtime::observer::notifications_suppressed() {
+            return;
+        }
         let subs: Vec<Rc<dyn Subscriber>> = {
             let mut inner = self.0.borrow_mut();
             let mut upgraded = Vec::with_capacity(inner.subscribers.len());
