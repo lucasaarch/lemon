@@ -10,6 +10,7 @@ members = [
     "examples/components",
     "examples/layout",
     "examples/form",
+    "examples/rich",
 ]
 resolver = "2"
 
