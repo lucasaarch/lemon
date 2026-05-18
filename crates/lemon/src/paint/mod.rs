@@ -142,6 +142,19 @@ fn paint_node<'a>(
         return;
     };
 
+    let opacity = resolved_opacity(node.style.opacity);
+    let use_opacity_layer = opacity < 1.0;
+    if use_opacity_layer {
+        // Keep overflow-visible descendants paintable outside the node's layout bounds.
+        scene.push_layer(
+            Fill::NonZero,
+            BlendMode::default(),
+            opacity,
+            ctx.base,
+            &clip_everything(),
+        );
+    }
+
     paint_container(node, rect, scene, ctx, stats);
     paint_text(node, rect, scene, ctx, stats);
     paint_image(node, rect, scene, ctx);
@@ -186,6 +199,10 @@ fn paint_node<'a>(
     );
     paint_scrollbar(node, rect, layout, scene, ctx, stats);
     paint_widget_scroll_bar(node, rect, layout, scene, ctx, stats);
+
+    if use_opacity_layer {
+        scene.pop_layer();
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -508,6 +525,14 @@ fn layout_rect_to_rounded(rect: &LayoutRect, radii: &CornerRadii) -> RoundedRect
 
 fn to_peniko_color(color: Color) -> PenikoColor {
     AlphaColor::new([color.r, color.g, color.b, color.a])
+}
+
+fn resolved_opacity(opacity: f32) -> f32 {
+    if opacity.is_finite() {
+        opacity.clamp(0.0, 1.0)
+    } else {
+        1.0
+    }
 }
 
 fn paint_focus_ring(
@@ -1053,6 +1078,24 @@ mod tests {
 
         let stats = layout_and_paint(&mut tree, 1.0);
         assert_eq!(stats.fills, 2, "overflow clipping should keep both fills");
+    }
+
+    #[test]
+    fn partial_opacity_paints_without_panic() {
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(100.0)
+                .height(80.0)
+                .background(Color::rgb8(40, 80, 120))
+                .opacity(0.5)
+                .child(Text::new("hello").font_size(12.0))
+                .into_element(),
+        )
+        .unwrap();
+
+        let stats = layout_and_paint(&mut tree, 1.0);
+        assert_eq!(stats.fills, 1);
+        assert!(stats.glyph_runs > 0);
     }
 
     #[test]

@@ -974,6 +974,11 @@ mod tests {
     }
 
     #[test]
+    fn style_props_default_opacity_is_opaque() {
+        assert_eq!(StyleProps::default().opacity, 1.0);
+    }
+
+    #[test]
     fn per_axis_gap_overrides_uniform_gap() {
         let style = StyleProps {
             gap: Some(5.0),

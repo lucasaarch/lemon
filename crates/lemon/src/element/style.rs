@@ -93,7 +93,7 @@ impl CornerRadii {
 ///
 /// App code usually sets these through builder methods ([`Column::gap`](crate::element::builders::Column::gap), etc.)
 /// rather than constructing `StyleProps` directly.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct StyleProps {
     pub width: Option<Dimension>,
     pub height: Option<Dimension>,
@@ -115,6 +115,11 @@ pub struct StyleProps {
     /// [`row_gap`](crate::element::builders::Column::row_gap) rather than setting these directly.
     pub column_gap: Option<f32>,
     pub row_gap: Option<f32>,
+    /// Opacity multiplier applied to this node's painted output and descendants.
+    ///
+    /// `0.0` is fully transparent and `1.0` is fully opaque.
+    /// Container builders clamp values to the valid `0.0..=1.0` range.
+    pub opacity: f32,
     pub flex_grow: Option<f32>,
     pub flex_shrink: Option<f32>,
     pub align_items: Option<Align>,
@@ -135,6 +140,32 @@ pub struct StyleProps {
     /// Use the builder method [`.absolute()`](crate::element::builders::View::absolute) rather
     /// than setting this field directly.
     pub position_absolute: bool,
+}
+
+impl Default for StyleProps {
+    fn default() -> Self {
+        Self {
+            width: None,
+            height: None,
+            padding: None,
+            margin: None,
+            inset: None,
+            gap: None,
+            column_gap: None,
+            row_gap: None,
+            opacity: 1.0,
+            flex_grow: None,
+            flex_shrink: None,
+            align_items: None,
+            justify_content: None,
+            overflow: Overflow::Visible,
+            z_index: 0,
+            align_self: None,
+            focusable: false,
+            cursor: crate::element::events::Cursor::default(),
+            position_absolute: false,
+        }
+    }
 }
 
 /// sRGB color with components in `0.0..=1.0`.
