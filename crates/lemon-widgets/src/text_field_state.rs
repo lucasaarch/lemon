@@ -53,7 +53,9 @@ impl TextFieldState {
         self.clamp_cursor_to_boundary();
 
         match &event.key {
-            LemonKey::Character(chars) if !event.modifiers.ctrl && !event.modifiers.meta => {
+            LemonKey::Character(chars)
+                if !event.modifiers.ctrl && !event.modifiers.alt && !event.modifiers.meta =>
+            {
                 for ch in chars.chars() {
                     self.value.insert(self.cursor, ch);
                     self.cursor += ch.len_utf8();
@@ -88,6 +90,7 @@ impl TextFieldState {
         }
     }
 
+    /// Clamps the cursor inside the current text and onto a UTF-8 char boundary.
     fn clamp_cursor_to_boundary(&mut self) {
         self.cursor = self.cursor.min(self.value.len());
         while self.cursor > 0 && !self.value.is_char_boundary(self.cursor) {
@@ -95,6 +98,7 @@ impl TextFieldState {
         }
     }
 
+    /// Returns the previous UTF-8 character boundary at or before `pos`.
     fn prev_char_boundary(&self, pos: usize) -> usize {
         if pos == 0 {
             return 0;
@@ -107,6 +111,7 @@ impl TextFieldState {
         cursor
     }
 
+    /// Returns the next UTF-8 character boundary at or after `pos`.
     fn next_char_boundary(&self, pos: usize) -> usize {
         if pos >= self.value.len() {
             return self.value.len();
@@ -253,6 +258,41 @@ mod tests {
 
         state.handle_key(&key(LemonKey::Named(NamedKey::Backspace)));
         assert_eq!(state.value, "b");
+        assert_eq!(state.cursor, 0);
+    }
+
+    #[test]
+    fn modified_character_shortcuts_are_not_inserted() {
+        let mut state = TextFieldState::new("");
+        state.handle_key(&KeyEvent {
+            key: LemonKey::Character("x".into()),
+            modifiers: Modifiers {
+                ctrl: true,
+                ..Default::default()
+            },
+            repeat: false,
+            state: KeyState::Pressed,
+        });
+        state.handle_key(&KeyEvent {
+            key: LemonKey::Character("x".into()),
+            modifiers: Modifiers {
+                alt: true,
+                ..Default::default()
+            },
+            repeat: false,
+            state: KeyState::Pressed,
+        });
+        state.handle_key(&KeyEvent {
+            key: LemonKey::Character("x".into()),
+            modifiers: Modifiers {
+                meta: true,
+                ..Default::default()
+            },
+            repeat: false,
+            state: KeyState::Pressed,
+        });
+
+        assert_eq!(state.value, "");
         assert_eq!(state.cursor, 0);
     }
 }
