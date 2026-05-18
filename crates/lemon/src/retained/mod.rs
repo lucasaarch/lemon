@@ -73,8 +73,11 @@ pub struct EventHandlers {
     pub on_hover_leave: Option<Rc<dyn Fn()>>,
     /// Vertical wheel delta in logical pixels; set via [`.on_scroll`](crate::element::builders::Column::on_scroll).
     pub on_scroll: Option<Rc<dyn Fn(f64)>>,
+    /// Called when a click is dispatched outside this retained node's bounds.
     pub on_click_outside: Option<Rc<dyn Fn()>>,
+    /// Called when a pointer press lands inside this retained node with normalized `(x, y)` coordinates.
     pub on_pointer_down: Option<Rc<dyn Fn(f32, f32)>>,
+    /// Called when pointer movement is reported for this retained node with normalized `(x, y)` coordinates.
     pub on_pointer_move: Option<Rc<dyn Fn(f32, f32)>>,
 }
 
