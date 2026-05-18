@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = ["lemon", "lemon-widgets"]
-patch = []
-pre = true
-summary = "Add WidgetChromeTokens to Theme; scrollbar, caret, and focus-ring colors now read from active theme"

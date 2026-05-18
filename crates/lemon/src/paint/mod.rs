@@ -468,7 +468,9 @@ fn paint_focus_ring(
         scene,
         ctx,
         &shape,
-        crate::theme::current_theme().chrome.focus_ring,
+        node.paint
+            .focus_ring_color
+            .unwrap_or(crate::theme::current_theme().chrome.focus_ring),
         2.0,
         stats,
     );
@@ -626,7 +628,11 @@ fn paint_widget_scroll_bar(
     scene.fill(
         Fill::NonZero,
         ctx.base,
-        to_peniko_color(crate::theme::current_theme().chrome.scrollbar_track),
+        to_peniko_color(
+            node.paint
+                .scroll_track_color
+                .unwrap_or(crate::theme::current_theme().chrome.scrollbar_track),
+        ),
         None,
         &track,
     );
@@ -645,7 +651,11 @@ fn paint_widget_scroll_bar(
     scene.fill(
         Fill::NonZero,
         ctx.base,
-        to_peniko_color(crate::theme::current_theme().chrome.scrollbar_thumb),
+        to_peniko_color(
+            node.paint
+                .scroll_thumb_color
+                .unwrap_or(crate::theme::current_theme().chrome.scrollbar_thumb),
+        ),
         None,
         &thumb,
     );
@@ -693,7 +703,11 @@ fn paint_scrollbar(
     scene.fill(
         Fill::NonZero,
         ctx.base,
-        to_peniko_color(crate::theme::current_theme().chrome.scrollbar_track),
+        to_peniko_color(
+            node.paint
+                .scroll_track_color
+                .unwrap_or(crate::theme::current_theme().chrome.scrollbar_track),
+        ),
         None,
         &track,
     );
@@ -712,7 +726,11 @@ fn paint_scrollbar(
     scene.fill(
         Fill::NonZero,
         ctx.base,
-        to_peniko_color(crate::theme::current_theme().chrome.scrollbar_thumb),
+        to_peniko_color(
+            node.paint
+                .scroll_thumb_color
+                .unwrap_or(crate::theme::current_theme().chrome.scrollbar_thumb),
+        ),
         None,
         &thumb,
     );

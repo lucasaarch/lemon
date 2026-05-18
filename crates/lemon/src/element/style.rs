@@ -190,6 +190,12 @@ pub struct PaintProps {
     pub radius: CornerRadii,
     /// Optional image drawn inside the container using object-fit: contain scaling.
     pub image: Option<crate::asset::ImageHandle>,
+    /// Optional override for widget scrollbar track painting.
+    pub scroll_track_color: Option<ColorSource>,
+    /// Optional override for widget scrollbar thumb painting.
+    pub scroll_thumb_color: Option<ColorSource>,
+    /// Optional override for text-input focus ring painting.
+    pub focus_ring_color: Option<ColorSource>,
 }
 
 impl Default for PaintProps {
@@ -200,6 +206,9 @@ impl Default for PaintProps {
             border_width: 0.0,
             radius: CornerRadii::default(),
             image: None,
+            scroll_track_color: None,
+            scroll_thumb_color: None,
+            focus_ring_color: None,
         }
     }
 }
@@ -215,6 +224,18 @@ impl std::fmt::Debug for PaintProps {
             .field("border_width", &self.border_width)
             .field("radius", &self.radius)
             .field("image", &self.image)
+            .field(
+                "scroll_track_color",
+                &self.scroll_track_color.as_ref().map(|c| c.resolve()),
+            )
+            .field(
+                "scroll_thumb_color",
+                &self.scroll_thumb_color.as_ref().map(|c| c.resolve()),
+            )
+            .field(
+                "focus_ring_color",
+                &self.focus_ring_color.as_ref().map(|c| c.resolve()),
+            )
             .finish()
     }
 }
@@ -228,6 +249,9 @@ pub struct PaintData {
     pub radius: CornerRadii,
     /// Optional image drawn inside the container using object-fit: contain scaling.
     pub image: Option<crate::asset::ImageHandle>,
+    pub scroll_track_color: Option<Color>,
+    pub scroll_thumb_color: Option<Color>,
+    pub focus_ring_color: Option<Color>,
 }
 
 impl PaintProps {
@@ -238,6 +262,9 @@ impl PaintProps {
             border_width: self.border_width,
             radius: self.radius.clone(),
             image: self.image.clone(),
+            scroll_track_color: self.scroll_track_color.as_ref().map(|c| c.resolve()),
+            scroll_thumb_color: self.scroll_thumb_color.as_ref().map(|c| c.resolve()),
+            focus_ring_color: self.focus_ring_color.as_ref().map(|c| c.resolve()),
         }
     }
 }

@@ -15,4 +15,7 @@ pub use lemon::platform::{run, WindowConfig};
 pub use lemon::runtime::cx::Cx;
 pub use lemon::runtime::signal::Signal;
 
-pub use crate::{Button, Image, Scroll, Select, Slider, TextFieldState, TextInput};
+pub use crate::{
+    Button, Image, Scroll, ScrollStyle, Select, SelectStyle, Slider, SliderStyle, TextFieldState,
+    TextInput, TextInputStyle,
+};

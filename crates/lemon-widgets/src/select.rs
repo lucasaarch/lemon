@@ -8,6 +8,69 @@ use lemon::{
     Cx, Signal,
 };
 
+/// Per-widget visual overrides for [`Select`].
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SelectStyle {
+    trigger_height: Option<f32>,
+    trigger_padding: Option<f32>,
+    trigger_background: Option<Color>,
+    trigger_radius: Option<f32>,
+    dropdown_background: Option<Color>,
+    dropdown_border: Option<Color>,
+    dropdown_radius: Option<f32>,
+    item_padding: Option<f32>,
+}
+
+impl SelectStyle {
+    /// Overrides trigger height in logical points.
+    pub fn trigger_height(mut self, value: f32) -> Self {
+        self.trigger_height = Some(value);
+        self
+    }
+
+    /// Overrides trigger padding in logical points.
+    pub fn trigger_padding(mut self, value: f32) -> Self {
+        self.trigger_padding = Some(value);
+        self
+    }
+
+    /// Overrides trigger background color.
+    pub fn trigger_background(mut self, color: Color) -> Self {
+        self.trigger_background = Some(color);
+        self
+    }
+
+    /// Overrides trigger corner radius in logical points.
+    pub fn trigger_radius(mut self, value: f32) -> Self {
+        self.trigger_radius = Some(value);
+        self
+    }
+
+    /// Overrides dropdown background color.
+    pub fn dropdown_background(mut self, color: Color) -> Self {
+        self.dropdown_background = Some(color);
+        self
+    }
+
+    /// Overrides dropdown border color.
+    pub fn dropdown_border(mut self, color: Color) -> Self {
+        self.dropdown_border = Some(color);
+        self
+    }
+
+    /// Overrides dropdown corner radius in logical points.
+    pub fn dropdown_radius(mut self, value: f32) -> Self {
+        self.dropdown_radius = Some(value);
+        self
+    }
+
+    /// Overrides option-item padding in logical points.
+    pub fn item_padding(mut self, value: f32) -> Self {
+        self.item_padding = Some(value);
+        self
+    }
+}
+
 /// Dropdown select widget backed by user-owned signal state.
 ///
 /// `Select<T>` renders a trigger button that opens a dropdown list of choices. Selecting an option
@@ -22,8 +85,8 @@ use lemon::{
 /// # Examples
 ///
 /// ```no_run
-/// use lemon::{Cx, element::Element};
-/// use lemon_widgets::Select;
+/// use lemon::{Color, Cx, element::Element};
+/// use lemon_widgets::{Select, SelectStyle};
 ///
 /// #[derive(Clone, PartialEq)]
 /// enum Size { Small, Medium, Large }
@@ -39,6 +102,7 @@ use lemon::{
 ///             (Size::Large, "Large".to_string()),
 ///         ],
 ///     )
+///     .style(SelectStyle::default().dropdown_background(Color::rgb8(30, 30, 40)))
 ///     .placeholder("Choose a size")
 ///     .width(180.0)
 ///     .into_element()
@@ -58,6 +122,7 @@ pub struct Select<T> {
     dropdown_border: Color,
     dropdown_radius: f32,
     item_padding: f32,
+    style: SelectStyle,
 }
 
 impl<T: Clone + PartialEq + 'static> Select<T> {
@@ -96,6 +161,7 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
             dropdown_border: theme.colors.border,
             dropdown_radius: theme.radius.md,
             item_padding: theme.spacing.sm,
+            style: SelectStyle::default(),
         }
     }
 
@@ -110,6 +176,30 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
     /// Fixed width in logical points applied to the trigger and dropdown list.
     pub fn width(mut self, v: f32) -> Self {
         self.width = Some(v);
+        self
+    }
+
+    /// Replaces all select style overrides.
+    pub fn style(mut self, style: SelectStyle) -> Self {
+        self.style = style;
+        self
+    }
+
+    /// Overrides trigger background color for this widget.
+    pub fn trigger_background(mut self, color: Color) -> Self {
+        self.style.trigger_background = Some(color);
+        self
+    }
+
+    /// Overrides dropdown background color for this widget.
+    pub fn dropdown_background(mut self, color: Color) -> Self {
+        self.style.dropdown_background = Some(color);
+        self
+    }
+
+    /// Overrides dropdown border color for this widget.
+    pub fn dropdown_border(mut self, color: Color) -> Self {
+        self.style.dropdown_border = Some(color);
         self
     }
 
@@ -132,6 +222,15 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
         let dropdown_border = self.dropdown_border;
         let dropdown_radius = self.dropdown_radius;
         let item_padding = self.item_padding;
+        let style = self.style;
+        let trigger_height = style.trigger_height.unwrap_or(trigger_height);
+        let trigger_padding = style.trigger_padding.unwrap_or(trigger_padding);
+        let trigger_background = style.trigger_background.unwrap_or(trigger_background);
+        let trigger_radius = style.trigger_radius.unwrap_or(trigger_radius);
+        let dropdown_background = style.dropdown_background.unwrap_or(dropdown_background);
+        let dropdown_border = style.dropdown_border.unwrap_or(dropdown_border);
+        let dropdown_radius = style.dropdown_radius.unwrap_or(dropdown_radius);
+        let item_padding = style.item_padding.unwrap_or(item_padding);
 
         // Derive trigger label from the current selection, falling back to placeholder.
         let trigger_label = current
@@ -568,6 +667,60 @@ mod tests {
             panic!("expected option View");
         };
         assert_eq!(option.style.padding, Some(Edges::all(custom.spacing.sm)));
+
+        set_active_theme(previous);
+    }
+
+    #[test]
+    fn select_style_overrides_and_theme_fallbacks() {
+        use lemon::{
+            current_theme,
+            element::style::{CornerRadii, Edges},
+            set_active_theme, Theme,
+        };
+
+        let previous = current_theme();
+        let mut custom = Theme::default_dark();
+        custom.colors.accent = lemon::Color::rgb8(10, 20, 30);
+        custom.colors.surface = lemon::Color::rgb8(40, 50, 60);
+        custom.colors.border = lemon::Color::rgb8(70, 80, 90);
+        custom.spacing.sm = 9.0;
+        custom.radius.md = 11.0;
+        set_active_theme(custom);
+
+        let cx = Cx::new();
+        let value = Signal::new(None::<Color>);
+        let open = Signal::new(true);
+        let Element::Column(root) = Select::with_open(&cx, value, open, make_options())
+            .style(
+                SelectStyle::default()
+                    .trigger_background(lemon::Color::rgb8(1, 2, 3))
+                    .dropdown_background(lemon::Color::rgb8(4, 5, 6))
+                    .dropdown_border(lemon::Color::rgb8(7, 8, 9)),
+            )
+            .into_element()
+        else {
+            panic!("expected Column");
+        };
+
+        let Element::Button(trigger) = &root.children[0] else {
+            panic!("expected trigger Button");
+        };
+        assert_eq!(trigger.style.padding, Some(Edges::all(9.0)));
+        let trigger_paint = trigger.paint.resolve();
+        assert_eq!(trigger_paint.background, Some(lemon::Color::rgb8(1, 2, 3)));
+        assert_eq!(trigger_paint.radius, CornerRadii::all(11.0));
+
+        let Element::Column(dropdown) = &root.children[1] else {
+            panic!("expected dropdown Column");
+        };
+        let dropdown_paint = dropdown.paint.resolve();
+        assert_eq!(dropdown_paint.background, Some(lemon::Color::rgb8(4, 5, 6)));
+        assert_eq!(
+            dropdown_paint.border_color,
+            Some(lemon::Color::rgb8(7, 8, 9))
+        );
+        assert_eq!(dropdown_paint.radius, CornerRadii::all(11.0));
 
         set_active_theme(previous);
     }

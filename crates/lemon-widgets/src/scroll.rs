@@ -2,9 +2,30 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use lemon::{
-    element::{builders::View, Element},
+    element::{builders::View, style::Color, style::ColorSource, Element},
     Cx, Overflow, Signal,
 };
+
+/// Per-widget visual overrides for [`Scroll`].
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ScrollStyle {
+    scrollbar_track_color: Option<Color>,
+    scrollbar_thumb_color: Option<Color>,
+}
+
+impl ScrollStyle {
+    /// Overrides the scrollbar track color.
+    pub fn scrollbar_track_color(mut self, color: Color) -> Self {
+        self.scrollbar_track_color = Some(color);
+        self
+    }
+
+    /// Overrides the scrollbar thumb color.
+    pub fn scrollbar_thumb_color(mut self, color: Color) -> Self {
+        self.scrollbar_thumb_color = Some(color);
+        self
+    }
+}
 
 /// Vertical scroll viewport with internal offset state and a proportional scrollbar thumb.
 ///
@@ -20,6 +41,7 @@ pub struct Scroll {
     /// Fallback max scroll before the first layout measurement (virtualized lists).
     content_height: Option<f32>,
     layout_max: Rc<Cell<f64>>,
+    style: ScrollStyle,
 }
 
 impl Scroll {
@@ -37,6 +59,7 @@ impl Scroll {
             width: None,
             content_height: None,
             layout_max: Rc::new(Cell::new(f64::MAX)),
+            style: ScrollStyle::default(),
         }
     }
 
@@ -58,6 +81,24 @@ impl Scroll {
     /// mounted subtree is shorter than the logical list.
     pub fn content_height(mut self, height: f32) -> Self {
         self.content_height = Some(height);
+        self
+    }
+
+    /// Replaces all scrollbar style overrides.
+    pub fn style(mut self, style: ScrollStyle) -> Self {
+        self.style = style;
+        self
+    }
+
+    /// Overrides the scrollbar track color for this widget.
+    pub fn scrollbar_track_color(mut self, color: Color) -> Self {
+        self.style.scrollbar_track_color = Some(color);
+        self
+    }
+
+    /// Overrides the scrollbar thumb color for this widget.
+    pub fn scrollbar_thumb_color(mut self, color: Color) -> Self {
+        self.style.scrollbar_thumb_color = Some(color);
         self
     }
 
@@ -94,7 +135,16 @@ impl Scroll {
         if let Some(w) = width {
             viewport = viewport.width(w);
         }
-        viewport.into_element()
+        let mut element = viewport.into_element();
+        if let Element::View(viewport) = &mut element {
+            if let Some(track) = self.style.scrollbar_track_color {
+                viewport.paint.scroll_track_color = Some(ColorSource::Static(track));
+            }
+            if let Some(thumb) = self.style.scrollbar_thumb_color {
+                viewport.paint.scroll_thumb_color = Some(ColorSource::Static(thumb));
+            }
+        }
+        element
     }
 }
 
@@ -227,5 +277,42 @@ mod tests {
         let cell_b = view_a.handlers.scroll_layout_max.as_ref().unwrap();
 
         assert!(Rc::ptr_eq(&cell_a, cell_b));
+    }
+
+    #[test]
+    fn scroll_style_overrides_set_scrollbar_paint_colors() {
+        let offset = Signal::new(0.0f64);
+        let root = Scroll::with_offset(offset, lemon::element::builders::Text::new("item"))
+            .style(
+                ScrollStyle::default()
+                    .scrollbar_track_color(Color::rgb8(1, 2, 3))
+                    .scrollbar_thumb_color(Color::rgb8(4, 5, 6)),
+            )
+            .into_element();
+
+        let Element::View(viewport) = root else {
+            panic!("expected scroll viewport View");
+        };
+        let paint = viewport.paint.resolve();
+        assert_eq!(paint.scroll_track_color, Some(Color::rgb8(1, 2, 3)));
+        assert_eq!(paint.scroll_thumb_color, Some(Color::rgb8(4, 5, 6)));
+    }
+
+    #[test]
+    fn scroll_style_unset_fields_fall_back_to_theme_tokens() {
+        let offset = Signal::new(0.0f64);
+        let root = Scroll::with_offset(offset, lemon::element::builders::Text::new("item"))
+            .style(ScrollStyle::default().scrollbar_thumb_color(Color::rgb8(4, 5, 6)))
+            .into_element();
+
+        let Element::View(viewport) = root else {
+            panic!("expected scroll viewport View");
+        };
+        let paint = viewport.paint.resolve();
+        assert_eq!(paint.scroll_thumb_color, Some(Color::rgb8(4, 5, 6)));
+        assert_eq!(
+            paint.scroll_track_color, None,
+            "unset track color should keep theme fallback path"
+        );
     }
 }
