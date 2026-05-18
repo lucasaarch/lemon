@@ -93,6 +93,16 @@ macro_rules! container_builder {
                 self.0.handlers.on_hover_leave = Some(Rc::new(f));
                 self
             }
+            pub fn on_scroll(mut self, f: impl Fn(f64) + 'static) -> Self {
+                self.0.handlers.on_scroll = Some(Rc::new(f));
+                self
+            }
+            pub fn margin_top(mut self, v: f32) -> Self {
+                let mut edges = self.0.style.margin.take().unwrap_or_default();
+                edges.top = v;
+                self.0.style.margin = Some(edges);
+                self
+            }
             pub fn focusable(mut self) -> Self {
                 self.0.style.focusable = true;
                 self

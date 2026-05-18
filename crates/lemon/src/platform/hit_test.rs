@@ -121,6 +121,39 @@ pub fn dispatch_click(node: &RetainedNode) -> bool {
     }
 }
 
+/// Walk the retained tree in post-order and return the top-most node under
+/// `point` that has an `on_scroll` handler.
+pub fn hit_test_scroll<'a>(
+    node: &'a RetainedNode,
+    layout: &LayoutMap,
+    point: LogicalPoint,
+) -> Option<&'a RetainedNode> {
+    if matches!(node.kind, RetainedKind::Component { .. }) {
+        let mut hit = None;
+        for child in &node.children {
+            hit = hit_test_scroll(child, layout, point).or(hit);
+        }
+        return hit;
+    }
+
+    let mut hit = None;
+    for child in &node.children {
+        hit = hit_test_scroll(child, layout, point).or(hit);
+    }
+
+    if node.handlers.on_scroll.is_some() {
+        if let Some(id) = node.taffy_id {
+            if let Some(rect) = layout.get(id) {
+                if point_in_rect(point, rect) {
+                    hit = Some(node);
+                }
+            }
+        }
+    }
+
+    hit
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -289,5 +322,41 @@ mod tests {
         let found = find_node_by_taffy_id(root, child_id);
         assert!(found.is_some());
         assert_eq!(found.unwrap().text_content(), Some("b"));
+    }
+
+    #[test]
+    fn hit_test_scroll_finds_node_with_on_scroll() {
+        use std::cell::Cell;
+        let scrolled = Rc::new(Cell::new(false));
+        let s = scrolled.clone();
+
+        let mut tree = RetainedTree::mount(
+            Box_::new()
+                .width(200.0)
+                .height(150.0)
+                .on_scroll(move |_| s.set(true))
+                .into_element(),
+        )
+        .unwrap();
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 400.0,
+            },
+            1.0,
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let hit = hit_test_scroll(root, &layout, LogicalPoint::new(50.0, 50.0));
+        assert!(hit.is_some());
+        if let Some(node) = hit {
+            node.handlers.on_scroll.as_ref().unwrap()(10.0);
+        }
+        assert!(scrolled.get());
+
+        let miss = hit_test_scroll(root, &layout, LogicalPoint::new(300.0, 300.0));
+        assert!(miss.is_none());
     }
 }
