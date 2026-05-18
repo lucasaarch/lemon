@@ -961,7 +961,7 @@ dependencies = [
 
 [[package]]
 name = "images"
-version = "0.2.0-alpha.7"
+version = "0.2.0-alpha.9"
 dependencies = [
  "lemon",
  "lemon-widgets",
@@ -2073,7 +2073,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "scroll"
-version = "0.2.0-alpha.7"
+version = "0.2.0-alpha.9"
 dependencies = [
  "lemon",
  "lemon-widgets",
@@ -2094,7 +2094,7 @@ dependencies = [
 
 [[package]]
 name = "select"
-version = "0.2.0-alpha.7"
+version = "0.2.0-alpha.9"
 dependencies = [
  "lemon",
  "lemon-widgets",
@@ -2190,7 +2190,7 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "slider"
-version = "0.2.0-alpha.7"
+version = "0.2.0-alpha.9"
 dependencies = [
  "lemon",
  "lemon-widgets",
