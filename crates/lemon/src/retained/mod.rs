@@ -340,7 +340,10 @@ impl RetainedTree {
 
     fn build_text_node(&mut self, node: TextElement) -> Result<RetainedNode, RetainedError> {
         let content = node.content.resolve();
-        let color = node.style.color.unwrap_or_default();
+        let color = node
+            .style
+            .color
+            .unwrap_or_else(crate::element::style::default_text_color);
         let taffy_id = self.taffy.new_leaf(Style::default())?;
 
         Ok(RetainedNode::text(taffy_id, content, node.style, color))
@@ -352,10 +355,10 @@ impl RetainedTree {
         let label_style = TextStyle {
             font_size: 16.0,
             font_weight: 500,
-            font_family: "system-ui".to_string(),
+            font_family: crate::theme::current_theme().typography.font_family.clone(),
             line_height: 1.0,
             letter_spacing: 0.0,
-            color: Some(crate::element::style::default_text_color()),
+            color: Some(crate::theme::current_theme().colors.on_accent),
         };
 
         Ok(RetainedNode {

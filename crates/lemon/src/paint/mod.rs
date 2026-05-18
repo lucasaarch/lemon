@@ -7,7 +7,7 @@ use vello::peniko::{
 };
 use vello::{Glyph, Scene};
 
-use crate::element::style::{default_text_color, Color, CornerRadii, Edges, Overflow};
+use crate::element::style::{Color, CornerRadii, Edges, Overflow};
 use crate::layout::{measure_single_line_width, LayoutMap, LayoutRect};
 use crate::retained::{RetainedKind, RetainedNode, RetainedTree};
 
@@ -325,7 +325,7 @@ fn paint_text(
         return;
     };
 
-    let color = text.style.color.unwrap_or_else(default_text_color);
+    let color = crate::element::style::resolved_text_color(&text.style);
     let (origin_x, origin_y) = if matches!(node.kind, RetainedKind::Button) {
         let content = node
             .style
@@ -562,10 +562,13 @@ fn paint_text_input_caret(
         (f64::from(caret_x), f64::from(caret_top)),
         (f64::from(caret_x), f64::from(caret_bottom)),
     );
+    // Match the visible text color (value or placeholder), not only `chrome.caret`, so the
+    // caret stays visible when the app background does not match the active theme palette.
+    let caret_color = crate::element::style::resolved_text_color(&text_style);
     scene.stroke(
         &Stroke::new(1.5),
         ctx.base,
-        to_peniko_color(crate::theme::current_theme().chrome.caret),
+        to_peniko_color(caret_color),
         None,
         &line,
     );

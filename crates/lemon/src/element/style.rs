@@ -151,6 +151,15 @@ impl Color {
         self.a = a;
         self
     }
+
+    /// Converts to 8-bit sRGB channels for GPU clear colors and similar APIs.
+    pub fn to_rgb8(self) -> (u8, u8, u8) {
+        (
+            (self.r.clamp(0.0, 1.0) * 255.0).round() as u8,
+            (self.g.clamp(0.0, 1.0) * 255.0).round() as u8,
+            (self.b.clamp(0.0, 1.0) * 255.0).round() as u8,
+        )
+    }
 }
 
 /// A color that may be evaluated dynamically from a closure.
@@ -288,19 +297,47 @@ impl Default for TextStyle {
             font_family: typography.font_family,
             line_height: typography.line_height,
             letter_spacing: typography.letter_spacing,
-            color: Some(Color::rgb8(235, 235, 240)),
+            color: None,
         }
     }
 }
 
 /// Foreground used when a text node has no explicit color.
 pub fn default_text_color() -> Color {
-    Color::rgb8(235, 235, 240)
+    crate::theme::current_theme().colors.foreground
+}
+
+/// Resolved paint color for a text node (explicit style or theme foreground).
+pub fn resolved_text_color(style: &TextStyle) -> Color {
+    style.color.unwrap_or_else(default_text_color)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Overflow, StyleProps};
+    use super::{resolved_text_color, Color, Overflow, StyleProps, TextStyle};
+    use crate::theme::{set_active_theme, Theme};
+
+    #[test]
+    fn resolved_text_color_prefers_explicit_style() {
+        let style = TextStyle {
+            color: Some(Color::rgb8(255, 128, 64)),
+            ..TextStyle::default()
+        };
+        assert_eq!(resolved_text_color(&style), Color::rgb8(255, 128, 64));
+    }
+
+    #[test]
+    fn resolved_text_color_falls_back_to_theme_foreground() {
+        let original = crate::theme::current_theme();
+        let mut theme = Theme::default_dark();
+        theme.colors.foreground = Color::rgb8(200, 210, 220);
+        set_active_theme(theme);
+
+        let style = TextStyle::default();
+        assert_eq!(resolved_text_color(&style), Color::rgb8(200, 210, 220));
+
+        set_active_theme(original);
+    }
 
     #[test]
     fn style_props_default_overflow_is_visible() {

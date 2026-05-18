@@ -81,6 +81,8 @@ pub struct TextInput {
     placeholder: String,
     width: Option<f32>,
     placeholder_color: Color,
+    text_color: Color,
+    surface_color: Color,
     border_color: Color,
     padding: f32,
     radius: f32,
@@ -100,6 +102,8 @@ impl TextInput {
             placeholder: String::new(),
             width: None,
             placeholder_color: theme.colors.foreground_secondary,
+            text_color: theme.colors.foreground,
+            surface_color: theme.colors.surface,
             border_color: theme.colors.border,
             padding: theme.spacing.sm,
             radius: theme.radius.sm,
@@ -178,10 +182,13 @@ impl TextInput {
                 .color(placeholder_color)
                 .into_element()
         } else {
-            Text::new(current_value).into_element()
+            Text::new(current_value)
+                .color(self.text_color)
+                .into_element()
         };
 
         let mut container = View::new()
+            .background(self.surface_color)
             .padding(padding)
             .border(border_color, 1.5)
             .radius(radius)
@@ -264,6 +271,22 @@ mod tests {
             panic!("expected placeholder Text");
         };
         assert_eq!(text.style.color, Some(custom.colors.foreground_secondary));
+
+        let mut field = TextFieldState::new("hello");
+        field.cursor = 5;
+        let state_with_text = Signal::new(field);
+        let Element::View(filled) = TextInput::new(&cx, state_with_text).into_element() else {
+            panic!("expected View element");
+        };
+        let Element::Row(filled_row) = &filled.children[0] else {
+            panic!("expected inner Row");
+        };
+        let Element::Text(filled_text) = &filled_row.children[0] else {
+            panic!("expected value Text");
+        };
+        assert_eq!(filled_text.style.color, Some(custom.colors.foreground));
+        let filled_paint = filled.paint.resolve();
+        assert_eq!(filled_paint.background, Some(custom.colors.surface));
 
         set_active_theme(previous);
     }

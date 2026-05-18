@@ -5,6 +5,9 @@ use crate::element::style::Color;
 /// Application theme grouped by token families.
 ///
 /// Use [`Theme::default_light`] or [`Theme::default_dark`] as sensible base palettes.
+///
+/// [`Theme::default`] and [`run`](crate::platform::run) use [`Theme::default_dark`] so new apps
+/// get light foreground text on the default near-black window clear color.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Theme {
     /// Color tokens used for backgrounds, text, accents, and borders.
@@ -20,6 +23,11 @@ pub struct Theme {
 }
 
 impl Theme {
+    /// Default app theme ([`default_dark`](Self::default_dark)).
+    pub fn default() -> Self {
+        Self::default_dark()
+    }
+
     /// Returns the default light theme.
     pub fn default_light() -> Self {
         Self {
@@ -28,6 +36,7 @@ impl Theme {
                 surface: Color::rgb8(255, 255, 255),
                 foreground: Color::rgb8(15, 23, 42),
                 foreground_secondary: Color::rgb8(71, 85, 105),
+                on_accent: Color::rgb8(255, 255, 255),
                 accent: Color::rgb8(59, 130, 246),
                 accent_hover: Color::rgb8(37, 99, 235),
                 error: Color::rgb8(220, 38, 38),
@@ -67,10 +76,11 @@ impl Theme {
     pub fn default_dark() -> Self {
         Self {
             colors: ColorTokens {
-                background: Color::rgb8(17, 24, 39),
+                background: Color::rgb8(0, 0, 0),
                 surface: Color::rgb8(35, 35, 52),
-                foreground: Color::rgb8(235, 235, 240),
+                foreground: Color::rgb8(255, 255, 255),
                 foreground_secondary: Color::rgb8(156, 163, 175),
+                on_accent: Color::rgb8(255, 255, 255),
                 accent: Color::rgb8(59, 130, 246),
                 accent_hover: Color::rgb8(37, 99, 235),
                 error: Color::rgb8(248, 113, 113),
@@ -114,6 +124,8 @@ pub struct ColorTokens {
     pub surface: Color,
     pub foreground: Color,
     pub foreground_secondary: Color,
+    /// Text and icons on [`accent`](Self::accent) fills (buttons, select triggers).
+    pub on_accent: Color,
     pub accent: Color,
     pub accent_hover: Color,
     pub error: Color,
@@ -184,7 +196,7 @@ pub struct RadiusTokens {
 }
 
 thread_local! {
-    static ACTIVE_THEME: RefCell<Rc<Theme>> = RefCell::new(Rc::new(Theme::default_light()));
+    static ACTIVE_THEME: RefCell<Rc<Theme>> = RefCell::new(Rc::new(Theme::default_dark()));
 }
 
 /// Sets the active theme for the current thread.
@@ -205,11 +217,11 @@ mod tests {
     use crate::element::style::Color;
 
     #[test]
-    fn active_theme_defaults_to_light_on_new_thread() {
+    fn active_theme_defaults_to_dark_on_new_thread() {
         let from_thread = std::thread::spawn(current_theme)
             .join()
             .expect("theme thread should join");
-        assert_eq!(from_thread, Theme::default_light());
+        assert_eq!(from_thread, Theme::default_dark());
     }
 
     #[test]

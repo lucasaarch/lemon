@@ -19,6 +19,7 @@ pub struct SelectStyle {
     dropdown_border: Option<Color>,
     dropdown_radius: Option<f32>,
     item_padding: Option<f32>,
+    item_text_color: Option<Color>,
 }
 
 impl SelectStyle {
@@ -67,6 +68,12 @@ impl SelectStyle {
     /// Overrides option-item padding in logical points.
     pub fn item_padding(mut self, value: f32) -> Self {
         self.item_padding = Some(value);
+        self
+    }
+
+    /// Overrides dropdown option label color.
+    pub fn item_text_color(mut self, color: Color) -> Self {
+        self.item_text_color = Some(color);
         self
     }
 }
@@ -122,6 +129,7 @@ pub struct Select<T> {
     dropdown_border: Color,
     dropdown_radius: f32,
     item_padding: f32,
+    item_text_color: Color,
     style: SelectStyle,
 }
 
@@ -161,6 +169,7 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
             dropdown_border: theme.colors.border,
             dropdown_radius: theme.radius.md,
             item_padding: theme.spacing.sm,
+            item_text_color: theme.colors.foreground,
             style: SelectStyle::default(),
         }
     }
@@ -222,6 +231,7 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
         let dropdown_border = self.dropdown_border;
         let dropdown_radius = self.dropdown_radius;
         let item_padding = self.item_padding;
+        let item_text_color = self.item_text_color;
         let style = self.style;
         let trigger_height = style.trigger_height.unwrap_or(trigger_height);
         let trigger_padding = style.trigger_padding.unwrap_or(trigger_padding);
@@ -231,6 +241,7 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
         let dropdown_border = style.dropdown_border.unwrap_or(dropdown_border);
         let dropdown_radius = style.dropdown_radius.unwrap_or(dropdown_radius);
         let item_padding = style.item_padding.unwrap_or(item_padding);
+        let item_text_color = style.item_text_color.unwrap_or(item_text_color);
 
         // Derive trigger label from the current selection, falling back to placeholder.
         let trigger_label = current
@@ -290,7 +301,11 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
                         val_c.set(Some(opt.clone()));
                         open_c.set(false);
                     })
-                    .child(Text::new(label).font_size(14.0));
+                    .child(
+                        Text::new(label)
+                            .font_size(14.0)
+                            .color(item_text_color),
+                    );
                 if let Some(w) = width {
                     item = item.width(w);
                 }

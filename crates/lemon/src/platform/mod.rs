@@ -83,7 +83,7 @@ pub struct AppState {
 
 impl AppState {
     pub fn new(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) -> Self {
-        Self::with_theme(config, Theme::default_light(), root)
+        Self::with_theme(config, Theme::default(), root)
     }
 
     fn with_theme(
@@ -586,7 +586,7 @@ impl AppState {
                 &self.scene,
                 &surface.target_view,
                 &vello::RenderParams {
-                    base_color: Color::from_rgb8(18, 18, 22),
+                    base_color: theme_background_peniko(self.theme.colors.background),
                     width,
                     height,
                     antialiasing_method: AaConfig::Area,
@@ -787,6 +787,11 @@ impl ApplicationHandler for LemonApplication {
     }
 }
 
+fn theme_background_peniko(color: crate::element::style::Color) -> Color {
+    let (r, g, b) = color.to_rgb8();
+    Color::from_rgb8(r, g, b)
+}
+
 /// Opens a native window and runs `root` as the UI until the window closes.
 ///
 /// `root` is called on the first frame and again whenever reactive state read during the last
@@ -798,7 +803,7 @@ impl ApplicationHandler for LemonApplication {
 ///
 /// See the `counter` example in the repository or the crate-level docs in [`crate`].
 pub fn run(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) {
-    run_with_theme(config, Theme::default_light(), root);
+    run_with_theme(config, Theme::default(), root);
 }
 
 /// Opens a native window and runs `root` with `theme` as the active theme.

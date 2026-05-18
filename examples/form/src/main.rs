@@ -1,6 +1,6 @@
 //! Widgets: [`TextInput`], [`Scroll`], native focus, caret, and scrollbar (see `lemon-widgets`).
 
-use lemon::{run, Color, Cx, WindowConfig};
+use lemon::{run, Cx, WindowConfig};
 use lemon_widgets::{children, Button, Column, Row, Scroll, Text, TextFieldState, TextInput};
 
 #[derive(Clone)]
@@ -14,20 +14,24 @@ fn app(cx: &Cx) -> lemon::element::Element {
     let email_state = cx.use_signal(TextFieldState::new(""));
     let entries = cx.use_signal(Vec::<Entry>::new());
 
+    let theme = cx.use_theme();
+
     let list_content = if entries.get().is_empty() {
         Column::new().child(
             Text::new("No entries submitted yet.")
-                .color(Color::rgb8(140, 140, 160))
+                .color(theme.colors.foreground_secondary)
                 .font_size(14.0),
         )
     } else {
         let mut list = Column::new().gap(8.0);
         for (idx, entry) in entries.get().into_iter().enumerate() {
             list = list.child(Row::new().key(idx as u64).gap(8.0).children(children![
-                    Text::new(entry.name).font_size(14.0),
+                    Text::new(entry.name)
+                        .font_size(14.0)
+                        .color(theme.colors.foreground),
                     Text::new(format!("<{}>", entry.email))
                         .font_size(14.0)
-                        .color(Color::rgb8(150, 160, 180)),
+                        .color(theme.colors.foreground_secondary),
                 ]));
         }
         list
@@ -41,10 +45,12 @@ fn app(cx: &Cx) -> lemon::element::Element {
         .padding(24.0)
         .gap(12.0)
         .children(children![
-            Text::new("Widgets — form").font_size(18.0),
+            Text::new("Widgets — form")
+                .font_size(18.0)
+                .color(theme.colors.foreground),
             Text::new("TextInput + Scroll from lemon-widgets; combines signals, keys, and layout.")
                 .font_size(14.0)
-                .color(Color::rgb8(140, 150, 170)),
+                .color(theme.colors.foreground_secondary),
             TextInput::new(cx, name_state)
                 .placeholder("Name")
                 .width(360.0),
@@ -70,7 +76,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
                 .width(120.0),
             Text::new(move || format!("Submitted entries ({})", entries.get().len()))
                 .font_size(16.0)
-                .color(Color::rgb8(200, 200, 220)),
+                .color(theme.colors.foreground),
             Scroll::new(cx, list_content).height(240.0).width(520.0),
         ])
         .into_element()
