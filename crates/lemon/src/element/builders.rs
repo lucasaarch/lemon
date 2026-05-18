@@ -10,26 +10,32 @@ use crate::element::{
 // ── Macro to generate container builders (Column, Row, Box_) ──────────────
 
 macro_rules! container_builder {
-    ($name:ident, $variant:ident) => {
+    ($name:ident, $variant:ident, $doc:expr) => {
+        #[doc = $doc]
         pub struct $name(BoxElement);
 
         impl $name {
+            /// Creates an empty container; add children with [`.child`](Self::child).
             pub fn new() -> Self {
                 $name(BoxElement::default())
             }
 
+            /// Spacing between flex children, in logical points.
             pub fn gap(mut self, v: f32) -> Self {
                 self.0.style.gap = Some(v);
                 self
             }
+            /// Uniform padding on all sides.
             pub fn padding(mut self, v: f32) -> Self {
                 self.0.style.padding = Some(Edges::all(v));
                 self
             }
+            /// Fixed width in logical points.
             pub fn width(mut self, v: f32) -> Self {
                 self.0.style.width = Some(crate::element::style::Dimension::Points(v));
                 self
             }
+            /// Fixed height in logical points.
             pub fn height(mut self, v: f32) -> Self {
                 self.0.style.height = Some(crate::element::style::Dimension::Points(v));
                 self
@@ -63,10 +69,19 @@ macro_rules! container_builder {
                 self.0.paint.radius = CornerRadii::all(r);
                 self
             }
+            /// Appends a child widget; call repeatedly to build a list of children.
             pub fn child(mut self, el: impl Into<Element>) -> Self {
                 self.0.children.push(el.into());
                 self
             }
+            /// Stable identity for diffing when this child is inserted, removed, or reordered.
+            ///
+            /// All siblings under the same parent must use keys if any sibling uses one.
+            pub fn key(mut self, key: u64) -> Self {
+                self.0.key = Some(Key(key));
+                self
+            }
+            /// Mouse click handler (logical coordinates, hit-tested against this node’s bounds).
             pub fn on_click(mut self, f: impl Fn() + 'static) -> Self {
                 self.0.handlers.on_click = Some(Rc::new(f));
                 self
@@ -93,18 +108,17 @@ macro_rules! container_builder {
                 self.0.handlers.on_hover_leave = Some(Rc::new(f));
                 self
             }
+            /// Includes this node in keyboard focus traversal (Tab / Shift+Tab).
             pub fn focusable(mut self) -> Self {
                 self.0.style.focusable = true;
                 self
             }
+            /// Cursor shown when the pointer is over this node.
             pub fn cursor(mut self, c: crate::element::events::Cursor) -> Self {
                 self.0.style.cursor = c;
                 self
             }
-            pub fn key(mut self, key: u64) -> Self {
-                self.0.key = Some(Key(key));
-                self
-            }
+            /// Finishes the builder and returns an [`Element`] for use in [`.child`](Self::child) or the root view.
             pub fn into_element(self) -> Element {
                 Element::$variant(self.0)
             }
@@ -123,12 +137,35 @@ macro_rules! container_builder {
     };
 }
 
-container_builder!(Column, Column);
-container_builder!(Row, Row);
-container_builder!(Box_, Box_);
+container_builder!(
+    Column,
+    Column,
+    "Vertical flex container: children stack from top to bottom."
+);
+container_builder!(
+    Row,
+    Row,
+    "Horizontal flex container: children stack from left to right."
+);
+container_builder!(
+    Box_,
+    Box_,
+    "Generic flex container; use when you do not need an explicit row or column axis."
+);
 
 // ── Text ──────────────────────────────────────────────────────────────────
 
+/// Single-line or wrapped text label.
+///
+/// Pass a `&str` / `String` for static copy, or a `Fn() -> String` closure to re-read signals
+/// on each render:
+///
+/// ```no_run
+/// # use lemon::{Signal, element::builders::Text};
+/// # let count = Signal::new(0);
+/// # let c = count.clone();
+/// Text::new(move || format!("{}", c.get()));
+/// ```
 pub struct Text {
     content: TextContent,
     style: TextStyle,
@@ -136,6 +173,7 @@ pub struct Text {
 }
 
 impl Text {
+    /// Creates text from static content or a reactive closure (see [`TextContent`]).
     pub fn new(content: impl Into<TextContent>) -> Self {
         Text {
             content: content.into(),
@@ -143,10 +181,12 @@ impl Text {
             key: None,
         }
     }
+    /// Stable key when this text node is a keyed sibling (see [`Column::key`]).
     pub fn key(mut self, key: u64) -> Self {
         self.key = Some(Key(key));
         self
     }
+    /// Font size in logical points.
     pub fn font_size(mut self, size: f32) -> Self {
         self.style.font_size = size;
         self
@@ -159,6 +199,7 @@ impl Text {
         self.style.color = Some(c);
         self
     }
+    /// Finishes the builder and returns an [`Element`].
     pub fn into_element(self) -> Element {
         Element::Text(TextElement {
             content: self.content,
@@ -176,6 +217,7 @@ impl From<Text> for Element {
 
 // ── Button ────────────────────────────────────────────────────────────────
 
+/// Clickable control with a text label and default padding / background.
 pub struct Button {
     label: TextContent,
     style: StyleProps,
@@ -184,6 +226,7 @@ pub struct Button {
 }
 
 impl Button {
+    /// Creates a button; label accepts the same static or closure forms as [`Text::new`].
     pub fn new(label: impl Into<TextContent>) -> Self {
         Button {
             label: label.into(),
@@ -200,10 +243,12 @@ impl Button {
             on_click: None,
         }
     }
+    /// Called when the button is clicked (after hit-testing).
     pub fn on_click(mut self, f: impl Fn() + 'static) -> Self {
         self.on_click = Some(Rc::new(f));
         self
     }
+    /// Fill color behind the label ([`Color`] or reactive [`ColorSource`]).
     pub fn background(mut self, c: impl Into<ColorSource>) -> Self {
         self.paint.background = Some(c.into());
         self
@@ -220,6 +265,7 @@ impl Button {
         self.style.height = Some(crate::element::style::Dimension::Points(v));
         self
     }
+    /// Finishes the builder and returns an [`Element`].
     pub fn into_element(self) -> Element {
         Element::Button(crate::element::types::ButtonElement {
             label: self.label,
@@ -239,18 +285,28 @@ impl From<Button> for Element {
 
 // ── Component ─────────────────────────────────────────────────────────────
 
+/// Nested view with its own [`Cx`](crate::Cx) hook state (signals, effects).
+///
+/// `view` must be a **function pointer** (`fn(&Cx) -> Element`), not a closure that captures
+/// environment data. Identity is the function address plus an optional [`.key`](Self::key).
+///
+/// For list rows that need per-item callbacks, build keyed [`Row`] / [`Column`] children instead
+/// of capturing state inside [`Component::new`].
 pub struct Component(ComponentElement);
 
 impl Component {
+    /// Wraps a sub-view function; hooks inside `view` persist across parent re-renders.
     pub fn new(view: ComponentFn) -> Self {
         Self(ComponentElement::from_component_fn(view))
     }
 
+    /// Stable key when this component is one of several keyed siblings.
     pub fn key(mut self, key: u64) -> Self {
         self.0 = self.0.with_key(Key(key));
         self
     }
 
+    /// Finishes the builder and returns an [`Element`].
     pub fn into_element(self) -> Element {
         Element::Component(self.0)
     }

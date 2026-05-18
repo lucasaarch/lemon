@@ -20,6 +20,7 @@ struct PaintContext {
     base: Affine,
 }
 
+/// Counters from a single [`paint_pass`] (useful in tests and profiling).
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct PaintStats {
     pub fills: u32,
@@ -27,10 +28,10 @@ pub struct PaintStats {
     pub glyph_runs: u32,
 }
 
-/// Walk the retained tree in pre-order and emit Vello draw commands.
+/// Walks the retained tree and records Vello draw commands into `scene`.
 ///
-/// Drawing uses logical points; `scale_factor` is applied via a root transform on
-/// all emitted geometry (and a matching root layer per the architecture spec).
+/// Coordinates in `layout` are logical points; `scale_factor` scales the root transform for HiDPI
+/// (pass the window’s scale factor, often `1.0` in tests).
 pub fn paint_pass(
     tree: &RetainedTree,
     layout: &LayoutMap,

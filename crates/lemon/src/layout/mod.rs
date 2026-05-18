@@ -12,6 +12,7 @@ use crate::retained::{RetainedError, RetainedKind, RetainedNode, RetainedTree};
 
 type ParleyBrush = [u8; 4];
 
+/// Absolute bounds of a node after layout, in logical coordinates relative to the window.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LayoutRect {
     pub x: f32,
@@ -20,6 +21,7 @@ pub struct LayoutRect {
     pub height: f32,
 }
 
+/// Maps Taffy [`NodeId`] values to absolute [`LayoutRect`]s for one layout pass.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct LayoutMap {
     rects: HashMap<NodeId, LayoutRect>,
@@ -67,7 +69,10 @@ struct TextSnapshot {
     parley_layout: Option<Layout<ParleyBrush>>,
 }
 
-/// Run Taffy layout on `tree` and collect absolute logical rects keyed by `NodeId`.
+/// Runs Taffy flex layout and text measurement on `tree`, returning absolute logical rects.
+///
+/// Clears [`RetainedTree::layout_dirty`](crate::retained::RetainedTree::layout_dirty). Pass the
+/// same [`Viewport`] size the window uses in logical points.
 pub fn layout_pass(
     tree: &mut RetainedTree,
     viewport: Viewport,
@@ -131,7 +136,7 @@ pub fn layout_pass(
     Ok(map)
 }
 
-/// Run layout only when `tree.layout_dirty` is set (e.g. after patches).
+/// Like [`layout_pass`], but returns `Ok(None)` when the tree is not dirty (cheap no-op).
 pub fn layout_pass_if_dirty(
     tree: &mut RetainedTree,
     viewport: Viewport,

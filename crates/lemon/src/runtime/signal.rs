@@ -7,9 +7,14 @@ struct SignalInner<T> {
     subscribers: Vec<Weak<dyn Subscriber>>,
 }
 
+/// Mutable reactive cell shared via [`Clone`].
+///
+/// Prefer [`Cx::use_signal`](crate::Cx::use_signal) inside views. Standalone [`Signal::new`] is useful for state held
+/// outside the UI tree (e.g. in `main`) that you pass into a view by cloning before `run`.
 pub struct Signal<T>(Rc<RefCell<SignalInner<T>>>);
 
 impl<T: Clone + 'static> Signal<T> {
+    /// Creates a signal with no subscribers until something reads it under an effect or render.
     pub fn new(value: T) -> Self {
         Signal(Rc::new(RefCell::new(SignalInner {
             value,
@@ -17,6 +22,7 @@ impl<T: Clone + 'static> Signal<T> {
         })))
     }
 
+    /// Returns a copy of the current value and records a dependency when called during render.
     pub fn get(&self) -> T {
         let mut inner = self.0.borrow_mut();
         if let Some(obs) = current_observer() {
@@ -27,11 +33,13 @@ impl<T: Clone + 'static> Signal<T> {
         inner.value.clone()
     }
 
+    /// Replaces the value and schedules a re-render of dependent views.
     pub fn set(&self, value: T) {
         self.0.borrow_mut().value = value;
         self.notify();
     }
 
+    /// Mutates the value in place, then notifies subscribers (same as [`set`](Self::set) after `f`).
     pub fn update(&self, f: impl FnOnce(&mut T)) {
         f(&mut self.0.borrow_mut().value);
         self.notify();

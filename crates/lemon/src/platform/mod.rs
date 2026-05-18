@@ -33,7 +33,11 @@ pub use window::WindowConfig;
 /// Root view function type used by [`AppState`].
 pub type RootComponent = Arc<dyn Fn(&Cx) -> Element>;
 
-/// Application state for the winit / wgpu / Vello shell (Camada 8).
+/// Owns the window, GPU surface, runtime, and retained tree for one Lemon app.
+///
+/// Constructed internally by [`run`]. Advanced integrations can build an [`AppState`] manually
+/// and drive [`Runtime::flush_effects`](crate::Runtime::flush_effects) / layout / paint in a
+/// custom event loop; most apps should call [`run`] instead.
 pub struct AppState {
     pub window: Option<Arc<Window>>,
     pub render_cx: RenderContext,
@@ -500,7 +504,16 @@ impl ApplicationHandler for LemonApplication {
     }
 }
 
-/// Start the winit event loop with the given window configuration and root component.
+/// Opens a native window and runs `root` as the UI until the window closes.
+///
+/// `root` is called on the first frame and again whenever reactive state read during the last
+/// render changes (signals, dynamic text closures, etc.). Build widgets with [`Column`](crate::Column),
+/// [`Text`](crate::Text), [`Button`](crate::Button), and related builders, then finish with
+/// [`.into_element()`](crate::Column::into_element).
+///
+/// # Example
+///
+/// See the `counter` example in the repository or the crate-level docs in [`crate`].
 pub fn run(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) {
     let event_loop = EventLoop::new().expect("create event loop");
     let mut app = LemonApplication {
