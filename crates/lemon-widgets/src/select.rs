@@ -542,7 +542,9 @@ mod tests {
         let cx = Cx::new();
         let value = Signal::new(None::<Color>);
         let open = Signal::new(true);
-        let Element::Column(root) = Select::with_open(&cx, value, open, make_options()).into_element() else {
+        let Element::Column(root) =
+            Select::with_open(&cx, value, open, make_options()).into_element()
+        else {
             panic!("expected Column");
         };
 

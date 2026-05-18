@@ -1,10 +1,5 @@
 use lemon::{
-    element::{
-        builders::Button as CoreButton,
-        content::TextContent,
-        style::ColorSource,
-        Element,
-    },
+    element::{builders::Button as CoreButton, content::TextContent, style::ColorSource, Element},
     Cx,
 };
 
