@@ -43,6 +43,13 @@ macro_rules! container_builder {
                 self.0.style.row_gap = Some(v);
                 self
             }
+            /// Sets a paint-only opacity multiplier for this container and its descendants.
+            ///
+            /// Values are clamped to `0.0..=1.0`; non-finite inputs fall back to `1.0`.
+            pub fn opacity(mut self, v: f32) -> Self {
+                self.0.style.opacity = if v.is_finite() { v.clamp(0.0, 1.0) } else { 1.0 };
+                self
+            }
             /// Uniform padding on all sides, in logical points.
             pub fn padding(mut self, v: f32) -> Self {
                 self.0.style.padding = Some(Edges::all(v));
@@ -764,6 +771,24 @@ mod tests {
             panic!()
         };
         assert_eq!(el.style.z_index, 3);
+    }
+
+    #[test]
+    fn box_builder_clamps_opacity_to_valid_range() {
+        let Element::View(el) = View::new().opacity(1.5).into_element() else {
+            panic!()
+        };
+        assert_eq!(el.style.opacity, 1.0);
+
+        let Element::View(el) = View::new().opacity(-0.5).into_element() else {
+            panic!()
+        };
+        assert_eq!(el.style.opacity, 0.0);
+
+        let Element::View(el) = View::new().opacity(f32::NAN).into_element() else {
+            panic!()
+        };
+        assert_eq!(el.style.opacity, 1.0);
     }
 
     #[test]
