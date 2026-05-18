@@ -1,0 +1,6 @@
+[update]
+major = []
+minor = []
+patch = ["lemon", "lemon-widgets"]
+pre = true
+summary = "Fix Select dropdown z-index global painting and Scroll infinite-scroll clamping"

@@ -68,7 +68,8 @@ impl Scroll {
         let offset = self.offset.clone();
         let viewport_h = self.height;
         let width = self.width;
-        let has_custom_scrollbar = self.content_height.is_some();
+        let content_height = self.content_height;
+        let has_custom_scrollbar = content_height.is_some();
 
         let inner = View::new().margin_top(-offset_value).child(self.child);
 
@@ -78,7 +79,9 @@ impl Scroll {
             .height(viewport_h)
             .overflow(Overflow::Hidden)
             .on_scroll(move |delta| {
-                let next = (offset.get() - delta).max(0.0);
+                let max_offset = content_height
+                    .map_or(f64::MAX, |ch| ((ch as f64) - (viewport_h as f64)).max(0.0));
+                let next = (offset.get() - delta).max(0.0).min(max_offset);
                 offset.set(next);
             })
             .child(inner);
@@ -172,6 +175,35 @@ mod tests {
         assert_eq!(offset.get(), 30.0);
         on_scroll(1000.0);
         assert_eq!(offset.get(), 0.0);
+    }
+
+    #[test]
+    fn scroll_with_content_height_clamps_offset_at_max() {
+        let offset = Signal::new(0.0f64);
+        let root = Scroll::with_offset(offset.clone(), lemon::element::builders::Text::new("item"))
+            .height(200.0)
+            .content_height(600.0)
+            .into_element();
+
+        let Element::Row(row) = root else {
+            panic!("expected Row");
+        };
+        let Element::View(viewport) = &row.children[0] else {
+            panic!("expected viewport View");
+        };
+        let on_scroll = viewport.handlers.on_scroll.as_ref().unwrap();
+
+        // Scrolling past max_offset (600 - 200 = 400) must clamp to 400.
+        on_scroll(-9999.0);
+        assert_eq!(
+            offset.get(),
+            400.0,
+            "offset must clamp at content_height - viewport_h"
+        );
+
+        // Scrolling back past zero must clamp to 0.
+        on_scroll(9999.0);
+        assert_eq!(offset.get(), 0.0, "offset must clamp at 0");
     }
 
     #[test]

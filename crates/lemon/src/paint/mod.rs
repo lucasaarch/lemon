@@ -60,6 +60,8 @@ pub fn paint_pass(
         &clip_everything(),
     );
 
+    let mut global_deferred: Vec<(i32, &RetainedNode)> = Vec::new();
+
     if let Some(root) = tree.root.as_ref() {
         paint_node(
             root,
@@ -70,6 +72,23 @@ pub fn paint_pass(
             focused,
             caret_visible,
             &mut stats,
+            &mut global_deferred,
+        );
+    }
+
+    // Paint globally deferred high-z nodes on top of all normal content.
+    global_deferred.sort_by_key(|(z, _)| *z);
+    for (_, node) in global_deferred {
+        paint_node(
+            node,
+            layout,
+            scene,
+            ctx,
+            scale_factor,
+            focused,
+            caret_visible,
+            &mut stats,
+            &mut Vec::new(),
         );
     }
 
@@ -78,8 +97,8 @@ pub fn paint_pass(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn paint_node(
-    node: &RetainedNode,
+fn paint_node<'a>(
+    node: &'a RetainedNode,
     layout: &LayoutMap,
     scene: &mut Scene,
     ctx: PaintContext,
@@ -87,6 +106,7 @@ fn paint_node(
     focused: Option<NodeId>,
     caret_visible: bool,
     stats: &mut PaintStats,
+    global_deferred: &mut Vec<(i32, &'a RetainedNode)>,
 ) {
     if matches!(node.kind, RetainedKind::Component { .. }) {
         paint_children(
@@ -98,6 +118,7 @@ fn paint_node(
             focused,
             caret_visible,
             stats,
+            global_deferred,
         );
         return;
     }
@@ -112,6 +133,7 @@ fn paint_node(
             focused,
             caret_visible,
             stats,
+            global_deferred,
         );
         return;
     };
@@ -145,6 +167,7 @@ fn paint_node(
         focused,
         caret_visible,
         stats,
+        global_deferred,
     );
 
     if clip_children {
@@ -165,8 +188,8 @@ fn paint_node(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn paint_children(
-    children: &[RetainedNode],
+fn paint_children<'a>(
+    children: &'a [RetainedNode],
     layout: &LayoutMap,
     scene: &mut Scene,
     ctx: PaintContext,
@@ -174,36 +197,26 @@ fn paint_children(
     focused: Option<NodeId>,
     caret_visible: bool,
     stats: &mut PaintStats,
+    global_deferred: &mut Vec<(i32, &'a RetainedNode)>,
 ) {
-    for child in ordered_children_by_z_index(children) {
-        paint_node(
-            child,
-            layout,
-            scene,
-            ctx,
-            scale_factor,
-            focused,
-            caret_visible,
-            stats,
-        );
-    }
-}
-
-fn ordered_children_by_z_index(children: &[RetainedNode]) -> Vec<&RetainedNode> {
-    let mut immediate = Vec::with_capacity(children.len());
-    let mut deferred = Vec::with_capacity(children.len());
-
     for child in children {
-        if child.style.z_index == 0 {
-            immediate.push(child);
+        if child.style.z_index != 0 {
+            // Defer globally so high-z nodes paint on top of all siblings at every level.
+            global_deferred.push((child.style.z_index, child));
         } else {
-            deferred.push(child);
+            paint_node(
+                child,
+                layout,
+                scene,
+                ctx,
+                scale_factor,
+                focused,
+                caret_visible,
+                stats,
+                global_deferred,
+            );
         }
     }
-
-    deferred.sort_by_key(|child| child.style.z_index);
-    immediate.extend(deferred);
-    immediate
 }
 
 fn paint_container(
@@ -870,36 +883,78 @@ mod tests {
     }
 
     #[test]
-    fn z_index_ordering_defers_non_zero_children() {
-        fn node_with_z(z_index: i32) -> RetainedNode {
-            RetainedNode {
-                kind: RetainedKind::View,
-                taffy_id: None,
-                style: crate::element::style::StyleProps {
-                    z_index,
-                    ..Default::default()
-                },
-                paint: Default::default(),
-                children: Vec::new(),
-                handlers: Default::default(),
-                text: None,
-                text_input: None,
-                scroll_viewport: false,
-            }
-        }
+    fn z_index_non_zero_nodes_paint_on_top_of_siblings() {
+        // A column with two children: z_index=0 (red) and z_index=1 (green).
+        // With global deferral both must be painted; green deferred node paints last.
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(120.0)
+                .height(120.0)
+                .child(
+                    View::new()
+                        .width(80.0)
+                        .height(40.0)
+                        .background(Color::rgb8(255, 0, 0)),
+                )
+                .child(
+                    View::new()
+                        .width(80.0)
+                        .height(40.0)
+                        .background(Color::rgb8(0, 255, 0))
+                        .z_index(1),
+                )
+                .into_element(),
+        )
+        .unwrap();
 
-        let children = vec![
-            node_with_z(0),
-            node_with_z(2),
-            node_with_z(0),
-            node_with_z(-1),
-        ];
+        let stats = layout_and_paint(&mut tree, 1.0);
+        assert_eq!(stats.fills, 2, "both siblings must be painted");
+    }
 
-        let ordered: Vec<i32> = ordered_children_by_z_index(&children)
-            .into_iter()
-            .map(|child| child.style.z_index)
-            .collect();
-        assert_eq!(ordered, vec![0, 0, -1, 2]);
+    #[test]
+    fn z_index_non_zero_paints_over_later_siblings_at_parent_level() {
+        // Simulates the Select dropdown scenario: a Column (the Select wrapper) containing
+        // a trigger (z=0) and a dropdown (z=10), alongside a sibling Column (z=0).
+        // The dropdown must paint on top of the sibling, not behind it.
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(200.0)
+                .height(200.0)
+                // Select wrapper
+                .child(
+                    Column::new()
+                        .width(100.0)
+                        .height(100.0)
+                        // trigger
+                        .child(
+                            View::new()
+                                .width(100.0)
+                                .height(20.0)
+                                .background(Color::rgb8(80, 80, 80)),
+                        )
+                        // dropdown with high z_index
+                        .child(
+                            View::new()
+                                .width(100.0)
+                                .height(60.0)
+                                .background(Color::rgb8(35, 35, 52))
+                                .z_index(10),
+                        ),
+                )
+                // sibling that dropdown must overlay
+                .child(
+                    View::new()
+                        .width(200.0)
+                        .height(80.0)
+                        .background(Color::rgb8(60, 60, 60)),
+                )
+                .into_element(),
+        )
+        .unwrap();
+
+        let stats = layout_and_paint(&mut tree, 1.0);
+        // trigger(1) + sibling(1) + dropdown(1) = 3 fills, all painted
+        assert_eq!(stats.fills, 3, "dropdown and all siblings must be painted");
     }
 
     #[test]
