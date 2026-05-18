@@ -6,7 +6,7 @@ EXAMPLES := counter signals memo effects keys components layout form
 
 .PHONY: help \
 	check ci fmt fmt-check clippy test build build-examples doc doc-open \
-	run-counter run-signals run-memo run-effects run-keys run-components run-layout run-form run \
+	run-counter run-signals run-memo run-effects run-keys run-components run-components-debug run-layout run-form run \
 	clean
 
 .DEFAULT_GOAL := help
@@ -63,6 +63,9 @@ run-keys: ## Run the keyed list example
 
 run-components: ## Run the Component example
 	$(CARGO) run -p components
+
+run-components-debug: ## Run the Component example with LEMON_DEBUG=1
+	LEMON_DEBUG=1 $(CARGO) run -p components
 
 run-layout: ## Run the layout example
 	$(CARGO) run -p layout

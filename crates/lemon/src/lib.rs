@@ -67,6 +67,7 @@ mod macros;
 pub mod prelude;
 
 pub mod asset;
+pub mod debug;
 pub mod diff;
 pub mod element;
 pub mod layout;
@@ -94,6 +95,8 @@ pub use retained::RetainedTree;
 pub use runtime::cx::Cx;
 pub use runtime::signal::Signal;
 pub use runtime::Runtime;
+
+pub use debug::Category as DebugCategory;
 
 #[cfg(test)]
 mod tests {

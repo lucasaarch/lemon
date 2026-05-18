@@ -173,13 +173,17 @@ fn measure_text_node(
     ctx: &mut MeasureContext<'_>,
     node_id: NodeId,
 ) -> Size<f32> {
-    if let (Some(width), Some(height)) = (known_dimensions.width, known_dimensions.height) {
-        return Size { width, height };
-    }
-
     let Some(snapshot) = snapshot else {
         return Size::ZERO;
     };
+
+    // Taffy may supply both dimensions for sized leaves (e.g. buttons with `.width(...)`).
+    // Still run Parley when `needs_layout` is set so `apply_text_measurements` can clear it.
+    if let (Some(width), Some(height)) = (known_dimensions.width, known_dimensions.height) {
+        if !snapshot.needs_layout {
+            return Size { width, height };
+        }
+    }
 
     let max_width = known_dimensions.width.or(match available_space.width {
         AvailableSpace::Definite(width) => Some(width),
@@ -340,6 +344,38 @@ mod tests {
         assert!(cache.parley_layout.is_some());
         assert!(!cache.needs_layout);
         assert!(cache.layout_max_width.is_some());
+    }
+
+    #[test]
+    fn button_with_fixed_width_clears_label_needs_layout() {
+        use crate::element::builders::Button;
+
+        let mut tree = RetainedTree::mount(
+            View::new()
+                .width(200.0)
+                .child(Button::new("+").width(44.0))
+                .into_element(),
+        )
+        .unwrap();
+
+        let button = &tree.root.as_ref().unwrap().children[0];
+        assert!(button.text.as_ref().is_some_and(|text| text.needs_layout));
+
+        layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 600.0,
+            },
+            1.0,
+        )
+        .unwrap();
+
+        let button = &tree.root.as_ref().unwrap().children[0];
+        let label = button.text.as_ref().unwrap();
+        assert!(label.parley_layout.is_some());
+        assert!(!label.needs_layout);
+        assert!(!tree.text_needs_reflow());
     }
 
     #[test]

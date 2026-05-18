@@ -124,21 +124,65 @@ impl AppState {
     }
 
     fn apply_runtime_patches(&mut self) {
+        crate::lemon_trace!(
+            Runtime,
+            "{} apply_runtime_patches: flush",
+            crate::debug::frame_tag()
+        );
         self.runtime.flush_effects();
         let patches = self.runtime.take_patches();
+        crate::debug::trace_patches("apply_runtime_patches", &patches);
         if patches.is_empty() {
             return;
         }
         let needs_layout = patches_need_layout(&patches);
+        crate::lemon_trace!(
+            Runtime,
+            "{} needs_layout={needs_layout}",
+            crate::debug::frame_tag()
+        );
         if let Some(tree) = self.retained.as_mut() {
             if let Err(err) = tree.apply_patches(patches) {
                 eprintln!("apply_patches: {err:?}");
             }
         }
         if needs_layout {
-            self.layout_dirty = true;
+            self.run_layout_pass(crate::debug::frame_tag());
         }
         self.paint_dirty = true;
+    }
+
+    fn run_layout_pass(&mut self, context: impl AsRef<str>) {
+        self.layout_dirty = true;
+        let viewport = self.viewport();
+        let scale = self.scale_factor();
+        let context = context.as_ref();
+        crate::lemon_trace!(
+            Layout,
+            "{context} layout_pass {}x{} scale={scale}",
+            viewport.width,
+            viewport.height
+        );
+        let tree = self.retained.as_mut().expect("retained tree");
+        match layout_pass(tree, viewport, scale) {
+            Ok(map) => {
+                self.layout_map = map;
+                self.layout_dirty = false;
+                if tree.text_needs_reflow() {
+                    crate::lemon_trace!(
+                        Layout,
+                        "{context} layout_pass ok but text still needs reflow"
+                    );
+                } else {
+                    crate::lemon_trace!(Layout, "{context} layout_pass ok");
+                }
+            }
+            Err(err) => eprintln!("layout_pass: {err:?}"),
+        }
+    }
+
+    fn needs_layout_before_paint(&self) -> bool {
+        self.layout_dirty
     }
 
     fn window_config(&self) -> &WindowConfig {
@@ -220,8 +264,12 @@ impl AppState {
         self.ensure_mounted();
         self.tick_caret_blink();
 
+        let frame = crate::debug::next_frame();
+        crate::lemon_trace!(Runtime, "frame {frame} update_frame: flush");
+
         self.runtime.flush_effects();
         let patches = self.runtime.take_patches();
+        crate::debug::trace_patches("update_frame", &patches);
         if !patches.is_empty() {
             let needs_layout = patches_need_layout(&patches);
             let tree = self.retained.as_mut().expect("retained tree");
@@ -234,18 +282,8 @@ impl AppState {
             self.paint_dirty = true;
         }
 
-        if self.layout_dirty {
-            let viewport = self.viewport();
-            let scale = self.scale_factor();
-            let tree = self.retained.as_mut().expect("retained tree");
-            match layout_pass(tree, viewport, scale) {
-                Ok(map) => {
-                    self.layout_map = map;
-                    self.layout_dirty = false;
-                    self.paint_dirty = true;
-                }
-                Err(err) => eprintln!("layout_pass: {err:?}"),
-            }
+        if self.needs_layout_before_paint() {
+            self.run_layout_pass(format!("frame {frame}"));
         }
 
         if self.paint_dirty {
@@ -253,13 +291,20 @@ impl AppState {
             let scale = self.scale_factor();
             let caret_visible = self.caret_visible_now();
             if let Some(tree) = self.retained.as_ref() {
-                paint_pass(
+                let stats = paint_pass(
                     tree,
                     &self.layout_map,
                     &mut self.scene,
                     scale,
                     self.focus_manager.focused,
                     caret_visible,
+                );
+                crate::lemon_trace!(
+                    Paint,
+                    "frame {frame} paint_pass fills={} strokes={} glyphs={}",
+                    stats.fills,
+                    stats.strokes,
+                    stats.glyph_runs
                 );
             }
             self.paint_dirty = false;
@@ -298,6 +343,13 @@ impl AppState {
             return false;
         };
         let handled = dispatch_click(node);
+        crate::lemon_trace!(
+            Input,
+            "click at ({:.1},{:.1}) taffy_id={:?} handled={handled}",
+            point.x,
+            point.y,
+            node.taffy_id
+        );
         if handled {
             self.apply_runtime_patches();
         }
@@ -637,6 +689,7 @@ impl ApplicationHandler for LemonApplication {
 ///
 /// See the `counter` example in the repository or the crate-level docs in [`crate`].
 pub fn run(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) {
+    crate::debug::configure_from_env();
     let event_loop = EventLoop::new().expect("create event loop");
     let mut app = LemonApplication {
         state: Some(AppState::new(config, root)),

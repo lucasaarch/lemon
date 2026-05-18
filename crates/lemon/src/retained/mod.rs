@@ -191,6 +191,11 @@ pub struct RetainedTree {
 }
 
 impl RetainedTree {
+    /// Returns true if any text node still needs a layout pass (e.g. after `UpdateText`).
+    pub fn text_needs_reflow(&self) -> bool {
+        self.root.as_ref().is_some_and(text_node_needs_reflow)
+    }
+
     /// Empty tree with no root node.
     pub fn new() -> Self {
         Self {
@@ -202,6 +207,11 @@ impl RetainedTree {
 
     /// Builds the initial retained tree from a frozen element tree (e.g. [`Runtime::root_element`](crate::Runtime::root_element)).
     pub fn mount(element: Element) -> Result<Self, RetainedError> {
+        crate::lemon_trace!(
+            Retained,
+            "mount root={}",
+            crate::debug::element_kind(&element)
+        );
         let mut tree = Self::new();
         let root = tree.build_node(element)?;
         tree.root = Some(root);
@@ -346,6 +356,7 @@ impl RetainedTree {
     }
 
     pub fn apply_patch(&mut self, patch: Patch) -> Result<(), RetainedError> {
+        crate::lemon_trace!(Patches, "apply {}", crate::debug::format_patch(&patch));
         match patch {
             Patch::UpdateComponent { node, component } => {
                 let retained = self.node_mut_exact(&node)?;
@@ -750,6 +761,13 @@ fn node_mut_from<'a>(node: &'a mut RetainedNode, path: &[usize]) -> Option<&'a m
     node_mut_from(child, rest)
 }
 
+fn text_node_needs_reflow(node: &RetainedNode) -> bool {
+    if node.text.as_ref().is_some_and(|text| text.needs_layout) {
+        return true;
+    }
+    node.children.iter().any(text_node_needs_reflow)
+}
+
 fn resolve_transparent_mut(node: &mut RetainedNode) -> &mut RetainedNode {
     if matches!(node.kind, RetainedKind::Component { .. }) && node.children.len() == 1 {
         &mut node.children[0]
@@ -946,6 +964,84 @@ mod tests {
         let text = &root.children[0];
         assert_eq!(text.text_content(), Some("hi"));
         assert_eq!(text.text.as_ref().unwrap().caret, 2);
+    }
+
+    #[test]
+    fn update_text_on_component_wrapped_row_reflows_after_layout() {
+        use crate::element::builders::{Component, Row};
+        use crate::element::types::ComponentElement;
+        use crate::layout::{layout_pass, Viewport};
+
+        fn mini(_cx: &crate::runtime::cx::Cx) -> Element {
+            Row::new().child(Text::new("0")).into_element()
+        }
+
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .child(Component::new(mini).key(1))
+                .into_element(),
+        )
+        .unwrap();
+
+        let row = Row::new().child(Text::new("0")).into_element();
+        tree.apply_patch(Patch::ReplaceNode {
+            node: NodePath(vec![0]),
+            new_element: row,
+        })
+        .unwrap();
+        tree.apply_patch(Patch::MountComponent {
+            node: NodePath(vec![0]),
+            component: ComponentElement::from_component_fn(mini)
+                .with_key(crate::element::types::Key(1)),
+        })
+        .unwrap();
+        layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 400.0,
+            },
+            1.0,
+        )
+        .unwrap();
+        assert!(!tree.text_needs_reflow());
+
+        tree.apply_patch(Patch::UpdateText {
+            node: NodePath(vec![0, 0]),
+            content: "1".to_owned(),
+        })
+        .unwrap();
+        assert!(tree.text_needs_reflow());
+
+        layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 400.0,
+            },
+            1.0,
+        )
+        .unwrap();
+        assert!(
+            !tree.text_needs_reflow(),
+            "layout_pass should clear needs_layout on nested component text"
+        );
+
+        let text = tree
+            .root
+            .as_ref()
+            .unwrap()
+            .children
+            .first()
+            .unwrap()
+            .children
+            .first()
+            .unwrap()
+            .children
+            .first()
+            .unwrap();
+        assert_eq!(text.text_content(), Some("1"));
+        assert!(text.text.as_ref().unwrap().parley_layout.is_some());
     }
 
     #[test]

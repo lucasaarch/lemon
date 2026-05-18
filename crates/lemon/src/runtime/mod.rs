@@ -80,6 +80,7 @@ impl Runtime {
     ///
     /// Call after changing a [`Signal`] (or other tracked state), then [`take_patches`](Self::take_patches).
     pub fn flush_effects(&mut self) {
+        crate::lemon_trace!(Runtime, "flush_effects ({} root slot(s))", self.slots.len());
         for slot in &mut self.slots {
             flush_slot_subtree(slot, &mut self.patch_queue);
         }
@@ -147,16 +148,23 @@ fn create_component_slot(
 }
 
 fn flush_slot_subtree(slot: &mut ComponentSlot, patches: &mut Vec<Patch>) {
-    render_slot(slot, patches);
     for child in &mut slot.children {
         flush_slot_subtree(child, patches);
     }
+    render_slot(slot, patches);
 }
 
 fn render_slot(slot: &mut ComponentSlot, patches: &mut Vec<Patch>) {
     if let Some(new_tree) = slot.pending.borrow_mut().take() {
         let next_previous = new_tree.clone();
         if let Some(old_tree) = slot.previous.take() {
+            crate::lemon_trace!(
+                Runtime,
+                "render_slot path={} old={} new={}",
+                crate::debug::format_path(&slot.path),
+                crate::debug::element_kind(&old_tree),
+                crate::debug::element_kind(&new_tree)
+            );
             let deferred = Rc::clone(&slot.deferred_effects);
             diff_with_nested_components(
                 &mut slot.children,
@@ -282,6 +290,13 @@ fn mount_component_slot(
     component: ComponentElement,
     deferred_effects: Rc<RefCell<Vec<Effect>>>,
 ) {
+    crate::lemon_trace!(
+        Runtime,
+        "mount_component_slot path={} key={:?} identity={}",
+        crate::debug::format_path(&path),
+        component.key(),
+        component.identity()
+    );
     // Nested components must run their effect on mount so signal reads register subscribers.
     // A lazy effect never runs until dirty, but it cannot become dirty until it has run once.
     let mut slot = create_component_slot(path, component.view(), false, deferred_effects);
@@ -315,7 +330,17 @@ fn handle_component_pair(
     if same_component_identity(old, &new) {
         if let Some(slot) = find_slot_mut(parent_slots, &path) {
             *slot.view.borrow_mut() = new.view();
-            sync_render(slot);
+            // A signal-driven effect may have already rendered into `pending`. Do not clobber it.
+            let had_pending = slot.pending.borrow().is_some();
+            if !had_pending {
+                sync_render(slot);
+            }
+            crate::lemon_trace!(
+                Runtime,
+                "handle_component_pair path={} key={:?} pending_before={had_pending}",
+                crate::debug::format_path(&path),
+                new.key()
+            );
             render_slot(slot, patches);
         } else {
             mount_component_slot(
@@ -1014,6 +1039,115 @@ mod tests {
         tree.apply_patches(rt.take_patches())
             .expect("apply_patches after remove");
         assert_eq!(tree.root.as_ref().unwrap().children[2].children.len(), 2);
+    }
+
+    #[test]
+    fn sibling_component_counters_update_independently() {
+        use std::cell::RefCell;
+
+        use crate::element::builders::{Button, Column, Component, Row};
+        use crate::retained::RetainedTree;
+
+        thread_local! {
+            static FIRST: RefCell<Option<Signal<i32>>> = const { RefCell::new(None) };
+            static SECOND: RefCell<Option<Signal<i32>>> = const { RefCell::new(None) };
+        }
+
+        fn first(cx: &Cx) -> Element {
+            let n = cx.use_signal(0i32);
+            FIRST.with(|cell| *cell.borrow_mut() = Some(n.clone()));
+            let label = n.clone();
+            Row::new()
+                .child(Text::new(move || format!("{}", label.get())).font_size(16.0))
+                .child(Button::new("+").width(44.0))
+                .into_element()
+        }
+
+        fn second(cx: &Cx) -> Element {
+            let n = cx.use_signal(0i32);
+            SECOND.with(|cell| *cell.borrow_mut() = Some(n.clone()));
+            let label = n.clone();
+            Row::new()
+                .child(Text::new(move || format!("{}", label.get())).font_size(16.0))
+                .child(Button::new("+").width(44.0))
+                .into_element()
+        }
+
+        let mut runtime = Runtime::new();
+        runtime.mount(|_cx| {
+            Column::new()
+                .child(Text::new("a"))
+                .child(Text::new("b"))
+                .child(Text::new("c"))
+                .child(Text::new("d"))
+                .child(Text::new("e"))
+                .child(Component::new(first).key(1))
+                .child(Component::new(second).key(2))
+                .into_element()
+        });
+
+        let element = runtime.root_element().expect("root");
+        let mut tree = RetainedTree::mount(element).expect("mount");
+        tree.apply_patches(runtime.take_patches())
+            .expect("bootstrap patches");
+
+        let first = FIRST.with(|cell| cell.borrow().clone().expect("first signal"));
+        let second = SECOND.with(|cell| cell.borrow().clone().expect("second signal"));
+
+        first.set(1);
+        runtime.flush_effects();
+        let first_patches = runtime.take_patches();
+        assert!(
+            first_patches.iter().any(|patch| {
+                matches!(
+                    patch,
+                    Patch::UpdateText {
+                        node,
+                        content,
+                    } if node.0 == [5, 0] && content == "1"
+                )
+            }),
+            "first counter click should update text at [5, 0], got {first_patches:?}"
+        );
+        tree.apply_patches(first_patches)
+            .expect("apply first counter patches");
+
+        second.set(1);
+        runtime.flush_effects();
+        let second_patches = runtime.take_patches();
+        assert!(
+            second_patches.iter().any(|patch| {
+                matches!(
+                    patch,
+                    Patch::UpdateText {
+                        node,
+                        content,
+                    } if node.0 == [6, 0] && content == "1"
+                )
+            }),
+            "second counter click should update text at [6, 0], got {second_patches:?}"
+        );
+        tree.apply_patches(second_patches)
+            .expect("apply second counter patches");
+
+        let first_text = tree
+            .root
+            .as_ref()
+            .and_then(|root| root.children.get(5))
+            .and_then(|node| node.children.first())
+            .and_then(|row| row.children.first())
+            .and_then(|node| node.text.as_ref())
+            .expect("first counter text");
+        let second_text = tree
+            .root
+            .as_ref()
+            .and_then(|root| root.children.get(6))
+            .and_then(|node| node.children.first())
+            .and_then(|row| row.children.first())
+            .and_then(|node| node.text.as_ref())
+            .expect("second counter text");
+        assert_eq!(first_text.content, "1");
+        assert_eq!(second_text.content, "1");
     }
 
     #[test]

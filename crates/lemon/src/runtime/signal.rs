@@ -35,12 +35,14 @@ impl<T: Clone + 'static> Signal<T> {
 
     /// Replaces the value and schedules a re-render of dependent views.
     pub fn set(&self, value: T) {
+        crate::debug::trace(crate::debug::Category::Signal, "signal set");
         self.0.borrow_mut().value = value;
         self.notify();
     }
 
     /// Mutates the value in place, then notifies subscribers (same as [`set`](Self::set) after `f`).
     pub fn update(&self, f: impl FnOnce(&mut T)) {
+        crate::debug::trace(crate::debug::Category::Signal, "signal update");
         f(&mut self.0.borrow_mut().value);
         self.notify();
     }
