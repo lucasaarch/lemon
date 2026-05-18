@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = ["lemon", "lemon-widgets"]
-patch = []
-pre = true
-summary = "Add per-widget style overrides for Select, Slider, TextInput, and Scroll"
