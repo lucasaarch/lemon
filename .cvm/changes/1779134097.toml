@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = ["lemon"]
-patch = []
-pre = true
-summary = "Add theme tokens and thread-local active theme helpers"
