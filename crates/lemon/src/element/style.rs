@@ -95,7 +95,8 @@ pub struct StyleProps {
     pub overflow: Overflow,
     /// Paint-only z-order for this node among siblings (`0` = normal flow).
     ///
-    /// Layout is unaffected; non-zero values are only used during painting.
+    /// Layout is unaffected. During painting, `z_index == 0` nodes are painted first in normal
+    /// traversal order; non-zero nodes are deferred and then painted in ascending `z_index` order.
     pub z_index: i32,
     /// Cross-axis alignment when this node is a flex child (e.g. avoid stretch in a column).
     pub align_self: Option<Align>,

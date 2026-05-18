@@ -175,26 +175,7 @@ fn paint_children(
     caret_visible: bool,
     stats: &mut PaintStats,
 ) {
-    let mut deferred = Vec::new();
-    for child in children {
-        if child.style.z_index == 0 {
-            paint_node(
-                child,
-                layout,
-                scene,
-                ctx,
-                scale_factor,
-                focused,
-                caret_visible,
-                stats,
-            );
-        } else {
-            deferred.push(child);
-        }
-    }
-
-    deferred.sort_by_key(|child| child.style.z_index);
-    for child in deferred {
+    for child in ordered_children_by_z_index(children) {
         paint_node(
             child,
             layout,
@@ -206,6 +187,23 @@ fn paint_children(
             stats,
         );
     }
+}
+
+fn ordered_children_by_z_index(children: &[RetainedNode]) -> Vec<&RetainedNode> {
+    let mut immediate = Vec::with_capacity(children.len());
+    let mut deferred = Vec::with_capacity(children.len());
+
+    for child in children {
+        if child.style.z_index == 0 {
+            immediate.push(child);
+        } else {
+            deferred.push(child);
+        }
+    }
+
+    deferred.sort_by_key(|child| child.style.z_index);
+    immediate.extend(deferred);
+    immediate
 }
 
 fn paint_container(
@@ -869,6 +867,39 @@ mod tests {
 
         let stats = layout_and_paint(&mut tree, 1.0);
         assert_eq!(stats.fills, 2, "overflow clipping should keep both fills");
+    }
+
+    #[test]
+    fn z_index_ordering_defers_non_zero_children() {
+        fn node_with_z(z_index: i32) -> RetainedNode {
+            RetainedNode {
+                kind: RetainedKind::View,
+                taffy_id: None,
+                style: crate::element::style::StyleProps {
+                    z_index,
+                    ..Default::default()
+                },
+                paint: Default::default(),
+                children: Vec::new(),
+                handlers: Default::default(),
+                text: None,
+                text_input: None,
+                scroll_viewport: false,
+            }
+        }
+
+        let children = vec![
+            node_with_z(0),
+            node_with_z(2),
+            node_with_z(0),
+            node_with_z(-1),
+        ];
+
+        let ordered: Vec<i32> = ordered_children_by_z_index(&children)
+            .into_iter()
+            .map(|child| child.style.z_index)
+            .collect();
+        assert_eq!(ordered, vec![0, 0, -1, 2]);
     }
 
     #[test]

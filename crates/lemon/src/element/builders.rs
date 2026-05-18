@@ -58,7 +58,8 @@ macro_rules! container_builder {
             }
             /// Paint-only z-order among siblings (`0` keeps normal traversal order).
             ///
-            /// Non-zero values are deferred to a sorted paint pass and do not affect layout.
+            /// Non-zero values are deferred to a sorted paint pass (ascending `z_index`) and do
+            /// not affect layout.
             pub fn z_index(mut self, z: i32) -> Self {
                 self.0.style.z_index = z;
                 self
