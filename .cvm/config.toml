@@ -1,1 +1,5 @@
-# CVM Configuration
+[pre]
+enabled = true
+identifier = "alpha"
+
+[pre.base_versions]
