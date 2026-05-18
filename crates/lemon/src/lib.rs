@@ -61,6 +61,7 @@
 //! [`Runtime`], [`RetainedTree`], [`layout_pass`], and [`paint_pass`] are public for tests and
 //! custom hosts; normal apps should use [`run`] and never touch those directly.
 
+pub mod asset;
 pub mod diff;
 pub mod element;
 pub mod layout;
@@ -69,6 +70,7 @@ pub mod platform;
 pub mod retained;
 pub mod runtime;
 
+pub use asset::ImageHandle;
 pub use element::builders::{Button, Column, Component, Row, Text, View};
 
 /// Deprecated alias for [`View`]; use [`View`] in new code.

@@ -9,6 +9,7 @@ keywords = ["ui", "gui", "toolkit", "reactive"]
 categories = ["gui"]
 
 [dependencies]
+image = { workspace = true }
 parley = "0.9"
 pollster = "0.4"
 taffy = "0.7"
