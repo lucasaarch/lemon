@@ -254,7 +254,15 @@ fn paint_container(
                     stats,
                 );
             } else {
-                paint_per_side_borders(scene, ctx, rect, &node.paint.radius, *widths, border_color, stats);
+                paint_per_side_borders(
+                    scene,
+                    ctx,
+                    rect,
+                    &node.paint.radius,
+                    *widths,
+                    border_color,
+                    stats,
+                );
             }
         }
     }
