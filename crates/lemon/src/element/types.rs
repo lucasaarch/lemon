@@ -165,7 +165,9 @@ impl ComponentElement {
         let props_for_view = props.clone();
         Self {
             view: Rc::new(move |cx| view(cx, &props_for_view)),
-            type_id: std::any::TypeId::of::<fn(&crate::runtime::cx::Cx, &P) -> crate::element::Element>(),
+            type_id: std::any::TypeId::of::<
+                fn(&crate::runtime::cx::Cx, &P) -> crate::element::Element,
+            >(),
             identity,
             key: None,
             props: Some(Box::new(props)),
