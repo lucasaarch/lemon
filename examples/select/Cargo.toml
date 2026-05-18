@@ -1,0 +1,9 @@
+[package]
+name = "select"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+lemon = { workspace = true }
+lemon-widgets = { workspace = true }
