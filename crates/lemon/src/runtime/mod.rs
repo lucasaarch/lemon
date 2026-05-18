@@ -335,7 +335,7 @@ fn handle_component_pair(
             let props_changed = slot
                 .component
                 .as_ref()
-                .map_or(!old.props_eq(&new), |previous| !previous.props_eq(&new));
+                .is_none_or(|previous| !previous.props_eq(&new));
             let should_sync_render = if new.has_props() { props_changed } else { true };
             if should_sync_render {
                 *slot.view.borrow_mut() = new.view();
