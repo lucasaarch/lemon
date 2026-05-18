@@ -3,19 +3,20 @@
 //! # Getting started
 //!
 //! Most apps only need [`run`], [`WindowConfig`], [`Cx`], and the layout widgets
-//! ([`Column`], [`Row`], [`Text`], [`Button`], …) re-exported below.
+//! ([`Column`], [`Row`], [`Text`], [`Button`], …). Import them via [`prelude`]:
 //!
 //! ```no_run
-//! use lemon::{run, Cx, WindowConfig};
-//! use lemon::{Button, Column, Text};
+//! use lemon::prelude::*;
 //!
-//! fn app(cx: &Cx) -> lemon::element::Element {
+//! fn app(cx: &Cx) -> Element {
 //!     let count = cx.use_signal(0i32);
 //!     let label = count.clone();
 //!     let inc = count.clone();
 //!     Column::new()
-//!         .child(Text::new(move || label.get().to_string()))
-//!         .child(Button::new("+").on_click(move || inc.update(|n| *n += 1)))
+//!         .children(children![
+//!             Text::new(move || label.get().to_string()),
+//!             Button::new("+").on_click(move || inc.update(|n| *n += 1)),
+//!         ])
 //!         .into_element()
 //! }
 //!
@@ -34,7 +35,7 @@
 //! # Keys and lists
 //!
 //! Give stable [`.key(id)`](Column::key) values to siblings that are inserted, removed, or reordered
-//! (see the `list_keyed` example). Without keys, children are reconciled by index only.
+//! (see the `keys` example). Without keys, children are reconciled by index only.
 //!
 //! # Components
 //!
@@ -60,6 +61,10 @@
 //!
 //! [`Runtime`], [`RetainedTree`], [`layout_pass`], and [`paint_pass`] are public for tests and
 //! custom hosts; normal apps should use [`run`] and never touch those directly.
+
+mod macros;
+
+pub mod prelude;
 
 pub mod asset;
 pub mod diff;
@@ -296,7 +301,7 @@ mod tests {
         .unwrap();
 
         let mut scene = Scene::new();
-        let stats = paint_pass(&tree, &layout, &mut scene, 1.0);
+        let stats = paint_pass(&tree, &layout, &mut scene, 1.0, None);
 
         assert!(stats.glyph_runs > 0, "counter label should paint glyphs");
         assert!(stats.fills >= 1, "button should paint a background fill");
@@ -331,7 +336,7 @@ mod tests {
 
         let mut scene = Scene::new();
         let layout = layout_pass(&mut tree, viewport, 1.0).unwrap();
-        let _stats = paint_pass(&tree, &layout, &mut scene, 1.0);
+        let _stats = paint_pass(&tree, &layout, &mut scene, 1.0, None);
 
         count.set(1);
         rt.flush_effects();
@@ -339,7 +344,20 @@ mod tests {
         let layout = layout_pass_if_dirty(&mut tree, viewport, 1.0)
             .unwrap()
             .expect("layout after patch");
-        let _stats = paint_pass(&tree, &layout, &mut scene, 2.0);
+        let _stats = paint_pass(&tree, &layout, &mut scene, 2.0, None);
+    }
+
+    #[test]
+    fn prelude_exports_common_app_types() {
+        use crate::prelude::*;
+
+        fn _app(cx: &Cx) -> Element {
+            let n = cx.use_signal(0);
+            let n2 = n.clone();
+            Column::new()
+                .children(children![Text::new(move || n2.get().to_string())])
+                .into_element()
+        }
     }
 
     #[test]

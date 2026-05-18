@@ -43,6 +43,11 @@ pub enum Patch {
         node: NodePath,
         content: String,
     },
+    UpdateWidgetChrome {
+        node: NodePath,
+        text_input: Option<crate::element::types::TextInputMeta>,
+        scroll_viewport: bool,
+    },
     ReplaceNode {
         node: NodePath,
         new_element: Element,
@@ -180,6 +185,13 @@ fn diff_box(
         patches.push(Patch::UpdatePaint {
             node: path.clone(),
             paint: np,
+        });
+    }
+    if o.text_input != n.text_input || o.scroll_viewport != n.scroll_viewport {
+        patches.push(Patch::UpdateWidgetChrome {
+            node: path.clone(),
+            text_input: n.text_input,
+            scroll_viewport: n.scroll_viewport,
         });
     }
     diff_children(o.children, n.children, &path, patches);

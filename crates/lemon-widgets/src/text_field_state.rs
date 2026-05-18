@@ -78,6 +78,10 @@ impl TextFieldState {
             }
             LemonKey::Named(NamedKey::Home) => self.cursor = 0,
             LemonKey::Named(NamedKey::End) => self.cursor = self.value.len(),
+            LemonKey::Named(NamedKey::Space) => {
+                self.value.insert(self.cursor, ' ');
+                self.cursor += 1;
+            }
             _ => {}
         }
     }
@@ -251,6 +255,19 @@ mod tests {
         state.handle_key(&key(LemonKey::Named(NamedKey::Backspace)));
         assert_eq!(state.value, "b");
         assert_eq!(state.cursor, 0);
+    }
+
+    #[test]
+    fn space_named_key_inserts_space_character() {
+        let mut state = TextFieldState {
+            value: "hi".into(),
+            cursor: 2,
+        };
+
+        state.handle_key(&key(LemonKey::Named(NamedKey::Space)));
+
+        assert_eq!(state.value, "hi ");
+        assert_eq!(state.cursor, 3);
     }
 
     #[test]

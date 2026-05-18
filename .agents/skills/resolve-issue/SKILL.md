@@ -109,9 +109,7 @@ Examples:
 ```bash
 cargo test -p lemon
 cargo test -p lemon-widgets
-cargo build -p counter
-cargo build -p card
-cargo build -p list_keyed
+make build-examples
 ```
 
 If the issue affects one module, run the narrowest useful test target first before widening.
@@ -171,7 +169,7 @@ If unsure between patch and minor, prefer **patch** for fixes and **minor** for 
 
 #### 8.3 Choose crates
 
-This workspace publishes **`lemon`** and **`lemon-widgets`**. Examples (`counter`, `card`, `list_keyed`) use `publish = false` — do **not** use `--crate all`.
+This workspace publishes **`lemon`** and **`lemon-widgets`**. Examples under `examples/` use `publish = false` — do **not** use `--crate all`.
 
 | What changed | Crates to bump |
 |--------------|----------------|

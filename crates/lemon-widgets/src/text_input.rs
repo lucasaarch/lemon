@@ -3,6 +3,7 @@ use lemon::{
         builders::{Row, Text, View},
         events::Cursor,
         style::Color,
+        types::TextInputMeta,
         Element,
     },
     Signal,
@@ -12,14 +13,11 @@ use crate::TextFieldState;
 
 /// Single-line text input widget.
 ///
-/// `TextInput` is a **pure builder** — it reads reactive signals at build time and registers
-/// reactive dependencies so the parent re-renders when either signal changes.
+/// `TextInput` is a **pure builder** — it reads reactive state at build time and registers
+/// reactive dependencies so the parent re-renders when the field value changes.
 ///
-/// # Parameters
-///
-/// - `state`: [`Signal<TextFieldState>`] owned by the parent; updated on every key press.
-/// - `focused`: [`Signal<bool>`] that controls the visual focus border; set to `true` by the
-///   parent's `.on_click()` handler and to `false` when another field is clicked.
+/// Keyboard focus is handled by the platform ([`FocusManager`](lemon::retained::focus::FocusManager)):
+/// click or Tab to focus, then type. The paint pass draws the focus ring and text caret.
 ///
 /// # Examples
 ///
@@ -29,8 +27,7 @@ use crate::TextFieldState;
 ///
 /// fn my_view(cx: &Cx) -> Element {
 ///     let state = cx.use_signal(TextFieldState::new(""));
-///     let focused = cx.use_signal(false);
-///     TextInput::new(state.clone(), focused.clone())
+///     TextInput::new(state)
 ///         .placeholder("Type here…")
 ///         .width(240.0)
 ///         .into_element()
@@ -38,20 +35,18 @@ use crate::TextFieldState;
 /// ```
 pub struct TextInput {
     state: Signal<TextFieldState>,
-    focused: Signal<bool>,
     placeholder: String,
     width: Option<f32>,
 }
 
 impl TextInput {
-    /// Creates a new `TextInput` backed by `state` and `focused`.
+    /// Creates a new `TextInput` backed by `state`.
     ///
-    /// The builder reads both signals immediately so the parent component re-renders
-    /// whenever either one changes.
-    pub fn new(state: Signal<TextFieldState>, focused: Signal<bool>) -> Self {
+    /// The builder reads the signal immediately so the parent component re-renders
+    /// whenever the field value or cursor changes.
+    pub fn new(state: Signal<TextFieldState>) -> Self {
         TextInput {
             state,
-            focused,
             placeholder: String::new(),
             width: None,
         }
@@ -73,16 +68,9 @@ impl TextInput {
     ///
     /// Call this at the end of the builder chain to insert the widget into a parent container.
     pub fn into_element(self) -> Element {
-        let is_focused = self.focused.get();
-        let current_value = self.state.get().value.clone();
+        let field = self.state.get();
+        let current_value = field.value.clone();
         let placeholder = self.placeholder.clone();
-
-        // Border color: blue when focused, gray when not.
-        let border_color = if is_focused {
-            Color::rgb8(59, 130, 246) // blue-500
-        } else {
-            Color::rgb8(156, 163, 175) // gray-400
-        };
 
         // Text shown in the field: current value or placeholder (dimmed).
         let text_child: Element = if current_value.is_empty() {
@@ -95,13 +83,13 @@ impl TextInput {
 
         let mut container = View::new()
             .padding(6.0)
-            .border(border_color, 1.5)
+            .border(Color::rgb8(156, 163, 175), 1.5)
             .radius(4.0)
             .focusable()
             .cursor(Cursor::Text)
-            .on_click({
-                let focused = self.focused.clone();
-                move || focused.set(true)
+            .text_input(TextInputMeta {
+                cursor: field.cursor,
+                value: field.value,
             })
             .on_key_down({
                 let state = self.state.clone();

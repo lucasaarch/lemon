@@ -74,6 +74,14 @@ macro_rules! container_builder {
                 self.0.children.push(el.into());
                 self
             }
+            /// Appends multiple children in order.
+            ///
+            /// For a list of mixed widget types, use the [`children!`](crate::children) macro:
+            /// `.children(children![Text::new("a"), Button::new("b")])`.
+            pub fn children(mut self, items: impl IntoIterator<Item = impl Into<Element>>) -> Self {
+                self.0.children.extend(items.into_iter().map(Into::into));
+                self
+            }
             /// Stable identity for diffing when this child is inserted, removed, or reordered.
             ///
             /// All siblings under the same parent must use keys if any sibling uses one.
@@ -129,6 +137,16 @@ macro_rules! container_builder {
             /// Includes this node in keyboard focus traversal (Tab / Shift+Tab).
             pub fn focusable(mut self) -> Self {
                 self.0.style.focusable = true;
+                self
+            }
+            /// Attaches text-field metadata used by the paint pass (caret, focus ring).
+            pub fn text_input(mut self, meta: crate::element::types::TextInputMeta) -> Self {
+                self.0.text_input = Some(meta);
+                self
+            }
+            /// Marks this node as a vertical scroll viewport (scrollbar when content overflows).
+            pub fn scroll_viewport(mut self) -> Self {
+                self.0.scroll_viewport = true;
                 self
             }
             /// Cursor shown when the pointer is over this node.
@@ -361,6 +379,23 @@ mod tests {
             panic!()
         };
         assert_eq!(el.children.len(), 2);
+    }
+
+    #[test]
+    fn children_macro_accepts_mixed_builders() {
+        use crate::{children, Button, Column, Row, Text};
+
+        let Element::Column(col) = Column::new()
+            .children(children![
+                Text::new("title"),
+                Button::new("ok"),
+                Row::new().child(Text::new("nested")),
+            ])
+            .into_element()
+        else {
+            panic!("expected Column");
+        };
+        assert_eq!(col.children.len(), 3);
     }
 
     #[test]

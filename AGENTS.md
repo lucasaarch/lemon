@@ -24,9 +24,14 @@ Lemon is a reactive native desktop UI toolkit in Rust. The repository is a Cargo
 
 - `crates/lemon`: core engine
 - `crates/lemon-widgets`: app-facing widget re-exports
-- `examples/counter`
-- `examples/card`
-- `examples/list_keyed`
+- `examples/counter` — quick start
+- `examples/signals` — `use_signal`
+- `examples/memo` — `use_memo`
+- `examples/effects` — `use_effect`
+- `examples/keys` — keyed diffing
+- `examples/components` — `Component::new`
+- `examples/layout` — flex layout and styling
+- `examples/form` — `lemon-widgets` (TextInput, Scroll)
 
 Primary technologies:
 
@@ -279,8 +284,13 @@ Relevant commands:
 
 ```bash
 cargo build -p counter
-cargo build -p card
-cargo build -p list_keyed
+cargo build -p signals
+cargo build -p memo
+cargo build -p effects
+cargo build -p keys
+cargo build -p components
+cargo build -p layout
+cargo build -p form
 ```
 
 ### Rule: prefer extending existing patterns

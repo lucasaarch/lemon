@@ -600,6 +600,8 @@ fn freeze_box(container: &BoxElement) -> BoxElement {
         children: container.children.iter().map(freeze_element).collect(),
         key: container.key.clone(),
         handlers: container.handlers.clone(),
+        text_input: container.text_input.clone(),
+        scroll_viewport: container.scroll_viewport,
     }
 }
 

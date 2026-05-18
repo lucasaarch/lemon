@@ -1,5 +1,5 @@
 [package]
-name = "list_keyed"
+name = "effects"
 version.workspace = true
 edition.workspace = true
 publish = false

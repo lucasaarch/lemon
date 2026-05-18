@@ -1,0 +1,9 @@
+[package]
+name = "keys"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+lemon = { workspace = true }
+lemon-widgets = { workspace = true }

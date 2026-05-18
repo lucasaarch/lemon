@@ -14,6 +14,13 @@ fn component_identity(view: ComponentFn) -> usize {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Key(pub u64);
 
+/// Editing metadata for a single-line text field (caret painting, focus chrome).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct TextInputMeta {
+    pub cursor: usize,
+    pub value: String,
+}
+
 /// Shared backing struct for [`View`](crate::element::builders::View), [`Row`](crate::element::builders::Row), and [`Column`](crate::element::builders::Column).
 #[derive(Clone, Default, Debug)]
 pub struct BoxElement {
@@ -22,6 +29,10 @@ pub struct BoxElement {
     pub children: Vec<crate::element::Element>,
     pub key: Option<Key>,
     pub handlers: crate::retained::EventHandlers,
+    /// When set, the paint pass draws a caret for this field when it has keyboard focus.
+    pub text_input: Option<TextInputMeta>,
+    /// Marks a clipped viewport that may show a vertical scrollbar when content overflows.
+    pub scroll_viewport: bool,
 }
 
 #[derive(Clone)]

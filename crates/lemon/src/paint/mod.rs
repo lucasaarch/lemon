@@ -1,10 +1,11 @@
 use parley::PositionedLayoutItem;
-use vello::kurbo::{Affine, Rect, RoundedRect, Stroke};
+use taffy::NodeId;
+use vello::kurbo::{Affine, Line, Rect, RoundedRect, Stroke};
 use vello::peniko::{color::AlphaColor, BlendMode, Color as PenikoColor, Fill};
 use vello::{Glyph, Scene};
 
 use crate::element::style::{default_text_color, Color, CornerRadii, Edges, Overflow};
-use crate::layout::{LayoutMap, LayoutRect};
+use crate::layout::{measure_single_line_width, LayoutMap, LayoutRect};
 use crate::retained::{RetainedKind, RetainedNode, RetainedTree};
 
 type ParleyLayout = parley::Layout<[u8; 4]>;
@@ -37,6 +38,7 @@ pub fn paint_pass(
     layout: &LayoutMap,
     scene: &mut Scene,
     scale_factor: f32,
+    focused: Option<NodeId>,
 ) -> PaintStats {
     let mut stats = PaintStats::default();
     let base = if scale_factor == 1.0 {
@@ -55,7 +57,7 @@ pub fn paint_pass(
     );
 
     if let Some(root) = tree.root.as_ref() {
-        paint_node(root, layout, scene, ctx, &mut stats);
+        paint_node(root, layout, scene, ctx, scale_factor, focused, &mut stats);
     }
 
     scene.pop_layer();
@@ -67,18 +69,20 @@ fn paint_node(
     layout: &LayoutMap,
     scene: &mut Scene,
     ctx: PaintContext,
+    scale_factor: f32,
+    focused: Option<NodeId>,
     stats: &mut PaintStats,
 ) {
     if matches!(node.kind, RetainedKind::Component { .. }) {
         for child in &node.children {
-            paint_node(child, layout, scene, ctx, stats);
+            paint_node(child, layout, scene, ctx, scale_factor, focused, stats);
         }
         return;
     }
 
     let Some(taffy_id) = node.taffy_id else {
         for child in &node.children {
-            paint_node(child, layout, scene, ctx, stats);
+            paint_node(child, layout, scene, ctx, scale_factor, focused, stats);
         }
         return;
     };
@@ -89,6 +93,7 @@ fn paint_node(
 
     paint_container(node, rect, scene, ctx, stats);
     paint_text(node, rect, scene, ctx, stats);
+    paint_focus_ring(node, rect, taffy_id, focused, scene, ctx, stats);
 
     let clip_children = node.style.overflow == Overflow::Hidden;
     if clip_children {
@@ -102,12 +107,15 @@ fn paint_node(
     }
 
     for child in &node.children {
-        paint_node(child, layout, scene, ctx, stats);
+        paint_node(child, layout, scene, ctx, scale_factor, focused, stats);
     }
 
     if clip_children {
         scene.pop_layer();
     }
+
+    paint_text_input_caret(node, layout, scale_factor, focused, scene, ctx, stats);
+    paint_scrollbar(node, rect, layout, scene, ctx, stats);
 }
 
 fn paint_container(
@@ -289,6 +297,180 @@ fn to_peniko_color(color: Color) -> PenikoColor {
     AlphaColor::new([color.r, color.g, color.b, color.a])
 }
 
+const FOCUS_RING: Color = Color::rgb8(59, 130, 246);
+const SCROLLBAR_TRACK: Color = Color::rgb8(229, 231, 235);
+const SCROLLBAR_THUMB: Color = Color::rgb8(156, 163, 175);
+
+fn paint_focus_ring(
+    node: &RetainedNode,
+    rect: &LayoutRect,
+    taffy_id: NodeId,
+    focused: Option<NodeId>,
+    scene: &mut Scene,
+    ctx: PaintContext,
+    stats: &mut PaintStats,
+) {
+    if node.text_input.is_none() || focused != Some(taffy_id) {
+        return;
+    }
+
+    let shape = layout_rect_to_rounded(rect, &node.paint.radius);
+    stroke_rounded_rect(scene, ctx, &shape, FOCUS_RING, 2.0, stats);
+}
+
+fn first_text_descendant(node: &RetainedNode) -> Option<&RetainedNode> {
+    if node.text.is_some() {
+        return Some(node);
+    }
+    for child in &node.children {
+        if let Some(found) = first_text_descendant(child) {
+            return Some(found);
+        }
+    }
+    None
+}
+
+fn paint_text_input_caret(
+    node: &RetainedNode,
+    layout: &LayoutMap,
+    scale_factor: f32,
+    focused: Option<NodeId>,
+    scene: &mut Scene,
+    ctx: PaintContext,
+    stats: &mut PaintStats,
+) {
+    let Some(meta) = node.text_input.as_ref() else {
+        return;
+    };
+    let Some(field_id) = node.taffy_id else {
+        return;
+    };
+    let Some(field_rect) = layout.get(field_id) else {
+        return;
+    };
+    if focused != Some(field_id) {
+        return;
+    }
+
+    let (text_rect, text_style) = match first_text_descendant(node) {
+        Some(text_node) => match text_node.taffy_id.and_then(|id| layout.get(id).copied()) {
+            Some(rect) => {
+                let style = text_node
+                    .text
+                    .as_ref()
+                    .map(|t| t.style.clone())
+                    .unwrap_or_default();
+                (rect, style)
+            }
+            None => {
+                let padding = node.style.padding.clone().unwrap_or_default();
+                (inset_rect(field_rect, &padding), Default::default())
+            }
+        },
+        None => {
+            let padding = node.style.padding.clone().unwrap_or_default();
+            (inset_rect(field_rect, &padding), Default::default())
+        }
+    };
+
+    let prefix = if meta.cursor == 0 {
+        String::new()
+    } else {
+        meta.value
+            .get(..meta.cursor.min(meta.value.len()))
+            .unwrap_or("")
+            .to_string()
+    };
+    let caret_x = text_rect.x + measure_single_line_width(&prefix, &text_style, scale_factor);
+    let line_height = text_style.font_size.max(16.0);
+    let caret_top = text_rect.y + ((text_rect.height - line_height) * 0.5).max(0.0);
+    let caret_bottom = caret_top + line_height;
+
+    let line = Line::new(
+        (f64::from(caret_x), f64::from(caret_top)),
+        (f64::from(caret_x), f64::from(caret_bottom)),
+    );
+    scene.stroke(
+        &Stroke::new(1.5),
+        ctx.base,
+        to_peniko_color(default_text_color()),
+        None,
+        &line,
+    );
+    stats.strokes += 1;
+}
+
+fn paint_scrollbar(
+    node: &RetainedNode,
+    viewport_rect: &LayoutRect,
+    layout: &LayoutMap,
+    scene: &mut Scene,
+    ctx: PaintContext,
+    stats: &mut PaintStats,
+) {
+    if !node.scroll_viewport {
+        return;
+    }
+    let Some(inner) = node.children.first() else {
+        return;
+    };
+    let Some(inner_id) = inner.taffy_id else {
+        return;
+    };
+    let Some(inner_rect) = layout.get(inner_id) else {
+        return;
+    };
+
+    let content_height = inner_rect.height;
+    let viewport_height = viewport_rect.height;
+    if content_height <= viewport_height + 1.0 {
+        return;
+    }
+
+    let scroll_offset = inner
+        .style
+        .margin
+        .as_ref()
+        .map(|m| (-m.top).max(0.0))
+        .unwrap_or(0.0);
+    let max_offset = (content_height - viewport_height).max(1.0);
+    let track_width = 6.0;
+    let track_x = viewport_rect.x + viewport_rect.width - track_width - 2.0;
+    let track = Rect::new(
+        f64::from(track_x),
+        f64::from(viewport_rect.y + 2.0),
+        f64::from(track_x + track_width),
+        f64::from(viewport_rect.y + viewport_rect.height - 2.0),
+    );
+    scene.fill(
+        Fill::NonZero,
+        ctx.base,
+        to_peniko_color(SCROLLBAR_TRACK),
+        None,
+        &track,
+    );
+    stats.fills += 1;
+
+    let thumb_height = (viewport_height / content_height * viewport_height).max(16.0);
+    let thumb_travel = (viewport_height - thumb_height - 4.0).max(0.0);
+    let thumb_y =
+        viewport_rect.y + 2.0 + (scroll_offset / max_offset).clamp(0.0, 1.0) * thumb_travel;
+    let thumb = Rect::new(
+        f64::from(track_x + 1.0),
+        f64::from(thumb_y),
+        f64::from(track_x + track_width - 1.0),
+        f64::from(thumb_y + thumb_height),
+    );
+    scene.fill(
+        Fill::NonZero,
+        ctx.base,
+        to_peniko_color(SCROLLBAR_THUMB),
+        None,
+        &thumb,
+    );
+    stats.fills += 1;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -307,7 +489,7 @@ mod tests {
         )
         .unwrap();
         let mut scene = Scene::new();
-        paint_pass(tree, &layout, &mut scene, scale_factor)
+        paint_pass(tree, &layout, &mut scene, scale_factor, None)
     }
 
     #[test]
@@ -380,7 +562,7 @@ mod tests {
             .parley_layout = None;
 
         let mut scene = Scene::new();
-        let stats = paint_pass(&tree, &layout, &mut scene, 1.0);
+        let stats = paint_pass(&tree, &layout, &mut scene, 1.0, None);
 
         assert_eq!(stats.glyph_runs, 0);
     }
@@ -429,7 +611,7 @@ mod tests {
         .unwrap();
 
         let mut scene = Scene::new();
-        let stats = paint_pass(&tree, &LayoutMap::default(), &mut scene, 1.0);
+        let stats = paint_pass(&tree, &LayoutMap::default(), &mut scene, 1.0, None);
 
         assert_eq!(stats.fills, 0);
     }

@@ -126,6 +126,8 @@ pub struct RetainedNode {
     pub children: Vec<RetainedNode>,
     pub handlers: EventHandlers,
     pub text: Option<TextCache>,
+    pub text_input: Option<crate::element::types::TextInputMeta>,
+    pub scroll_viewport: bool,
 }
 
 impl RetainedNode {
@@ -159,6 +161,8 @@ impl RetainedNode {
                 parley_layout: None,
                 layout_max_width: None,
             }),
+            text_input: None,
+            scroll_viewport: false,
         }
     }
 
@@ -237,6 +241,8 @@ impl RetainedTree {
             children: node_children,
             key: _,
             handlers,
+            text_input,
+            scroll_viewport,
         } = node;
         let mut children = Vec::with_capacity(node_children.len());
         for child in node_children {
@@ -264,6 +270,8 @@ impl RetainedTree {
             children,
             handlers,
             text: None,
+            text_input,
+            scroll_viewport,
         })
     }
 
@@ -301,6 +309,8 @@ impl RetainedTree {
                 parley_layout: None,
                 layout_max_width: None,
             }),
+            text_input: None,
+            scroll_viewport: false,
         })
     }
 
@@ -315,6 +325,8 @@ impl RetainedTree {
             children: Vec::new(),
             handlers: EventHandlers::default(),
             text: None,
+            text_input: None,
+            scroll_viewport: false,
         })
     }
 
@@ -340,6 +352,8 @@ impl RetainedTree {
                     children: Vec::new(),
                     handlers: EventHandlers::default(),
                     text: None,
+                    text_input: None,
+                    scroll_viewport: false,
                 };
                 self.replace_with_wrapper(node, wrapper)?;
             }
@@ -356,6 +370,15 @@ impl RetainedTree {
             }
             Patch::UpdatePaint { node, paint } => {
                 self.node_mut(&node)?.paint = paint;
+            }
+            Patch::UpdateWidgetChrome {
+                node,
+                text_input,
+                scroll_viewport,
+            } => {
+                let retained = self.node_mut(&node)?;
+                retained.text_input = text_input;
+                retained.scroll_viewport = scroll_viewport;
             }
             Patch::UpdateText { node, content } => {
                 let retained = self.node_mut(&node)?;
@@ -958,6 +981,8 @@ mod tests {
             )],
             handlers: Default::default(),
             text: None,
+            text_input: None,
+            scroll_viewport: false,
         };
 
         assert_eq!(wrapper.children[0].text_content(), Some("child"));

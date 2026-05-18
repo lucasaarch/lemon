@@ -3,8 +3,12 @@ members = [
     "crates/lemon",
     "crates/lemon-widgets",
     "examples/counter",
-    "examples/card",
-    "examples/list_keyed",
+    "examples/signals",
+    "examples/memo",
+    "examples/effects",
+    "examples/keys",
+    "examples/components",
+    "examples/layout",
     "examples/form",
 ]
 resolver = "2"

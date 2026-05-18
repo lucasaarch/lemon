@@ -1,9 +1,9 @@
 use lemon::{
     element::{builders::View, Element},
-    Overflow, Signal,
+    Cx, Overflow, Signal,
 };
 
-/// Simple vertical scroll viewport that updates a caller-owned offset signal.
+/// Vertical scroll viewport with internal offset state and a painted scrollbar.
 pub struct Scroll {
     child: Element,
     offset: Signal<f64>,
@@ -12,7 +12,13 @@ pub struct Scroll {
 }
 
 impl Scroll {
-    pub fn new(child: impl Into<Element>, offset: Signal<f64>) -> Self {
+    /// Creates a scroll region that owns its scroll offset (starts at `0`).
+    pub fn new(cx: &Cx, child: impl Into<Element>) -> Self {
+        Self::with_offset(cx.use_signal(0.0f64), child)
+    }
+
+    /// Creates a scroll region backed by a caller-owned offset signal (advanced use).
+    pub fn with_offset(offset: Signal<f64>, child: impl Into<Element>) -> Self {
         Self {
             child: child.into(),
             offset,
@@ -38,6 +44,7 @@ impl Scroll {
         let mut viewport = View::new()
             .height(self.height)
             .overflow(Overflow::Hidden)
+            .scroll_viewport()
             .on_scroll(move |delta| {
                 let next = (offset.get() - delta).max(0.0);
                 offset.set(next);

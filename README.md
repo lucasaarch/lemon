@@ -74,16 +74,19 @@ cargo run -p counter
 
 The workspace includes a few small but representative examples:
 
-- `counter`: minimal reactive state and button interaction
-- `card`: nested layout, styling, and simple interaction
-- `list_keyed`: keyed children and dynamic add/remove updates
+- `counter`: quick start
+- `signals` / `memo` / `effects`: reactive hooks
+- `keys`: keyed list diffing
+- `components`: nested `Component::new`
+- `layout`: flex containers and styling
+- `form`: TextInput, Scroll, and widget integration
 
 Run them with:
 
 ```bash
 cargo run -p counter
-cargo run -p card
-cargo run -p list_keyed
+cargo run -p signals
+cargo run -p form
 ```
 
 ## Mental Model
@@ -108,9 +111,14 @@ This repository is a Cargo workspace:
 |------|------|------|
 | `lemon` | `crates/lemon` | Core runtime, element model, diffing, retained tree, layout, paint, platform |
 | `lemon-widgets` | `crates/lemon-widgets` | App-facing widget and builder re-exports |
-| `counter` | `examples/counter` | Minimal reactive counter |
-| `card` | `examples/card` | Composed card layout example |
-| `list_keyed` | `examples/list_keyed` | Keyed list update example |
+| `counter` | `examples/counter` | Quick start |
+| `signals` | `examples/signals` | `use_signal` patterns |
+| `memo` | `examples/memo` | `use_memo` derived values |
+| `effects` | `examples/effects` | `use_effect` side effects |
+| `keys` | `examples/keys` | Keyed list diffing |
+| `components` | `examples/components` | `Component::new` |
+| `layout` | `examples/layout` | Flex layout and styling |
+| `form` | `examples/form` | Widgets (TextInput, Scroll) |
 
 ## Current Capabilities
 
@@ -189,9 +197,8 @@ Useful commands:
 cargo build -p lemon
 cargo test -p lemon
 cargo test -p lemon-widgets
-cargo build -p counter
-cargo build -p card
-cargo build -p list_keyed
+make build-examples
+# or: cargo run -p counter | signals | memo | effects | keys | components | layout | form
 ```
 
 Full workspace checks:

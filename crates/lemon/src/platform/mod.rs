@@ -186,7 +186,13 @@ impl AppState {
             self.scene.reset();
             let scale = self.scale_factor();
             if let Some(tree) = self.retained.as_ref() {
-                paint_pass(tree, &self.layout_map, &mut self.scene, scale);
+                paint_pass(
+                    tree,
+                    &self.layout_map,
+                    &mut self.scene,
+                    scale,
+                    self.focus_manager.focused,
+                );
             }
             self.paint_dirty = false;
         }

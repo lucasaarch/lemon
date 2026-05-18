@@ -225,6 +225,27 @@ fn effective_font_size(style: &TextStyle) -> f32 {
     }
 }
 
+/// Measures the width of a single-line string using the same defaults as layout.
+pub fn measure_single_line_width(content: &str, style: &TextStyle, scale_factor: f32) -> f32 {
+    if content.is_empty() {
+        return 0.0;
+    }
+
+    let mut font_cx = FontContext::new();
+    let mut layout_cx = LayoutContext::<ParleyBrush>::new();
+    let font_size = effective_font_size(style);
+    let weight = FontWeight::new(style.font_weight as f32);
+
+    let mut builder = layout_cx.ranged_builder(&mut font_cx, content, scale_factor, true);
+    builder.push_default(GenericFamily::SystemUi);
+    builder.push_default(StyleProperty::FontSize(font_size));
+    builder.push_default(StyleProperty::FontWeight(weight));
+    let mut layout = builder.build(content);
+    layout.break_all_lines(None);
+    layout.align(Alignment::Start, AlignmentOptions::default());
+    layout.width()
+}
+
 fn apply_text_measurements(node: &mut RetainedNode, results: &HashMap<NodeId, TextMeasureOutput>) {
     if let Some(id) = node.taffy_id {
         if let (Some(text), Some(output)) = (&mut node.text, results.get(&id)) {
