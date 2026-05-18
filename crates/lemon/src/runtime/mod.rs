@@ -629,19 +629,19 @@ fn sync_slots_for_emitted_patches(
             }
             Patch::UpdateComponent { node, component } => {
                 if let Some(slot) = find_slot_mut(slots, node) {
-                let props_changed = slot
-                    .component
-                    .as_ref()
-                    .is_none_or(|previous| !previous.props_eq(component));
-                let should_sync_render = if component.has_props() {
-                    props_changed
-                } else {
-                    true
-                };
-                if should_sync_render {
-                    *slot.view.borrow_mut() = component.view();
-                    sync_render(slot);
-                }
+                    let props_changed = slot
+                        .component
+                        .as_ref()
+                        .is_none_or(|previous| !previous.props_eq(component));
+                    let should_sync_render = if component.has_props() {
+                        props_changed
+                    } else {
+                        true
+                    };
+                    if should_sync_render {
+                        *slot.view.borrow_mut() = component.view();
+                        sync_render(slot);
+                    }
                     slot.component = Some(component.clone());
                 } else {
                     mount_component_slot(
@@ -962,7 +962,10 @@ mod tests {
         runtime.take_patches();
 
         let renders_after_mount = RENDERS.with(|renders| renders.get());
-        assert_eq!(renders_after_mount, 1, "child should render exactly once on mount");
+        assert_eq!(
+            renders_after_mount, 1,
+            "child should render exactly once on mount"
+        );
 
         trigger.set(1);
         runtime.flush_effects();
