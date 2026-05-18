@@ -27,6 +27,7 @@ struct ComponentSlot {
     pending: Rc<RefCell<Option<Element>>>,
     view: Rc<RefCell<ViewFn>>,
     cx: Rc<RefCell<Cx>>,
+    component: Option<ComponentElement>,
     children: Vec<ComponentSlot>,
     deferred_effects: Rc<RefCell<Vec<Effect>>>,
     _effect: Effect,
@@ -141,6 +142,7 @@ fn create_component_slot(
         pending,
         view: view_cell,
         cx,
+        component: None,
         children: Vec::new(),
         deferred_effects,
         _effect: effect,
@@ -300,6 +302,7 @@ fn mount_component_slot(
     // Nested components must run their effect on mount so signal reads register subscribers.
     // A lazy effect never runs until dirty, but it cannot become dirty until it has run once.
     let mut slot = create_component_slot(path, component.view(), false, deferred_effects);
+    slot.component = Some(component);
     if let Some(initial) = slot.pending.borrow_mut().take() {
         slot.previous = Some(initial);
     }
@@ -327,18 +330,21 @@ fn handle_component_pair(
     deferred_effects: Rc<RefCell<Vec<Effect>>>,
 ) {
     let new_for_patch = new.clone();
-    let props_changed = !old.props_eq(&new);
     if same_component_identity(old, &new) {
         if let Some(slot) = find_slot_mut(parent_slots, &path) {
-            *slot.view.borrow_mut() = new.view();
-            // A signal-driven effect may have already rendered into `pending`. Do not clobber it.
-            let had_pending = slot.pending.borrow().is_some();
-            if !had_pending {
+            let props_changed = slot
+                .component
+                .as_ref()
+                .is_none_or(|previous| !previous.props_eq(&new));
+            let should_sync_render = if new.has_props() { props_changed } else { true };
+            if should_sync_render {
+                *slot.view.borrow_mut() = new.view();
                 sync_render(slot);
             }
+            slot.component = Some(new.clone());
             crate::lemon_trace!(
                 Runtime,
-                "handle_component_pair path={} key={:?} pending_before={had_pending} props_changed={props_changed}",
+                "handle_component_pair path={} key={:?} props_changed={props_changed}",
                 crate::debug::format_path(&path),
                 new.key()
             );
@@ -623,8 +629,20 @@ fn sync_slots_for_emitted_patches(
             }
             Patch::UpdateComponent { node, component } => {
                 if let Some(slot) = find_slot_mut(slots, node) {
-                    *slot.view.borrow_mut() = component.view();
-                    sync_render(slot);
+                    let props_changed = slot
+                        .component
+                        .as_ref()
+                        .is_none_or(|previous| !previous.props_eq(component));
+                    let should_sync_render = if component.has_props() {
+                        props_changed
+                    } else {
+                        true
+                    };
+                    if should_sync_render {
+                        *slot.view.borrow_mut() = component.view();
+                        sync_render(slot);
+                    }
+                    slot.component = Some(component.clone());
                 } else {
                     mount_component_slot(
                         slots_bucket_mut(slots, node),
@@ -908,6 +926,62 @@ mod tests {
         assert!(patches
             .iter()
             .any(|patch| { matches!(patch, Patch::UpdateText { content, .. } if content == "2") }));
+    }
+
+    #[test]
+    fn typed_props_component_skips_rerender_when_props_unchanged() {
+        use std::cell::Cell;
+
+        use crate::element::builders::{Column, Component};
+
+        #[derive(Clone, PartialEq)]
+        struct Props {
+            value: u32,
+        }
+
+        thread_local! {
+            static RENDERS: Cell<u32> = const { Cell::new(0) };
+        }
+
+        fn child(_cx: &Cx, props: &Props) -> Element {
+            RENDERS.with(|renders| renders.set(renders.get() + 1));
+            Text::new(props.value.to_string()).into_element()
+        }
+
+        RENDERS.with(|renders| renders.set(0));
+
+        let trigger = Signal::new(0u32);
+        let t2 = trigger.clone();
+        let mut runtime = Runtime::new();
+        runtime.mount(move |_cx| {
+            t2.get();
+            Column::new()
+                .child(Component::new_with_props(child, Props { value: 42 }))
+                .into_element()
+        });
+        runtime.take_patches();
+
+        let renders_after_mount = RENDERS.with(|renders| renders.get());
+        assert_eq!(
+            renders_after_mount, 1,
+            "child should render exactly once on mount"
+        );
+
+        trigger.set(1);
+        runtime.flush_effects();
+        let patches = runtime.take_patches();
+        let renders_after_rerender = RENDERS.with(|renders| renders.get());
+
+        assert_eq!(
+            renders_after_rerender, renders_after_mount,
+            "child should not re-render when typed props are unchanged"
+        );
+        assert!(
+            patches
+                .iter()
+                .any(|patch| matches!(patch, Patch::UpdateComponent { node, .. } if node.0 == [0])),
+            "parent should still reconcile component node, got {patches:?}"
+        );
     }
 
     #[test]
