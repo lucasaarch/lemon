@@ -1,21 +1,33 @@
 use std::rc::Rc;
 
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct Edges<T: Clone> {
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Edges<T: Copy> {
     pub top: T,
     pub right: T,
     pub bottom: T,
     pub left: T,
 }
 
-impl<T: Clone> Edges<T> {
+impl<T: Copy> Edges<T> {
     pub fn all(v: T) -> Self {
         Edges {
-            top: v.clone(),
-            right: v.clone(),
-            bottom: v.clone(),
+            top: v,
+            right: v,
+            bottom: v,
             left: v,
         }
+    }
+}
+
+impl Edges<f32> {
+    /// Returns true if any side has a width greater than zero.
+    pub fn any_positive(&self) -> bool {
+        self.top > 0.0 || self.right > 0.0 || self.bottom > 0.0 || self.left > 0.0
+    }
+
+    /// Returns true when all four sides share the same width.
+    pub fn is_uniform(&self) -> bool {
+        self.top == self.right && self.right == self.bottom && self.bottom == self.left
     }
 }
 
@@ -191,11 +203,12 @@ impl<F: Fn() -> Color + 'static> From<F> for ColorSource {
 }
 
 /// Visual decoration properties. May contain dynamic closures.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct PaintProps {
     pub background: Option<ColorSource>,
     pub border_color: Option<ColorSource>,
-    pub border_width: f32,
+    /// Per-side border widths in logical points (`0.0` = no border on that side).
+    pub border_width: Edges<f32>,
     pub radius: CornerRadii,
     /// Optional image drawn inside the container using object-fit: contain scaling.
     pub image: Option<crate::asset::ImageHandle>,
@@ -205,21 +218,6 @@ pub struct PaintProps {
     pub scroll_thumb_color: Option<ColorSource>,
     /// Optional override for text-input focus ring painting.
     pub focus_ring_color: Option<ColorSource>,
-}
-
-impl Default for PaintProps {
-    fn default() -> Self {
-        PaintProps {
-            background: None,
-            border_color: None,
-            border_width: 0.0,
-            radius: CornerRadii::default(),
-            image: None,
-            scroll_track_color: None,
-            scroll_thumb_color: None,
-            focus_ring_color: None,
-        }
-    }
 }
 
 impl std::fmt::Debug for PaintProps {
@@ -254,7 +252,7 @@ impl std::fmt::Debug for PaintProps {
 pub struct PaintData {
     pub background: Option<Color>,
     pub border_color: Option<Color>,
-    pub border_width: f32,
+    pub border_width: Edges<f32>,
     pub radius: CornerRadii,
     /// Optional image drawn inside the container using object-fit: contain scaling.
     pub image: Option<crate::asset::ImageHandle>,
