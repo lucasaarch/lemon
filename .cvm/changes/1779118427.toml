@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = ["lemon", "lemon-widgets"]
-patch = []
-pre = true
-summary = "Add position_absolute layout support; fix Select overlay and Scroll double-scrollbar"
