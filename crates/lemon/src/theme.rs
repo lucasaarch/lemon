@@ -151,9 +151,19 @@ mod tests {
     use super::{current_theme, set_active_theme, Theme};
 
     #[test]
+    fn active_theme_defaults_to_light_on_new_thread() {
+        let from_thread = std::thread::spawn(current_theme)
+            .join()
+            .expect("theme thread should join");
+        assert_eq!(from_thread, Theme::default_light());
+    }
+
+    #[test]
     fn active_theme_roundtrip_works() {
+        let previous = current_theme();
         let dark = Theme::default_dark();
         set_active_theme(dark.clone());
         assert_eq!(current_theme(), dark);
+        set_active_theme(previous);
     }
 }

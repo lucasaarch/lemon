@@ -101,7 +101,10 @@ pub use retained::RetainedTree;
 pub use runtime::cx::Cx;
 pub use runtime::signal::Signal;
 pub use runtime::Runtime;
-pub use theme::{ColorTokens, RadiusTokens, SpacingTokens, Theme, TypographyTokens};
+pub use theme::{
+    current_theme, set_active_theme, ColorTokens, RadiusTokens, SpacingTokens, Theme,
+    TypographyTokens,
+};
 
 pub use debug::Category as DebugCategory;
 
