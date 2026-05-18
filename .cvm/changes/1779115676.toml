@@ -1,0 +1,6 @@
+[update]
+major = []
+minor = ["lemon"]
+patch = []
+pre = true
+summary = "Add mouse capture and pointer dispatch with normalized coordinates"
