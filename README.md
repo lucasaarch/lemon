@@ -33,7 +33,26 @@ fn main() {
 ```
 
 ```bash
-cargo run --example counter
+cargo run -p counter
+```
+
+Add `lemon = "0.1"` to your app’s `Cargo.toml`, or use this repo as a workspace (see below).
+
+## Workspace
+
+This repository is a [Cargo workspace](https://doc.rust-lang.org/cargo/reference/workspaces.html):
+
+| Crate | Path | Published |
+|-------|------|-----------|
+| `lemon` | `lemon/` | yes (crates.io) |
+| `counter` | `examples/counter/` | no (`publish = false`) |
+
+Future crates (e.g. `lemon-widgets`) can be added as workspace members with aligned versions via `[workspace.package]`.
+
+```bash
+cargo test              # all workspace crates
+cargo test -p lemon     # core only
+cargo run -p counter    # demo app
 ```
 
 ## Architecture
@@ -58,9 +77,9 @@ Layers 1–4 are pure Rust and covered by unit tests. Layers 5–8 run when you 
 ## Development
 
 ```bash
-cargo test          # 98 unit tests
-cargo build
-cargo run --example counter
+cargo test -p lemon
+cargo build -p lemon
+cargo run -p counter
 ```
 
 Requires a recent stable Rust toolchain and GPU compute support (Vello).
