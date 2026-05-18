@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = ["lemon"]
-patch = []
-pre = true
-summary = "Add outside-click and pointer handlers on container builders"
