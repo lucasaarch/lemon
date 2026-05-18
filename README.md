@@ -36,10 +36,9 @@ It is not trying to imitate a web framework in Rust, and it is not trying to cla
 ## Quick Example
 
 ```rust
-use lemon::{run, Cx, WindowConfig};
-use lemon_widgets::{Button, Column, Text};
+use lemon::prelude::*;
 
-fn counter(cx: &Cx) -> lemon::element::Element {
+fn counter(cx: &Cx) -> Element {
     let count = cx.use_signal(0i32);
     let count_text = count.clone();
     let count_btn = count.clone();
@@ -48,7 +47,7 @@ fn counter(cx: &Cx) -> lemon::element::Element {
         .gap(12.0)
         .padding(24.0)
         .child(Text::new(move || count_text.get().to_string()).font_size(24.0))
-        .child(Button::new("Increment").on_click(move || {
+        .child(Button::new(cx, "Increment").on_click(move || {
             count_btn.update(|n| *n += 1);
         }))
         .into_element()
@@ -64,10 +63,10 @@ fn main() {
 }
 ```
 
-Run the example workspace app:
+Run the counter example:
 
 ```bash
-cargo run -p counter
+cargo run --example counter
 ```
 
 ## Examples
@@ -84,9 +83,10 @@ The workspace includes a few small but representative examples:
 Run them with:
 
 ```bash
-cargo run -p counter
-cargo run -p signals
-cargo run -p form
+cargo run --example counter
+cargo run --example signals
+cargo run --example form
+cargo run --example rich
 ```
 
 ## Mental Model
@@ -103,22 +103,25 @@ Lemon is intentionally built as a pipeline of small layers:
 
 This layering matters. Lemon is designed so that state changes do not imply full re-execution of every lower-level concern beyond what is actually dirty.
 
-## Workspace Layout
+## Repository Layout
 
-This repository is a Cargo workspace:
+Single `lemon` crate at the repo root:
 
-| Crate | Path | Role |
-|------|------|------|
-| `lemon` | `crates/lemon` | Core runtime, element model, diffing, retained tree, layout, paint, platform |
-| `lemon-widgets` | `crates/lemon-widgets` | App-facing widget and builder re-exports |
-| `counter` | `examples/counter` | Quick start |
-| `signals` | `examples/signals` | `use_signal` patterns |
-| `memo` | `examples/memo` | `use_memo` derived values |
-| `effects` | `examples/effects` | `use_effect` side effects |
-| `keys` | `examples/keys` | Keyed list diffing |
-| `components` | `examples/components` | `Component::new` |
-| `layout` | `examples/layout` | Flex layout and styling |
-| `form` | `examples/form` | Widgets (TextInput, Scroll) |
+| Path | Role |
+|------|------|
+| `src/` | Core runtime, element model, diff, retained tree, layout, paint, platform |
+| `src/widget/` | App-facing widgets (`TextInput`, `Scroll`, `Select`, `Slider`, `Image`, …) |
+| `examples/*.rs` | Runnable examples (`cargo run --example <name>`) |
+
+| Example | Topic |
+|---------|--------|
+| `counter` | Quick start |
+| `signals` / `memo` / `effects` | Reactive hooks |
+| `keys` | Keyed list diffing |
+| `components` | `Component::new` |
+| `layout` | Flex layout and styling |
+| `form` | TextInput, Scroll |
+| `rich` | Image, Select, Slider, Scroll showcase |
 
 ## Current Capabilities
 
@@ -194,19 +197,22 @@ Prerequisites:
 Useful commands:
 
 ```bash
-cargo build -p lemon
-cargo test -p lemon
-cargo test -p lemon-widgets
+cargo build
+cargo test
 make build-examples
-# or: cargo run -p counter | signals | memo | effects | keys | components | layout | form
+cargo run --example counter
+cargo run --example form
 ```
 
-Full workspace checks:
+Full quality gates:
 
 ```bash
+make check
+# or:
 cargo fmt --all -- --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
+cargo clippy --all-targets -- -D warnings
+cargo test
+cargo build --examples
 ```
 
 ## Contributing

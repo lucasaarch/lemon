@@ -1,8 +1,7 @@
-# Lemon workspace — common development commands
+# Lemon — common development commands
 # Run `make` or `make help` for targets.
 
 CARGO := cargo
-EXAMPLES := counter signals memo effects keys components layout form rich slider images select scroll
 
 .PHONY: help check ci fmt fmt-check clippy test build build-examples doc doc-open clean
 
@@ -22,26 +21,23 @@ fmt: ## Format all Rust code
 fmt-check: ## Check formatting (no changes)
 	$(CARGO) fmt --all -- --check
 
-clippy: ## Lint workspace with warnings denied
-	$(CARGO) clippy --workspace --all-targets -- -D warnings
+clippy: ## Lint with warnings denied
+	$(CARGO) clippy --all-targets -- -D warnings
 
-test: ## Run all workspace tests
-	$(CARGO) test --workspace
+test: ## Run all tests (lib, widget, doctests)
+	$(CARGO) test
 
-build: ## Build entire workspace
-	$(CARGO) build --workspace
+build: ## Build library and binaries
+	$(CARGO) build
 
-build-examples: ## Build all example binaries
-	@for ex in $(EXAMPLES); do \
-		echo "==> building $$ex"; \
-		$(CARGO) build -p $$ex || exit $$?; \
-	done
+build-examples: ## Build all examples
+	$(CARGO) build --examples
 
-doc: ## Build rustdoc for lemon (library)
-	$(CARGO) doc -p lemon --no-deps
+doc: ## Build rustdoc
+	$(CARGO) doc --no-deps
 
-doc-open: doc ## Build and open lemon docs in the browser
-	$(CARGO) doc -p lemon --no-deps --open
+doc-open: doc ## Build and open docs in the browser
+	$(CARGO) doc --no-deps --open
 
 clean: ## Remove build artifacts
 	$(CARGO) clean

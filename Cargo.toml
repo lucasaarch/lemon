@@ -1,30 +1,71 @@
-[workspace]
-members = [
-    "crates/lemon",
-    "crates/lemon-widgets",
-    "examples/counter",
-    "examples/signals",
-    "examples/memo",
-    "examples/effects",
-    "examples/keys",
-    "examples/components",
-    "examples/layout",
-    "examples/form",
-    "examples/rich",
-    "examples/slider",
-    "examples/images",
-    "examples/select",
-    "examples/scroll",
-]
-resolver = "2"
-
-[workspace.package]
+[package]
+name = "lemon"
 version = "0.2.0-alpha.16"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/lucasaarch/lemon"
+description = "A reactive UI toolkit for Rust"
+keywords = ["ui", "gui", "toolkit", "reactive"]
+categories = ["gui"]
 
-[workspace.dependencies]
+[dependencies]
+arboard = "3.4"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
-lemon = { path = "crates/lemon", version = "0.2.0-alpha.16" }
-lemon-widgets = { path = "crates/lemon-widgets", version = "0.2.0-alpha.16" }
+parley = "0.9"
+pollster = "0.4"
+taffy = "0.7"
+vello = "0.9"
+wgpu = "29"
+winit = "0.30"
+
+[[example]]
+name = "counter"
+path = "examples/counter.rs"
+
+[[example]]
+name = "signals"
+path = "examples/signals.rs"
+
+[[example]]
+name = "memo"
+path = "examples/memo.rs"
+
+[[example]]
+name = "effects"
+path = "examples/effects.rs"
+
+[[example]]
+name = "keys"
+path = "examples/keys.rs"
+
+[[example]]
+name = "components"
+path = "examples/components.rs"
+
+[[example]]
+name = "layout"
+path = "examples/layout.rs"
+
+[[example]]
+name = "form"
+path = "examples/form.rs"
+
+[[example]]
+name = "rich"
+path = "examples/rich.rs"
+
+[[example]]
+name = "slider"
+path = "examples/slider.rs"
+
+[[example]]
+name = "images"
+path = "examples/images.rs"
+
+[[example]]
+name = "select"
+path = "examples/select.rs"
+
+[[example]]
+name = "scroll"
+path = "examples/scroll.rs"

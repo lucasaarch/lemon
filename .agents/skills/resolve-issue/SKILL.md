@@ -98,7 +98,7 @@ Repository-specific requirements:
 
 - Preserve the pipeline: `runtime -> diff -> retained -> layout -> paint -> platform`
 - Do not treat `Component::new(...)` as if it accepted arbitrary captured closures
-- Re-export app-facing builder changes through `crates/lemon-widgets` when needed
+- Re-export app-facing builder changes through `src/widget` when needed
 
 ### Step 6: Run progressive verification during development
 
@@ -107,8 +107,8 @@ Run the smallest relevant checks first.
 Examples:
 
 ```bash
-cargo test -p lemon
-cargo test -p lemon-widgets
+cargo test
+cargo test::widget
 make build-examples
 ```
 
@@ -162,20 +162,20 @@ Choose **one** bump type per staged change based on what you shipped. Use your j
 | Bump | When to use |
 |------|-------------|
 | **patch** | Bug fixes, regressions, internal refactors, tests-only, CI/docs, performance fixes without API changes |
-| **minor** | New backward-compatible features, new public types/builders/exports, new widgets in `lemon-widgets`, new optional behavior |
+| **minor** | New backward-compatible features, new public types/builders/exports, new widgets in `lemon::widget`, new optional behavior |
 | **major** | Breaking public API changes, removed or renamed exports, intentional semantic breaks consumers must react to |
 
 If unsure between patch and minor, prefer **patch** for fixes and **minor** for user-visible additions.
 
 #### 8.3 Choose crates
 
-This workspace publishes **`lemon`** and **`lemon-widgets`**. Examples under `examples/` use `publish = false` — do **not** use `--crate all`.
+This workspace publishes **`lemon`** only. Examples are `[[example]]` targets in the root `Cargo.toml` — do **not** use `--crate all`.
 
 | What changed | Crates to bump |
 |--------------|----------------|
-| Only `crates/lemon` (no public widget surface) | `--crate lemon` |
-| Only `crates/lemon-widgets` | `--crate lemon-widgets` |
-| Public API / widgets / re-exports in both crates | `--crate lemon --crate lemon-widgets` (same `--bump` for both) |
+| Only `src` (no public widget surface) | `--crate lemon` |
+| Only `src/widget` | `--crate lemon::widget` |
+| Public API / widgets / re-exports in both crates | `--crate lemon --crate lemon::widget` (same `--bump` for both) |
 
 When both library crates need the same bump, pass one `--bump` and multiple `--crate` flags.
 
@@ -191,7 +191,7 @@ Good examples:
 
 - `Fix hover hit-testing for nested retained nodes`
 - `Add TextFieldState and wire keyboard input for text fields`
-- `Export Scroll widget from lemon-widgets`
+- `Export Scroll widget from lemon::widget`
 
 Bad examples:
 
@@ -202,7 +202,7 @@ Bad examples:
 #### 8.5 Run CVM
 
 ```bash
-cvm --crate lemon --crate lemon-widgets --bump minor --summary "Add TextFieldState for controlled text input"
+cvm --crate lemon --crate lemon::widget --bump minor --summary "Add TextFieldState for controlled text input"
 ```
 
 Adjust `--crate` and `--bump` to match your decision.
@@ -315,7 +315,7 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 cargo install cvm_cli --version 1.1.2 --locked
-cvm --crate lemon --crate lemon-widgets --bump patch --summary "<effective one-line changelog>"
+cvm --crate lemon --crate lemon::widget --bump patch --summary "<effective one-line changelog>"
 cvm status
 git add .cvm/changes/ <files>
 git commit -m "<type>: <description>"

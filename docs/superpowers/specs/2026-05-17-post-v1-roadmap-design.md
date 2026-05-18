@@ -10,7 +10,7 @@
 
 - Cada milestone é publicável no crates.io e passa em `cargo test --workspace` + `cargo clippy --workspace -- -D warnings` antes do release.
 - Foco em tornar o Lemon utilizável para apps reais: interatividade e widgets primeiro.
-- **`lemon` core** contém apenas primitivas de renderização e o runtime. **`lemon-widgets`** contém todos os widgets com semântica de produto.
+- **`lemon` core** contém apenas primitivas de renderização e o runtime. **`lemon::widget`** contém todos os widgets com semântica de produto.
 - A11y e multi-window em V0.5 podem ser splitados em V0.6 se o milestone ficar grande demais.
 
 ---
@@ -25,13 +25,13 @@
 - Camadas 1–8: runtime reativo, diff+patch, retained tree, layout (Taffy), paint (Vello), platform (winit + wgpu)
 - `lemon::run()`
 
-### `lemon-widgets` (novo crate)
+### `lemon::widget` (novo crate)
 
 - Builders migrados do core: `Button`, `Row`, `Column`, `Text`, `Image`
 - Widgets novos: `Scroll`, `TextInput`, `Select`, `Slider`
 - Contexto de tema: `Theme`, `use_theme()`
 
-Os widgets de `lemon-widgets` constroem sobre as primitivas do core — um `Button`, por exemplo, é um `Prim` com style, paint e `on_click`.
+Os widgets de `lemon::widget` constroem sobre as primitivas do core — um `Button`, por exemplo, é um `Prim` com style, paint e `on_click`.
 
 ---
 
@@ -39,12 +39,12 @@ Os widgets de `lemon-widgets` constroem sobre as primitivas do core — um `Butt
 
 **Objetivo:** Fundar a qualidade do projeto e a infraestrutura de eventos antes de adicionar features.
 
-### Extração `lemon-widgets` *(pré-requisito de todo o resto)*
+### Extração `lemon::widget` *(pré-requisito de todo o resto)*
 
-- Criar `crates/lemon-widgets/` com `lemon = { workspace = true }`
+- Criar `src/widget/` com `lemon = { workspace = true }`
 - Refatorar `Element` enum para primitivas (`Prim`, `TextNode`, `Component`, `Fragment`)
-- Migrar builders `Button`, `Row`, `Column`, `Text`, `Image` para `lemon-widgets`
-- Atualizar `examples/counter` para importar de `lemon-widgets`
+- Migrar builders `Button`, `Row`, `Column`, `Text`, `Image` para `lemon::widget`
+- Atualizar `examples/counter` para importar de `lemon::widget`
 
 ### CI
 
@@ -93,7 +93,7 @@ Os widgets de `lemon-widgets` constroem sobre as primitivas do core — um `Butt
 
 ### Scroll / Viewports Roláveis
 
-- Widget `Scroll` em `lemon-widgets`
+- Widget `Scroll` em `lemon::widget`
 - Scroll offset interno como `Signal<f64>` (vertical; horizontal como extensão futura)
 - Layout: conteúdo mede seu tamanho natural; viewport tem tamanho fixo
 - Paint: conteúdo renderizado com `Affine::translate` dentro do clip rect
@@ -102,7 +102,7 @@ Os widgets de `lemon-widgets` constroem sobre as primitivas do core — um `Butt
 
 ### TextInput
 
-- Widget `TextInput` em `lemon-widgets`
+- Widget `TextInput` em `lemon::widget`
 - Props: `value: Signal<String>`, `on_change: Fn(String)`, `placeholder: &str`
 - Cursor de texto posicionado via Parley; renderizado no paint pass
 - Seleção de texto (click + drag; Shift+setas)
@@ -121,7 +121,7 @@ Os widgets de `lemon-widgets` constroem sobre as primitivas do core — um `Butt
 
 - `Element::Image` hoje é placeholder — wiring real no paint pass usando suporte de imagem do Vello
 - `ImageData` no retained tree: textura wgpu carregada e cacheada
-- `Image` builder em `lemon-widgets` aceita `ImageHandle`
+- `Image` builder em `lemon::widget` aceita `ImageHandle`
 
 ### Assets / Carregamento de Imagens
 
@@ -137,14 +137,14 @@ Os widgets de `lemon-widgets` constroem sobre as primitivas do core — um `Butt
 
 ### Select
 
-- Widget `Select<T>` em `lemon-widgets`
+- Widget `Select<T>` em `lemon::widget`
 - Props: `value: Signal<T>`, `options: Vec<(T, &str)>`, `on_change: Fn(T)`
 - Dropdown popup usa z-index para renderizar acima de tudo
 - Fecha ao clicar fora (hit-test global)
 
 ### Slider
 
-- Widget `Slider` em `lemon-widgets`
+- Widget `Slider` em `lemon::widget`
 - Props: `value: Signal<f32>`, `min`, `max`, `step`, `on_change: Fn(f32)`
 - Drag via mouse: `on_hover_enter` + mouse down + `CursorMoved`
 - Track + thumb renderizados via primitivas `Prim`
@@ -161,7 +161,7 @@ Os widgets de `lemon-widgets` constroem sobre as primitivas do core — um `Butt
 
 - Struct `Theme` com campos: `colors` (background, foreground, accent, error...), `typography` (font sizes, weights), `spacing` (padding/gap scales)
 - Hook `use_theme() -> Theme` disponível em `Cx`
-- Widgets de `lemon-widgets` leem o tema por padrão, sobrescrevível por prop
+- Widgets de `lemon::widget` leem o tema por padrão, sobrescrevível por prop
 - `lemon::run()` aceita `Theme` opcional como parâmetro
 
 ### Animações / Transições
@@ -175,7 +175,7 @@ Os widgets de `lemon-widgets` constroem sobre as primitivas do core — um `Butt
 
 - Integração com [AccessKit](https://github.com/AccessKit/accesskit)
 - Retained tree emite accessibility tree paralela sincronizada com cada frame
-- Widgets de `lemon-widgets` declaram roles semânticos (button, textinput, etc.)
+- Widgets de `lemon::widget` declaram roles semânticos (button, textinput, etc.)
 - Suporte a leitores de tela no macOS (VoiceOver), Windows (NVDA/JAWS), Linux (Orca)
 
 ### Multi-window
@@ -202,7 +202,7 @@ Os widgets de `lemon-widgets` constroem sobre as primitivas do core — um `Butt
 
 ```
 V0.1 (atual)
-  └── V0.2: lemon-widgets + CI + licença + exemplos + Keyboard + Hover
+  └── V0.2: lemon::widget + CI + licença + exemplos + Keyboard + Hover
         └── V0.3: clipping + Scroll + TextInput
               └── V0.4: Image + Assets + Z-index + Select + Slider
                     └── V0.5: Themes + Animations + a11y + Multi-window + Props + Fragment
@@ -215,10 +215,10 @@ Itens dentro de cada milestone também têm dependências internas explicitadas 
 ## Crate sugerido para sequência de publish
 
 ```
-V0.2: cargo publish -p lemon && cargo publish -p lemon-widgets
-V0.3: cargo publish -p lemon-widgets  (lemon core pode não mudar)
-V0.4: cargo publish -p lemon-widgets
-V0.5: cargo publish -p lemon && cargo publish -p lemon-widgets
+V0.2: cargo publish
+V0.3: cargo publish  (lemon core pode não mudar)
+V0.4: cargo publish
+V0.5: cargo publish
 ```
 
 ---

@@ -20,18 +20,13 @@ Agents MUST ignore `CONTEXT.md` and everything under `docs/superpowers/` for rep
 
 The mission is to improve Lemon without degrading its architecture.
 
-Lemon is a reactive native desktop UI toolkit in Rust. The repository is a Cargo workspace containing:
+Lemon is a reactive native desktop UI toolkit in Rust. The repository is a **single crate** (`lemon`) with:
 
-- `crates/lemon`: core engine
-- `crates/lemon-widgets`: app-facing widget re-exports
-- `examples/counter` — quick start
-- `examples/signals` — `use_signal`
-- `examples/memo` — `use_memo`
-- `examples/effects` — `use_effect`
-- `examples/keys` — keyed diffing
-- `examples/components` — `Component::new`
-- `examples/layout` — flex layout and styling
-- `examples/form` — `lemon-widgets` (TextInput, Scroll)
+- `src/`: core engine (runtime, element, diff, retained, layout, paint, platform)
+- `src/widget/`: app-facing widgets (`TextInput`, `Scroll`, `Select`, …)
+- `examples/*.rs`: runnable examples via `cargo run --example <name>`
+
+Examples: `counter` (quick start), `signals`, `memo`, `effects`, `keys`, `components`, `layout`, `form` (TextInput, Scroll), `rich`, `slider`, `images`, `select`, `scroll`
 
 Primary technologies:
 
@@ -84,8 +79,8 @@ This repository prefers:
 
 The public surface is defined primarily by:
 
-- `crates/lemon/src/lib.rs`
-- `crates/lemon-widgets/src/lib.rs`
+- `src/lib.rs` and `src/prelude.rs`
+- `src/widget/` for app-facing widgets
 
 If an agent changes app-facing APIs, it MUST also verify:
 
@@ -99,7 +94,7 @@ Agents MUST add or update Rust doc comments (`///`) for every public API they in
 
 **Public API** means anything reachable from app code, including:
 
-- items re-exported from `crates/lemon/src/lib.rs` or `crates/lemon-widgets/src/lib.rs`
+- items re-exported from `src/lib.rs`, `src/prelude.rs`, or `src/widget/`
 - `pub` types, traits, functions, constants, and enum variants in those crates
 - builder methods and hook APIs on `Cx`, widgets, and configuration types (`WindowConfig`, events, styles)
 
@@ -124,8 +119,8 @@ Before considering non-trivial work complete, agents MUST run:
 
 ```bash
 cargo fmt --all -- --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
+cargo clippy --all-targets -- -D warnings
+cargo test
 ```
 
 If one of these cannot be run, the agent MUST explicitly say so.
@@ -136,16 +131,17 @@ Agents MUST use the real codebase, not assumptions.
 
 High-value files:
 
-- `crates/lemon/src/lib.rs`: public exports
-- `crates/lemon/src/runtime/`: reactive state and rendering loop
-- `crates/lemon/src/element/`: virtual element model, builders, styles, events
-- `crates/lemon/src/diff/mod.rs`: patch generation
-- `crates/lemon/src/retained/mod.rs`: retained tree and patch application
-- `crates/lemon/src/retained/focus.rs`: focus traversal
-- `crates/lemon/src/layout/mod.rs`: layout pass and text measurement
-- `crates/lemon/src/paint/mod.rs`: Vello scene generation
-- `crates/lemon/src/platform/mod.rs`: app shell, input dispatch, redraw loop
-- `crates/lemon/src/platform/hit_test.rs`: click and hover hit testing
+- `src/lib.rs`: public exports
+- `src/runtime/`: reactive state and rendering loop
+- `src/element/`: virtual element model, builders, styles, events
+- `src/widget/`: app-facing widgets
+- `src/diff/mod.rs`: patch generation
+- `src/retained/mod.rs`: retained tree and patch application
+- `src/retained/focus.rs`: focus traversal
+- `src/layout/mod.rs`: layout pass and text measurement
+- `src/paint/mod.rs`: Vello scene generation
+- `src/platform/mod.rs`: app shell, input dispatch, redraw loop
+- `src/platform/hit_test.rs`: click and hover hit testing
 - `examples/`: canonical consumer code
 - `.github/workflows/ci.yml`: CI quality gates
 
@@ -167,9 +163,9 @@ When debugging, agents MUST identify which stage is failing before editing code.
 
 ### Public documentation
 
-Follow Non-Negotiable Policy **4. Document public APIs**. Match the tone and depth of existing crate-level and builder docs in `crates/lemon/src/lib.rs` and `element/builders.rs`: short lead sentence, behavior notes, migration hints when renaming, and examples for entry-point APIs.
+Follow Non-Negotiable Policy **4. Document public APIs**. Match the tone and depth of existing crate-level and builder docs in `src/lib.rs` and `element/builders.rs`: short lead sentence, behavior notes, migration hints when renaming, and examples for entry-point APIs.
 
-When exposing a symbol through `lib.rs` or `lemon-widgets`, document it at the definition site (or on the re-export with `#[doc(inline)]` only if the underlying docs are already complete).
+When exposing a symbol through `lib.rs` or `widget/`, document it at the definition site (or on the re-export with `#[doc(inline)]` only if the underlying docs are already complete).
 
 ### Builders
 
@@ -214,16 +210,16 @@ Agents MUST:
 
 - use stable keys for stable identity
 - preserve keyed vs unkeyed behavior
-- add or update tests in `crates/lemon/src/diff/mod.rs` when keyed reconciliation changes
+- add or update tests in `src/diff/mod.rs` when keyed reconciliation changes
 
 ### Events and input
 
 Current event model lives in:
 
-- `crates/lemon/src/element/events.rs`
-- `crates/lemon/src/retained/mod.rs`
-- `crates/lemon/src/platform/hit_test.rs`
-- `crates/lemon/src/platform/mod.rs`
+- `src/element/events.rs`
+- `src/retained/mod.rs`
+- `src/platform/hit_test.rs`
+- `src/platform/mod.rs`
 
 Important concepts:
 
@@ -283,14 +279,19 @@ If an agent changes builders, exports, keys, runtime behavior, or public events,
 Relevant commands:
 
 ```bash
-cargo build -p counter
-cargo build -p signals
-cargo build -p memo
-cargo build -p effects
-cargo build -p keys
-cargo build -p components
-cargo build -p layout
-cargo build -p form
+cargo build --example counter
+cargo build --example signals
+cargo build --example memo
+cargo build --example effects
+cargo build --example keys
+cargo build --example components
+cargo build --example layout
+cargo build --example form
+cargo build --example rich
+cargo build --example slider
+cargo build --example images
+cargo build --example select
+cargo build --example scroll
 ```
 
 ### Rule: prefer extending existing patterns
@@ -302,14 +303,14 @@ Examples:
 - tests near the module under test
 - builder methods in `element/builders.rs`
 - exports in `lib.rs`
-- app-facing re-exports in `lemon-widgets`
+- app-facing widgets in `src/widget/` and `prelude`
 
 ## Known Pitfalls
 
 Agents MUST be aware of these repository-specific traps:
 
 1. Adding fields to `StyleProps` or `BoxElement` often breaks manual initializers in tests.
-2. Adding builder capabilities without exposing them through `lemon-widgets` leaves examples behind.
+2. Adding widget capabilities without exporting them from `src/widget/` and `prelude` leaves examples behind.
 3. Input changes often require edits in more than one place: builders, retained handlers, hit testing, and platform dispatch.
 4. `clippy -D warnings` is strict. Structural lint failures count as broken work.
 5. `README.md` may lag behind the actual code. Source and tests win.
@@ -327,7 +328,7 @@ This section is procedural. Agents SHOULD follow it in order.
 4. Make the smallest coherent code change.
 5. Add or update tests.
 6. Run the smallest relevant command.
-7. Run full workspace gates.
+7. Run full quality gates (`make check`).
 
 ### Playbook B: when debugging a bug
 
@@ -346,14 +347,13 @@ Agents MUST NOT start patching random downstream files before locating the faili
 
 ### Playbook C: when adding a new app-facing capability
 
-1. implement the core data or behavior in `crates/lemon`
-2. expose the builder or type from the appropriate module
+1. implement the core data or behavior in the appropriate `src/` layer
+2. expose the builder or type from `src/widget/` when app-facing
 3. add or update `///` documentation on every new or changed public item
-4. re-export from `crates/lemon/src/lib.rs` if public
-5. re-export from `crates/lemon-widgets` if end-user-facing
-6. update or add an example if the feature is visible to users
-7. run builds for affected examples
-8. confirm `cargo doc -p lemon --no-deps` (and `lemon-widgets` if touched) builds without doc warnings when practical
+4. re-export from `src/lib.rs` and `src/prelude.rs` when public
+5. update or add an `examples/<name>.rs` example if the feature is visible to users
+6. run `cargo build --example <name>` for affected examples
+7. confirm `cargo doc --no-deps` builds without doc warnings when practical
 
 ### Playbook D: when reviewing a proposed change
 
@@ -377,8 +377,8 @@ An agent SHOULD only consider work complete when all of the following are true:
 - every new or changed public API has accurate `///` documentation
 - examples still build if the public surface changed
 - `cargo fmt --all -- --check` passes
-- `cargo clippy --workspace --all-targets -- -D warnings` passes
-- `cargo test --workspace` passes
+- `cargo clippy --all-targets -- -D warnings` passes
+- `cargo test` passes
 
 ## Short Version
 
@@ -391,4 +391,4 @@ If an agent reads nothing else, it MUST remember this:
 - do not misuse `Component::new(...)` as if it accepted arbitrary captured closures
 - document every public API you add or change (`///`, with examples when non-trivial)
 - verify examples after public API changes
-- never skip `fmt`, `clippy`, or workspace tests
+- never skip `fmt`, `clippy`, or `cargo test`

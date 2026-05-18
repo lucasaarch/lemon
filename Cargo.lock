@@ -306,14 +306,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "components"
-version = "0.2.0-alpha.16"
-dependencies = [
- "lemon",
- "lemon-widgets",
-]
-
-[[package]]
 name = "concurrent-queue"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -369,14 +361,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77745e017f5edba1a9c1d854f6f3a52dac8a12dd5af5d2f54aecf61e43d80d30"
 dependencies = [
  "libm",
-]
-
-[[package]]
-name = "counter"
-version = "0.2.0-alpha.16"
-dependencies = [
- "lemon",
- "lemon-widgets",
 ]
 
 [[package]]
@@ -462,14 +446,6 @@ name = "dpi"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76"
-
-[[package]]
-name = "effects"
-version = "0.2.0-alpha.16"
-dependencies = [
- "lemon",
- "lemon-widgets",
-]
 
 [[package]]
 name = "equivalent"
@@ -602,14 +578,6 @@ name = "foreign-types-shared"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
-
-[[package]]
-name = "form"
-version = "0.2.0-alpha.16"
-dependencies = [
- "lemon",
- "lemon-widgets",
-]
 
 [[package]]
 name = "futures-core"
@@ -960,14 +928,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "images"
-version = "0.2.0-alpha.16"
-dependencies = [
- "lemon",
- "lemon-widgets",
-]
-
-[[package]]
 name = "indexmap"
 version = "2.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1058,14 +1018,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "keys"
-version = "0.2.0-alpha.16"
-dependencies = [
- "lemon",
- "lemon-widgets",
-]
-
-[[package]]
 name = "khronos-egl"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1095,17 +1047,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "layout"
-version = "0.2.0-alpha.16"
-dependencies = [
- "lemon",
- "lemon-widgets",
-]
-
-[[package]]
 name = "lemon"
 version = "0.2.0-alpha.16"
 dependencies = [
+ "arboard",
  "image",
  "parley",
  "pollster",
@@ -1113,14 +1058,6 @@ dependencies = [
  "vello",
  "wgpu",
  "winit",
-]
-
-[[package]]
-name = "lemon-widgets"
-version = "0.2.0-alpha.16"
-dependencies = [
- "arboard",
- "lemon",
 ]
 
 [[package]]
@@ -1215,14 +1152,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "714098028fe011992e1c3962653c96b2d578c4b4bce9036e15ff220319b1e0e3"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "memo"
-version = "0.2.0-alpha.16"
-dependencies = [
- "lemon",
- "lemon-widgets",
 ]
 
 [[package]]
@@ -1987,14 +1916,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b30a45b0cd0bcca8037f3d0dc3421eaf95327a17cad11964fb8179b4fc4832"
 
 [[package]]
-name = "rich"
-version = "0.2.0-alpha.16"
-dependencies = [
- "lemon",
- "lemon-widgets",
-]
-
-[[package]]
 name = "roxmltree"
 version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2072,14 +1993,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
-name = "scroll"
-version = "0.2.0-alpha.16"
-dependencies = [
- "lemon",
- "lemon-widgets",
-]
-
-[[package]]
 name = "sctk-adwaita"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2090,14 +2003,6 @@ dependencies = [
  "memmap2",
  "smithay-client-toolkit",
  "tiny-skia",
-]
-
-[[package]]
-name = "select"
-version = "0.2.0-alpha.16"
-dependencies = [
- "lemon",
- "lemon-widgets",
 ]
 
 [[package]]
@@ -2143,14 +2048,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
-name = "signals"
-version = "0.2.0-alpha.16"
-dependencies = [
- "lemon",
- "lemon-widgets",
-]
-
-[[package]]
 name = "simd-adler32"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2187,14 +2084,6 @@ name = "slab"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
-
-[[package]]
-name = "slider"
-version = "0.2.0-alpha.16"
-dependencies = [
- "lemon",
- "lemon-widgets",
-]
 
 [[package]]
 name = "slotmap"
