@@ -49,6 +49,13 @@ pub enum Justify {
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
+pub enum Overflow {
+    #[default]
+    Visible,
+    Hidden,
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct CornerRadii {
     pub top_left: f32,
     pub top_right: f32,
@@ -78,6 +85,7 @@ pub struct StyleProps {
     pub flex_shrink: Option<f32>,
     pub align_items: Option<Align>,
     pub justify_content: Option<Justify>,
+    pub overflow: Overflow,
     /// Cross-axis alignment when this node is a flex child (e.g. avoid stretch in a column).
     pub align_self: Option<Align>,
     pub focusable: bool,
@@ -210,4 +218,14 @@ impl Default for TextStyle {
 /// Foreground used when a text node has no explicit color.
 pub fn default_text_color() -> Color {
     Color::rgb8(235, 235, 240)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Overflow, StyleProps};
+
+    #[test]
+    fn style_props_default_overflow_is_visible() {
+        assert_eq!(StyleProps::default().overflow, Overflow::Visible);
+    }
 }

@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::element::{
     content::TextContent,
-    style::{Color, ColorSource, CornerRadii, Edges, PaintProps, StyleProps, TextStyle},
+    style::{Color, ColorSource, CornerRadii, Edges, Overflow, PaintProps, StyleProps, TextStyle},
     types::{BoxElement, ComponentElement, ComponentFn, Key, TextElement},
     Element,
 };
@@ -44,6 +44,10 @@ macro_rules! container_builder {
             }
             pub fn justify_content(mut self, v: crate::element::style::Justify) -> Self {
                 self.0.style.justify_content = Some(v);
+                self
+            }
+            pub fn overflow(mut self, v: Overflow) -> Self {
+                self.0.style.overflow = v;
                 self
             }
             pub fn background(mut self, c: impl Into<ColorSource>) -> Self {
@@ -291,6 +295,14 @@ mod tests {
             panic!()
         };
         assert_eq!(el.key, Some(Key(9)));
+    }
+
+    #[test]
+    fn box_builder_sets_overflow() {
+        let Element::Box_(el) = Box_::new().overflow(Overflow::Hidden).into_element() else {
+            panic!()
+        };
+        assert_eq!(el.style.overflow, Overflow::Hidden);
     }
 
     #[test]

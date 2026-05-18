@@ -8,7 +8,7 @@ pub mod runtime;
 
 pub use element::builders::{Box_, Button, Column, Component, Row, Text};
 pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
-pub use element::style::{Color, StyleProps};
+pub use element::style::{Color, Overflow, StyleProps};
 pub use layout::{layout_pass, layout_pass_if_dirty, LayoutMap, LayoutRect, Viewport};
 pub use paint::{paint_pass, PaintStats};
 pub use platform::{run, AppState, WindowConfig};
@@ -281,5 +281,11 @@ mod tests {
         };
 
         assert_eq!(component.key(), Some(&element::types::Key(9)));
+    }
+
+    #[test]
+    fn crate_root_re_exports_overflow() {
+        let hidden = Overflow::Hidden;
+        assert_eq!(hidden, element::style::Overflow::Hidden);
     }
 }
