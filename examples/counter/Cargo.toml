@@ -5,4 +5,4 @@ edition.workspace = true
 publish = false
 
 [dependencies]
-lemon = { path = "../../lemon" }
+lemon = { path = "../../crates/lemon" }

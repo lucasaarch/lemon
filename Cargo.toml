@@ -1,5 +1,5 @@
 [workspace]
-members = ["lemon", "examples/counter"]
+members = ["crates/lemon", "examples/counter"]
 resolver = "2"
 
 [workspace.package]
@@ -9,4 +9,4 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/lucasaarch/lemon"
 
 [workspace.dependencies]
-lemon = { path = "lemon", version = "0.1.0" }
+lemon = { path = "crates/lemon", version = "0.1.0" }

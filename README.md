@@ -44,7 +44,7 @@ This repository is a [Cargo workspace](https://doc.rust-lang.org/cargo/reference
 
 | Crate | Path | Published |
 |-------|------|-----------|
-| `lemon` | `lemon/` | yes (crates.io) |
+| `lemon` | `crates/lemon/` | yes (crates.io) |
 | `counter` | `examples/counter/` | no (`publish = false`) |
 
 Future crates (e.g. `lemon-widgets`) can be added as workspace members with aligned versions via `[workspace.package]`.
