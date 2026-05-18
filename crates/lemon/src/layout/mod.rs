@@ -719,4 +719,102 @@ mod tests {
         let rect = map.get(text_id).unwrap();
         assert!(rect.width > 0.0 && rect.height > 0.0);
     }
+
+    #[test]
+    fn column_padding_left_offsets_children() {
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(200.0)
+                .padding_left(30.0)
+                .child(View::new().height(10.0))
+                .into_element(),
+        )
+        .unwrap();
+
+        let map = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 400.0,
+            },
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let child_id = root.children[0].taffy_id.unwrap();
+        let child_rect = map.get(child_id).unwrap();
+        assert_eq!(
+            child_rect.x, 30.0,
+            "child should be offset by padding_left=30, got x={}",
+            child_rect.x
+        );
+    }
+
+    #[test]
+    fn column_row_gap_spaces_children() {
+        let gap = 20.0;
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(100.0)
+                .row_gap(gap)
+                .child(View::new().height(10.0))
+                .child(View::new().height(10.0))
+                .into_element(),
+        )
+        .unwrap();
+
+        let map = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 400.0,
+            },
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let first_id = root.children[0].taffy_id.unwrap();
+        let second_id = root.children[1].taffy_id.unwrap();
+        let first = map.get(first_id).unwrap();
+        let second = map.get(second_id).unwrap();
+        let spacing = second.y - (first.y + first.height);
+        assert!(
+            (spacing - gap).abs() < 1.0,
+            "row_gap should produce {gap}pt between children, got {spacing}"
+        );
+    }
+
+    #[test]
+    fn column_margin_all_sides_offsets_node() {
+        let mut tree = RetainedTree::mount(
+            Column::new()
+                .width(200.0)
+                .child(View::new().height(10.0).margin(16.0))
+                .into_element(),
+        )
+        .unwrap();
+
+        let map = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 400.0,
+            },
+        )
+        .unwrap();
+
+        let root = tree.root.as_ref().unwrap();
+        let child_id = root.children[0].taffy_id.unwrap();
+        let child_rect = map.get(child_id).unwrap();
+        assert_eq!(
+            child_rect.x, 16.0,
+            "child should be offset by margin_left=16, got x={}",
+            child_rect.x
+        );
+        assert_eq!(
+            child_rect.y, 16.0,
+            "child should be offset by margin_top=16, got y={}",
+            child_rect.y
+        );
+    }
 }
