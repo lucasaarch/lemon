@@ -8,7 +8,11 @@ use lemon_widgets::{children, Column, Row, Scroll, Text};
 
 fn app(cx: &Cx) -> lemon::element::Element {
     const COUNT: usize = 30;
-    const ROW_HEIGHT: f32 = 30.0;
+    const ROW_VERTICAL_PADDING: f32 = 4.0;
+    const ROW_GAP: f32 = 4.0;
+    const ESTIMATED_TEXT_LINE_HEIGHT: f32 = 18.0;
+    const ROW_HEIGHT: f32 = ESTIMATED_TEXT_LINE_HEIGHT + ROW_VERTICAL_PADDING * 2.0;
+    let content_height = COUNT as f32 * ROW_HEIGHT + (COUNT.saturating_sub(1) as f32) * ROW_GAP;
 
     let mut list = Column::new().gap(4.0);
     for i in 0..COUNT {
@@ -31,7 +35,7 @@ fn app(cx: &Cx) -> lemon::element::Element {
             Scroll::new(cx, list)
                 .height(220.0)
                 .width(400.0)
-                .content_height(COUNT as f32 * ROW_HEIGHT),
+                .content_height(content_height),
         ])
         .into_element()
 }

@@ -178,32 +178,38 @@ mod tests {
     }
 
     #[test]
-    fn scroll_with_content_height_clamps_offset_at_max() {
-        let offset = Signal::new(0.0f64);
-        let root = Scroll::with_offset(offset.clone(), lemon::element::builders::Text::new("item"))
-            .height(200.0)
-            .content_height(600.0)
-            .into_element();
+    fn scroll_with_content_height_clamps_offset_at_max_table_driven() {
+        let cases = [
+            ("matches_estimate", 596.0_f32, 396.0_f64),
+            ("over_estimate", 604.0_f32, 404.0_f64),
+        ];
 
-        let Element::Row(row) = root else {
-            panic!("expected Row");
-        };
-        let Element::View(viewport) = &row.children[0] else {
-            panic!("expected viewport View");
-        };
-        let on_scroll = viewport.handlers.on_scroll.as_ref().unwrap();
+        for (name, content_height, expected_max_offset) in cases {
+            let offset = Signal::new(0.0f64);
+            let root =
+                Scroll::with_offset(offset.clone(), lemon::element::builders::Text::new("item"))
+                    .height(200.0)
+                    .content_height(content_height)
+                    .into_element();
 
-        // Scrolling past max_offset (600 - 200 = 400) must clamp to 400.
-        on_scroll(-9999.0);
-        assert_eq!(
-            offset.get(),
-            400.0,
-            "offset must clamp at content_height - viewport_h"
-        );
+            let Element::Row(row) = root else {
+                panic!("expected Row");
+            };
+            let Element::View(viewport) = &row.children[0] else {
+                panic!("expected viewport View");
+            };
+            let on_scroll = viewport.handlers.on_scroll.as_ref().unwrap();
 
-        // Scrolling back past zero must clamp to 0.
-        on_scroll(9999.0);
-        assert_eq!(offset.get(), 0.0, "offset must clamp at 0");
+            on_scroll(-9999.0);
+            assert_eq!(
+                offset.get(),
+                expected_max_offset,
+                "{name}: offset must clamp at content_height - viewport_h"
+            );
+
+            on_scroll(9999.0);
+            assert_eq!(offset.get(), 0.0, "{name}: offset must clamp at 0");
+        }
     }
 
     #[test]
