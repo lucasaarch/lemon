@@ -5,6 +5,7 @@ mod window;
 
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
+use std::sync::Arc as StdArc;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -25,6 +26,7 @@ use crate::animation::AnimRegistry;
 use crate::diff::Patch;
 use crate::element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 use crate::element::Element;
+use crate::font::{register_font_data, FontRegistrationError};
 use crate::layout::{layout_pass, sync_scroll_layout_max, LayoutMap, Viewport};
 use crate::paint::paint_pass;
 use crate::retained::focus::FocusManager;
@@ -190,7 +192,7 @@ impl WindowState {
             viewport.height
         );
         let tree = self.retained.as_mut().expect("retained tree");
-        match layout_pass(tree, viewport) {
+        match layout_pass(tree, &mut self.font_cx, viewport) {
             Ok(map) => {
                 self.layout_map = map;
                 if let Some(root) = tree.root.as_ref() {
@@ -700,6 +702,13 @@ pub struct AppState {
     theme: Theme,
     root_component: RootComponent,
     animation_registry: AnimRegistry,
+    registered_fonts: Vec<RegisteredFont>,
+}
+
+#[derive(Clone)]
+struct RegisteredFont {
+    family_name: String,
+    bytes: StdArc<Vec<u8>>,
 }
 
 impl AppState {
@@ -723,6 +732,7 @@ impl AppState {
             theme,
             root_component: Arc::new(root),
             animation_registry: AnimRegistry::shared(),
+            registered_fonts: Vec::new(),
         }
     }
 
@@ -731,7 +741,57 @@ impl AppState {
     }
 
     fn make_window_state(&self) -> WindowState {
-        WindowState::new(self.theme.clone(), Arc::clone(&self.root_component))
+        let mut state = WindowState::new(self.theme.clone(), Arc::clone(&self.root_component));
+        for registered in &self.registered_fonts {
+            register_font_data(
+                &mut state.font_cx,
+                registered.family_name.clone(),
+                StdArc::clone(&registered.bytes),
+            )
+            .expect("font registration was validated before storing");
+        }
+        state
+    }
+
+    /// Registers an in-memory font under `family_name` for all windows in this app.
+    ///
+    /// Registered fonts are applied to existing windows immediately and to future windows when
+    /// they are created. Use the same family in text styles with
+    /// [`.font_family(...)`](crate::Text::font_family).
+    pub fn register_font_bytes(
+        &mut self,
+        family_name: impl Into<String>,
+        bytes: impl Into<Vec<u8>>,
+    ) -> Result<(), FontRegistrationError> {
+        let family_name = family_name.into();
+        let bytes = StdArc::new(bytes.into());
+
+        let mut probe = FontContext::new();
+        register_font_data(&mut probe, family_name.clone(), StdArc::clone(&bytes))?;
+
+        for window in self.windows.values_mut() {
+            register_font_data(
+                &mut window.font_cx,
+                family_name.clone(),
+                StdArc::clone(&bytes),
+            )?;
+            window.layout_dirty = true;
+            window.paint_dirty = true;
+        }
+
+        self.registered_fonts
+            .push(RegisteredFont { family_name, bytes });
+        Ok(())
+    }
+
+    /// Loads a font from `path` and registers it under `family_name`.
+    pub fn register_font_path(
+        &mut self,
+        family_name: impl Into<String>,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<(), FontRegistrationError> {
+        let bytes = std::fs::read(path.as_ref())?;
+        self.register_font_bytes(family_name, bytes)
     }
 
     fn remove_window(&mut self, window_id: WindowId) -> bool {
@@ -943,10 +1003,52 @@ pub fn run(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) {
 /// [`Cx::use_theme`](crate::Cx::use_theme) and [`current_theme`](crate::current_theme) during
 /// reactive work see this theme consistently.
 pub fn run_with_theme(config: WindowConfig, theme: Theme, root: impl Fn(&Cx) -> Element + 'static) {
+    run_with_theme_and_fonts(config, theme, root, |_| {});
+}
+
+/// Opens a native window and runs `root`, allowing fonts to be registered before the first frame.
+///
+/// # Example
+///
+/// ```no_run
+/// use lemon::prelude::*;
+/// use lemon::run_with_fonts;
+///
+/// fn app(_cx: &Cx) -> Element {
+///     Text::new("Brand font").font_family("MyApp Sans").into_element()
+/// }
+///
+/// fn main() {
+///     let bundled = include_bytes!(file!());
+///     run_with_fonts(WindowConfig::default(), app, move |state| {
+///         state
+///             .register_font_bytes("MyApp Sans", bundled.to_vec())
+///             .expect("register bundled font");
+///     });
+/// }
+/// ```
+pub fn run_with_fonts(
+    config: WindowConfig,
+    root: impl Fn(&Cx) -> Element + 'static,
+    register_fonts: impl FnOnce(&mut AppState),
+) {
+    run_with_theme_and_fonts(config, Theme::default(), root, register_fonts);
+}
+
+/// Opens a native window and runs `root` with `theme`, allowing custom fonts to be registered
+/// before the event loop starts.
+pub fn run_with_theme_and_fonts(
+    config: WindowConfig,
+    theme: Theme,
+    root: impl Fn(&Cx) -> Element + 'static,
+    register_fonts: impl FnOnce(&mut AppState),
+) {
     crate::debug::configure_from_env();
     let event_loop = EventLoop::new().expect("create event loop");
+    let mut state = AppState::with_theme(config, theme, root);
+    register_fonts(&mut state);
     let mut app = LemonApplication {
-        state: Some(AppState::with_theme(config, theme, root)),
+        state: Some(state),
     };
     event_loop.run_app(&mut app).expect("run event loop");
 }
@@ -990,6 +1092,20 @@ fn lemon_cursor_to_winit(cursor: &Cursor) -> CursorIcon {
 mod tests {
     use super::*;
     use crate::element::builders::Text;
+    use std::path::PathBuf;
+
+    fn test_font_path() -> PathBuf {
+        let candidates = [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
+            "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+        ];
+        candidates
+            .iter()
+            .map(PathBuf::from)
+            .find(|path| path.is_file())
+            .expect("expected at least one system TTF font for tests")
+    }
 
     #[test]
     fn app_state_starts_without_windows() {
@@ -1030,5 +1146,40 @@ mod tests {
 
         assert!(state.remove_window(id));
         assert!(state.windows.is_empty());
+    }
+
+    #[test]
+    fn register_font_bytes_applies_to_new_window_font_context() {
+        let mut state = AppState::new(WindowConfig::default(), |_cx| {
+            Text::new("hi").into_element()
+        });
+        let bytes = std::fs::read(test_font_path()).expect("read font bytes");
+        state
+            .register_font_bytes("PlatformFontBytes", bytes)
+            .expect("register font bytes");
+
+        let mut window_state = state.make_window_state();
+        assert!(window_state
+            .font_cx
+            .collection
+            .family_by_name("PlatformFontBytes")
+            .is_some());
+    }
+
+    #[test]
+    fn register_font_path_applies_to_new_window_font_context() {
+        let mut state = AppState::new(WindowConfig::default(), |_cx| {
+            Text::new("hi").into_element()
+        });
+        state
+            .register_font_path("PlatformFontPath", test_font_path())
+            .expect("register font path");
+
+        let mut window_state = state.make_window_state();
+        assert!(window_state
+            .font_cx
+            .collection
+            .family_by_name("PlatformFontPath")
+            .is_some());
     }
 }

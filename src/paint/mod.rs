@@ -935,8 +935,14 @@ fn paint_scrollbar(
 mod tests {
     use super::*;
     use crate::element::builders::{Button, Column, Text, View};
-    use crate::layout::{layout_pass, Viewport};
+    use crate::layout::{LayoutMap, Viewport};
+    use parley::FontContext;
     use crate::retained::RetainedTree;
+
+    fn layout_pass(tree: &mut RetainedTree, viewport: Viewport) -> Result<LayoutMap, crate::retained::RetainedError> {
+        let mut font_cx = FontContext::new();
+        crate::layout::layout_pass(tree, &mut font_cx, viewport)
+    }
 
     fn layout_and_paint(tree: &mut RetainedTree, scale_factor: f32) -> PaintStats {
         let layout = layout_pass(

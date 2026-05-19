@@ -269,10 +269,16 @@ pub fn hit_test_scroll<'a>(
 mod tests {
     use super::*;
     use crate::element::builders::{Button, Column, Text, View};
-    use crate::layout::{layout_pass, Viewport};
+    use crate::layout::{LayoutMap, Viewport};
     use crate::retained::RetainedTree;
+    use parley::FontContext;
     use std::cell::Cell;
     use std::rc::Rc;
+
+    fn layout_pass(tree: &mut RetainedTree, viewport: Viewport) -> Result<LayoutMap, crate::retained::RetainedError> {
+        let mut font_cx = FontContext::new();
+        crate::layout::layout_pass(tree, &mut font_cx, viewport)
+    }
 
     #[test]
     fn physical_to_logical_divides_by_scale_factor() {
