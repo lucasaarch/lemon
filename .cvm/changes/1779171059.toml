@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = []
-patch = ["lemon"]
-pre = true
-summary = "Add V0.5 showcase example"

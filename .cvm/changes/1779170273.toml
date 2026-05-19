@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = []
-patch = ["lemon"]
-pre = true
-summary = "Tick active animations in the frame loop"
