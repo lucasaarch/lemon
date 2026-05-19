@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = []
-patch = ["lemon"]
-pre = true
-summary = "Document primitive-first widget customization"
