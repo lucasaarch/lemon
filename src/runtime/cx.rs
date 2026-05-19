@@ -1,3 +1,4 @@
+use crate::animation::{AnimRegistry, AnimSlot, AnimationConfig, AnimationHandle};
 use crate::runtime::derived::Derived;
 use crate::runtime::effect::Effect;
 use crate::runtime::signal::Signal;
@@ -98,6 +99,39 @@ impl Cx {
     /// The platform entry points activate the app theme before mount and frame/update work.
     pub fn use_theme(&self) -> crate::theme::Theme {
         crate::theme::current_theme()
+    }
+
+    /// Returns a stable animation handle for this component instance.
+    ///
+    /// The same hook index on later renders returns the same [`AnimationHandle`]; changing hook
+    /// order between renders will panic. The handle is registered with the shared
+    /// [`AnimRegistry`] and can be cloned into dynamic element closures.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use lemon::prelude::*;
+    ///
+    /// fn view(cx: &Cx) -> Element {
+    ///     let anim = cx.use_animation(AnimationConfig::default());
+    ///     anim.play();
+    ///     Text::new(move || format!("{:.2}", anim.progress())).into_element()
+    /// }
+    /// ```
+    pub fn use_animation(&self, config: AnimationConfig) -> AnimationHandle {
+        let idx = self.index.get();
+        self.index.set(idx + 1);
+        let mut hooks = self.hooks.borrow_mut();
+        if idx < hooks.len() {
+            hooks[idx]
+                .downcast_ref::<AnimationHandle>()
+                .expect("use_animation: hook type mismatch")
+                .clone()
+        } else {
+            let handle = AnimRegistry::shared().register(AnimSlot::new(config));
+            hooks.push(Box::new(handle.clone()));
+            handle
+        }
     }
 }
 
@@ -218,5 +252,19 @@ mod tests {
         assert_eq!(active, dark);
 
         set_active_theme(previous);
+    }
+
+    #[test]
+    fn use_animation_returns_stable_handle_on_second_call() {
+        let cx = Cx::new();
+        let first = cx.use_animation(AnimationConfig::default());
+        first.play();
+
+        cx.reset_hooks();
+        let second = cx.use_animation(AnimationConfig::default());
+
+        assert!(second.is_playing());
+        second.reset();
+        assert_eq!(first.progress(), 0.0);
     }
 }

@@ -1,0 +1,6 @@
+[update]
+major = []
+minor = ["lemon"]
+patch = []
+pre = true
+summary = "Add hook-backed animation primitives"

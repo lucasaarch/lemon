@@ -9,6 +9,7 @@
 //! Lower-level APIs ([`Runtime`], [`layout_pass`], [`paint_pass`], …) stay on the crate root
 //! and are intentionally omitted here.
 
+pub use crate::animation::{AnimationConfig, AnimationHandle, Easing};
 pub use crate::children;
 pub use crate::element::builders::{Column, Component, Row, Text, View};
 pub use crate::element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
