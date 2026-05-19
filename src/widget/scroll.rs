@@ -158,6 +158,16 @@ impl From<Scroll> for Element {
 mod tests {
     use super::*;
     use crate::element::Element;
+    use crate::layout::{LayoutMap, Viewport};
+    use parley::FontContext;
+
+    fn layout_pass(
+        tree: &mut crate::RetainedTree,
+        viewport: Viewport,
+    ) -> Result<LayoutMap, crate::retained::RetainedError> {
+        let mut font_cx = FontContext::new();
+        crate::layout::layout_pass(tree, &mut font_cx, viewport)
+    }
 
     #[test]
     fn scroll_viewport_uses_scroll_bar_paint_flag() {
@@ -223,7 +233,7 @@ mod tests {
     #[test]
     fn scroll_clamps_to_measured_content_after_layout_sync() {
         use crate::element::builders::{Column, Row, Text};
-        use crate::{layout_pass, sync_scroll_layout_max, RetainedTree, Viewport};
+        use crate::{sync_scroll_layout_max, RetainedTree};
 
         let mut list = Column::new().gap(4.0);
         for i in 0..12 {

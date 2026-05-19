@@ -907,8 +907,18 @@ mod tests {
     use crate::element::events::{KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
     use crate::element::style::{Align, Color, Dimension, Edges, Justify, StyleProps};
     use crate::element::types::ComponentElement;
+    use crate::layout::{LayoutMap, Viewport};
+    use parley::FontContext;
 
     use super::*;
+
+    fn layout_pass(
+        tree: &mut RetainedTree,
+        viewport: Viewport,
+    ) -> Result<LayoutMap, RetainedError> {
+        let mut font_cx = FontContext::new();
+        crate::layout::layout_pass(tree, &mut font_cx, viewport)
+    }
 
     #[test]
     fn style_props_convert_to_taffy_style() {
@@ -1152,7 +1162,6 @@ mod tests {
     fn update_text_on_component_wrapped_row_reflows_after_layout() {
         use crate::element::builders::{Component, Row};
         use crate::element::types::ComponentElement;
-        use crate::layout::{layout_pass, Viewport};
 
         fn mini(_cx: &crate::runtime::cx::Cx) -> Element {
             Row::new().child(Text::new("0")).into_element()
@@ -1243,8 +1252,6 @@ mod tests {
 
     #[test]
     fn update_text_style_patch_replaces_style_and_reflows_after_layout() {
-        use crate::layout::{layout_pass, Viewport};
-
         let mut tree =
             RetainedTree::mount(Text::new("preview").font_size(16.0).into_element()).unwrap();
         let first_layout = layout_pass(

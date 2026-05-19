@@ -408,6 +408,16 @@ impl<T: Clone + PartialEq + 'static> From<Select<T>> for Element {
 mod tests {
     use super::*;
     use crate::element::Element;
+    use crate::layout::{LayoutMap, Viewport};
+    use parley::FontContext;
+
+    fn layout_pass(
+        tree: &mut crate::RetainedTree,
+        viewport: Viewport,
+    ) -> Result<LayoutMap, crate::retained::RetainedError> {
+        let mut font_cx = FontContext::new();
+        crate::layout::layout_pass(tree, &mut font_cx, viewport)
+    }
 
     #[derive(Clone, PartialEq, Debug)]
     enum Color {
@@ -497,7 +507,7 @@ mod tests {
 
     #[test]
     fn select_open_dropdown_lays_out_below_trigger() {
-        use crate::{layout_pass, RetainedTree, Viewport};
+        use crate::RetainedTree;
 
         let value = Signal::new(None::<Color>);
         let open = Signal::new(true);
@@ -542,7 +552,7 @@ mod tests {
 
     #[test]
     fn mount_open_select_root_dropdown_has_nonzero_height() {
-        use crate::{layout_pass, RetainedTree, Viewport};
+        use crate::RetainedTree;
 
         let value = Signal::new(None::<Color>);
         let open = Signal::new(true);
@@ -567,7 +577,7 @@ mod tests {
     #[test]
     fn select_runtime_open_dropdown_has_layout_and_paint_after_diff() {
         use crate::diff::{diff, NodePath};
-        use crate::{layout_pass, RetainedTree, Viewport};
+        use crate::RetainedTree;
 
         let value = Signal::new(None::<Color>);
         let open = Signal::new(false);
@@ -604,7 +614,7 @@ mod tests {
 
     #[test]
     fn select_open_dropdown_retains_background_paint() {
-        use crate::{layout_pass, RetainedTree, Viewport};
+        use crate::RetainedTree;
 
         let value = Signal::new(None::<Color>);
         let open = Signal::new(true);

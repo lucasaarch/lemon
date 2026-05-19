@@ -71,6 +71,7 @@ pub mod asset;
 pub mod debug;
 pub mod diff;
 pub mod element;
+pub mod font;
 pub mod layout;
 pub mod paint;
 pub mod platform;
@@ -85,6 +86,7 @@ pub use animation::{
 };
 pub use asset::ImageHandle;
 pub use element::builders::{Column, Component, Row, Text, View};
+pub use font::{register_font_bytes, register_font_path, FontRegistrationError};
 pub use widget::{
     Button, Image, Scroll, ScrollStyle, Select, SelectStyle, Slider, SliderStyle, TextFieldState,
     TextInput, TextInputStyle,
@@ -100,11 +102,15 @@ pub use element::builders::View as Box_;
 pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 pub use element::style::{BoxShadow, Color, LinearGradient, Overflow, StyleProps};
 pub use layout::{
-    layout_pass, layout_pass_if_dirty, measure_element_height, scroll_content_max_offset,
-    sync_scroll_layout_max, LayoutMap, LayoutRect, Viewport,
+    layout_pass, layout_pass_if_dirty, measure_element_height,
+    measure_element_height_with_font_context, scroll_content_max_offset, sync_scroll_layout_max,
+    LayoutMap, LayoutRect, Viewport,
 };
 pub use paint::{paint_pass, PaintStats};
-pub use platform::{run, run_with_theme, AppState, WindowConfig, WindowState};
+pub use platform::{
+    run, run_with_fonts, run_with_theme, run_with_theme_and_fonts, AppState, WindowConfig,
+    WindowState,
+};
 pub use retained::RetainedTree;
 pub use runtime::cx::{Cx, OpenWindowParams};
 pub use runtime::signal::Signal;
@@ -121,9 +127,26 @@ mod tests {
     use super::*;
     use crate::diff::Patch;
     use crate::element::builders::Button as RawButton;
+    use parley::FontContext;
     use std::thread::sleep;
     use std::time::{Duration, Instant};
     use vello::Scene;
+
+    fn layout_pass(
+        tree: &mut RetainedTree,
+        viewport: Viewport,
+    ) -> Result<LayoutMap, crate::retained::RetainedError> {
+        let mut font_cx = FontContext::new();
+        crate::layout::layout_pass(tree, &mut font_cx, viewport)
+    }
+
+    fn layout_pass_if_dirty(
+        tree: &mut RetainedTree,
+        viewport: Viewport,
+    ) -> Result<Option<LayoutMap>, crate::retained::RetainedError> {
+        let mut font_cx = FontContext::new();
+        crate::layout::layout_pass_if_dirty(tree, &mut font_cx, viewport)
+    }
 
     #[test]
     fn counter_increments_produce_update_text_patches() {

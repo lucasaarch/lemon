@@ -76,10 +76,12 @@ struct TextSnapshot {
 /// Runs Taffy flex layout and text measurement on `tree`, returning absolute logical rects.
 ///
 /// Clears [`RetainedTree::layout_dirty`](crate::retained::RetainedTree::layout_dirty). Pass the
-/// same [`Viewport`] size the window uses in logical points. `font_size` and other style sizes are
-/// logical pixels; the platform applies the window scale factor when painting.
+/// same [`Viewport`] size the window uses in logical points, plus a shared `font_cx` so registered
+/// fonts remain available across layout passes. `font_size` and other style sizes are logical
+/// pixels; the platform applies the window scale factor when painting.
 pub fn layout_pass(
     tree: &mut RetainedTree,
+    font_cx: &mut FontContext,
     viewport: Viewport,
 ) -> Result<LayoutMap, RetainedError> {
     let root_node = tree
@@ -95,11 +97,10 @@ pub fn layout_pass(
     let mut snapshots: HashMap<NodeId, TextSnapshot> = HashMap::new();
     collect_text_snapshots(root_node, &mut snapshots);
 
-    let mut font_cx = FontContext::new();
     let mut layout_cx = LayoutContext::new();
     let mut measure_results: HashMap<NodeId, TextMeasureOutput> = HashMap::new();
     let mut measure_ctx = MeasureContext {
-        font_cx: &mut font_cx,
+        font_cx,
         layout_cx: &mut layout_cx,
         results: &mut measure_results,
     };
@@ -191,9 +192,20 @@ pub fn measure_element_height(
     element: crate::element::Element,
     viewport_width: f32,
 ) -> Result<f32, RetainedError> {
+    let mut font_cx = FontContext::new();
+    measure_element_height_with_font_context(element, viewport_width, &mut font_cx)
+}
+
+/// Lays out `element` once using `font_cx` and returns its root height in logical points.
+pub fn measure_element_height_with_font_context(
+    element: crate::element::Element,
+    viewport_width: f32,
+    font_cx: &mut FontContext,
+) -> Result<f32, RetainedError> {
     let mut tree = RetainedTree::mount(element)?;
     let map = layout_pass(
         &mut tree,
+        font_cx,
         Viewport {
             width: viewport_width,
             height: 10_000.0,
@@ -215,12 +227,13 @@ pub fn measure_element_height(
 /// Like [`layout_pass`], but returns `Ok(None)` when the tree is not dirty (cheap no-op).
 pub fn layout_pass_if_dirty(
     tree: &mut RetainedTree,
+    font_cx: &mut FontContext,
     viewport: Viewport,
 ) -> Result<Option<LayoutMap>, RetainedError> {
     if !tree.layout_dirty {
         return Ok(None);
     }
-    Ok(Some(layout_pass(tree, viewport)?))
+    Ok(Some(layout_pass(tree, font_cx, viewport)?))
 }
 
 fn collect_text_snapshots(node: &RetainedNode, map: &mut HashMap<NodeId, TextSnapshot>) {
@@ -505,6 +518,28 @@ mod tests {
     use crate::diff::{NodePath, Patch};
     use crate::element::builders::{Column, Text, View};
     use crate::element::types::ComponentElement;
+    use std::path::PathBuf;
+
+    fn layout_pass(
+        tree: &mut RetainedTree,
+        viewport: Viewport,
+    ) -> Result<LayoutMap, RetainedError> {
+        let mut font_cx = FontContext::new();
+        super::layout_pass(tree, &mut font_cx, viewport)
+    }
+
+    fn test_font_path() -> PathBuf {
+        let candidates = [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
+            "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+        ];
+        candidates
+            .iter()
+            .map(PathBuf::from)
+            .find(|path| path.is_file())
+            .expect("expected at least one system TTF font for tests")
+    }
 
     #[test]
     fn font_size_16px_measures_in_logical_points_not_display_scale() {
@@ -1058,6 +1093,81 @@ mod tests {
             geom.y0 < line_height,
             "caret should stay on the first line, got y0={}",
             geom.y0
+        );
+    }
+
+    #[test]
+    fn registered_font_bytes_are_used_for_text_layout() {
+        let family = "LemonTestFontBytes";
+        let font_path = test_font_path();
+        let bytes = std::fs::read(font_path).expect("read font bytes");
+        let mut font_cx = FontContext::new();
+        crate::register_font_bytes(&mut font_cx, family, bytes.clone()).unwrap();
+        assert!(font_cx.collection.family_by_name(family).is_some());
+
+        let mut tree =
+            RetainedTree::mount(Text::new("font bytes").font_family(family).into_element())
+                .unwrap();
+        super::layout_pass(
+            &mut tree,
+            &mut font_cx,
+            Viewport {
+                width: 300.0,
+                height: 200.0,
+            },
+        )
+        .unwrap();
+
+        let layout = tree
+            .root
+            .as_ref()
+            .and_then(|n| n.text.as_ref())
+            .and_then(|t| t.parley_layout.as_ref())
+            .expect("parley layout");
+        let uses_registered_font = layout
+            .lines()
+            .flat_map(|line| line.runs())
+            .any(|run| run.font().data.as_ref() == bytes.as_slice());
+        assert!(
+            uses_registered_font,
+            "expected text layout to use font bytes registered for {family}"
+        );
+    }
+
+    #[test]
+    fn registered_font_path_is_available_for_text_layout() {
+        let family = "LemonTestFontPath";
+        let font_path = test_font_path();
+        let bytes = std::fs::read(&font_path).expect("read font bytes");
+        let mut font_cx = FontContext::new();
+        crate::register_font_path(&mut font_cx, family, &font_path).unwrap();
+        assert!(font_cx.collection.family_by_name(family).is_some());
+
+        let mut tree =
+            RetainedTree::mount(Text::new("font path").font_family(family).into_element()).unwrap();
+        super::layout_pass(
+            &mut tree,
+            &mut font_cx,
+            Viewport {
+                width: 300.0,
+                height: 200.0,
+            },
+        )
+        .unwrap();
+
+        let layout = tree
+            .root
+            .as_ref()
+            .and_then(|n| n.text.as_ref())
+            .and_then(|t| t.parley_layout.as_ref())
+            .expect("parley layout");
+        let uses_registered_font = layout
+            .lines()
+            .flat_map(|line| line.runs())
+            .any(|run| run.font().data.as_ref() == bytes.as_slice());
+        assert!(
+            uses_registered_font,
+            "expected text layout to use font loaded from path for {family}"
         );
     }
 }
