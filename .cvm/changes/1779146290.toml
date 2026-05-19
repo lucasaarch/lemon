@@ -1,3 +1,0 @@
-minor = ["lemon"]
-
-summary = "Consolidate lemon-widgets into lemon::widget; single crate at repo root; examples as cargo --example targets"
