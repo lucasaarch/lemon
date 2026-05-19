@@ -79,6 +79,7 @@ The workspace includes a few small but representative examples:
 - `components`: nested `Component::new`
 - `layout`: flex containers and styling
 - `form`: TextInput, Scroll, and widget integration
+- `custom_select`: rebuilding a select-like control from primitives for full visual control
 
 Run them with:
 
@@ -87,6 +88,7 @@ cargo run --example counter
 cargo run --example signals
 cargo run --example form
 cargo run --example rich
+cargo run --example custom_select
 ```
 
 ## Mental Model
@@ -122,6 +124,7 @@ Single `lemon` crate at the repo root:
 | `layout` | Flex layout and styling |
 | `form` | TextInput, Scroll |
 | `rich` | Image, Select, Slider, Scroll showcase |
+| `custom_select` | Primitive-first customization and dynamic paint |
 
 ## Current Capabilities
 
@@ -136,6 +139,41 @@ Today, the codebase includes:
 - keyboard event dispatch and focus cycling
 - hover enter/leave handling and cursor selection
 - example applications that exercise composition, keyed updates, and interaction
+
+## Primitive-First Customization
+
+Built-in widgets such as `Button`, `Select`, `Slider`, `Scroll`, and `TextInput` cover common
+application UI, and their defaults come from the active `Theme`. Start there when the widget shape
+matches your product. Use `run_with_theme` for app-wide tokens and widget style types such as
+`SelectStyle`, `SliderStyle`, and `TextInputStyle` for local overrides.
+
+When a widget almost fits but the visual structure does not, rebuild the control from primitives:
+`View`, `Column`, `Row`, `Text`, `Button`, `Signal`, and event handlers. This keeps the app in the
+normal Lemon pipeline while giving you control over layout, paint, hover/press state, and copy.
+For repeated dynamic rows, give siblings stable `.key(id)` values so diffing preserves identity.
+For colors that depend on live state, pass a closure to paint builders such as `.background(...)`;
+the closure is stored as a dynamic `ColorSource` and is resolved as the tree is frozen.
+
+The `custom_select` example demonstrates this escape hatch by building a select-like control from
+regular nodes:
+
+```bash
+cargo run --example custom_select
+```
+
+Use this path when the customization is mostly visual or structural. Prefer the built-in widget
+plus theme/style overrides when the interaction model is the same. Fork or write a custom widget
+when you need to own identity, overlay positioning, pointer capture, keyboard handling, or internal
+state transitions as a reusable app abstraction.
+
+Current limits live at the paint layer. Widget-managed details such as scrollbars and text-input
+carets are painted by Lemon's retained widget metadata, not by arbitrary app paint hooks. If those
+details need brand-specific behavior beyond existing style overrides, use a custom primitive
+composition where possible and track the relevant roadmap work:
+[#40](https://github.com/lucasaarch/lemon/issues/40) for theme tokens,
+[#42](https://github.com/lucasaarch/lemon/issues/42) for theme-backed widget defaults,
+[#92](https://github.com/lucasaarch/lemon/pull/92) for positioned select overlays, and
+[#93](https://github.com/lucasaarch/lemon/pull/93) for scroll behavior polish.
 
 ## Current Status
 
