@@ -121,6 +121,8 @@ mod tests {
     use super::*;
     use crate::diff::Patch;
     use crate::element::builders::Button as RawButton;
+    use std::thread::sleep;
+    use std::time::{Duration, Instant};
     use vello::Scene;
 
     #[test]
@@ -390,6 +392,32 @@ mod tests {
         let handle = registry.register(AnimSlot::new(AnimationConfig::default()));
         handle.play();
         assert!(handle.is_playing());
+    }
+
+    #[test]
+    fn animation_tick_advances_progress() {
+        let registry = AnimRegistry::default();
+        let handle = registry.register(AnimSlot::new(AnimationConfig::new(Duration::from_millis(
+            100,
+        ))));
+
+        handle.play();
+        let initial_progress = handle.raw_progress();
+        assert_eq!(registry.active_slots(), 1);
+
+        sleep(Duration::from_millis(20));
+        let keep_redrawing = registry.tick_active(Instant::now());
+
+        assert!(keep_redrawing);
+        assert!(handle.raw_progress() > initial_progress);
+        assert_eq!(registry.active_slots(), 1);
+
+        sleep(Duration::from_millis(120));
+        let keep_redrawing = registry.tick_active(Instant::now());
+
+        assert!(!keep_redrawing);
+        assert_eq!(handle.raw_progress(), 1.0);
+        assert_eq!(registry.active_slots(), 0);
     }
 
     #[test]
