@@ -397,11 +397,13 @@ pub(crate) fn take_animation_pending() -> bool {
 /// Increments the frame signal by one, triggering a reactive re-render in any component that
 /// subscribed to it via [`animation_frame_signal`].
 pub(crate) fn tick_animation_frame() {
-    FRAME_SIGNAL.with(|cell| {
-        if let Some(signal) = cell.borrow().as_ref() {
-            signal.update(|v| *v = v.wrapping_add(1));
-        }
-    });
+    // Clone the signal before releasing the borrow so that `signal.update()` below can
+    // re-enter `animation_frame_signal()` (which needs `borrow_mut`) from inside reactive
+    // subscriber callbacks without hitting a "RefCell already borrowed" panic.
+    let signal = FRAME_SIGNAL.with(|cell| cell.borrow().as_ref().cloned());
+    if let Some(signal) = signal {
+        signal.update(|v| *v = v.wrapping_add(1));
+    }
 }
 
 #[cfg(test)]
