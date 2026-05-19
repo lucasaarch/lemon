@@ -1,10 +1,90 @@
 use crate::animation::{AnimRegistry, AnimSlot, AnimationConfig, AnimationHandle};
+use crate::element::Element;
 use crate::runtime::derived::Derived;
 use crate::runtime::effect::Effect;
 use crate::runtime::signal::Signal;
 use std::any::Any;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
+use std::sync::Arc;
+
+/// Configuration for a new window opened via [`Cx::open_window`].
+///
+/// Sizes are in **logical points** (device-independent pixels).
+///
+/// ```
+/// use lemon::OpenWindowParams;
+///
+/// let params = OpenWindowParams::default()
+///     .title("Settings")
+///     .size(640.0, 480.0)
+///     .resizable(false);
+/// ```
+#[derive(Clone, Debug, PartialEq)]
+pub struct OpenWindowParams {
+    /// Window title shown in the title bar.
+    pub title: String,
+    /// Initial client width in logical points.
+    pub width: f32,
+    /// Initial client height in logical points.
+    pub height: f32,
+    /// Whether the user can resize the window.
+    pub resizable: bool,
+}
+
+impl Default for OpenWindowParams {
+    fn default() -> Self {
+        Self {
+            title: "Lemon".to_owned(),
+            width: 900.0,
+            height: 600.0,
+            resizable: true,
+        }
+    }
+}
+
+impl OpenWindowParams {
+    /// Sets the window title.
+    pub fn title(mut self, title: impl Into<String>) -> Self {
+        self.title = title.into();
+        self
+    }
+
+    /// Sets the initial window size (`width`, `height`) in logical points.
+    pub fn size(mut self, width: f32, height: f32) -> Self {
+        self.width = width;
+        self.height = height;
+        self
+    }
+
+    /// Enables or disables user resizing.
+    pub fn resizable(mut self, resizable: bool) -> Self {
+        self.resizable = resizable;
+        self
+    }
+}
+
+/// A queued request to open a new native window, produced by [`Cx::open_window`].
+///
+/// Platform layer drains these via [`take_open_window_requests`] and creates
+/// the actual OS window and [`WindowState`](crate::platform::WindowState).
+pub struct OpenWindowRequest {
+    /// Size and title for the new window.
+    pub params: OpenWindowParams,
+    /// Root component function rendered inside the new window.
+    pub root: Arc<dyn Fn(&Cx) -> Element>,
+}
+
+thread_local! {
+    static OPEN_WINDOW_QUEUE: RefCell<Vec<OpenWindowRequest>> = const { RefCell::new(Vec::new()) };
+}
+
+/// Drains all pending open-window requests queued by [`Cx::open_window`].
+///
+/// Called by the platform layer after each event batch to spawn requested windows.
+pub fn take_open_window_requests() -> Vec<OpenWindowRequest> {
+    OPEN_WINDOW_QUEUE.with(|q| std::mem::take(&mut *q.borrow_mut()))
+}
 
 /// Reactive context passed to your root view and to [`Component`](crate::element::builders::Component) views.
 ///
@@ -99,6 +179,43 @@ impl Cx {
     /// The platform entry points activate the app theme before mount and frame/update work.
     pub fn use_theme(&self) -> crate::theme::Theme {
         crate::theme::current_theme()
+    }
+
+    /// Queues a request to open a new native window with the given parameters.
+    ///
+    /// The request is pushed to a thread-local queue and drained by the platform layer after
+    /// the current event batch. The new window is independent and participates in the same
+    /// application lifecycle as the primary window.
+    ///
+    /// This method does **not** consume a hook slot and can be called outside of the fixed hook
+    /// ordering (e.g. inside an event handler or effect).
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use lemon::prelude::*;
+    /// use lemon::OpenWindowParams;
+    ///
+    /// fn settings(_cx: &Cx) -> Element {
+    ///     Text::new("Settings").into_element()
+    /// }
+    ///
+    /// fn view(cx: &Cx) -> Element {
+    ///     let open = cx.use_signal(false);
+    ///     if open.get() {
+    ///         cx.open_window(OpenWindowParams::default().title("Settings"), settings);
+    ///     }
+    ///     let open2 = open.clone();
+    ///     Button::new(cx, "Open").on_click(move || open2.set(true)).into_element()
+    /// }
+    /// ```
+    pub fn open_window(&self, params: OpenWindowParams, root: impl Fn(&Cx) -> Element + 'static) {
+        OPEN_WINDOW_QUEUE.with(|q| {
+            q.borrow_mut().push(OpenWindowRequest {
+                params,
+                root: Arc::new(root),
+            });
+        });
     }
 
     /// Returns a stable animation handle for this component instance.
@@ -266,5 +383,26 @@ mod tests {
         assert!(second.is_playing());
         second.reset();
         assert_eq!(first.progress(), 0.0);
+    }
+
+    #[test]
+    fn open_window_queues_request_to_thread_local_sink() {
+        use crate::element::builders::Text;
+
+        // Drain any stale requests left by other tests before we begin.
+        let _ = super::take_open_window_requests();
+
+        let cx = Cx::new();
+        let params = OpenWindowParams::default().title("Test").size(400.0, 300.0);
+        cx.open_window(params.clone(), |_cx| Text::new("hello").into_element());
+
+        let requests = super::take_open_window_requests();
+        assert_eq!(requests.len(), 1);
+        assert_eq!(requests[0].params.title, "Test");
+        assert_eq!(requests[0].params.width, 400.0);
+        assert_eq!(requests[0].params.height, 300.0);
+
+        // Queue should be empty after draining.
+        assert!(super::take_open_window_requests().is_empty());
     }
 }

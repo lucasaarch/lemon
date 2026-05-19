@@ -29,7 +29,10 @@ use crate::layout::{layout_pass, sync_scroll_layout_max, LayoutMap, Viewport};
 use crate::paint::paint_pass;
 use crate::retained::focus::FocusManager;
 use crate::retained::RetainedTree;
-use crate::runtime::{cx::Cx, Runtime};
+use crate::runtime::{
+    cx::{take_open_window_requests, Cx},
+    Runtime,
+};
 use crate::theme::{set_active_theme, Theme};
 use hit_test::{
     dispatch_click, dispatch_outside_clicks, find_node_by_taffy_id, hit_test_focusable,
@@ -747,6 +750,32 @@ impl AppState {
         }
         requested || active
     }
+
+    /// Opens a new native window from a queued [`OpenWindowRequest`](crate::runtime::cx::OpenWindowRequest).
+    ///
+    /// Creates the OS window, attaches the GPU surface and renderer, and inserts the new
+    /// [`WindowState`] into [`windows`](Self::windows) under its `winit` [`WindowId`].
+    fn spawn_window(
+        &mut self,
+        event_loop: &ActiveEventLoop,
+        req: crate::runtime::cx::OpenWindowRequest,
+    ) {
+        let window = Arc::new(
+            event_loop
+                .create_window(
+                    Window::default_attributes()
+                        .with_title(req.params.title.clone())
+                        .with_inner_size(LogicalSize::new(req.params.width, req.params.height))
+                        .with_resizable(req.params.resizable),
+                )
+                .expect("create window"),
+        );
+        let window_id = window.id();
+        let mut window_state = WindowState::new(self.theme.clone(), req.root);
+        window_state.attach_window(&mut self.render_cx, window);
+        window_state.request_redraw();
+        self.windows.insert(window_id, window_state);
+    }
 }
 
 struct LemonApplication {
@@ -902,7 +931,15 @@ impl ApplicationHandler for LemonApplication {
         }
     }
 
-    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+    fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        // Spawn any windows requested by `cx.open_window(...)` during the last event batch.
+        let requests = take_open_window_requests();
+        if let Some(state) = self.state.as_mut() {
+            for req in requests {
+                state.spawn_window(event_loop, req);
+            }
+        }
+
         if let Some(state) = self.state.as_mut() {
             let animation_redraw = state.tick_animations();
             for window_state in state.windows.values_mut() {
