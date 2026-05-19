@@ -80,6 +80,7 @@ The workspace includes a few small but representative examples:
 - `layout`: flex containers and styling
 - `form`: TextInput, Scroll, and widget integration
 - `custom_select`: rebuilding a select-like control from primitives for full visual control
+- `showcase`: theme, animation, opacity, and platform polish together
 
 Run them with:
 
@@ -89,6 +90,7 @@ cargo run --example signals
 cargo run --example form
 cargo run --example rich
 cargo run --example custom_select
+cargo run --example showcase
 ```
 
 ## Mental Model
@@ -125,6 +127,7 @@ Single `lemon` crate at the repo root:
 | `form` | TextInput, Scroll |
 | `rich` | Image, Select, Slider, Scroll showcase |
 | `custom_select` | Primitive-first customization and dynamic paint |
+| `showcase` | Theme, animation, opacity, and platform polish |
 
 ## Current Capabilities
 
