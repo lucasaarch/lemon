@@ -3,6 +3,7 @@
 mod hit_test;
 mod window;
 
+use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use std::sync::Arc;
 use std::time::Instant;
@@ -47,55 +48,56 @@ fn patches_need_layout(patches: &[Patch]) -> bool {
     })
 }
 
-/// Root view function type used by [`AppState`].
+/// Root view function type used by [`AppState`] and [`WindowState`].
 pub type RootComponent = Arc<dyn Fn(&Cx) -> Element>;
 
-/// Owns the window, GPU surface, runtime, and retained tree for one Lemon app.
+/// Per-window platform state owned by [`AppState`].
 ///
-/// Constructed internally by [`run`]. Advanced integrations can build an [`AppState`] manually
-/// and drive [`Runtime::flush_effects`](crate::Runtime::flush_effects) / layout / paint in a
-/// custom event loop; most apps should call [`run`] instead.
-pub struct AppState {
+/// `WindowState` contains the native window, GPU surface, renderer, runtime, retained tree,
+/// layout cache, and input state for exactly one `winit` [`WindowId`]. Most apps should call
+/// [`run`] or [`run_with_theme`] and let Lemon construct this internally.
+pub struct WindowState {
+    /// Native `winit` window handle, attached after the event loop resumes.
     pub window: Option<Arc<Window>>,
-    pub render_cx: RenderContext,
+    /// GPU surface associated with [`window`](Self::window).
     pub surface: Option<RenderSurface<'static>>,
+    /// Vello renderer used for this window's surface.
     pub renderer: Option<Renderer>,
+    /// Reused Vello scene buffer for the current retained tree.
     pub scene: Scene,
+    /// Reactive runtime for this window's root component and nested components.
     pub runtime: Runtime,
+    /// Retained tree built from the latest rendered element tree.
     pub retained: Option<RetainedTree>,
+    /// Latest layout rectangles keyed by Taffy node id.
     pub layout_map: LayoutMap,
+    /// Font context used during text measurement.
     pub font_cx: FontContext,
+    /// Set when the retained tree needs a fresh layout pass before painting.
     pub layout_dirty: bool,
+    /// Set when the scene must be rebuilt before presentation.
     pub paint_dirty: bool,
+    /// Keyboard focus traversal and current focused node for this window.
     pub focus_manager: FocusManager,
+    /// Node currently receiving hover state.
     pub hovered_node_id: Option<taffy::NodeId>,
     /// The node currently capturing pointer events (set on pointer-down, cleared on pointer-up).
     pub mouse_capture_node: Option<taffy::NodeId>,
     /// True while the left mouse button is held down.
     pub mouse_button_down: bool,
+    /// Currently active keyboard modifiers for events delivered to this window.
     pub active_modifiers: Modifiers,
-    window_config: WindowConfig,
     theme: Theme,
     root_component: Option<RootComponent>,
     last_cursor: Option<(f32, f32)>,
     mounted: bool,
     last_caret_activity: Instant,
-    animation_registry: AnimRegistry,
 }
 
-impl AppState {
-    pub fn new(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) -> Self {
-        Self::with_theme(config, Theme::default(), root)
-    }
-
-    fn with_theme(
-        config: WindowConfig,
-        theme: Theme,
-        root: impl Fn(&Cx) -> Element + 'static,
-    ) -> Self {
+impl WindowState {
+    fn new(theme: Theme, root_component: RootComponent) -> Self {
         Self {
             window: None,
-            render_cx: RenderContext::new(),
             surface: None,
             renderer: None,
             scene: Scene::new(),
@@ -110,13 +112,11 @@ impl AppState {
             mouse_capture_node: None,
             mouse_button_down: false,
             active_modifiers: Modifiers::default(),
-            window_config: config,
             theme,
-            root_component: Some(Arc::new(root)),
+            root_component: Some(root_component),
             last_cursor: None,
             mounted: false,
             last_caret_activity: Instant::now(),
-            animation_registry: AnimRegistry::shared(),
         }
     }
 
@@ -146,15 +146,6 @@ impl AppState {
         if self.focused_text_input() {
             self.paint_dirty = true;
         }
-    }
-
-    fn tick_animations(&mut self) -> bool {
-        let requested = crate::animation::take_animation_pending();
-        let active = self.animation_registry.tick_active(Instant::now());
-        if requested || active {
-            crate::animation::tick_animation_frame();
-        }
-        requested || active
     }
 
     fn apply_runtime_patches(&mut self) {
@@ -223,16 +214,12 @@ impl AppState {
         self.layout_dirty
     }
 
-    fn window_config(&self) -> &WindowConfig {
-        &self.window_config
-    }
-
-    fn attach_window(&mut self, window: Arc<Window>) {
+    fn attach_window(&mut self, render_cx: &mut RenderContext, window: Arc<Window>) {
         let size = window.inner_size();
         let width = size.width.max(1);
         let height = size.height.max(1);
 
-        let surface = pollster::block_on(self.render_cx.create_surface(
+        let surface = pollster::block_on(render_cx.create_surface(
             window.clone(),
             width,
             height,
@@ -240,7 +227,7 @@ impl AppState {
         ))
         .expect("create wgpu surface");
 
-        let device = &self.render_cx.devices[surface.dev_id].device;
+        let device = &render_cx.devices[surface.dev_id].device;
         let renderer = Renderer::new(
             device,
             RendererOptions {
@@ -351,12 +338,12 @@ impl AppState {
         }
     }
 
-    fn resize_surface(&mut self, width: u32, height: u32) {
+    fn resize_surface(&mut self, render_cx: &mut RenderContext, width: u32, height: u32) {
         if width == 0 || height == 0 {
             return;
         }
         if let Some(surface) = self.surface.as_mut() {
-            self.render_cx.resize_surface(surface, width, height);
+            render_cx.resize_surface(surface, width, height);
             self.layout_dirty = true;
             self.paint_dirty = true;
         }
@@ -608,7 +595,7 @@ impl AppState {
         }
     }
 
-    fn present(&mut self) {
+    fn present(&mut self, render_cx: &mut RenderContext) {
         let Some(window) = self.window.as_ref() else {
             return;
         };
@@ -621,7 +608,7 @@ impl AppState {
 
         let width = surface.config.width;
         let height = surface.config.height;
-        let device_handle = &self.render_cx.devices[surface.dev_id];
+        let device_handle = &render_cx.devices[surface.dev_id];
 
         renderer
             .render_to_texture(
@@ -642,7 +629,7 @@ impl AppState {
             wgpu::CurrentSurfaceTexture::Success(texture)
             | wgpu::CurrentSurfaceTexture::Suboptimal(texture) => texture,
             wgpu::CurrentSurfaceTexture::Outdated => {
-                self.render_cx.configure_surface(surface);
+                render_cx.configure_surface(surface);
                 window.request_redraw();
                 return;
             }
@@ -682,9 +669,9 @@ impl AppState {
             .expect("poll wgpu device");
     }
 
-    fn render_frame(&mut self) {
+    fn render_frame(&mut self, render_cx: &mut RenderContext) {
         self.update_frame();
-        self.present();
+        self.present(render_cx);
         self.runtime.flush_deferred_effects();
     }
 
@@ -699,6 +686,69 @@ impl AppState {
     }
 }
 
+/// Top-level platform state for a Lemon application.
+///
+/// `AppState` owns the shared GPU [`RenderContext`] and the map of live windows keyed by
+/// `winit` [`WindowId`]. The default [`run`] and [`run_with_theme`] entry points create one
+/// window today, but the state is structured so event dispatch and teardown are window-id based.
+pub struct AppState {
+    /// Shared WGPU/Vello render context used to create and resize all window surfaces.
+    pub render_cx: RenderContext,
+    /// Live per-window states keyed by the `WindowId` delivered by `winit` events.
+    pub windows: HashMap<WindowId, WindowState>,
+    window_config: WindowConfig,
+    theme: Theme,
+    root_component: RootComponent,
+    animation_registry: AnimRegistry,
+}
+
+impl AppState {
+    /// Creates application state for a single-window Lemon app.
+    ///
+    /// The native window is not created until the event loop is resumed. After resume, the first
+    /// window is inserted into [`windows`](Self::windows) under its `winit` [`WindowId`].
+    pub fn new(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) -> Self {
+        Self::with_theme(config, Theme::default(), root)
+    }
+
+    fn with_theme(
+        config: WindowConfig,
+        theme: Theme,
+        root: impl Fn(&Cx) -> Element + 'static,
+    ) -> Self {
+        Self {
+            render_cx: RenderContext::new(),
+            windows: HashMap::new(),
+            window_config: config,
+            theme,
+            root_component: Arc::new(root),
+            animation_registry: AnimRegistry::shared(),
+        }
+    }
+
+    fn window_config(&self) -> &WindowConfig {
+        &self.window_config
+    }
+
+    fn make_window_state(&self) -> WindowState {
+        WindowState::new(self.theme.clone(), Arc::clone(&self.root_component))
+    }
+
+    fn remove_window(&mut self, window_id: WindowId) -> bool {
+        self.windows.remove(&window_id);
+        self.windows.is_empty()
+    }
+
+    fn tick_animations(&mut self) -> bool {
+        let requested = crate::animation::take_animation_pending();
+        let active = self.animation_registry.tick_active(Instant::now());
+        if requested || active {
+            crate::animation::tick_animation_frame();
+        }
+        requested || active
+    }
+}
+
 struct LemonApplication {
     state: Option<AppState>,
 }
@@ -708,7 +758,7 @@ impl ApplicationHandler for LemonApplication {
         let Some(state) = self.state.as_mut() else {
             return;
         };
-        if state.window.is_some() {
+        if !state.windows.is_empty() {
             return;
         }
 
@@ -724,14 +774,17 @@ impl ApplicationHandler for LemonApplication {
                 .expect("create window"),
         );
 
-        state.attach_window(window);
-        state.request_redraw();
+        let window_id = window.id();
+        let mut window_state = state.make_window_state();
+        window_state.attach_window(&mut state.render_cx, window);
+        window_state.request_redraw();
+        state.windows.insert(window_id, window_state);
     }
 
     fn window_event(
         &mut self,
         event_loop: &ActiveEventLoop,
-        _window_id: WindowId,
+        window_id: WindowId,
         event: WindowEvent,
     ) {
         let Some(state) = self.state.as_mut() else {
@@ -739,14 +792,23 @@ impl ApplicationHandler for LemonApplication {
         };
 
         match event {
-            WindowEvent::CloseRequested => event_loop.exit(),
+            WindowEvent::CloseRequested if state.remove_window(window_id) => {
+                event_loop.exit();
+            }
+            WindowEvent::CloseRequested => {}
             WindowEvent::Resized(size) => {
-                state.resize_surface(size.width, size.height);
-                state.request_redraw();
+                let Some(window_state) = state.windows.get_mut(&window_id) else {
+                    return;
+                };
+                window_state.resize_surface(&mut state.render_cx, size.width, size.height);
+                window_state.request_redraw();
             }
             WindowEvent::ModifiersChanged(modifiers) => {
+                let Some(window_state) = state.windows.get_mut(&window_id) else {
+                    return;
+                };
                 let current = modifiers.state();
-                state.active_modifiers = Modifiers {
+                window_state.active_modifiers = Modifiers {
                     shift: current.shift_key(),
                     ctrl: current.control_key(),
                     alt: current.alt_key(),
@@ -754,18 +816,24 @@ impl ApplicationHandler for LemonApplication {
                 };
             }
             WindowEvent::KeyboardInput { event, .. } => {
-                state.event_pass_keyboard(event);
-                if state.needs_redraw() {
-                    state.request_redraw();
+                let Some(window_state) = state.windows.get_mut(&window_id) else {
+                    return;
+                };
+                window_state.event_pass_keyboard(event);
+                if window_state.needs_redraw() {
+                    window_state.request_redraw();
                 }
             }
             WindowEvent::CursorMoved { position, .. } => {
-                let logical = state.cursor_logical(position.x, position.y);
-                state.last_cursor = Some((logical.x, logical.y));
-                state.event_pass_hover(logical);
-                state.event_pass_pointer_move(logical);
-                if state.needs_redraw() {
-                    state.request_redraw();
+                let Some(window_state) = state.windows.get_mut(&window_id) else {
+                    return;
+                };
+                let logical = window_state.cursor_logical(position.x, position.y);
+                window_state.last_cursor = Some((logical.x, logical.y));
+                window_state.event_pass_hover(logical);
+                window_state.event_pass_pointer_move(logical);
+                if window_state.needs_redraw() {
+                    window_state.request_redraw();
                 }
             }
             WindowEvent::MouseInput {
@@ -773,15 +841,18 @@ impl ApplicationHandler for LemonApplication {
                 button: MouseButton::Left,
                 ..
             } => {
-                let point = state
+                let Some(window_state) = state.windows.get_mut(&window_id) else {
+                    return;
+                };
+                let point = window_state
                     .last_cursor
                     .map(|(x, y)| LogicalPoint::new(x, y))
                     .unwrap_or(LogicalPoint::new(0.0, 0.0));
-                state.mouse_button_down = true;
-                let clicked = state.event_pass_click(point);
-                let pointer_handled = state.event_pass_pointer_down(point);
+                window_state.mouse_button_down = true;
+                let clicked = window_state.event_pass_click(point);
+                let pointer_handled = window_state.event_pass_pointer_down(point);
                 if clicked || pointer_handled {
-                    state.request_redraw();
+                    window_state.request_redraw();
                 }
             }
             WindowEvent::MouseInput {
@@ -789,43 +860,59 @@ impl ApplicationHandler for LemonApplication {
                 button: MouseButton::Left,
                 ..
             } => {
-                let point = state
+                let Some(window_state) = state.windows.get_mut(&window_id) else {
+                    return;
+                };
+                let point = window_state
                     .last_cursor
                     .map(|(x, y)| LogicalPoint::new(x, y))
                     .unwrap_or(LogicalPoint::new(0.0, 0.0));
-                let pointer_released = state.event_pass_pointer_up(point);
-                state.mouse_button_down = false;
-                state.mouse_capture_node = None;
-                if pointer_released || state.needs_redraw() {
-                    state.request_redraw();
+                let pointer_released = window_state.event_pass_pointer_up(point);
+                window_state.mouse_button_down = false;
+                window_state.mouse_capture_node = None;
+                if pointer_released || window_state.needs_redraw() {
+                    window_state.request_redraw();
                 }
             }
             WindowEvent::MouseWheel { delta, .. } => {
+                let Some(window_state) = state.windows.get_mut(&window_id) else {
+                    return;
+                };
                 // Normalize line-based scroll to pixel delta. One line ≈ 20 logical pixels,
                 // matching common conventions on platforms that report in line units.
                 let delta_y = match delta {
                     MouseScrollDelta::LineDelta(_, y) => f64::from(y) * 20.0,
                     MouseScrollDelta::PixelDelta(pos) => pos.y,
                 };
-                let point = state
+                let point = window_state
                     .last_cursor
                     .map(|(x, y)| LogicalPoint::new(x, y))
                     .unwrap_or(LogicalPoint::new(0.0, 0.0));
-                if state.event_pass_scroll(point, delta_y) {
-                    state.request_redraw();
+                if window_state.event_pass_scroll(point, delta_y) {
+                    window_state.request_redraw();
                 }
             }
-            WindowEvent::RedrawRequested => state.render_frame(),
+            WindowEvent::RedrawRequested => {
+                let Some(window_state) = state.windows.get_mut(&window_id) else {
+                    return;
+                };
+                window_state.render_frame(&mut state.render_cx);
+            }
             _ => {}
         }
     }
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
         if let Some(state) = self.state.as_mut() {
-            state.tick_caret_blink();
             let animation_redraw = state.tick_animations();
-            if state.focused_text_input() || state.needs_redraw() || animation_redraw {
-                state.request_redraw();
+            for window_state in state.windows.values_mut() {
+                window_state.tick_caret_blink();
+                if window_state.focused_text_input()
+                    || window_state.needs_redraw()
+                    || animation_redraw
+                {
+                    window_state.request_redraw();
+                }
             }
         }
     }
@@ -905,19 +992,43 @@ mod tests {
     use crate::element::builders::Text;
 
     #[test]
-    fn app_state_starts_dirty_with_runtime() {
+    fn app_state_starts_without_windows() {
         let state = AppState::new(WindowConfig::default(), |_cx| {
             Text::new("hi").into_element()
         });
 
-        assert!(state.layout_dirty);
-        assert!(state.paint_dirty);
-        assert!(state.window.is_none());
-        assert!(state.retained.is_none());
-        assert!(!state.mounted);
-        assert!(state.focus_manager.focused.is_none());
-        assert!(state.hovered_node_id.is_none());
-        assert!(state.mouse_capture_node.is_none());
-        assert!(!state.mouse_button_down);
+        assert!(state.windows.is_empty());
+        assert_eq!(state.window_config().title, WindowConfig::default().title);
+    }
+
+    #[test]
+    fn new_window_state_starts_dirty_with_runtime() {
+        let state = AppState::new(WindowConfig::default(), |_cx| {
+            Text::new("hi").into_element()
+        });
+        let window_state = state.make_window_state();
+
+        assert!(window_state.layout_dirty);
+        assert!(window_state.paint_dirty);
+        assert!(window_state.window.is_none());
+        assert!(window_state.retained.is_none());
+        assert!(!window_state.mounted);
+        assert!(window_state.focus_manager.focused.is_none());
+        assert!(window_state.hovered_node_id.is_none());
+        assert!(window_state.mouse_capture_node.is_none());
+        assert!(!window_state.mouse_button_down);
+    }
+
+    #[test]
+    fn removing_last_window_reports_empty_app() {
+        let mut state = AppState::new(WindowConfig::default(), |_cx| {
+            Text::new("hi").into_element()
+        });
+        let id = WindowId::dummy();
+
+        state.windows.insert(id, state.make_window_state());
+
+        assert!(state.remove_window(id));
+        assert!(state.windows.is_empty());
     }
 }

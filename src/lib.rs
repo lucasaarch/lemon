@@ -104,7 +104,7 @@ pub use layout::{
     sync_scroll_layout_max, LayoutMap, LayoutRect, Viewport,
 };
 pub use paint::{paint_pass, PaintStats};
-pub use platform::{run, run_with_theme, AppState, WindowConfig};
+pub use platform::{run, run_with_theme, AppState, WindowConfig, WindowState};
 pub use retained::RetainedTree;
 pub use runtime::cx::Cx;
 pub use runtime::signal::Signal;
