@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = ["lemon"]
-patch = []
-pre = true
-summary = "Add cx.open_window and queued window spawning through the platform layer"

@@ -1,6 +1,0 @@
-[update]
-major = []
-minor = ["lemon"]
-patch = []
-pre = true
-summary = "Add shared FontContext layout and bundled font registration APIs"
