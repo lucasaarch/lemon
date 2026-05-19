@@ -106,7 +106,7 @@ pub use layout::{
 pub use paint::{paint_pass, PaintStats};
 pub use platform::{run, run_with_theme, AppState, WindowConfig, WindowState};
 pub use retained::RetainedTree;
-pub use runtime::cx::Cx;
+pub use runtime::cx::{Cx, OpenWindowParams};
 pub use runtime::signal::Signal;
 pub use runtime::Runtime;
 pub use theme::{

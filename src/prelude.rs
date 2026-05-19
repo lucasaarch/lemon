@@ -16,7 +16,7 @@ pub use crate::element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers
 pub use crate::element::style::{Align, Color, Justify, Overflow};
 pub use crate::element::Element;
 pub use crate::platform::{run, WindowConfig};
-pub use crate::runtime::cx::Cx;
+pub use crate::runtime::cx::{Cx, OpenWindowParams};
 pub use crate::runtime::signal::Signal;
 pub use crate::widget::{
     Button, Image, Scroll, ScrollStyle, Select, SelectStyle, Slider, SliderStyle, TextFieldState,
