@@ -20,6 +20,7 @@ use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::keyboard::{Key, NamedKey as WinitNamedKey};
 use winit::window::{CursorIcon, Window, WindowId};
 
+use crate::animation::AnimRegistry;
 use crate::diff::Patch;
 use crate::element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 use crate::element::Element;
@@ -79,6 +80,7 @@ pub struct AppState {
     last_cursor: Option<(f32, f32)>,
     mounted: bool,
     last_caret_activity: Instant,
+    animation_registry: AnimRegistry,
 }
 
 impl AppState {
@@ -114,6 +116,7 @@ impl AppState {
             last_cursor: None,
             mounted: false,
             last_caret_activity: Instant::now(),
+            animation_registry: AnimRegistry::shared(),
         }
     }
 
@@ -143,6 +146,15 @@ impl AppState {
         if self.focused_text_input() {
             self.paint_dirty = true;
         }
+    }
+
+    fn tick_animations(&mut self) -> bool {
+        let requested = crate::animation::take_animation_pending();
+        let active = self.animation_registry.tick_active(Instant::now());
+        if requested || active {
+            crate::animation::tick_animation_frame();
+        }
+        requested || active
     }
 
     fn apply_runtime_patches(&mut self) {
@@ -811,16 +823,8 @@ impl ApplicationHandler for LemonApplication {
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
         if let Some(state) = self.state.as_mut() {
             state.tick_caret_blink();
-            // Advance animation: tick the frame signal (re-renders subscribed components) then
-            // check whether any component re-subscribed for the next frame.
-            let anim = crate::animation::take_animation_pending();
-            if anim {
-                crate::animation::tick_animation_frame();
-            }
-            if state.focused_text_input()
-                || state.needs_redraw()
-                || crate::animation::animation_pending()
-            {
+            let animation_redraw = state.tick_animations();
+            if state.focused_text_input() || state.needs_redraw() || animation_redraw {
                 state.request_redraw();
             }
         }

@@ -6,7 +6,7 @@
 //! - [`animation_frame_signal`] — a [`Signal<u32>`] that the platform increments once per frame
 //!   while at least one widget has requested an animation tick.  Read it from `into_element` to
 //!   subscribe the component to frame events so the runtime re-renders on each tick.
-//! - [`request_animation_frame`] — call this from `into_element` when the current animation has
+//! - [`request_animation_frame`] — call this from `into_element` when custom animation state has
 //!   not yet reached its target.  The platform will call `request_redraw` and advance the frame
 //!   signal on the next `about_to_wait`.
 //!
@@ -210,9 +210,18 @@ impl AnimSlot {
 #[derive(Clone, Debug)]
 pub struct AnimationHandle {
     slot: Rc<RefCell<AnimSlot>>,
+    active_slots: Rc<RefCell<Vec<Weak<RefCell<AnimSlot>>>>>,
 }
 
 impl AnimationHandle {
+    fn mark_active(&self) {
+        let weak = Rc::downgrade(&self.slot);
+        let mut active = self.active_slots.borrow_mut();
+        if !active.iter().any(|slot| slot.ptr_eq(&weak)) {
+            active.push(weak);
+        }
+    }
+
     /// Returns eased progress in the range `[0.0, 1.0]`.
     pub fn progress(&self) -> f32 {
         let now = Instant::now();
@@ -241,6 +250,8 @@ impl AnimationHandle {
         }
         let elapsed = slot.config.duration.mul_f32(slot.raw_progress);
         slot.started_at = Some(now.checked_sub(elapsed).unwrap_or(now));
+        drop(slot);
+        self.mark_active();
         request_animation_frame();
     }
 
@@ -249,6 +260,12 @@ impl AnimationHandle {
         let mut slot = self.slot.borrow_mut();
         slot.raw_progress = 0.0;
         slot.started_at = None;
+        drop(slot);
+        self.active_slots.borrow_mut().retain(|active| {
+            active
+                .upgrade()
+                .is_some_and(|slot| !Rc::ptr_eq(&slot, &self.slot))
+        });
     }
 
     /// Returns `true` while this handle is actively playing.
@@ -285,6 +302,7 @@ impl AnimationHandle {
 #[derive(Clone, Debug, Default)]
 pub struct AnimRegistry {
     slots: Rc<RefCell<Vec<Weak<RefCell<AnimSlot>>>>>,
+    active_slots: Rc<RefCell<Vec<Weak<RefCell<AnimSlot>>>>>,
 }
 
 impl AnimRegistry {
@@ -300,7 +318,10 @@ impl AnimRegistry {
     pub fn register(&self, slot: AnimSlot) -> AnimationHandle {
         let slot = Rc::new(RefCell::new(slot));
         self.slots.borrow_mut().push(Rc::downgrade(&slot));
-        AnimationHandle { slot }
+        AnimationHandle {
+            slot,
+            active_slots: self.active_slots.clone(),
+        }
     }
 
     /// Returns the number of live slots currently tracked by this registry.
@@ -308,6 +329,29 @@ impl AnimRegistry {
         let mut slots = self.slots.borrow_mut();
         slots.retain(|slot| slot.strong_count() > 0);
         slots.len()
+    }
+
+    #[cfg(test)]
+    pub(crate) fn active_slots(&self) -> usize {
+        let mut active = self.active_slots.borrow_mut();
+        active.retain(|slot| {
+            slot.upgrade()
+                .is_some_and(|slot| slot.borrow().is_playing())
+        });
+        active.len()
+    }
+
+    pub(crate) fn tick_active(&self, now: Instant) -> bool {
+        let mut active = self.active_slots.borrow_mut();
+        active.retain(|slot| {
+            let Some(slot) = slot.upgrade() else {
+                return false;
+            };
+            let mut slot = slot.borrow_mut();
+            slot.update(now);
+            slot.is_playing()
+        });
+        !active.is_empty()
     }
 }
 
@@ -339,12 +383,6 @@ pub fn animation_frame_signal() -> Signal<u32> {
 /// drives the reactive re-render needed to advance the interpolation.
 pub fn request_animation_frame() {
     PENDING.with(|f| f.set(true));
-}
-
-/// Returns `true` if [`request_animation_frame`] has been called since the last
-/// [`take_animation_pending`].
-pub(crate) fn animation_pending() -> bool {
-    PENDING.with(Cell::get)
 }
 
 /// Clears the pending flag and returns its previous value.
