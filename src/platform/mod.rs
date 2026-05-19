@@ -1019,7 +1019,7 @@ pub fn run_with_theme(config: WindowConfig, theme: Theme, root: impl Fn(&Cx) -> 
 /// }
 ///
 /// fn main() {
-///     let bundled = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"));
+///     let bundled = include_bytes!("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
 ///     run_with_fonts(WindowConfig::default(), app, move |state| {
 ///         state
 ///             .register_font_bytes("MyApp Sans", bundled.to_vec())

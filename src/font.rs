@@ -51,7 +51,7 @@ impl From<std::io::Error> for FontRegistrationError {
 /// use lemon::register_font_bytes;
 /// use parley::FontContext;
 ///
-/// let bundled = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"));
+/// let bundled = include_bytes!("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
 /// let mut fonts = FontContext::new();
 /// register_font_bytes(&mut fonts, "MyApp Sans", bundled.to_vec()).unwrap();
 /// ```
