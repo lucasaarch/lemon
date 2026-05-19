@@ -1,0 +1,6 @@
+[update]
+major = ["lemon"]
+minor = []
+patch = []
+pre = true
+summary = "Refactor platform state for multi-window dispatch"
