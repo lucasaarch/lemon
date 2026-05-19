@@ -85,8 +85,8 @@ pub use animation::{
     AnimationHandle, Easing,
 };
 pub use asset::ImageHandle;
-pub use font::{register_font_bytes, register_font_path, FontRegistrationError};
 pub use element::builders::{Column, Component, Row, Text, View};
+pub use font::{register_font_bytes, register_font_path, FontRegistrationError};
 pub use widget::{
     Button, Image, Scroll, ScrollStyle, Select, SelectStyle, Slider, SliderStyle, TextFieldState,
     TextInput, TextInputStyle,

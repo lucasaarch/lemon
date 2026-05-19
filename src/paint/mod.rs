@@ -936,10 +936,13 @@ mod tests {
     use super::*;
     use crate::element::builders::{Button, Column, Text, View};
     use crate::layout::{LayoutMap, Viewport};
-    use parley::FontContext;
     use crate::retained::RetainedTree;
+    use parley::FontContext;
 
-    fn layout_pass(tree: &mut RetainedTree, viewport: Viewport) -> Result<LayoutMap, crate::retained::RetainedError> {
+    fn layout_pass(
+        tree: &mut RetainedTree,
+        viewport: Viewport,
+    ) -> Result<LayoutMap, crate::retained::RetainedError> {
         let mut font_cx = FontContext::new();
         crate::layout::layout_pass(tree, &mut font_cx, viewport)
     }

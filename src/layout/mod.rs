@@ -520,7 +520,10 @@ mod tests {
     use crate::element::types::ComponentElement;
     use std::path::PathBuf;
 
-    fn layout_pass(tree: &mut RetainedTree, viewport: Viewport) -> Result<LayoutMap, RetainedError> {
+    fn layout_pass(
+        tree: &mut RetainedTree,
+        viewport: Viewport,
+    ) -> Result<LayoutMap, RetainedError> {
         let mut font_cx = FontContext::new();
         super::layout_pass(tree, &mut font_cx, viewport)
     }
@@ -1103,7 +1106,8 @@ mod tests {
         assert!(font_cx.collection.family_by_name(family).is_some());
 
         let mut tree =
-            RetainedTree::mount(Text::new("font bytes").font_family(family).into_element()).unwrap();
+            RetainedTree::mount(Text::new("font bytes").font_family(family).into_element())
+                .unwrap();
         super::layout_pass(
             &mut tree,
             &mut font_cx,

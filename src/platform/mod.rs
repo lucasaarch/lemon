@@ -1019,7 +1019,7 @@ pub fn run_with_theme(config: WindowConfig, theme: Theme, root: impl Fn(&Cx) -> 
 /// }
 ///
 /// fn main() {
-///     let bundled = include_bytes!(file!());
+///     let bundled = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"));
 ///     run_with_fonts(WindowConfig::default(), app, move |state| {
 ///         state
 ///             .register_font_bytes("MyApp Sans", bundled.to_vec())
@@ -1047,9 +1047,7 @@ pub fn run_with_theme_and_fonts(
     let event_loop = EventLoop::new().expect("create event loop");
     let mut state = AppState::with_theme(config, theme, root);
     register_fonts(&mut state);
-    let mut app = LemonApplication {
-        state: Some(state),
-    };
+    let mut app = LemonApplication { state: Some(state) };
     event_loop.run_app(&mut app).expect("run event loop");
 }
 

@@ -912,7 +912,10 @@ mod tests {
 
     use super::*;
 
-    fn layout_pass(tree: &mut RetainedTree, viewport: Viewport) -> Result<LayoutMap, RetainedError> {
+    fn layout_pass(
+        tree: &mut RetainedTree,
+        viewport: Viewport,
+    ) -> Result<LayoutMap, RetainedError> {
         let mut font_cx = FontContext::new();
         crate::layout::layout_pass(tree, &mut font_cx, viewport)
     }

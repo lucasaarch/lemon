@@ -48,9 +48,10 @@ impl From<std::io::Error> for FontRegistrationError {
 /// [`.font_family(...)`](crate::Text::font_family), for example:
 ///
 /// ```no_run
-/// use lemon::{register_font_bytes, FontContext};
+/// use lemon::register_font_bytes;
+/// use parley::FontContext;
 ///
-/// let bundled = include_bytes!(file!());
+/// let bundled = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"));
 /// let mut fonts = FontContext::new();
 /// register_font_bytes(&mut fonts, "MyApp Sans", bundled.to_vec()).unwrap();
 /// ```

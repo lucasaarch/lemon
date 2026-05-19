@@ -275,7 +275,10 @@ mod tests {
     use std::cell::Cell;
     use std::rc::Rc;
 
-    fn layout_pass(tree: &mut RetainedTree, viewport: Viewport) -> Result<LayoutMap, crate::retained::RetainedError> {
+    fn layout_pass(
+        tree: &mut RetainedTree,
+        viewport: Viewport,
+    ) -> Result<LayoutMap, crate::retained::RetainedError> {
         let mut font_cx = FontContext::new();
         crate::layout::layout_pass(tree, &mut font_cx, viewport)
     }
