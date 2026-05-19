@@ -71,5 +71,9 @@ name = "custom_select"
 path = "examples/custom_select.rs"
 
 [[example]]
+name = "showcase"
+path = "examples/showcase.rs"
+
+[[example]]
 name = "scroll"
 path = "examples/scroll.rs"
