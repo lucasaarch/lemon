@@ -17,7 +17,7 @@ pub enum TransitionProperty {
     Surface,
     /// Border colors, independently for each side.
     BorderColor,
-    /// Text-field focus ring color and appearance/disappearance.
+    /// Focus ring color and appearance/disappearance on opted-in focusable controls.
     FocusRing,
     /// Text foreground color.
     TextColor,
@@ -90,7 +90,7 @@ pub(crate) struct Visual {
 impl Visual {
     fn target(node: &RetainedNode, focused: Option<NodeId>) -> Self {
         let mut paint = node.paint.clone();
-        if node.text_input.is_some() {
+        if node.text_input.is_some() || (node.style.focusable && paint.focus_ring_color.is_some()) {
             let mut color = paint
                 .focus_ring_color
                 .unwrap_or(crate::theme::current_theme().chrome.focus_ring);
@@ -596,5 +596,74 @@ mod tests {
         update(&mut ui, mid);
         assert!(!ui.transitions.visuals.contains_key(&id));
         assert_eq!(ui.transitions.entries.len(), 2);
+    }
+    #[test]
+    fn select_overlay_fades_both_ways_and_disables_input_before_exit_completes() {
+        use crate::input::hit_test::hit_test_on_click;
+        let open = State::new(false);
+        let source = open.clone();
+        let value = State::new(None::<u8>);
+        let selected = value.clone();
+        let mut ui = UiState::default();
+        ui.mount(move |cx| {
+            Select::with_open(
+                cx,
+                selected.clone(),
+                source.clone(),
+                vec![(1, "One".into()), (2, "Two".into())],
+            )
+            .width(200.0)
+            .into_element()
+        })
+        .unwrap();
+        let start = Instant::now();
+        update(&mut ui, start);
+        let id = ui.retained().unwrap().root().unwrap().children[1]
+            .taffy_id
+            .unwrap();
+        assert_eq!(ui.transitions.visuals[&id].opacity, 0.0);
+        open.set(true);
+        update(&mut ui, start);
+        let row_id = ui.retained().unwrap().root().unwrap().children[1].children[0]
+            .taffy_id
+            .unwrap();
+        let row = ui.layout_map().get(row_id).unwrap();
+        let point = LogicalPoint::new(row.x + 4.0, row.y + 4.0);
+        ui.dispatch_input(InputEvent::PointerDown(point)).unwrap();
+        assert!(
+            open.get(),
+            "clicking an overlay descendant is inside the select"
+        );
+        update(&mut ui, start + Duration::from_millis(70));
+        assert_eq!(ui.transitions.visuals[&id].opacity, 0.75);
+        open.set(false);
+        update(&mut ui, start + Duration::from_millis(70));
+        assert_eq!(
+            ui.transitions.visuals[&id].opacity, 0.75,
+            "closing starts from the visible state"
+        );
+        assert!(hit_test_on_click(
+            ui.retained().unwrap().root().unwrap(),
+            ui.layout_map(),
+            point
+        )
+        .is_none());
+        update(&mut ui, start + Duration::from_millis(140));
+        assert_eq!(ui.transitions.visuals[&id].opacity, 0.1875);
+        open.set(true);
+        update(&mut ui, start + Duration::from_millis(140));
+        assert_eq!(
+            ui.transitions.visuals[&id].opacity, 0.1875,
+            "interrupted closing reverses without jumping"
+        );
+        update(&mut ui, start + Duration::from_millis(280));
+        assert_eq!(ui.transitions.visuals[&id].opacity, 1.0);
+        ui.dispatch_input(InputEvent::Click(point)).unwrap();
+        assert_eq!(value.get(), Some(1));
+        assert!(!open.get());
+        update(&mut ui, start + Duration::from_millis(280));
+        update(&mut ui, start + Duration::from_millis(420));
+        assert_eq!(ui.transitions.visuals[&id].opacity, 0.0);
+        assert!(!ui.transitions_active);
     }
 }

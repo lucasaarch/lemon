@@ -21,7 +21,8 @@ use super::{TextField, TextFieldStyle};
 ///     let password = cx.state("".to_owned());
 ///     SecureField::new(cx, password)
 ///         .placeholder("Password")
-///         .style(TextFieldStyle::default().rounding(8.0))
+///         .style(TextFieldStyle::Bordered)
+///         .rounding(8.0)
 ///         .width(240.0)
 ///         .into_element()
 /// }
@@ -50,7 +51,7 @@ impl SecureField {
         self
     }
 
-    /// Replaces all field style overrides; unset properties use the host theme.
+    /// Selects the same theme-aware preset as a plain field; explicit overrides are preserved.
     pub fn style(mut self, style: TextFieldStyle) -> Self {
         self.0 = self.0.style(style);
         self
@@ -222,16 +223,16 @@ mod tests {
     #[test]
     fn empty_placeholder_and_disabled_mask_share_plain_field_styles() {
         let cx = Cx::new();
-        let style = TextFieldStyle::default()
-            .placeholder_color(Color::rgb8(1, 2, 3))
-            .border_color(Color::rgb8(4, 5, 6))
-            .focus_ring_color(Color::rgb8(7, 8, 9))
-            .inset(10.0)
-            .rounding(8.0);
+        let style = TextFieldStyle::Bordered;
         let plain = view(
             TextField::new(&cx, State::new("".to_owned()))
                 .placeholder("Password")
-                .style(style.clone())
+                .style(style)
+                .placeholder_color(Color::rgb8(1, 2, 3))
+                .border_color(Color::rgb8(4, 5, 6))
+                .focus_ring_color(Color::rgb8(7, 8, 9))
+                .inset(10.0)
+                .rounding(8.0)
                 .width(220.0)
                 .into_element(),
         );
@@ -239,6 +240,11 @@ mod tests {
             SecureField::new(&cx, State::new("".to_owned()))
                 .placeholder("Password")
                 .style(style)
+                .placeholder_color(Color::rgb8(1, 2, 3))
+                .border_color(Color::rgb8(4, 5, 6))
+                .focus_ring_color(Color::rgb8(7, 8, 9))
+                .inset(10.0)
+                .rounding(8.0)
                 .width(220.0)
                 .into_element(),
         );

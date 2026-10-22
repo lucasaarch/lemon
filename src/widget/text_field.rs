@@ -11,48 +11,34 @@ use crate::{
 
 use super::field_editor::FieldEditor;
 
-/// Visual overrides shared by [`TextField`] and [`SecureField`](super::SecureField).
+/// Theme-aware visual preset shared by [`TextField`] and [`super::SecureField`].
 ///
-/// Unset properties use the current host theme. Apply these with either field's `.style(...)` method.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct TextFieldStyle {
+/// Presets have the same typography and padding. Explicit widget overrides apply
+/// after the preset; `.decorate(...)` can then customize the resulting root view.
+///
+/// ```
+/// use lemon::prelude::*;
+/// let cx = Cx::new();
+/// let field = TextField::new(&cx, State::new(String::new())).style(TextFieldStyle::Clean);
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum TextFieldStyle {
+    /// Transparent background with no resting border; focus remains visible.
+    Clean,
+    /// Themed surface and border. This is the default.
+    #[default]
+    Bordered,
+    /// Themed surface without a resting border.
+    Filled,
+}
+
+#[derive(Default)]
+struct FieldOverrides {
     placeholder_color: Option<Color>,
     border_color: Option<Color>,
     padding: Option<f32>,
     radius: Option<f32>,
     focus_ring_color: Option<Color>,
-}
-
-impl TextFieldStyle {
-    /// Overrides the placeholder text color.
-    pub fn placeholder_color(mut self, color: Color) -> Self {
-        self.placeholder_color = Some(color);
-        self
-    }
-
-    /// Overrides the border color.
-    pub fn border_color(mut self, color: Color) -> Self {
-        self.border_color = Some(color);
-        self
-    }
-
-    /// Overrides the container padding in logical points.
-    pub fn inset(mut self, value: f32) -> Self {
-        self.padding = Some(value);
-        self
-    }
-
-    /// Overrides the border radius in logical points.
-    pub fn rounding(mut self, value: f32) -> Self {
-        self.radius = Some(value);
-        self
-    }
-
-    /// Overrides the focus ring color.
-    pub fn focus_ring_color(mut self, color: Color) -> Self {
-        self.focus_ring_color = Some(color);
-        self
-    }
 }
 
 /// Single-line editable text field.
@@ -72,7 +58,8 @@ impl TextFieldStyle {
 /// fn my_view(cx: &Cx) -> Element {
 ///     let state = cx.state("".to_owned());
 ///     TextField::new(cx, state)
-///         .style(TextFieldStyle::default().border_color(Color::rgb8(200, 80, 80)))
+///         .style(TextFieldStyle::Bordered)
+///         .border_color(Color::rgb8(200, 80, 80))
 ///         .placeholder("Type here…")
 ///         .width(240.0)
 ///         .into_element()
@@ -97,6 +84,7 @@ pub struct TextField {
     radius: f32,
     focus_ring_color: Color,
     style: TextFieldStyle,
+    overrides: FieldOverrides,
     disabled: bool,
     secure: bool,
 }
@@ -130,6 +118,7 @@ impl TextField {
             radius: theme.radius.sm,
             focus_ring_color: theme.chrome.focus_ring,
             style: TextFieldStyle::default(),
+            overrides: FieldOverrides::default(),
             disabled: false,
             secure: false,
         }
@@ -154,7 +143,9 @@ impl TextField {
         self
     }
 
-    /// Replaces all text input style overrides.
+    /// Selects a theme-aware visual preset (default: [`TextFieldStyle::Bordered`]).
+    ///
+    /// Explicit color, padding and radius overrides remain in effect regardless of call order.
     pub fn style(mut self, style: TextFieldStyle) -> Self {
         self.style = style;
         self
@@ -162,31 +153,31 @@ impl TextField {
 
     /// Overrides the placeholder text color for this widget.
     pub fn placeholder_color(mut self, color: Color) -> Self {
-        self.style.placeholder_color = Some(color);
+        self.overrides.placeholder_color = Some(color);
         self
     }
 
     /// Overrides the border color for this widget.
     pub fn border_color(mut self, color: Color) -> Self {
-        self.style.border_color = Some(color);
+        self.overrides.border_color = Some(color);
         self
     }
 
     /// Overrides the container padding for this widget.
     pub fn inset(mut self, value: f32) -> Self {
-        self.style.padding = Some(value);
+        self.overrides.padding = Some(value);
         self
     }
 
     /// Overrides the border radius for this widget.
     pub fn rounding(mut self, value: f32) -> Self {
-        self.style.radius = Some(value);
+        self.overrides.radius = Some(value);
         self
     }
 
     /// Overrides the focus ring color for this widget.
     pub fn focus_ring_color(mut self, color: Color) -> Self {
-        self.style.focus_ring_color = Some(color);
+        self.overrides.focus_ring_color = Some(color);
         self
     }
 
@@ -221,14 +212,18 @@ impl TextField {
         };
         let placeholder = self.placeholder.clone();
         let placeholder_color = self
-            .style
+            .overrides
             .placeholder_color
             .unwrap_or(self.placeholder_color);
-        let border_color = self.style.border_color.unwrap_or(self.border_color);
-        let padding = self.style.padding.unwrap_or(self.padding);
-        let radius = self.style.radius.unwrap_or(self.radius);
-        let focus_ring_color = self.style.focus_ring_color.unwrap_or(self.focus_ring_color);
+        let border_color = self.overrides.border_color.unwrap_or(self.border_color);
+        let padding = self.overrides.padding.unwrap_or(self.padding);
+        let radius = self.overrides.radius.unwrap_or(self.radius);
+        let focus_ring_color = self
+            .overrides
+            .focus_ring_color
+            .unwrap_or(self.focus_ring_color);
         let surface_color = {
+            let clean = self.style == TextFieldStyle::Clean;
             let hovered = self.hovered.clone();
             let pressed = self.pressed.clone();
             let surface_color = self.surface_color;
@@ -236,7 +231,9 @@ impl TextField {
             let surface_color_pressed = self.surface_color_pressed;
             let surface_color_disabled = self.surface_color_disabled;
             ColorSource::Dynamic(std::rc::Rc::new(move || {
-                if disabled {
+                if clean {
+                    Color::default()
+                } else if disabled {
                     surface_color_disabled
                 } else if pressed.get() {
                     surface_color_pressed
@@ -272,7 +269,15 @@ impl TextField {
         let mut container = View::new()
             .surface(surface_color)
             .inset(padding)
-            .border(border_color, 1.5)
+            .border(
+                border_color,
+                if self.style == TextFieldStyle::Bordered || self.overrides.border_color.is_some() {
+                    1.5
+                } else {
+                    0.0
+                },
+            )
+            .transition(super::interaction_transition())
             .rounding(radius)
             .clip()
             .cursor(if disabled {
@@ -422,11 +427,9 @@ mod tests {
         let cx = Cx::new();
         let state = State::new("".to_owned());
         let Element::View(view) = TextField::new(&cx, state)
-            .style(
-                TextFieldStyle::default()
-                    .border_color(Color::rgb8(1, 2, 3))
-                    .focus_ring_color(Color::rgb8(4, 5, 6)),
-            )
+            .style(TextFieldStyle::Bordered)
+            .border_color(Color::rgb8(1, 2, 3))
+            .focus_ring_color(Color::rgb8(4, 5, 6))
             .placeholder("Type here")
             .into_element()
         else {

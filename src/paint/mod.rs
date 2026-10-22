@@ -669,7 +669,8 @@ fn paint_focus_ring(
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
-    if node.text_input.is_none() {
+    if node.text_input.is_none() && (!node.style.focusable || node.paint.focus_ring_color.is_none())
+    {
         return;
     }
     let color = if let Some(visual) = ctx.visual(node) {

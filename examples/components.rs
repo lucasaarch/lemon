@@ -11,7 +11,11 @@ fn counter(cx: &Cx) -> Element {
         .spacing(12.0)
         .align(Align::Center)
         .child(Text::new(move || format!("Count: {}", label.get())))
-        .child(Button::new(cx, "+").action(move || count.update(|n| *n += 1)))
+        .child(
+            Button::new(cx, "+")
+                .style(ButtonStyle::Clean)
+                .action(move || count.update(|n| *n += 1)),
+        )
         .into_element()
 }
 
@@ -21,7 +25,11 @@ fn settings(cx: &Cx) -> Element {
         .inset(24.0)
         .spacing(12.0)
         .child(Text::new("Settings").size(24.0))
-        .child(TextField::new(cx, name).placeholder("Name"))
+        .child(
+            TextField::new(cx, name)
+                .style(TextFieldStyle::Clean)
+                .placeholder("Name"),
+        )
         .into_element()
 }
 
@@ -33,12 +41,16 @@ fn app(cx: &Cx) -> Element {
         // Stable keys distinguish sibling instances of the same function.
         .child(Component::new(counter).key(1))
         .child(Component::new(counter).key(2))
-        .child(Button::new(cx, "Settings").action(move || {
-            windows.open_window(
-                WindowConfig::default().title("Settings").size(480.0, 360.0),
-                settings,
-            );
-        }))
+        .child(
+            Button::new(cx, "Settings")
+                .style(ButtonStyle::Bordered)
+                .action(move || {
+                    windows.open_window(
+                        WindowConfig::default().title("Settings").size(480.0, 360.0),
+                        settings,
+                    );
+                }),
+        )
         .into_element()
 }
 

@@ -202,6 +202,9 @@ impl CornerRadii {
 /// rather than constructing `StyleProps` directly.
 #[derive(Clone, Debug, PartialEq)]
 pub struct StyleProps {
+    /// Whether this subtree accepts pointer, keyboard and focus input (default: true).
+    /// Disabling input preserves layout and paint, allowing an overlay to fade out safely.
+    pub interactive: bool,
     /// Implicit visual transition for this subtree; absent by default.
     pub transition: Option<crate::transition::Transition>,
     pub width: Option<Dimension>,
@@ -254,6 +257,7 @@ pub struct StyleProps {
 impl Default for StyleProps {
     fn default() -> Self {
         Self {
+            interactive: true,
             transition: None,
             width: None,
             height: None,
@@ -438,7 +442,8 @@ pub struct PaintProps {
     pub scroll_track_color: Option<ColorSource>,
     /// Optional override for widget scrollbar thumb painting.
     pub scroll_thumb_color: Option<ColorSource>,
-    /// Optional override for text-input focus ring painting.
+    /// Focus ring color. Setting it on a focusable view enables focus chrome;
+    /// text inputs also use the current theme when no override is provided.
     pub focus_ring_color: Option<ColorSource>,
 }
 

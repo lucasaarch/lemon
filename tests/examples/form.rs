@@ -12,7 +12,7 @@ fn submission_requires_name_and_role_then_clears_the_input() {
         .iter()
         .any(|s| s.contains(" — ")));
 
-    support::click(&mut runtime, "Choose a role ▾");
+    support::click(&mut runtime, "Choose a role");
     support::click(&mut runtime, "Reader");
     support::click(&mut runtime, "Submit");
     assert!(!support::text(&runtime.root_element().unwrap())

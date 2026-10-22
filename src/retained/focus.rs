@@ -60,6 +60,9 @@ pub fn collect_focusable(tree: &RetainedTree) -> Vec<NodeId> {
 }
 
 fn collect_focusable_node(node: &RetainedNode, out: &mut Vec<NodeId>) {
+    if !node.style.interactive {
+        return;
+    }
     if node.style.focusable {
         if let Some(id) = node.taffy_id {
             out.push(id);

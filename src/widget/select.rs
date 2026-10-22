@@ -1,11 +1,11 @@
 use crate::{
     element::{
-        builders::{ColumnView, Text, View},
+        builders::{ColumnView, RowView, Text, View},
         events::Cursor,
         style::{Align, Color, ColorSource, Distribute},
         Element,
     },
-    Cx, State,
+    BoxShadow, Cx, KeyState, LemonKey, NamedKey, State,
 };
 
 /// Per-widget visual overrides for [`Select`].
@@ -18,6 +18,7 @@ pub struct SelectStyle {
     dropdown_background: Option<Color>,
     dropdown_border: Option<Color>,
     dropdown_radius: Option<f32>,
+    dropdown_transition: Option<crate::Transition>,
     item_padding: Option<f32>,
     item_text_color: Option<Color>,
 }
@@ -65,6 +66,21 @@ impl SelectStyle {
         self
     }
 
+    /// Configures the overlay's enter/exit transition (default: 140 ms, ease-out).
+    ///
+    /// Include [`crate::TransitionProperty::Opacity`] when selecting properties.
+    /// A zero duration disables the fade; input still follows the logical open state.
+    ///
+    /// ```
+    /// use lemon::{SelectStyle, Transition};
+    /// let style = SelectStyle::default().dropdown_transition(
+    ///     Transition::new(std::time::Duration::ZERO));
+    /// ```
+    pub fn dropdown_transition(mut self, transition: crate::Transition) -> Self {
+        self.dropdown_transition = Some(transition);
+        self
+    }
+
     /// Overrides option-item padding in logical points.
     pub fn item_inset(mut self, value: f32) -> Self {
         self.item_padding = Some(value);
@@ -85,6 +101,9 @@ impl SelectStyle {
 ///
 /// The dropdown list is rendered as an **overlay** — it is absolutely positioned so it floats
 /// above surrounding content and does not shift sibling elements when opened.
+/// It fades in and out using the shared transition pipeline. The closed overlay
+/// stays mounted but rejects input immediately, including during its exit fade.
+/// Arrow keys navigate, Enter/Space choose, and Escape dismisses the menu.
 ///
 /// The open/closed state is internal by default ([`Select::new`]) or caller-supplied for advanced
 /// use ([`Select::with_open`]).
@@ -120,6 +139,9 @@ pub struct Select<T> {
     open: State<bool>,
     trigger_hovered: State<bool>,
     trigger_pressed: State<bool>,
+    highlighted: State<Option<T>>,
+    accent: Color,
+    secondary_text: Color,
     options: Vec<(T, String)>,
     width: Option<f32>,
     placeholder: String,
@@ -168,17 +190,21 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
             open,
             trigger_hovered: cx.state(false),
             trigger_pressed: cx.state(false),
+            highlighted: cx.state(None),
+            accent: theme.colors.accent,
+            secondary_text: theme.colors.foreground_secondary,
             options,
             width: None,
             placeholder: "Select…".to_string(),
-            trigger_height: theme.spacing.sm * 5.0,
+            trigger_height: theme.typography.font_size_md * theme.typography.line_height
+                + theme.spacing.sm * 2.0,
             trigger_padding: theme.spacing.sm,
-            trigger_background: theme.colors.accent,
-            trigger_background_hover: theme.colors.accent_hover,
-            trigger_background_pressed: theme.colors.accent_pressed,
+            trigger_background: theme.colors.surface,
+            trigger_background_hover: theme.colors.surface_hover,
+            trigger_background_pressed: theme.colors.surface_pressed,
             trigger_background_disabled: theme.colors.surface,
             trigger_radius: theme.radius.md,
-            trigger_text_color: theme.colors.on_accent,
+            trigger_text_color: theme.colors.foreground,
             trigger_text_color_disabled: theme.colors.foreground_disabled,
             dropdown_background: theme.colors.surface,
             dropdown_border: theme.colors.border,
@@ -238,7 +264,11 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
     ///
     /// Call this at the end of the builder chain to insert the widget into a parent container.
     pub fn into_element(self) -> Element {
-        let is_open = !self.disabled && self.open.get();
+        let is_open = !self.disabled && !self.options.is_empty() && self.open.get();
+        let highlighted = self.highlighted;
+        let highlighted_value = highlighted.get();
+        let accent = self.accent;
+        let secondary_text = self.secondary_text;
         let current = self.value.get();
         let open = self.open;
         let trigger_hovered = self.trigger_hovered;
@@ -258,6 +288,7 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
         let trigger_text_color = self.trigger_text_color;
         let trigger_text_color_disabled = self.trigger_text_color_disabled;
         let dropdown_background = self.dropdown_background;
+        let trigger_border = self.dropdown_border;
         let dropdown_border = self.dropdown_border;
         let dropdown_radius = self.dropdown_radius;
         let item_padding = self.item_padding;
@@ -272,22 +303,26 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
         let dropdown_radius = style.dropdown_radius.unwrap_or(dropdown_radius);
         let item_padding = style.item_padding.unwrap_or(item_padding);
         let item_text_color = style.item_text_color.unwrap_or(item_text_color);
+        let dropdown_transition = style
+            .dropdown_transition
+            .unwrap_or_else(super::interaction_transition);
 
         // Derive trigger label from the current selection, falling back to placeholder.
-        let trigger_label = current
-            .as_ref()
-            .and_then(|v| {
-                options
-                    .iter()
-                    .find(|(opt, _)| opt == v)
-                    .map(|(_, l)| l.clone())
-            })
-            .unwrap_or(placeholder);
+        let trigger_label = current.as_ref().and_then(|v| {
+            options
+                .iter()
+                .find(|(opt, _)| opt == v)
+                .map(|(_, l)| l.clone())
+        });
+        let has_selection = trigger_label.is_some();
+        let trigger_label = trigger_label.unwrap_or(placeholder);
 
         let trigger_text_color = if disabled {
             trigger_text_color_disabled
-        } else {
+        } else if has_selection {
             trigger_text_color
+        } else {
+            secondary_text
         };
         let trigger_hovered_for_bg = trigger_hovered.clone();
         let trigger_pressed_for_bg = trigger_pressed.clone();
@@ -311,24 +346,37 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
             .inset(trigger_padding)
             .surface(trigger_background)
             .rounding(trigger_radius)
+            .border(if is_open { accent } else { trigger_border }, 1.0)
+            .transition(super::interaction_transition())
             .height(trigger_height)
             .align(Align::Center)
-            .distribute(Distribute::Center)
+            .distribute(Distribute::Between)
             .cursor(if disabled {
                 Cursor::NotAllowed
             } else {
                 Cursor::Pointer
             })
             .child(
-                Text::new(format!("{trigger_label} ▾"))
-                    .size(14.0)
-                    .color(trigger_text_color),
+                RowView::new()
+                    .grow(1.0)
+                    .align(Align::Center)
+                    .distribute(Distribute::Between)
+                    .spacing(12.0)
+                    .child(Text::new(trigger_label).color(trigger_text_color))
+                    .child(Text::new(if is_open { "▴" } else { "▾" }).color(secondary_text)),
             );
         if let Some(w) = width {
             trigger = trigger.width(w);
         }
         if !disabled {
             let open_for_trigger = open.clone();
+            let active_for_trigger = highlighted.clone();
+            let selected_for_trigger = value.clone();
+            let open_for_key = open.clone();
+            let value_for_key = value.clone();
+            let active_for_key = highlighted.clone();
+            let key_options = options.clone();
+            let has_options = !options.is_empty();
             let hovered_enter = trigger_hovered.clone();
             let hovered_leave = trigger_hovered.clone();
             let pressed_down = trigger_pressed.clone();
@@ -336,7 +384,59 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
             let pressed_leave = trigger_pressed.clone();
             trigger = trigger
                 .action(move || {
-                    open_for_trigger.update(|b| *b = !*b);
+                    if has_options {
+                        active_for_trigger.set(selected_for_trigger.peek());
+                        open_for_trigger.update(|b| *b = !*b);
+                    }
+                })
+                .focusable()
+                .on_key_down(move |event| {
+                    if event.state != KeyState::Pressed || key_options.is_empty() {
+                        return;
+                    }
+                    match event.key {
+                        LemonKey::Named(NamedKey::Escape) => open_for_key.set(false),
+                        LemonKey::Named(NamedKey::ArrowDown | NamedKey::ArrowUp) => {
+                            let up = event.key == LemonKey::Named(NamedKey::ArrowUp);
+                            let current = active_for_key.peek().or_else(|| value_for_key.peek());
+                            let index = current.as_ref().and_then(|value| {
+                                key_options
+                                    .iter()
+                                    .position(|(candidate, _)| candidate == value)
+                            });
+                            let next = if !open_for_key.peek() {
+                                index.unwrap_or(if up { key_options.len() - 1 } else { 0 })
+                            } else {
+                                match index {
+                                    Some(index) if up => {
+                                        (index + key_options.len() - 1) % key_options.len()
+                                    }
+                                    Some(index) => (index + 1) % key_options.len(),
+                                    None if up => key_options.len() - 1,
+                                    None => 0,
+                                }
+                            };
+                            active_for_key.set(Some(key_options[next].0.clone()));
+                            open_for_key.set(true);
+                        }
+                        LemonKey::Named(NamedKey::Enter | NamedKey::Space) if !event.repeat => {
+                            if open_for_key.peek() {
+                                let current =
+                                    active_for_key.peek().or_else(|| value_for_key.peek());
+                                let chosen = current
+                                    .filter(|value| {
+                                        key_options.iter().any(|(candidate, _)| candidate == value)
+                                    })
+                                    .unwrap_or_else(|| key_options[0].0.clone());
+                                value_for_key.set(Some(chosen));
+                                open_for_key.set(false);
+                            } else {
+                                active_for_key.set(value_for_key.peek());
+                                open_for_key.set(true);
+                            }
+                        }
+                        _ => {}
+                    }
                 })
                 .on_hover_enter(move || hovered_enter.set(true))
                 .on_hover_leave(move || {
@@ -356,43 +456,82 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
         if let Some(w) = width {
             container = container.width(w);
         }
+        let mut trigger = trigger.into_element();
+        if let Element::View(view) = &mut trigger {
+            view.paint.focus_ring_color = Some(accent.into());
+        }
         container = container.child(trigger);
 
-        if is_open {
-            // Dropdown list: absolutely positioned so it overlays content without shifting
-            // siblings, and z_index=10 so it paints above them.
-            let mut dropdown = ColumnView::new()
-                .layer(10)
-                .position(crate::Position::Absolute)
-                .top(trigger_height)
-                .left(0.0)
-                .surface(dropdown_background)
-                .border(dropdown_border, 1.0)
-                .rounding(dropdown_radius);
-            if let Some(w) = width {
-                dropdown = dropdown.width(w);
-            }
-
-            for (opt, label) in options {
-                let open_c = open.clone();
-                let val_c = value.clone();
-                let mut item = View::new()
-                    .inset(item_padding)
-                    .cursor(Cursor::Pointer)
-                    .child(Text::new(label).size(14.0).color(item_text_color));
-                if !disabled {
-                    item = item.action(move || {
-                        val_c.set(Some(opt.clone()));
-                        open_c.set(false);
-                    });
-                }
-                if let Some(w) = width {
-                    item = item.width(w);
-                }
-                dropdown = dropdown.child(item);
-            }
-            container = container.child(dropdown);
+        // Keep the overlay mounted at opacity zero when closed. This lets the
+        // shared transition pipeline interpolate both directions without timers.
+        // Input is disabled immediately, independently of the presentation opacity.
+        let mut dropdown = ColumnView::new()
+            .layer(10)
+            .position(crate::Position::Absolute)
+            .top(trigger_height + 4.0)
+            .left(0.0)
+            .fill_width()
+            .inset(4.0)
+            .spacing(2.0)
+            .surface(dropdown_background)
+            .border(dropdown_border, 1.0)
+            .rounding(dropdown_radius)
+            .clip()
+            .shadow(BoxShadow::new(
+                Color::rgb8(0, 0, 0).with_alpha(0.18),
+                0.0,
+                4.0,
+                12.0,
+            ))
+            .opacity(if is_open { 1.0 } else { 0.0 })
+            .interactive(is_open)
+            .transition(dropdown_transition);
+        if let Some(w) = width {
+            dropdown = dropdown.width(w);
         }
+        for (index, (opt, label)) in options.into_iter().enumerate() {
+            let selected = current.as_ref() == Some(&opt);
+            let active = highlighted_value.as_ref() == Some(&opt);
+            let open_c = open.clone();
+            let val_c = value.clone();
+            let choose = opt.clone();
+            let hover_enter = highlighted.clone();
+            let hover_leave = highlighted.clone();
+            let hover_value = opt.clone();
+            let mut item = RowView::new()
+                .key(index as u64)
+                .fill_width()
+                .inset(item_padding)
+                .spacing(12.0)
+                .align(Align::Center)
+                .distribute(Distribute::Between)
+                .rounding((dropdown_radius - 2.0).max(0.0))
+                .surface(if active {
+                    accent.with_alpha(0.16)
+                } else if selected {
+                    accent.with_alpha(0.08)
+                } else {
+                    Color::default()
+                })
+                .cursor(Cursor::Pointer)
+                .child(Text::new(label).color(item_text_color))
+                .child(Text::new(if selected { "✓" } else { "" }).color(accent));
+            if is_open {
+                item = item
+                    .action(move || {
+                        val_c.set(Some(choose.clone()));
+                        open_c.set(false);
+                    })
+                    .on_hover_enter(move || hover_enter.set(Some(opt.clone())))
+                    .on_hover_leave(move || {
+                        if hover_leave.peek().as_ref() == Some(&hover_value) {
+                            hover_leave.set(None);
+                        }
+                    });
+            }
+            dropdown = dropdown.child(item);
+        }
+        container = container.child(dropdown);
 
         container.into_element()
     }
@@ -444,12 +583,20 @@ mod tests {
         let Element::Column(col) = el else {
             panic!("expected Column container");
         };
-        // Closed: only the trigger child
-        assert_eq!(col.children.len(), 1);
+        // The overlay is retained for the exit fade, but rejects input when closed.
+        assert_eq!(col.children.len(), 2);
+        let Element::Column(dropdown) = &col.children[1] else {
+            panic!("dropdown")
+        };
+        assert_eq!(dropdown.style.opacity, 0.0);
+        assert!(!dropdown.style.interactive);
         let Element::View(trigger) = &col.children[0] else {
             panic!("expected View trigger");
         };
-        let Element::Text(label) = &trigger.children[0] else {
+        let Element::Row(content) = &trigger.children[0] else {
+            panic!("trigger content")
+        };
+        let Element::Text(label) = &content.children[0] else {
             panic!("expected trigger Text");
         };
         let label = label.content.resolve();
@@ -472,7 +619,10 @@ mod tests {
         let Element::View(trigger) = &col.children[0] else {
             panic!("expected View trigger");
         };
-        let Element::Text(label) = &trigger.children[0] else {
+        let Element::Row(content) = &trigger.children[0] else {
+            panic!("trigger content")
+        };
+        let Element::Text(label) = &content.children[0] else {
             panic!("expected trigger Text");
         };
         let label = label.content.resolve();
@@ -675,7 +825,7 @@ mod tests {
             panic!("expected Column dropdown");
         };
         // Options are now View items; on_click lives in handlers.
-        let Element::View(opt_view) = &dropdown.children[1] else {
+        let Element::Row(opt_view) = &dropdown.children[1] else {
             panic!("expected View option");
         };
         let on_click = opt_view
@@ -726,7 +876,10 @@ mod tests {
         let Element::View(trigger) = &col.children[0] else {
             panic!("expected View trigger");
         };
-        let Element::Text(label) = &trigger.children[0] else {
+        let Element::Row(content) = &trigger.children[0] else {
+            panic!("trigger content")
+        };
+        let Element::Text(label) = &content.children[0] else {
             panic!("expected trigger Text");
         };
         let label = label.content.resolve();
@@ -767,7 +920,7 @@ mod tests {
         };
         assert_eq!(trigger.style.padding, Some(Edges::all(custom.spacing.sm)));
         let trigger_paint = trigger.paint.resolve();
-        assert_eq!(trigger_paint.background, Some(custom.colors.accent));
+        assert_eq!(trigger_paint.background, Some(custom.colors.surface));
         assert_eq!(trigger_paint.radius, CornerRadii::all(custom.radius.md));
 
         let Element::Column(dropdown) = &root.children[1] else {
@@ -781,7 +934,7 @@ mod tests {
         );
         assert_eq!(dropdown_paint.radius, CornerRadii::all(custom.radius.md));
 
-        let Element::View(option) = &dropdown.children[0] else {
+        let Element::Row(option) = &dropdown.children[0] else {
             panic!("expected option View");
         };
         assert_eq!(option.style.padding, Some(Edges::all(custom.spacing.sm)));
@@ -868,7 +1021,7 @@ mod tests {
 
         assert_eq!(
             trigger.paint.resolve().background,
-            Some(custom.colors.accent)
+            Some(custom.colors.surface)
         );
         trigger
             .handlers
@@ -877,7 +1030,7 @@ mod tests {
             .expect("hover enter handler")();
         assert_eq!(
             trigger.paint.resolve().background,
-            Some(custom.colors.accent_hover)
+            Some(custom.colors.surface_hover)
         );
         trigger
             .handlers
@@ -886,7 +1039,7 @@ mod tests {
             .expect("pointer down handler")(0.5, 0.5);
         assert_eq!(
             trigger.paint.resolve().background,
-            Some(custom.colors.accent_pressed)
+            Some(custom.colors.surface_pressed)
         );
         trigger
             .handlers
@@ -895,7 +1048,7 @@ mod tests {
             .expect("pointer up handler")(0.5, 0.5);
         assert_eq!(
             trigger.paint.resolve().background,
-            Some(custom.colors.accent_hover)
+            Some(custom.colors.surface_hover)
         );
 
         crate::set_active_theme(previous);

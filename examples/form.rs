@@ -27,8 +27,12 @@ fn app(cx: &Cx) -> Element {
         .inset(24.0)
         .spacing(12.0)
         .children(children![
-            TextField::new(cx, name).placeholder("Name").width(300.0),
+            TextField::new(cx, name)
+                .style(TextFieldStyle::Bordered)
+                .placeholder("Name")
+                .width(300.0),
             SecureField::new(cx, password)
+                .style(TextFieldStyle::Filled)
                 .placeholder("Password (not saved)")
                 .width(300.0),
             Select::new(
@@ -43,19 +47,21 @@ fn app(cx: &Cx) -> Element {
             .width(300.0),
             Text::new(move || format!("Volume: {:.0}%", volume_label.get() * 100.0)),
             Slider::new(cx, volume).width(300.0),
-            Button::new(cx, "Submit").action(move || {
-                let name = name_submit.get().trim().to_owned();
-                let Some(role) = role_submit.get() else {
-                    return;
-                };
-                if name.is_empty() {
-                    return;
-                }
-                let entry = format!("{name} — {role} — {:.0}%", volume_submit.get() * 100.0);
-                history.update(|entries| entries.push(entry));
-                name_submit.update(|state| state.clear());
-                password_submit.update(|state| state.clear());
-            }),
+            Button::new(cx, "Submit")
+                .style(ButtonStyle::Filled)
+                .action(move || {
+                    let name = name_submit.get().trim().to_owned();
+                    let Some(role) = role_submit.get() else {
+                        return;
+                    };
+                    if name.is_empty() {
+                        return;
+                    }
+                    let entry = format!("{name} — {role} — {:.0}%", volume_submit.get() * 100.0);
+                    history.update(|entries| entries.push(entry));
+                    name_submit.update(|state| state.clear());
+                    password_submit.update(|state| state.clear());
+                }),
             Text::new("Submitted settings"),
             Scroll::new(cx, entries).width(360.0).height(140.0),
         ])

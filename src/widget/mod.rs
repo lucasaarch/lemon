@@ -24,13 +24,18 @@ pub mod select;
 pub mod slider;
 pub mod text_field;
 
-pub use button::Button;
+pub use button::{Button, ButtonStyle};
 pub use image::Image;
 pub use scroll::{Scroll, ScrollStyle};
 pub use secure_field::SecureField;
 pub use select::{Select, SelectStyle};
 pub use slider::{Slider, SliderStyle};
 pub use text_field::{TextField, TextFieldStyle};
+
+// Shared timing for built-in controls; root decoration can override it.
+fn interaction_transition() -> crate::Transition {
+    crate::Transition::new(std::time::Duration::from_millis(140)).easing(crate::Easing::EaseOut)
+}
 
 #[cfg(test)]
 mod text_field_tests {

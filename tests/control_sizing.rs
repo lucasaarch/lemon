@@ -1,7 +1,7 @@
 use lemon::{host::HostContext, prelude::*, ui::UiState, Theme, Viewport};
 
 #[test]
-fn default_button_and_fields_have_the_same_height() {
+fn default_controls_have_the_same_height() {
     for mut theme in [Theme::default_light(), Theme::default_dark()] {
         for font_size in [14.0, 20.0] {
             theme.typography.font_size_md = font_size;
@@ -15,6 +15,11 @@ fn default_button_and_fields_have_the_same_height() {
                     .child(TextField::new(cx, State::new(String::new())))
                     .child(TextField::new(cx, State::new("Name".to_owned())))
                     .child(SecureField::new(cx, State::new("Secret".to_owned())))
+                    .child(Select::new(
+                        cx,
+                        State::new(None::<u8>),
+                        vec![(1, "One".into())],
+                    ))
                     .into_element()
             })
             .unwrap();

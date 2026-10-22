@@ -334,7 +334,15 @@ fn clicking_non_focusable_content_or_empty_space_blurs_fields() {
         finish(&mut ui);
         assert!(!ui.paint_dirty());
         let outcome = ui.dispatch_input(InputEvent::Click(point)).unwrap();
-        assert_eq!(ui.focused(), None, "outside click must clear focus");
+        assert_eq!(
+            ui.focused(),
+            if point == points[2] {
+                Some(ids[2])
+            } else {
+                None
+            },
+            "outside clicks remove field focus; buttons can receive keyboard focus"
+        );
         assert!(outcome.handled, "blur counts as an input change");
         assert!(
             ui.paint_dirty(),

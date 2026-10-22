@@ -5,9 +5,9 @@ fn facade_and_prelude_export_plain_and_secure_fields_with_shared_styles() {
     let cx = Cx::new();
     let plain = State::new("name".to_owned());
     let secret = State::new("password".to_owned());
-    let style: lemon::TextFieldStyle = TextFieldStyle::default().rounding(8.0);
-    let field: lemon::TextField = TextField::new(&cx, plain).style(style.clone());
-    let secure: lemon::SecureField = SecureField::new(&cx, secret).style(style);
+    let style: lemon::TextFieldStyle = TextFieldStyle::Bordered;
+    let field: lemon::TextField = TextField::new(&cx, plain).style(style).rounding(8.0);
+    let secure: lemon::SecureField = SecureField::new(&cx, secret).style(style).rounding(8.0);
     let Element::Column(root) = ColumnView::new().child(field).child(secure).into_element() else {
         panic!("expected column")
     };

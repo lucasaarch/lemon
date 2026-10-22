@@ -16,8 +16,8 @@ pub fn text(element: &Element) -> Vec<String> {
 
 pub fn click(runtime: &mut Runtime, label: &str) {
     fn find(element: &Element, label: &str) -> Option<std::rc::Rc<dyn Fn()>> {
-        if let Element::View(node) = element {
-            if text(element) == [label] {
+        if let Element::View(node) | Element::Row(node) = element {
+            if text(element).first().is_some_and(|text| text == label) {
                 if let Some(handler) = &node.handlers.on_click {
                     return Some(handler.clone());
                 }

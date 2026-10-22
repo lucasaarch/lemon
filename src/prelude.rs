@@ -18,8 +18,8 @@ pub use crate::element::Element;
 pub use crate::platform::run;
 pub use crate::runtime::cx::Cx;
 pub use crate::widget::{
-    Button, Image, Scroll, ScrollStyle, SecureField, Select, SelectStyle, Slider, SliderStyle,
-    TextField, TextFieldStyle,
+    Button, ButtonStyle, Image, Scroll, ScrollStyle, SecureField, Select, SelectStyle, Slider,
+    SliderStyle, TextField, TextFieldStyle,
 };
 pub use crate::window::WindowConfig;
 pub use crate::State;

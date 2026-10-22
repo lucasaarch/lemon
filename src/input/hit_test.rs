@@ -66,6 +66,9 @@ fn hit_test<'a>(
         hit: &mut Option<&'a RetainedNode>,
         deferred: &mut Vec<(i32, &'a RetainedNode)>,
     ) {
+        if !node.style.interactive {
+            return;
+        }
         let inside = clips.iter().all(|rect| point_in_rect(point, rect));
         let rect = node.taffy_id.and_then(|id| layout.get(id));
         if inside && accepts(node) && rect.is_some_and(|rect| point_in_rect(point, rect)) {
@@ -129,10 +132,14 @@ pub fn hit_test_pointer_down<'a>(
 }
 
 /// Walk the entire retained tree and call [`on_click_outside`](crate::retained::EventHandlers::on_click_outside)
-/// on every node whose handler is set but whose layout bounds do **not** contain `point`.
+/// on every node whose interactive subtree does **not** contain `point`.
+/// Descendant overlays count as inside even when they extend beyond the parent's bounds.
 ///
 /// Used by the platform layer to close popovers or dropdowns when the user clicks elsewhere.
 pub fn dispatch_outside_clicks(node: &RetainedNode, layout: &LayoutMap, point: LogicalPoint) {
+    if !node.style.interactive {
+        return;
+    }
     if matches!(node.kind, RetainedKind::Component { .. }) {
         for child in &node.children {
             dispatch_outside_clicks(child, layout, point);
@@ -141,10 +148,7 @@ pub fn dispatch_outside_clicks(node: &RetainedNode, layout: &LayoutMap, point: L
     }
 
     if let Some(handler) = node.handlers.on_click_outside.as_ref() {
-        let is_outside = node
-            .taffy_id
-            .and_then(|id| layout.get(id))
-            .is_none_or(|rect| !point_in_rect(point, rect));
+        let is_outside = hit_test(node, layout, point, |_| true).is_none();
         if is_outside {
             handler();
         }
@@ -192,12 +196,30 @@ pub fn hit_test_focusable<'a>(
 
 /// Finds a retained node by its layout identity, traversing transparent components.
 pub fn find_node_by_taffy_id(node: &RetainedNode, id: taffy::NodeId) -> Option<&RetainedNode> {
+    find_node(node, id, false)
+}
+
+pub(crate) fn find_interactive_node_by_taffy_id(
+    node: &RetainedNode,
+    id: taffy::NodeId,
+) -> Option<&RetainedNode> {
+    find_node(node, id, true)
+}
+
+fn find_node(
+    node: &RetainedNode,
+    id: taffy::NodeId,
+    interactive_only: bool,
+) -> Option<&RetainedNode> {
+    if interactive_only && !node.style.interactive {
+        return None;
+    }
     if node.taffy_id == Some(id) {
         return Some(node);
     }
 
     for child in &node.children {
-        if let Some(found) = find_node_by_taffy_id(child, id) {
+        if let Some(found) = find_node(child, id, interactive_only) {
             return Some(found);
         }
     }

@@ -64,7 +64,7 @@ impl Default for InputState {
 impl UiState {
     pub(crate) fn reconcile_input(&mut self) {
         let root = self.retained.as_ref().and_then(|tree| tree.root.as_ref());
-        let exists = |id| root.and_then(|root| find_node_by_taffy_id(root, id));
+        let exists = |id| root.and_then(|root| find_interactive_node_by_taffy_id(root, id));
         if self
             .input
             .focus_manager
@@ -164,7 +164,8 @@ impl UiState {
         let Some(root) = self.retained.as_ref().and_then(|t| t.root.as_ref()) else {
             return false;
         };
-        find_node_by_taffy_id(root, focused_id).is_some_and(|node| node.text_input.is_some())
+        find_interactive_node_by_taffy_id(root, focused_id)
+            .is_some_and(|node| node.text_input.is_some())
     }
 
     /// Invalidates paint for a focused editor so a host can animate the caret.
@@ -246,7 +247,7 @@ impl UiState {
             .retained
             .as_ref()
             .and_then(|t| t.root.as_ref())
-            .and_then(|root| find_node_by_taffy_id(root, capture_id))
+            .and_then(|root| find_interactive_node_by_taffy_id(root, capture_id))
         {
             Some(node) => {
                 let h = node.handlers.on_pointer_move.clone();
@@ -278,7 +279,7 @@ impl UiState {
             .retained
             .as_ref()
             .and_then(|t| t.root.as_ref())
-            .and_then(|root| find_node_by_taffy_id(root, capture_id))
+            .and_then(|root| find_interactive_node_by_taffy_id(root, capture_id))
         {
             Some(node) => {
                 let h = node.handlers.on_pointer_up.clone();
@@ -324,7 +325,7 @@ impl UiState {
             .retained
             .as_ref()
             .and_then(|tree| tree.root.as_ref())
-            .and_then(|root| find_node_by_taffy_id(root, focused_id))
+            .and_then(|root| find_interactive_node_by_taffy_id(root, focused_id))
             .and_then(|node| match state {
                 KeyState::Pressed => node.handlers.on_key_down.clone(),
                 KeyState::Released => node.handlers.on_key_up.clone(),
@@ -360,7 +361,7 @@ impl UiState {
                         .as_ref()?
                         .root
                         .as_ref()
-                        .and_then(|root| find_node_by_taffy_id(root, id))
+                        .and_then(|root| find_interactive_node_by_taffy_id(root, id))
                 })
                 .map(|node| node.style.cursor.clone())
                 .unwrap_or(Cursor::Default);
@@ -371,7 +372,7 @@ impl UiState {
             self.retained
                 .as_ref()
                 .and_then(|tree| tree.root.as_ref())
-                .and_then(|root| find_node_by_taffy_id(root, old_id))
+                .and_then(|root| find_interactive_node_by_taffy_id(root, old_id))
                 .and_then(|node| node.handlers.on_hover_leave.clone())
         });
 
@@ -379,7 +380,7 @@ impl UiState {
             self.retained
                 .as_ref()
                 .and_then(|tree| tree.root.as_ref())
-                .and_then(|root| find_node_by_taffy_id(root, id))
+                .and_then(|root| find_interactive_node_by_taffy_id(root, id))
                 .map(|node| {
                     (
                         node.handlers.on_hover_enter.clone(),

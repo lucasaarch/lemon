@@ -267,7 +267,7 @@ for headless use; it does not query the OS. See the [winit platform limits](http
 Built-in widgets such as `Button`, `Select`, `Slider`, `Scroll`, `TextField`, and `SecureField` cover common
 application UI, and their defaults come from the active `Theme`. Start there when the widget shape
 matches your product. Use `run_with_theme` for app-wide tokens and widget style types such as
-`SelectStyle`, `SliderStyle`, and `TextFieldStyle` for local overrides.
+`SelectStyle` and `SliderStyle` for local overrides, and `ButtonStyle` / `TextFieldStyle` for ready-made appearances.
 
 `TextField` and `SecureField` accept `State<String>`; cursor and selection stay internal.
 `SecureField` shares `TextFieldStyle`, displays bullets, and
@@ -474,3 +474,35 @@ fn app(cx: &Cx) -> Element {
 
 `State` is the reactive cell type throughout the toolkit. Buttons and images render
 through ordinary views and text; low-level controls use these same primitives.
+
+### Built-in control styles
+
+Fields and buttons accept theme-aware presets through `.style(...)`. They keep
+matching typography and padding across light/dark appearances:
+
+```rust
+use lemon::prelude::*;
+fn form(cx: &Cx) -> Element {
+    let name = cx.state(String::new());
+    ColumnView::new().spacing(12.0)
+        .child(TextField::new(cx, name).style(TextFieldStyle::Bordered))
+        .child(Button::new(cx, "Save").style(ButtonStyle::Filled))
+        .into_element()
+}
+```
+
+Both enums provide `Clean`, `Bordered`, and `Filled`. Fields default to `Bordered`;
+buttons default to `Filled`. `Clean` removes the resting border and fill while
+retaining focus feedback. `Filled` fields have a surface without a resting border;
+`Filled` buttons use the accent with contrasting text. Explicit overrides apply
+after the preset, regardless of call order; `.decorate(...)` runs last. For example,
+use `.placeholder_color(...)` on a field or `.surface(...)` on a button for custom colors.
+Buttons and fields include subtle hover/focus transitions, overridable through root decoration.
+
+`Select` uses a neutral bordered trigger with separate label and indicator, selected
+and hovered option feedback, and a shadowed overlay that fades in and out. Arrow
+keys navigate, Enter/Space choose, Escape dismisses. The closed menu stays mounted
+at opacity zero and rejects input immediately, including throughout the exit fade.
+`View::interactive(false)` exposes this input behavior for custom overlays too.
+Use `SelectStyle::default().dropdown_transition(transition)` to configure the fade;
+zero duration disables it.

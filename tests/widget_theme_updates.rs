@@ -93,7 +93,7 @@ fn all_widget_defaults_follow_live_theme_without_losing_values_or_local_override
         assert_eq!(select.children.len(), 2, "an open dropdown stays open");
         assert_eq!(
             container(&select.children[0]).paint.resolve().background,
-            Some(theme.colors.accent)
+            Some(theme.colors.surface)
         );
         assert_eq!(
             container(&select.children[1]).paint.resolve().background,

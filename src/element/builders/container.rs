@@ -607,6 +607,21 @@ macro_rules! container_builder {
                 self.0.style.inset = Some(edges);
                 self
             }
+            /// Enables or disables input for this entire subtree (default: enabled).
+            ///
+            /// Layout and painting are preserved. Use `false` while a closing overlay
+            /// fades out so its invisible controls cannot receive focus or clicks.
+            /// Existing focus and pointer capture within the subtree are cleared.
+            ///
+            /// ```
+            /// use lemon::View;
+            /// let closing = View::new().opacity(0.0).interactive(false);
+            /// ```
+            pub fn interactive(mut self, enabled: bool) -> Self {
+                self.0.style.interactive = enabled;
+                self
+            }
+
             /// Includes this node in keyboard focus traversal (Tab / Shift+Tab).
             pub fn focusable(mut self) -> Self {
                 self.0.style.focusable = true;

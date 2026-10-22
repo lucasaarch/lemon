@@ -8,8 +8,29 @@ use crate::{
         style::{Align, Color, ColorSource, Distribute},
         Element,
     },
-    Cx, State,
+    Cx, KeyState, LemonKey, NamedKey, State,
 };
+
+/// Theme-aware button appearance, selected with [`Button::style`].
+///
+/// All presets share typography, padding, disabled behavior and interaction transitions.
+/// `.surface(...)` and `.decorate(...)` can override their defaults.
+///
+/// ```
+/// use lemon::prelude::*;
+/// let cx = Cx::new();
+/// let button = Button::new(&cx, "Save").style(ButtonStyle::Bordered);
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ButtonStyle {
+    /// Accent text on a transparent surface, with subtle hover/pressed feedback.
+    Clean,
+    /// Accent border and text, with subtle hover/pressed feedback.
+    Bordered,
+    /// Accent background and contrasting text. This is the default.
+    #[default]
+    Filled,
+}
 
 /// Theme-aware button widget for app-facing examples and widgets.
 ///
@@ -35,6 +56,7 @@ use crate::{
 /// }
 /// ```
 pub struct Button {
+    style: ButtonStyle,
     label: TextContent,
     on_click: Option<Rc<dyn Fn()>>,
     background: Option<ColorSource>,
@@ -62,6 +84,7 @@ impl Button {
     pub fn new(cx: &Cx, label: impl Into<TextContent>) -> Self {
         let theme = cx.theme();
         Self {
+            style: ButtonStyle::default(),
             label: label.into(),
             on_click: None,
             background: None,
@@ -79,6 +102,14 @@ impl Button {
             pressed: cx.state(false),
             disabled: false,
         }
+    }
+
+    /// Selects a theme-aware preset (default: [`ButtonStyle::Filled`]).
+    ///
+    /// Explicit surface, padding, size and radius overrides remain in effect.
+    pub fn style(mut self, style: ButtonStyle) -> Self {
+        self.style = style;
+        self
     }
 
     /// Called when the button is clicked (after hit-testing).
@@ -117,7 +148,7 @@ impl Button {
         self
     }
 
-    /// Marks this button as disabled, preventing click and pointer interactions.
+    /// Marks this button as disabled, preventing focus, keyboard and pointer interactions.
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
         self
@@ -129,8 +160,10 @@ impl Button {
         let disabled = self.disabled;
         let text_color = if disabled {
             self.disabled_text_color
-        } else {
+        } else if self.style == ButtonStyle::Filled {
             self.text_color
+        } else {
+            self.accent
         };
 
         let background = if let Some(background) = self.background {
@@ -142,8 +175,19 @@ impl Button {
             let accent_hover = self.accent_hover;
             let accent_pressed = self.accent_pressed;
             let disabled_background = self.disabled_background;
+            let filled = self.style == ButtonStyle::Filled;
             ColorSource::Dynamic(Rc::new(move || {
-                if disabled {
+                if !filled {
+                    if disabled {
+                        Color::default()
+                    } else if pressed.get() {
+                        accent.with_alpha(0.16)
+                    } else if hovered.get() {
+                        accent.with_alpha(0.08)
+                    } else {
+                        Color::default()
+                    }
+                } else if disabled {
                     disabled_background
                 } else if pressed.get() {
                     accent_pressed
@@ -159,6 +203,19 @@ impl Button {
             .inset(self.padding)
             .surface(background)
             .rounding(self.radius)
+            .border(
+                if disabled {
+                    self.disabled_text_color
+                } else {
+                    self.accent
+                },
+                if self.style == ButtonStyle::Bordered {
+                    1.0
+                } else {
+                    0.0
+                },
+            )
+            .transition(super::interaction_transition())
             .align(Align::Center)
             .distribute(Distribute::Center)
             .cursor(if disabled {
@@ -182,6 +239,7 @@ impl Button {
             let pressed_up = self.pressed.clone();
             let pressed_leave = self.pressed.clone();
             button = button
+                .focusable()
                 .on_hover_enter(move || hovered_enter.set(true))
                 .on_hover_leave(move || {
                     hovered_leave.set(false);
@@ -191,11 +249,26 @@ impl Button {
                 .on_pointer_up(move |_, _| pressed_up.set(false));
 
             if let Some(on_click) = self.on_click {
-                button = button.action(move || on_click());
+                let keyboard_action = on_click.clone();
+                button = button.action(move || on_click()).on_key_down(move |event| {
+                    if event.state == KeyState::Pressed
+                        && !event.repeat
+                        && matches!(
+                            event.key,
+                            LemonKey::Named(NamedKey::Enter | NamedKey::Space)
+                        )
+                    {
+                        keyboard_action();
+                    }
+                });
             }
         }
 
-        button.into_element()
+        let mut element = button.into_element();
+        if let Element::View(view) = &mut element {
+            view.paint.focus_ring_color = Some(self.accent.into());
+        }
+        element
     }
 }
 

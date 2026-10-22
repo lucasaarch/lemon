@@ -81,8 +81,8 @@ pub use element::builders::{ColumnView, Component, RowView, Text, View};
 pub use font::{register_font_bytes, register_font_path, FontRegistrationError};
 pub use transition::{Transition, TransitionProperty};
 pub use widget::{
-    Button, Image, Scroll, ScrollStyle, SecureField, Select, SelectStyle, Slider, SliderStyle,
-    TextField, TextFieldStyle,
+    Button, ButtonStyle, Image, Scroll, ScrollStyle, SecureField, Select, SelectStyle, Slider,
+    SliderStyle, TextField, TextFieldStyle,
 };
 
 pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
