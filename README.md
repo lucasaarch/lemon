@@ -71,26 +71,26 @@ cargo run --example counter
 
 ## Examples
 
-The workspace includes a few small but representative examples:
+Each example has one job. Sources live in [`crates/lemon/examples`](crates/lemon/examples).
 
-- `counter`: quick start
-- `signals` / `memo` / `effects`: reactive hooks
-- `keys`: keyed list diffing
-- `components`: nested `Component::new`
-- `layout`: flex containers and styling
-- `form`: TextInput, Scroll, and widget integration
-- `custom_select`: rebuilding a select-like control from primitives for full visual control
-- `showcase`: theme, animation, opacity, and platform polish together
+| Example | Topic |
+|---------|-------|
+| `counter` | Minimal signal, reactive text, and button |
+| `reactivity` | Signals, memoized values, and effects (output in the terminal) |
+| `components` | Independent hook state in keyed component instances |
+| `keys` | Stable row identity during removal and reordering |
+| `layout` | Rows, columns, spacing, alignment, and styled views |
+| `form` | TextInput, Select, Slider, and scrollable submission history |
+| `images` | In-memory RGBA pixels and shared image handles |
+| `custom_select` | A mouse-operated picker composed from primitives |
+| `animation` | Animation progress, opacity, and theme tokens |
 
-Run them with:
+Run any example with `cargo run --example <name>`. Start with:
 
 ```bash
 cargo run --example counter
-cargo run --example signals
+cargo run --example reactivity
 cargo run --example form
-cargo run --example rich
-cargo run --example custom_select
-cargo run --example showcase
 ```
 
 ## Mental Model
@@ -109,25 +109,46 @@ This layering matters. Lemon is designed so that state changes do not imply full
 
 ## Repository Layout
 
-Single `lemon` crate at the repo root:
+The repository is a Cargo workspace. Applications continue to depend on `lemon`
+and use the same root/prelude imports.
 
 | Path | Role |
 |------|------|
-| `src/` | Core runtime, element model, diff, retained tree, layout, paint, platform |
-| `src/widget/` | App-facing widgets (`TextInput`, `Scroll`, `Select`, `Slider`, `Image`, …) |
-| `examples/*.rs` | Runnable examples (`cargo run --example <name>`) |
+| `crates/lemon/` | Public facade, compatibility reexports, and app examples |
+| `crates/lemon-reactive/` | Signals, derived values, effects, and observer tracking; no dependencies |
+| `crates/lemon-core/` | Elements, component runtime, diff, retained state, layout, scene construction, and theme |
+| `crates/lemon-ui/` | Composed widgets (`TextInput`, `Scroll`, `Select`, `Slider`, `Image`, …) |
+| `crates/lemon-desktop/` | Native windows, input dispatch, GPU surfaces, and presentation |
+| `crates/lemon/examples/*.rs` | Runnable examples (`cargo run --example <name>`) |
 
-| Example | Topic |
-|---------|--------|
-| `counter` | Quick start |
-| `signals` / `memo` / `effects` | Reactive hooks |
-| `keys` | Keyed list diffing |
-| `components` | `Component::new` |
-| `layout` | Flex layout and styling |
-| `form` | TextInput, Scroll |
-| `rich` | Image, Select, Slider, Scroll showcase |
-| `custom_select` | Primitive-first customization and dynamic paint |
-| `showcase` | Theme, animation, opacity, and platform polish |
+Dependencies flow from `lemon` to `lemon-ui` and `lemon-desktop`, both to
+`lemon-core`, then to `lemon-reactive`. Core does not depend on UI or desktop.
+Primitive element builders remain in core; composed/themed widgets live in UI.
+Layout and paint stay together in core until a concrete independent consumer
+justifies another crate boundary.
+
+`lemon-core::ui::UiState` runs the update/layout/scene pipeline without a native
+window. `lemon-core::host::HostContext` owns an application's window requests and
+scopes its theme. Desktop windows delegate UI processing to this headless state.
+
+Run `make check` from the workspace root to validate every crate and example.
+For focused work, use `cargo test -p lemon-reactive` or `cargo test -p lemon-core`.
+For crates.io releases, publish dependencies before their consumers:
+`lemon-reactive`, `lemon-core`, `lemon-ui`/`lemon-desktop`, then `lemon`.
+All internal dependencies carry both a local path and an exact version.
+
+### Low-level migration notes
+
+- Application imports through `lemon` and `lemon::prelude` remain unchanged.
+- `WindowState` now owns `ui: UiState`; normal field access to the old UI fields
+  forwards through `Deref`/`DerefMut`. Code destructuring `WindowState` must use
+  the new `ui` field.
+- Manual `StyleProps` initializers must set `scroll_content` (normally `false`)
+  or use `..Default::default()`. `Scroll` sets this marker automatically.
+- `Cx::use_theme` reads the originating host's captured theme, not whichever
+  unrelated window happened to activate a theme last.
+- Existing public mutable engine fields remain available for custom hosts.
+  This migration does not remove them or claim to fully encapsulate that API.
 
 ## Current Capabilities
 

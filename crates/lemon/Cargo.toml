@@ -1,0 +1,18 @@
+[package]
+name = "lemon"
+version = "0.2.0-alpha.21"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/lucasaarch/lemon"
+description = "A reactive UI toolkit for Rust"
+keywords = ["ui", "gui", "toolkit", "reactive"]
+categories = ["gui"]
+
+[dependencies]
+lemon-core = { path = "../lemon-core", version = "=0.2.0-alpha.21" }
+lemon-desktop = { path = "../lemon-desktop", version = "=0.2.0-alpha.21" }
+lemon-ui = { path = "../lemon-ui", version = "=0.2.0-alpha.21" }
+
+[dev-dependencies]
+parley = "0.9"
+vello = "0.9"

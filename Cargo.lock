@@ -1050,14 +1050,48 @@ dependencies = [
 name = "lemon"
 version = "0.2.0-alpha.21"
 dependencies = [
- "arboard",
+ "lemon-core",
+ "lemon-desktop",
+ "lemon-ui",
+ "parley",
+ "vello",
+]
+
+[[package]]
+name = "lemon-core"
+version = "0.2.0-alpha.21"
+dependencies = [
  "image",
+ "lemon-reactive",
+ "parley",
+ "taffy",
+ "vello",
+]
+
+[[package]]
+name = "lemon-desktop"
+version = "0.2.0-alpha.21"
+dependencies = [
+ "lemon-core",
  "parley",
  "pollster",
  "taffy",
  "vello",
  "wgpu",
  "winit",
+]
+
+[[package]]
+name = "lemon-reactive"
+version = "0.2.0-alpha.21"
+
+[[package]]
+name = "lemon-ui"
+version = "0.2.0-alpha.21"
+dependencies = [
+ "arboard",
+ "lemon-core",
+ "parley",
 ]
 
 [[package]]

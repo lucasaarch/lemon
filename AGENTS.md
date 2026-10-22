@@ -1,394 +1,104 @@
 # AGENTS.md
 
-This document is the operational policy for AI agents working in this repository.
+Operational policy for agents working on Lemon, a reactive native desktop UI toolkit in Rust.
 
-It is intended to be stable, strict, and difficult to misinterpret.
+## Authority and scope
 
-If another local document conflicts with this file, follow this file.
+- Follow this file over other repository guidance. Use current source and tests to verify implementation details; prose documentation may lag behind them.
+- Ignore `CONTEXT.md` and everything under `docs/superpowers/` for repository guidance.
+- Preserve unrelated working tree changes. Keep changes focused on the requested task.
+- Prefer existing patterns, explicit structs and field propagation, fluent builders, and focused helpers. Introduce abstractions only when the task needs them.
 
-## Authority
+## Workspace and ownership
 
-Agents working in this repository MUST treat the following as authoritative, in this order:
+Run Cargo and Make commands from the workspace root.
 
-1. `AGENTS.md`
-2. the current source tree
-3. the current test suite
+| Path | Owns |
+|------|------|
+| `crates/lemon/src/lib.rs`, `prelude.rs` | Public facade and application imports |
+| `crates/lemon/examples/` | Runnable application examples |
+| `crates/lemon/tests/examples/` | Example tests, included by the corresponding example modules |
+| `crates/lemon-reactive/src/` | Signals, derived values, effects, observer tracking |
+| `crates/lemon-core/src/runtime/` | Component rendering, hook state, tree freezing |
+| `crates/lemon-core/src/element/` | Element model, primitive builders, styles, events |
+| `crates/lemon-core/src/diff/` | Patches, property comparisons, child reconciliation |
+| `crates/lemon-core/src/retained/` | Retained nodes, patch application, focus traversal |
+| `crates/lemon-core/src/layout/`, `paint/` | Geometry/text layout and Vello scene generation |
+| `crates/lemon-core/src/ui.rs` | Headless update, layout, and scene orchestration (`UiState`) |
+| `crates/lemon-core/src/host.rs`, `host_requests.rs` | Host context, scoped theme, window request queue/types |
+| `crates/lemon-ui/src/widget/` | Composed widgets and their exports in `mod.rs` |
+| `crates/lemon-desktop/src/platform/` | Native windows, input dispatch, hit testing, frame scheduling, presentation |
+| `crates/lemon-core/tests/` | Headless pipeline, reconciliation, and invalidation integration tests |
+| `Makefile`, `.github/workflows/ci.yml` | Local quality gates and CI |
 
-Agents MUST ignore `CONTEXT.md` and everything under `docs/superpowers/` for repository-specific guidance. Pretend those files do not exist.
+Internal dependencies flow from `lemon` to `lemon-ui` and `lemon-desktop`, from both to `lemon-core`, and from core to `lemon-reactive`. Reactive has no dependencies. Do not introduce dependencies from core to UI or desktop, including in tests.
 
-## Mission
+## Architecture
 
-The mission is to improve Lemon without degrading its architecture.
+User views build an `Element` tree. `Runtime` renders components and freezes dynamic values; diffing emits patches; `RetainedTree` applies them; layout computes geometry and text layout; paint builds a Vello scene. The desktop host supplies input and presentation around this pipeline. `UiState` runs UI processing without a native window or GPU surface.
 
-Lemon is a reactive native desktop UI toolkit in Rust. The repository is a **single crate** (`lemon`) with:
+- Identify the failing stage before editing. For reactive primitives start in `lemon-reactive`; for hook/render behavior start in core runtime; for reconciliation start in diff/retained; for geometry start in layout; for scene output start in paint; for native input start in desktop platform/hit testing and the affected widget.
+- Keep windowing and native input dispatch in desktop. Keep widget interaction in the owning widget and core event representation. Do not couple core rendering to desktop backends.
+- Apply UI updates through the runtime/diff/retained pipeline; do not bypass it by mutating unrelated layers.
+- Preserve host ownership: window requests and captured themes belong to their originating `HostContext`. Do not replace that ownership with unrelated active global state.
 
-- `src/`: core engine (runtime, element, diff, retained, layout, paint, platform)
-- `src/widget/`: app-facing widgets (`TextInput`, `Scroll`, `Select`, …)
-- `examples/*.rs`: runnable examples via `cargo run --example <name>`
+## Components, hooks, and identity
 
-Examples: `counter` (quick start), `signals`, `memo`, `effects`, `keys`, `components`, `layout`, `form` (TextInput, Scroll), `rich`, `slider`, `images`, `select`, `scroll`
+- Preserve fluent builders: `Column::new()`, `Row::new()`, `View::new()`, `Text::new(...)`.
+- The app-facing `Button` exported by `lemon`/its prelude is the composed widget: `Button::new(cx, label)`. Core also has a lower-level `element::builders::Button::new(label)`; use the appropriate layer.
+- `Component::new` takes `fn(&Cx) -> Element`. Capturing closures do not fit this API.
+- `Component::new_with_props` takes a typed function pointer and `Clone + PartialEq + 'static` props. Use it for components that need per-instance data and isolated hook state. Use keyed primitive rows when isolated component state is unnecessary.
+- Call hooks in a stable order on every render. Widget constructors such as `Button::new` consume hook slots too: do not put them in a changing loop or conditional on a shared `Cx`. Use component scopes or primitives there.
+- Component identity depends on the view function and optional key. Do not change this model incidentally.
+- Keys must be stable and unique among siblings. Use item IDs for reorderable/removable lists. Preserve keyed and unkeyed reconciliation behavior; update diff tests when changing it.
 
-Primary technologies:
+## Propagation and invalidation
 
-- `winit`
-- `wgpu`
-- `vello`
-- `taffy`
-- `parley`
+When adding or changing element/style/widget fields, inspect every applicable path:
 
-## Non-Negotiable Policies
+1. Types, defaults, constructors, and builder methods.
+2. `freeze_element` / `freeze_box` and paint freezing in `crates/lemon-core/src/runtime/mod.rs`.
+3. Diff comparisons and patch payloads in `crates/lemon-core/src/diff/`.
+4. Retained construction and patch application.
+5. Layout, paint, input dispatch, and manual struct literals in tests.
 
-These are hard rules.
+Preserve dirty flag semantics. Determine whether a change needs layout, paint, or both. Accumulate invalidation across update batches and preserve it on failure. Do not eagerly rerun layout or paint where existing dirty flags control the work.
 
-### 1. Preserve layer boundaries
+For input changes, verify the complete path: element/widget API → retained handlers/metadata → dispatch or hit testing → state updates and invalidation → tests. Account for focus, hover, and widget state where relevant.
 
-Agents MUST preserve the current architecture:
+## Public APIs and documentation
 
-1. `runtime`
-2. `element`
-3. `diff`
-4. `retained`
-5. `layout`
-6. `paint`
-7. `platform`
+- Document every introduced or materially changed public API with `///` at its definition, including APIs in the owning crates, builders, hooks, event/style types, and configuration.
+- Describe behavior, parameters/return values, relevant defaults, errors/panics, and non-obvious constraints. Include a compilable example for non-trivial APIs; use `no_run` when a native event loop is required.
+- README changes do not replace Rust API documentation. Use `#[doc(inline)]` on reexports only when the underlying documentation is complete.
+- Check exports in the owning crate, `crates/lemon-ui/src/widget/mod.rs` for widgets, and the facade `crates/lemon/src/lib.rs` / `prelude.rs` as appropriate. Keep lower-level APIs out of the prelude unless the change calls for them.
+- Update an existing example when user-visible behavior changes. Keep examples concise and focused; avoid adding another demo for an already covered capability.
 
-Agents MUST place logic in the layer that owns it.
+## Verification and completion
 
-Agents MUST NOT:
+Before editing, read the owning implementation and nearby tests. For behavior changes, add or update regression tests unless the layer has no meaningful unit-test surface. Prefer headless tests for UI processing; they do not prove native window/input/presentation behavior.
 
-- put windowing or input semantics into `runtime`
-- bypass diffing by mutating unrelated layers directly
-- couple `paint` logic to `platform`
-- couple `element` APIs to backend details unless the codebase already does so
+Run focused checks first, for example:
 
-### 2. Prefer minimal, local changes
+```bash
+cargo test -p lemon-reactive
+cargo test -p lemon-core
+cargo test -p lemon-ui
+cargo test -p lemon --examples
+cargo build --example form
+```
 
-Agents MUST make the smallest coherent change that solves the problem.
+`cargo test` does not run the tests included by example modules. Run `cargo test -p lemon --examples` when changing those examples or their tests.
 
-Agents MUST NOT introduce large abstractions unless the existing code already demands one.
-
-This repository prefers:
-
-- explicit structs
-- explicit field propagation
-- fluent builders
-- focused helper functions
-- tests close to the module they verify
-
-### 3. Keep public APIs deliberate
-
-The public surface is defined primarily by:
-
-- `src/lib.rs` and `src/prelude.rs`
-- `src/widget/` for app-facing widgets
-
-If an agent changes app-facing APIs, it MUST also verify:
-
-- exports remain correct
-- examples still compile
-- tests still pass
-
-### 4. Document public APIs
-
-Agents MUST add or update Rust doc comments (`///`) for every public API they introduce or materially change.
-
-**Public API** means anything reachable from app code, including:
-
-- items re-exported from `src/lib.rs`, `src/prelude.rs`, or `src/widget/`
-- `pub` types, traits, functions, constants, and enum variants in those crates
-- builder methods and hook APIs on `Cx`, widgets, and configuration types (`WindowConfig`, events, styles)
-
-Documentation MUST:
-
-- state what the API does and when to use it
-- document parameters, return values, and important defaults or panics
-- include at least one runnable or compilable example for non-trivial APIs (use `` ``` `` in doc comments; prefer `no_run` when a full window loop is required)
-- call out non-obvious constraints already enforced by the codebase (e.g. `Component::new` function-pointer limits, key requirements for lists)
-
-Agents MUST NOT merge public API changes that leave new or changed symbols undocumented. Updating `README.md` does not satisfy this rule; docs live on the Rust items in source.
-
-### 5. Behavior changes require verification
-
-If behavior changes, agents MUST add or update tests unless the affected layer has no meaningful unit-test surface.
-
-At minimum, agents MUST run the smallest relevant test or build command before claiming success.
-
-### 6. Final quality gates are mandatory
-
-Before considering non-trivial work complete, agents MUST run:
+Before completing non-trivial work, run `make check`, matching CI. It runs:
 
 ```bash
 cargo fmt --all -- --check
 cargo clippy --all-targets -- -D warnings
 cargo test
+cargo build --examples
 ```
 
-If one of these cannot be run, the agent MUST explicitly say so.
+For public API changes, also run `cargo doc --no-deps` when practical and resolve documentation warnings. Compilation of all examples is required after app-facing changes.
 
-## Repository Map
-
-Agents MUST use the real codebase, not assumptions.
-
-High-value files:
-
-- `src/lib.rs`: public exports
-- `src/runtime/`: reactive state and rendering loop
-- `src/element/`: virtual element model, builders, styles, events
-- `src/widget/`: app-facing widgets
-- `src/diff/mod.rs`: patch generation
-- `src/retained/mod.rs`: retained tree and patch application
-- `src/retained/focus.rs`: focus traversal
-- `src/layout/mod.rs`: layout pass and text measurement
-- `src/paint/mod.rs`: Vello scene generation
-- `src/platform/mod.rs`: app shell, input dispatch, redraw loop
-- `src/platform/hit_test.rs`: click and hover hit testing
-- `examples/`: canonical consumer code
-- `.github/workflows/ci.yml`: CI quality gates
-
-## Architecture Contract
-
-Agents SHOULD think of Lemon as this pipeline:
-
-1. user code builds an `Element` tree
-2. `Runtime` renders and re-renders using signals/effects
-3. `diff` emits `Patch` values
-4. `RetainedTree` applies patches
-5. `layout` computes rectangles and text layout
-6. `paint` generates the Vello scene
-7. `platform` handles input and presentation
-
-When debugging, agents MUST identify which stage is failing before editing code.
-
-## API Contract
-
-### Public documentation
-
-Follow Non-Negotiable Policy **4. Document public APIs**. Match the tone and depth of existing crate-level and builder docs in `src/lib.rs` and `element/builders.rs`: short lead sentence, behavior notes, migration hints when renaming, and examples for entry-point APIs.
-
-When exposing a symbol through `lib.rs` or `widget/`, document it at the definition site (or on the re-export with `#[doc(inline)]` only if the underlying docs are already complete).
-
-### Builders
-
-The canonical builder style is:
-
-- `Column::new()`
-- `Row::new()`
-- `View::new()` (formerly `Box_`; see crate docs)
-- `Text::new(...)`
-- `Button::new(...)`
-- `Component::new(...)`
-
-Container builders are backed by `BoxElement`. They own:
-
-- layout style
-- paint style
-- child elements
-- keys
-- event handlers
-
-Agents MUST preserve the fluent builder style.
-
-### Components
-
-This is important:
-
-`Component::new(...)` currently accepts a function pointer API, not an arbitrary capturing closure API.
-
-Agents MUST assume the following:
-
-- `Component::new(some_fn)` is valid
-- `Component::new(move |_cx| ...)` is only valid if it does not capture state
-- captured-state rows in repeated lists should usually be built with keyed elements, not captured components
-
-Agents MUST NOT silently refactor the component identity model unless the task explicitly requires it.
-
-### Keys
-
-Keyed diffing is already part of the architecture.
-
-Agents MUST:
-
-- use stable keys for stable identity
-- preserve keyed vs unkeyed behavior
-- add or update tests in `src/diff/mod.rs` when keyed reconciliation changes
-
-### Events and input
-
-Current event model lives in:
-
-- `src/element/events.rs`
-- `src/retained/mod.rs`
-- `src/platform/hit_test.rs`
-- `src/platform/mod.rs`
-
-Important concepts:
-
-- `KeyEvent`
-- `LemonKey`
-- `NamedKey`
-- `Modifiers`
-- `KeyState`
-- `Cursor`
-- retained `EventHandlers`
-- `StyleProps.focusable`
-
-If an agent adds a new input capability, it MUST verify the full chain:
-
-1. element-level API
-2. retained representation
-3. dispatch or hit testing
-4. dirty flag effects
-5. tests
-
-## Explicit Implementation Rules
-
-### Rule: propagate new fields completely
-
-This codebase has several manual propagation paths.
-
-If an agent adds a field to `StyleProps`, `BoxElement`, `ButtonElement`, or related public data structures, it MUST inspect all of:
-
-- default constructors
-- builder methods
-- `freeze_element` / `freeze_box` in `runtime/mod.rs`
-- retained tree construction
-- tests with manual struct literals
-
-Missing one propagation site is a common source of regressions.
-
-### Rule: protect dirty-flag semantics
-
-Layout and paint are intentionally dirty-flag driven.
-
-Agents MUST NOT eagerly recompute large subsystems when a dirty flag is the established mechanism.
-
-If a change affects:
-
-- text content
-- style
-- input handlers
-- focus
-- hover
-
-then the agent MUST confirm whether `layout_dirty`, `paint_dirty`, or both should change.
-
-### Rule: verify examples after app-facing changes
-
-If an agent changes builders, exports, keys, runtime behavior, or public events, it MUST verify the examples that exercise those surfaces.
-
-Relevant commands:
-
-```bash
-cargo build --example counter
-cargo build --example signals
-cargo build --example memo
-cargo build --example effects
-cargo build --example keys
-cargo build --example components
-cargo build --example layout
-cargo build --example form
-cargo build --example rich
-cargo build --example slider
-cargo build --example images
-cargo build --example select
-cargo build --example scroll
-```
-
-### Rule: prefer extending existing patterns
-
-Agents SHOULD follow patterns already present in the repository instead of inventing new styles.
-
-Examples:
-
-- tests near the module under test
-- builder methods in `element/builders.rs`
-- exports in `lib.rs`
-- app-facing widgets in `src/widget/` and `prelude`
-
-## Known Pitfalls
-
-Agents MUST be aware of these repository-specific traps:
-
-1. Adding fields to `StyleProps` or `BoxElement` often breaks manual initializers in tests.
-2. Adding widget capabilities without exporting them from `src/widget/` and `prelude` leaves examples behind.
-3. Input changes often require edits in more than one place: builders, retained handlers, hit testing, and platform dispatch.
-4. `clippy -D warnings` is strict. Structural lint failures count as broken work.
-5. `README.md` may lag behind the actual code. Source and tests win.
-6. The component system has identity semantics tied to function identity and keys. Do not casually rewrite that model.
-
-## Playbook
-
-This section is procedural. Agents SHOULD follow it in order.
-
-### Playbook A: when implementing a feature
-
-1. Identify the owning layer.
-2. Read the nearest existing implementation in that layer.
-3. Find tests in that module before editing.
-4. Make the smallest coherent code change.
-5. Add or update tests.
-6. Run the smallest relevant command.
-7. Run full quality gates (`make check`).
-
-### Playbook B: when debugging a bug
-
-Classify the failure first.
-
-If it is:
-
-- state/update bug: start in `runtime/`
-- reconciliation bug: start in `diff/mod.rs`
-- stale retained state bug: start in `retained/mod.rs`
-- click/hover/focus/keyboard bug: start in `platform/mod.rs` and `platform/hit_test.rs`
-- visual geometry bug: start in `layout/mod.rs`
-- paint-only bug: start in `paint/mod.rs`
-
-Agents MUST NOT start patching random downstream files before locating the failing stage.
-
-### Playbook C: when adding a new app-facing capability
-
-1. implement the core data or behavior in the appropriate `src/` layer
-2. expose the builder or type from `src/widget/` when app-facing
-3. add or update `///` documentation on every new or changed public item
-4. re-export from `src/lib.rs` and `src/prelude.rs` when public
-5. update or add an `examples/<name>.rs` example if the feature is visible to users
-6. run `cargo build --example <name>` for affected examples
-7. confirm `cargo doc --no-deps` builds without doc warnings when practical
-
-### Playbook D: when reviewing a proposed change
-
-Review in this order:
-
-1. architecture violation risk
-2. missing propagation risk
-3. dirty-flag correctness
-4. keyed identity correctness
-5. public API breakage
-6. missing or stale public API documentation
-7. missing tests
-8. formatting/lint/test status
-
-## Completion Standard
-
-An agent SHOULD only consider work complete when all of the following are true:
-
-- the change is in the correct architectural layer
-- tests covering the changed behavior exist or were updated
-- every new or changed public API has accurate `///` documentation
-- examples still build if the public surface changed
-- `cargo fmt --all -- --check` passes
-- `cargo clippy --all-targets -- -D warnings` passes
-- `cargo test` passes
-
-## Short Version
-
-If an agent reads nothing else, it MUST remember this:
-
-- obey this file over local prose docs
-- preserve the runtime → diff → retained → layout → paint → platform pipeline
-- keep changes small and local
-- propagate new fields everywhere
-- do not misuse `Component::new(...)` as if it accepted arbitrary captured closures
-- document every public API you add or change (`///`, with examples when non-trivial)
-- verify examples after public API changes
-- never skip `fmt`, `clippy`, or `cargo test`
+Report what changed, what was verified, and any failed or unavailable checks. Distinguish build/test evidence from visual or native runtime verification. Do not claim completion while required checks fail without explaining the blocker.
