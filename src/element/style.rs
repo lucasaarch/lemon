@@ -202,6 +202,8 @@ impl CornerRadii {
 /// rather than constructing `StyleProps` directly.
 #[derive(Clone, Debug, PartialEq)]
 pub struct StyleProps {
+    /// Implicit visual transition for this subtree; absent by default.
+    pub transition: Option<crate::transition::Transition>,
     pub width: Option<Dimension>,
     pub height: Option<Dimension>,
     pub padding: Option<Edges<f32>>,
@@ -252,6 +254,7 @@ pub struct StyleProps {
 impl Default for StyleProps {
     fn default() -> Self {
         Self {
+            transition: None,
             width: None,
             height: None,
             padding: None,

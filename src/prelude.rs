@@ -26,3 +26,5 @@ pub use crate::Signal;
 pub use crate::State;
 
 pub use crate::element::decoration::Decorate;
+
+pub use crate::transition::{Transition, TransitionProperty};

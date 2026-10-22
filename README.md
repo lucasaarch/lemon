@@ -423,3 +423,33 @@ let row = RowView::new().fill_width().distribute(Distribute::Between);
 let badge = View::new().position(Position::Fixed).top(16.0).right(16.0)
     .width(80.0).height(32.0);
 ```
+
+### Visual transitions
+
+Apply `.transition(...)` to a view, or use `.decorate(...)` on a widget. The setting
+covers its subtree; a descendant can override it. Focus, hover, theme and reactive
+color changes then animate without app-owned animation state:
+
+```rust
+use std::time::Duration;
+use lemon::prelude::*;
+fn field(cx: &Cx) -> Element {
+    let value = cx.state(String::new());
+    TextField::new(cx, value).decorate(|view| view.transition(
+        Transition::new(Duration::from_millis(180)).easing(Easing::EaseOut)
+    ))
+}
+```
+
+Supported properties: `Surface` (solid color), `BorderColor`, `FocusRing`,
+`TextColor`, `Opacity`, `Rounding`, and `BorderWidth`. All are enabled by default;
+`.properties([TransitionProperty::Surface, TransitionProperty::BorderColor])`
+selects only those properties. Duration defaults to 150 ms with linear easing.
+Initial mounting is immediate; interrupted transitions continue from the current
+appearance. Selected properties restart together on a new target. Zero duration
+snaps to the target. Layout dimensions, gradients, shadows and images change
+immediately. Pointer interaction always uses the current layout.
+
+The `animation` example combines explicit `cx.motion(...)` with implicit transitions.
+Native windows schedule frames automatically; custom hosts use `UiState::update`
+or `update_at` with a monotonic timestamp and honor their host's frame requests.

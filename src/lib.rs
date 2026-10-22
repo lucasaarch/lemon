@@ -67,6 +67,7 @@ pub mod paint;
 pub mod retained;
 pub mod runtime;
 pub mod theme;
+pub mod transition;
 pub mod ui;
 pub mod widget;
 
@@ -77,6 +78,7 @@ pub use animation::{AnimRegistry, AnimSlot, AnimationConfig, AnimationHandle, Ea
 pub use asset::ImageHandle;
 pub use element::builders::{ColumnView, Component, RowView, Text, View};
 pub use font::{register_font_bytes, register_font_path, FontRegistrationError};
+pub use transition::{Transition, TransitionProperty};
 pub use widget::{
     Button, Image, Scroll, ScrollStyle, SecureField, Select, SelectStyle, Slider, SliderStyle,
     TextField, TextFieldStyle,

@@ -1,4 +1,4 @@
-//! A themed view animates its width and opacity. Click Play to start or restart it.
+//! Explicit motion controls size; implicit transitions handle colors, hover and focus.
 
 use std::time::Duration;
 
@@ -10,6 +10,14 @@ fn app(cx: &Cx) -> Element {
     let animation =
         cx.motion(AnimationConfig::new(Duration::from_millis(1200)).easing(Easing::EaseInOut));
     let progress = animation.progress();
+    let value = cx.state(String::new());
+    let alternate = cx.state(false);
+    let color = if alternate.get() {
+        theme.colors.surface_hover
+    } else {
+        theme.colors.accent
+    };
+    let transition = Transition::new(Duration::from_millis(180)).easing(Easing::EaseOut);
 
     ColumnView::new()
         .inset(theme.spacing.lg)
@@ -22,11 +30,19 @@ fn app(cx: &Cx) -> Element {
                 .height(48.0)
                 .rounding(theme.radius.md)
                 .opacity(0.3 + progress * 0.7)
-                .surface(theme.colors.accent),
-            Button::new(cx, "Play").action(move || {
-                animation.reset();
-                animation.play();
-            }),
+                .surface(color)
+                .transition(transition.properties([TransitionProperty::Surface])),
+            TextField::new(cx, value)
+                .placeholder("Click to focus, then click outside")
+                .width(280.0)
+                .decorate(|view| view.transition(transition)),
+            Button::new(cx, "Play")
+                .action(move || {
+                    animation.reset();
+                    animation.play();
+                    alternate.update(|value| *value = !*value);
+                })
+                .decorate(|view| view.transition(transition)),
         ])
         .into_element()
 }
@@ -38,7 +54,7 @@ fn main() {
     run_with_theme(
         WindowConfig::default()
             .title("Lemon — animation")
-            .size(340.0, 240.0),
+            .size(360.0, 300.0),
         themes,
         app,
     );

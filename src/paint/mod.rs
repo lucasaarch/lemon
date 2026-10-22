@@ -19,9 +19,21 @@ fn clip_everything() -> Rect {
 }
 
 #[derive(Clone, Copy)]
-struct PaintContext {
+struct PaintContext<'a> {
     /// Global scale applied to all logical coordinates (HiDPI).
     base: Affine,
+    visuals: Option<&'a std::collections::HashMap<NodeId, crate::transition::Visual>>,
+}
+
+impl PaintContext<'_> {
+    fn visual(&self, node: &RetainedNode) -> Option<&crate::transition::Visual> {
+        self.visuals
+            .and_then(|visuals| visuals.get(&node.taffy_id?))
+    }
+    fn paint<'a>(&'a self, node: &'a RetainedNode) -> &'a crate::element::style::PaintData {
+        self.visual(node)
+            .map_or(&node.paint, |visual| &visual.paint)
+    }
 }
 
 /// Counters from a single [`paint_pass`] (useful in tests and profiling).
@@ -44,13 +56,33 @@ pub fn paint_pass(
     focused: Option<NodeId>,
     caret_visible: bool,
 ) -> PaintStats {
+    paint_pass_with_visuals(
+        tree,
+        layout,
+        scene,
+        scale_factor,
+        focused,
+        caret_visible,
+        None,
+    )
+}
+
+pub(crate) fn paint_pass_with_visuals(
+    tree: &RetainedTree,
+    layout: &LayoutMap,
+    scene: &mut Scene,
+    scale_factor: f32,
+    focused: Option<NodeId>,
+    caret_visible: bool,
+    visuals: Option<&std::collections::HashMap<NodeId, crate::transition::Visual>>,
+) -> PaintStats {
     let mut stats = PaintStats::default();
     let base = if scale_factor == 1.0 {
         Affine::IDENTITY
     } else {
         Affine::scale(f64::from(scale_factor))
     };
-    let ctx = PaintContext { base };
+    let ctx = PaintContext { base, visuals };
 
     scene.push_layer(
         Fill::NonZero,
@@ -143,7 +175,10 @@ fn paint_node<'a>(
         return;
     };
 
-    let opacity = resolved_opacity(node.style.opacity);
+    let opacity = resolved_opacity(
+        ctx.visual(node)
+            .map_or(node.style.opacity, |visual| visual.opacity),
+    );
     let use_opacity_layer = opacity < 1.0;
     if use_opacity_layer {
         // Keep overflow-visible descendants paintable outside the node's layout bounds.
@@ -253,21 +288,22 @@ fn paint_container(
         return;
     }
 
-    let shape = layout_rect_to_rounded(rect, &node.paint.radius);
+    let paint = ctx.paint(node);
+    let shape = layout_rect_to_rounded(rect, &paint.radius);
 
-    if let Some(shadow) = node.paint.box_shadow {
-        paint_box_shadow(scene, ctx, rect, &node.paint.radius, shadow, stats);
+    if let Some(shadow) = paint.box_shadow {
+        paint_box_shadow(scene, ctx, rect, &paint.radius, shadow, stats);
     }
 
-    if let Some(gradient) = node.paint.background_gradient {
+    if let Some(gradient) = paint.background_gradient {
         fill_gradient_rounded_rect(scene, ctx, rect, &shape, gradient, stats);
-    } else if let Some(background) = node.paint.background {
+    } else if let Some(background) = paint.background {
         fill_rounded_rect(scene, ctx, &shape, background, stats);
     }
 
-    let widths = &node.paint.border_width;
+    let widths = &paint.border_width;
     if widths.any_positive() {
-        if let Some(border_color) = uniform_border_color(&node.paint.border_color) {
+        if let Some(border_color) = uniform_border_color(&paint.border_color) {
             if widths.is_uniform() {
                 stroke_rounded_rect(
                     scene,
@@ -282,9 +318,9 @@ fn paint_container(
                     scene,
                     ctx,
                     rect,
-                    &node.paint.radius,
+                    &paint.radius,
                     *widths,
-                    &node.paint.border_color,
+                    &paint.border_color,
                     stats,
                 );
             }
@@ -293,9 +329,9 @@ fn paint_container(
                 scene,
                 ctx,
                 rect,
-                &node.paint.radius,
+                &paint.radius,
                 *widths,
-                &node.paint.border_color,
+                &paint.border_color,
                 stats,
             );
         }
@@ -399,7 +435,7 @@ fn paint_image(node: &RetainedNode, rect: &LayoutRect, scene: &mut Scene, ctx: P
         return;
     }
 
-    let Some(handle) = node.paint.image.as_ref() else {
+    let Some(handle) = ctx.paint(node).image.as_ref() else {
         return;
     };
 
@@ -454,7 +490,10 @@ fn paint_text(
         return;
     };
 
-    let color = crate::element::style::resolved_text_color(&text.style);
+    let color = ctx
+        .visual(node)
+        .and_then(|visual| visual.text_color)
+        .unwrap_or_else(|| crate::element::style::resolved_text_color(&text.style));
     let (origin_x, origin_y) = if matches!(node.kind, RetainedKind::Button) {
         let content = node
             .style
@@ -648,21 +687,25 @@ fn paint_focus_ring(
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
-    if node.text_input.is_none() || focused != Some(taffy_id) {
+    if node.text_input.is_none() {
+        return;
+    }
+    let color = if let Some(visual) = ctx.visual(node) {
+        visual.paint.focus_ring_color.unwrap_or_default()
+    } else {
+        if focused != Some(taffy_id) {
+            return;
+        }
+        node.paint
+            .focus_ring_color
+            .unwrap_or(crate::theme::current_theme().chrome.focus_ring)
+    };
+    if color.a <= 0.0 {
         return;
     }
 
-    let shape = layout_rect_to_rounded(rect, &node.paint.radius);
-    stroke_rounded_rect(
-        scene,
-        ctx,
-        &shape,
-        node.paint
-            .focus_ring_color
-            .unwrap_or(crate::theme::current_theme().chrome.focus_ring),
-        2.0,
-        stats,
-    );
+    let shape = layout_rect_to_rounded(rect, &ctx.paint(node).radius);
+    stroke_rounded_rect(scene, ctx, &shape, color, 2.0, stats);
 }
 
 fn first_text_descendant(node: &RetainedNode) -> Option<&RetainedNode> {
@@ -762,7 +805,10 @@ fn paint_text_input_caret(
     );
     // Match the visible text color (value or placeholder), not only `chrome.caret`, so the
     // caret stays visible when the app background does not match the active theme palette.
-    let caret_color = crate::element::style::resolved_text_color(&text_style);
+    let caret_color = text_node
+        .and_then(|node| ctx.visual(node))
+        .and_then(|visual| visual.text_color)
+        .unwrap_or_else(|| crate::element::style::resolved_text_color(&text_style));
     scene.stroke(
         &Stroke::new(f64::from(CARET_STROKE)),
         ctx.base,
@@ -823,7 +869,7 @@ fn paint_widget_scroll_bar(
         Fill::NonZero,
         ctx.base,
         to_peniko_color(
-            node.paint
+            ctx.paint(node)
                 .scroll_track_color
                 .unwrap_or(crate::theme::current_theme().chrome.scrollbar_track),
         ),
@@ -846,7 +892,7 @@ fn paint_widget_scroll_bar(
         Fill::NonZero,
         ctx.base,
         to_peniko_color(
-            node.paint
+            ctx.paint(node)
                 .scroll_thumb_color
                 .unwrap_or(crate::theme::current_theme().chrome.scrollbar_thumb),
         ),
@@ -897,7 +943,7 @@ fn paint_scrollbar(
         Fill::NonZero,
         ctx.base,
         to_peniko_color(
-            node.paint
+            ctx.paint(node)
                 .scroll_track_color
                 .unwrap_or(crate::theme::current_theme().chrome.scrollbar_track),
         ),
@@ -920,7 +966,7 @@ fn paint_scrollbar(
         Fill::NonZero,
         ctx.base,
         to_peniko_color(
-            node.paint
+            ctx.paint(node)
                 .scroll_thumb_color
                 .unwrap_or(crate::theme::current_theme().chrome.scrollbar_thumb),
         ),

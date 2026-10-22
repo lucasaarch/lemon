@@ -627,6 +627,20 @@ macro_rules! container_builder {
                 self.0.scroll_bar = true;
                 self
             }
+            /// Animates visual changes in this view and its descendants.
+            ///
+            /// Initial mounting is immediate. Layout changes are not animated.
+            /// Use through `.decorate(...)` to transition a widget's default states.
+            ///
+            /// ```
+            /// use lemon::{View, Transition};
+            /// let view = View::new().transition(Transition::default());
+            /// ```
+            pub fn transition(mut self, transition: crate::transition::Transition) -> Self {
+                self.0.style.transition = Some(transition);
+                self
+            }
+
             /// Sets normal, absolute, fixed or sticky positioning (default: relative).
             ///
             /// Pair with edge offsets; unspecified edges remain automatic. Absolute and

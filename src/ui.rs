@@ -6,9 +6,7 @@ use vello::Scene;
 
 use crate::element::Element;
 use crate::retained::RetainedError;
-use crate::{
-    layout_pass, paint_pass, sync_scroll_layout_max, Cx, LayoutMap, RetainedTree, Runtime, Viewport,
-};
+use crate::{layout_pass, sync_scroll_layout_max, Cx, LayoutMap, RetainedTree, Runtime, Viewport};
 
 /// UI processing state shared by desktop hosts and headless tests.
 ///
@@ -30,6 +28,8 @@ use crate::{
 /// ui.layout_dirty = false;
 /// ```
 pub struct UiState {
+    pub(crate) transitions: crate::transition::Transitions,
+    pub(crate) transitions_active: bool,
     pub(crate) input: crate::input::InputState,
     pub(crate) host: crate::host::HostContext,
     pub(crate) viewport: Option<Viewport>,
@@ -53,6 +53,8 @@ pub struct UiState {
 impl Default for UiState {
     fn default() -> Self {
         Self {
+            transitions: crate::transition::Transitions::default(),
+            transitions_active: false,
             input: crate::input::InputState::default(),
             host: crate::host::HostContext::current(),
             viewport: None,
@@ -215,6 +217,37 @@ impl UiState {
         focused: Option<NodeId>,
         caret_visible: bool,
     ) -> Result<(), RetainedError> {
+        self.update_at(
+            viewport,
+            scale,
+            focused,
+            caret_visible,
+            std::time::Instant::now(),
+        )
+    }
+
+    /// Updates UI processing using an explicit monotonic transition timestamp.
+    ///
+    /// Custom hosts and tests can drive transitions deterministically. Pass increasing
+    /// timestamps; an earlier timestamp is clamped to the start of each transition.
+    /// Like [`Self::update`], this applies pending changes and refreshes dirty layout.
+    ///
+    /// ```
+    /// use lemon::{View, Viewport, ui::UiState};
+    /// let mut ui = UiState::default();
+    /// ui.mount(|_| View::new().into_element()).unwrap();
+    /// ui.update_at(Viewport { width: 400.0, height: 300.0 }, 1.0, None, true,
+    ///     std::time::Instant::now()).unwrap();
+    /// ```
+    pub fn update_at(
+        &mut self,
+        viewport: Viewport,
+        scale: f32,
+        focused: Option<NodeId>,
+        caret_visible: bool,
+        now: std::time::Instant,
+    ) -> Result<(), RetainedError> {
+        let _scope = self.host.enter();
         self.apply_updates()?;
         if self.viewport != Some(viewport) {
             self.invalidate_layout();
@@ -226,19 +259,28 @@ impl UiState {
         if self.layout_dirty || self.retained.as_ref().is_some_and(|tree| tree.layout_dirty) {
             self.layout(viewport)?;
         }
+        if let Some(root) = self.retained.as_ref().and_then(|tree| tree.root.as_ref()) {
+            let active = self.transitions.update(root, focused, now);
+            self.paint_dirty |= active || self.transitions_active;
+            self.transitions_active = active;
+            if active {
+                self.host.animations().request_frame();
+            }
+        }
         if self.paint_dirty {
             let tree = self
                 .retained
                 .as_ref()
                 .ok_or(RetainedError::UnsupportedElement("UI not mounted"))?;
             self.scene.reset();
-            paint_pass(
+            crate::paint::paint_pass_with_visuals(
                 tree,
                 &self.layout_map,
                 &mut self.scene,
                 scale,
                 focused,
                 caret_visible,
+                Some(&self.transitions.visuals),
             );
             self.paint_dirty = false;
             self.last_paint = Some(paint_context);
