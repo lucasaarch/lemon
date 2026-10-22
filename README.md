@@ -228,6 +228,13 @@ text colors, and the window background update together without resetting compone
 state. Read semantic tokens with `cx.theme()` instead of hardcoding a light/dark
 surface and relying on an unrelated foreground color.
 
+The built-in palettes live in [`src/theme.rs`](src/theme.rs): edit
+`Theme::default_dark()` or `Theme::default_light()` to change Lemon's defaults.
+For application-specific changes, edit a `ThemePair` before passing it to
+`run_with_theme`. Its `colors` controls fills, text and borders; `chrome` controls
+focus rings, carets and scrollbars; `typography`, `spacing` and `radius` control
+the remaining shared defaults.
+
 Applications can supply their own light/dark pair using the same entry point:
 
 ```rust
@@ -242,6 +249,8 @@ let mut light = Theme::default_light();
 let mut dark = Theme::default_dark();
 light.radius.md = 10.0;
 dark.radius.md = 10.0;
+dark.colors.background = Color::rgb8(24, 24, 24);
+dark.colors.surface = Color::rgb8(36, 36, 36);
 run_with_theme(WindowConfig::default(), ThemePair::new(light, dark), app);
 ```
 

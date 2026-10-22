@@ -78,28 +78,41 @@ impl Theme {
         }
     }
 
-    /// Returns the default dark theme.
+    /// Returns Lemon's neutral graphite dark palette, typography, spacing and corner radii.
+    ///
+    /// Edit this constructor to change Lemon's built-in dark appearance. To customize
+    /// only your application, modify a returned theme and put it in a [`ThemePair`];
+    /// passing the pair to `run_with_theme` preserves system appearance switching.
+    /// Passing a single `Theme` instead keeps the application on that fixed palette.
+    ///
+    /// ```no_run
+    /// use lemon::{run_with_theme, Color, ThemePair, View, WindowConfig};
+    /// let mut themes = ThemePair::default();
+    /// themes.dark.colors.background = Color::rgb8(24, 24, 24);
+    /// themes.dark.colors.surface = Color::rgb8(36, 36, 36);
+    /// run_with_theme(WindowConfig::default(), themes, |_| View::new().fill().into_element());
+    /// ```
     pub fn default_dark() -> Self {
         Self {
             colors: ColorTokens {
-                background: Color::rgb8(0, 0, 0),
-                surface: Color::rgb8(35, 35, 52),
-                surface_hover: Color::rgb8(45, 45, 66),
-                surface_pressed: Color::rgb8(55, 55, 78),
-                foreground: Color::rgb8(255, 255, 255),
-                foreground_secondary: Color::rgb8(156, 163, 175),
-                foreground_disabled: Color::rgb8(107, 114, 128),
+                background: Color::rgb8(24, 24, 24),
+                surface: Color::rgb8(34, 34, 34),
+                surface_hover: Color::rgb8(44, 44, 44),
+                surface_pressed: Color::rgb8(54, 54, 54),
+                foreground: Color::rgb8(237, 237, 237),
+                foreground_secondary: Color::rgb8(173, 173, 173),
+                foreground_disabled: Color::rgb8(117, 117, 117),
                 on_accent: Color::rgb8(255, 255, 255),
                 accent: Color::rgb8(59, 130, 246),
                 accent_hover: Color::rgb8(37, 99, 235),
                 accent_pressed: Color::rgb8(29, 78, 216),
                 error: Color::rgb8(248, 113, 113),
-                border: Color::rgb8(80, 80, 110),
+                border: Color::rgb8(72, 72, 72),
             },
             chrome: WidgetChromeTokens {
-                scrollbar_track: Color::rgb8(30, 30, 40),
-                scrollbar_thumb: Color::rgb8(120, 120, 140),
-                caret: Color::rgb8(235, 235, 240),
+                scrollbar_track: Color::rgb8(30, 30, 30),
+                scrollbar_thumb: Color::rgb8(101, 101, 101),
+                caret: Color::rgb8(237, 237, 237),
                 focus_ring: Color::rgb8(59, 130, 246),
             },
             typography: TypographyTokens {
@@ -279,7 +292,7 @@ pub fn current_theme() -> Theme {
 
 #[cfg(test)]
 mod tests {
-    use super::{current_theme, set_active_theme, Theme, WidgetChromeTokens};
+    use super::{current_theme, set_active_theme, Theme, ThemePair, WidgetChromeTokens};
     use crate::element::style::Color;
 
     #[test]
@@ -323,10 +336,48 @@ mod tests {
         assert_ne!(theme.colors.foreground_disabled, theme.colors.foreground);
         // Focus ring matches the accent blue.
         assert_eq!(theme.chrome.focus_ring, Color::rgb8(59, 130, 246));
-        // Caret matches the light foreground for a dark background.
-        assert_eq!(theme.chrome.caret, Color::rgb8(235, 235, 240));
+        // Caret follows the palette's primary foreground.
+        assert_eq!(theme.chrome.caret, theme.colors.foreground);
         // Scrollbar colors are distinguishable.
         assert_ne!(theme.chrome.scrollbar_track, theme.chrome.scrollbar_thumb);
+    }
+
+    #[test]
+    fn dark_neutral_surfaces_have_distinct_states_and_legible_text() {
+        let theme = Theme::default_dark();
+        let colors = &theme.colors;
+        let surfaces = [
+            colors.background,
+            colors.surface,
+            colors.surface_hover,
+            colors.surface_pressed,
+        ];
+        for color in surfaces {
+            assert_eq!(color.r, color.g);
+            assert_eq!(color.g, color.b);
+        }
+        assert!(colors.background.r > 0.0);
+        for pair in surfaces.windows(2) {
+            assert!(pair[0].r < pair[1].r);
+        }
+        assert!(colors.border.r > colors.surface_pressed.r);
+
+        fn luminance(color: Color) -> f32 {
+            fn linear(channel: f32) -> f32 {
+                if channel <= 0.04045 {
+                    channel / 12.92
+                } else {
+                    ((channel + 0.055) / 1.055).powf(2.4)
+                }
+            }
+            0.2126 * linear(color.r) + 0.7152 * linear(color.g) + 0.0722 * linear(color.b)
+        }
+        for surface in surfaces {
+            let background = luminance(surface);
+            assert!((luminance(colors.foreground) + 0.05) / (background + 0.05) >= 7.0);
+            assert!((luminance(colors.foreground_secondary) + 0.05) / (background + 0.05) >= 4.5);
+        }
+        assert_eq!(ThemePair::default().dark, theme);
     }
 
     #[test]
