@@ -1086,13 +1086,6 @@ name = "lemon-reactive"
 version = "0.2.0-alpha.21"
 
 [[package]]
-name = "lemon-ui"
-version = "0.2.0-alpha.21"
-dependencies = [
- "lemon-core",
-]
-
-[[package]]
 name = "libc"
 version = "0.2.186"
 source = "registry+https://github.com/rust-lang/crates.io-index"

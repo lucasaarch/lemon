@@ -40,22 +40,12 @@ impl Button {
         self
     }
 
-    /// Deprecated name for [`action`](Self::action).
-    #[deprecated(note = "use .action(...) instead")]
-    pub fn on_click(self, f: impl Fn() + 'static) -> Self {
-        self.action(f)
-    }
     /// Uniform padding on all sides, in logical points.
     pub fn inset(mut self, v: f32) -> Self {
         self.style.padding = Some(Edges::all(v));
         self
     }
 
-    /// Deprecated name for [`inset`](Self::inset).
-    #[deprecated(note = "use .inset(...) instead")]
-    pub fn padding(self, v: f32) -> Self {
-        self.inset(v)
-    }
     /// Solid fill behind the label ([`crate::Color`] or reactive [`ColorSource`]).
     ///
     /// Calling this clears any previously configured [`gradient`](Self::gradient).
@@ -65,11 +55,6 @@ impl Button {
         self
     }
 
-    /// Deprecated name for [`surface`](Self::surface).
-    #[deprecated(note = "use .surface(...) instead")]
-    pub fn background(self, c: impl Into<ColorSource>) -> Self {
-        self.surface(c)
-    }
     /// Two-stop linear gradient fill painted behind the label.
     pub fn gradient(mut self, gradient: LinearGradient) -> Self {
         self.paint.background_gradient = Some(gradient);
@@ -77,33 +62,18 @@ impl Button {
         self
     }
 
-    /// Deprecated name for [`gradient`](Self::gradient).
-    #[deprecated(note = "use .gradient(...) instead")]
-    pub fn linear_gradient(self, gradient: LinearGradient) -> Self {
-        self.gradient(gradient)
-    }
     /// Blurred outer shadow painted before the button background.
     pub fn shadow(mut self, shadow: BoxShadow) -> Self {
         self.paint.box_shadow = Some(shadow);
         self
     }
 
-    /// Deprecated name for [`shadow`](Self::shadow).
-    #[deprecated(note = "use .shadow(...) instead")]
-    pub fn box_shadow(self, shadow: BoxShadow) -> Self {
-        self.shadow(shadow)
-    }
     /// Sets a uniform corner radius in logical points.
     pub fn rounding(mut self, r: f32) -> Self {
         self.paint.radius = CornerRadii::all(r);
         self
     }
 
-    /// Deprecated name for [`rounding`](Self::rounding).
-    #[deprecated(note = "use .rounding(...) instead")]
-    pub fn radius(self, r: f32) -> Self {
-        self.rounding(r)
-    }
     /// Fixed width in logical points.
     pub fn width(mut self, v: f32) -> Self {
         self.style.width = Some(crate::element::style::Dimension::Points(v));

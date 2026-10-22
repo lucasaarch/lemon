@@ -35,22 +35,10 @@ impl SelectStyle {
         self
     }
 
-    /// Deprecated name for [`trigger_inset`](Self::trigger_inset).
-    #[deprecated(note = "use .trigger_inset(...) instead")]
-    pub fn trigger_padding(self, value: f32) -> Self {
-        self.trigger_inset(value)
-    }
-
     /// Overrides trigger background color.
     pub fn trigger_surface(mut self, color: Color) -> Self {
         self.trigger_background = Some(color);
         self
-    }
-
-    /// Deprecated name for [`trigger_surface`](Self::trigger_surface).
-    #[deprecated(note = "use .trigger_surface(...) instead")]
-    pub fn trigger_background(self, color: Color) -> Self {
-        self.trigger_surface(color)
     }
 
     /// Overrides trigger corner radius in logical points.
@@ -59,22 +47,10 @@ impl SelectStyle {
         self
     }
 
-    /// Deprecated name for [`trigger_rounding`](Self::trigger_rounding).
-    #[deprecated(note = "use .trigger_rounding(...) instead")]
-    pub fn trigger_radius(self, value: f32) -> Self {
-        self.trigger_rounding(value)
-    }
-
     /// Overrides dropdown background color.
     pub fn dropdown_surface(mut self, color: Color) -> Self {
         self.dropdown_background = Some(color);
         self
-    }
-
-    /// Deprecated name for [`dropdown_surface`](Self::dropdown_surface).
-    #[deprecated(note = "use .dropdown_surface(...) instead")]
-    pub fn dropdown_background(self, color: Color) -> Self {
-        self.dropdown_surface(color)
     }
 
     /// Overrides dropdown border color.
@@ -89,22 +65,10 @@ impl SelectStyle {
         self
     }
 
-    /// Deprecated name for [`dropdown_rounding`](Self::dropdown_rounding).
-    #[deprecated(note = "use .dropdown_rounding(...) instead")]
-    pub fn dropdown_radius(self, value: f32) -> Self {
-        self.dropdown_rounding(value)
-    }
-
     /// Overrides option-item padding in logical points.
     pub fn item_inset(mut self, value: f32) -> Self {
         self.item_padding = Some(value);
         self
-    }
-
-    /// Deprecated name for [`item_inset`](Self::item_inset).
-    #[deprecated(note = "use .item_inset(...) instead")]
-    pub fn item_padding(self, value: f32) -> Self {
-        self.item_inset(value)
     }
 
     /// Overrides dropdown option label color.
@@ -258,22 +222,10 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
         self
     }
 
-    /// Deprecated name for [`trigger_surface`](Self::trigger_surface).
-    #[deprecated(note = "use .trigger_surface(...) instead")]
-    pub fn trigger_background(self, color: Color) -> Self {
-        self.trigger_surface(color)
-    }
-
     /// Overrides dropdown background color for this widget.
     pub fn dropdown_surface(mut self, color: Color) -> Self {
         self.style.dropdown_background = Some(color);
         self
-    }
-
-    /// Deprecated name for [`dropdown_surface`](Self::dropdown_surface).
-    #[deprecated(note = "use .dropdown_surface(...) instead")]
-    pub fn dropdown_background(self, color: Color) -> Self {
-        self.dropdown_surface(color)
     }
 
     /// Overrides dropdown border color for this widget.

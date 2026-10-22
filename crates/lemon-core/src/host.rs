@@ -33,7 +33,6 @@ pub struct HostContext {
 }
 
 thread_local! {
-    static FALLBACK: HostContext = HostContext::new(Theme::default());
     static ACTIVE: RefCell<Option<HostContext>> = const { RefCell::new(None) };
 }
 
@@ -90,13 +89,7 @@ impl HostContext {
     pub(crate) fn current() -> Self {
         ACTIVE
             .with(|active| active.borrow().clone())
-            .unwrap_or_else(|| {
-                FALLBACK.with(|fallback| {
-                    let mut context = fallback.clone();
-                    context.theme = Signal::new(current_theme());
-                    context
-                })
-            })
+            .unwrap_or_else(|| Self::new(current_theme()))
     }
 
     /// Returns the current theme and subscribes the current reactive observer to changes.

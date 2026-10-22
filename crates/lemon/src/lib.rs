@@ -3,7 +3,7 @@
 //! # Getting started
 //!
 //! Most apps only need [`run`], [`WindowConfig`], [`Cx`], and the layout widgets
-//! ([`Column`], [`Row`], [`Text`], [`Button`], …). Import them via [`prelude`]:
+//! ([`ColumnView`], [`RowView`], [`Text`], [`Button`], …). Import them via [`prelude`]:
 //!
 //! ```no_run
 //! use lemon::prelude::*;
@@ -41,21 +41,7 @@
 //!
 //! [`Component::new`] wraps a sub-view with its own [`Cx`] hooks. It currently takes a **function
 //! pointer** (`fn(&Cx) -> Element`), not a capturing closure. For list rows with per-item state,
-//! prefer keyed [`Row`] / [`Column`] children instead of capturing [`Component`]s.
-//!
-//! # Migrating from `Box_`
-//!
-//! The generic flex container builder was renamed to [`View`] (and [`element::Element::View`]) because
-//! `Box` clashes with [`std::boxed::Box`] in Rust. Update imports and matches:
-//!
-//! | Before | After |
-//! |--------|-------|
-//! | `Box_::new()` | [`View::new()`] |
-//! | `Element::Box_(…)` | `Element::View(…)` |
-//! | `use …::{Box_, …}` | `use …::{View, …}` |
-//!
-//! [`Box_`] remains available as a deprecated type alias for one release cycle. Roadmap issues
-//! and older examples may still mention `Box_`; treat that name as [`View`].
+//! prefer keyed [`RowView`] / [`ColumnView`] children instead of capturing [`Component`]s.
 //!
 //! # Lower-level API
 //!
@@ -72,37 +58,26 @@ pub use lemon_core::{
 pub use lemon_core::{host, input, ui};
 pub use lemon_desktop::platform;
 
-pub use animation::{
-    animation_frame_signal, request_animation_frame, AnimRegistry, AnimSlot, AnimationConfig,
-    AnimationHandle, Easing,
-};
+pub use animation::{AnimRegistry, AnimSlot, AnimationConfig, AnimationHandle, Easing};
 pub use asset::ImageHandle;
-pub use element::builders::{Column, ColumnView, Component, Row, RowView, Text, View};
+pub use element::builders::{ColumnView, Component, RowView, Text, View};
 pub use font::{register_font_bytes, register_font_path, FontRegistrationError};
 pub use widget::{
     Button, Image, Scroll, ScrollStyle, SecureField, Select, SelectStyle, Slider, SliderStyle,
     TextField, TextFieldState, TextFieldStyle,
 };
 
-#[allow(deprecated)]
-pub use crate::widget::{TextInput, TextInputStyle};
-
-/// Deprecated alias for [`View`]; use [`View`] in new code.
-#[deprecated(
-    since = "0.2.0",
-    note = "renamed to `View` to avoid clashing with std::boxed::Box; see crate-level docs"
-)]
-pub use element::builders::View as Box_;
-
 pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 pub use element::style::{
     BoxShadow, Color, Distribution, LinearGradient, Overflow, Placement, StyleProps,
 };
+pub use host::OpenWindowParams;
 pub use layout::{
     layout_pass, layout_pass_if_dirty, measure_element_height,
     measure_element_height_with_font_context, scroll_content_max_offset, sync_scroll_layout_max,
     LayoutMap, LayoutRect, Viewport,
 };
+pub use lemon_core::Signal;
 pub use lemon_core::State;
 pub use paint::{paint_pass, PaintStats};
 pub use platform::{
@@ -110,8 +85,7 @@ pub use platform::{
     WindowState,
 };
 pub use retained::RetainedTree;
-pub use runtime::cx::{Cx, OpenWindowParams};
-pub use runtime::signal::Signal;
+pub use runtime::cx::Cx;
 pub use runtime::Runtime;
 pub use theme::{
     current_theme, set_active_theme, ColorTokens, RadiusTokens, SpacingTokens, Theme, ThemePair,

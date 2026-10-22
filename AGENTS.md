@@ -29,11 +29,10 @@ Run Cargo and Make commands from the workspace root.
 | `crates/lemon-core/src/widget/` | Composed widgets; common app-facing builders are also reexported here |
 | `crates/lemon-desktop/src/platform/` | Native windows/event conversion, clipboard, frame scheduling, presentation |
 | `crates/lemon-core/src/input/` | Headless input dispatch, hit testing, focus and capture |
-| `crates/lemon-ui/` | Compatibility reexports only; no widget implementations |
 | `crates/lemon-core/tests/` | Headless pipeline, reconciliation, and invalidation integration tests |
 | `Makefile`, `.github/workflows/ci.yml` | Local quality gates and CI |
 
-Internal dependencies flow from `lemon` to `lemon-core` and `lemon-desktop`, desktop to core, and core to `lemon-reactive`. `lemon-ui` only reexports core for compatibility. Reactive has no dependencies. Do not introduce dependencies from core to UI or desktop, including in tests.
+Internal dependencies flow from `lemon` to `lemon-core` and `lemon-desktop`, desktop to core, and core to `lemon-reactive`. Reactive has no dependencies. Do not introduce dependencies from core to desktop, including in tests.
 
 ## Architecture
 
@@ -42,6 +41,7 @@ User views build an `Element` tree. `Runtime` renders components and freezes dyn
 - Identify the failing stage before editing. For reactive primitives start in `lemon-reactive`; for hook/render behavior start in core runtime; for reconciliation start in diff/retained; for geometry start in layout; for scene output start in paint; for logical input start in core input and the affected widget; for native event conversion start in desktop platform.
 - Keep windowing, native event conversion and native clipboard access in desktop. Logical input dispatch and hit testing belong to core input. Keep widget interaction in the owning widget and core event representation. Do not couple core rendering to desktop backends.
 - Apply UI updates through the runtime/diff/retained pipeline; do not bypass it by mutating unrelated layers.
+- Outside a host scope, each standalone `Cx` owns its resources; do not introduce implicit shared queues or clocks. Use `HostContext::animations()` and `take_window_requests()` directly in hosts.
 - Preserve host ownership: window requests, live reactive themes, animation clocks/requests and clipboard adapters belong to their originating `HostContext`. Do not replace that ownership with unrelated active global state.
 
 ## Theme ownership
@@ -53,7 +53,7 @@ User views build an `Element` tree. `Runtime` renders components and freezes dyn
 
 ## Application vocabulary
 
-Use the canonical API in new code, examples, and docs. Old spellings remain deprecated migration aliases.
+Use only the canonical API in code, examples, and docs. Do not retain deprecated APIs, old aliases, compatibility crates or forwarding bridges.
 
 - State and behavior: `cx.state`, `cx.derive`, `cx.watch`, `cx.motion`, `cx.theme`; use `State<T>` for app-owned reactive values.
 - Size and placement: `.fill()`, `.fill_width()`, `.fill_height()`, `.center()`, `.place(Placement::...)`, `.distribute(Distribution::...)`.
@@ -107,7 +107,6 @@ Run focused checks first, for example:
 ```bash
 cargo test -p lemon-reactive
 cargo test -p lemon-core
-cargo test -p lemon-ui
 cargo test -p lemon --examples
 cargo build --example form
 ```

@@ -47,33 +47,18 @@ impl Text {
         self
     }
 
-    /// Deprecated name for [`size`](Self::size).
-    #[deprecated(note = "use .size(...) instead")]
-    pub fn font_size(self, size: f32) -> Self {
-        self.size(size)
-    }
     /// Preferred font family list (for example `"Inter, system-ui"`).
     pub fn font(mut self, family: impl Into<String>) -> Self {
         self.style.font_family = family.into();
         self
     }
 
-    /// Deprecated name for [`font`](Self::font).
-    #[deprecated(note = "use .font(...) instead")]
-    pub fn font_family(self, family: impl Into<String>) -> Self {
-        self.font(family)
-    }
     /// Unitless line-height multiplier relative to font size.
     pub fn leading(mut self, line_height: f32) -> Self {
         self.style.line_height = line_height;
         self
     }
 
-    /// Deprecated name for [`leading`](Self::leading).
-    #[deprecated(note = "use .leading(...) instead")]
-    pub fn line_height(self, line_height: f32) -> Self {
-        self.leading(line_height)
-    }
     pub fn weight(mut self, w: u16) -> Self {
         self.style.font_weight = w;
         self

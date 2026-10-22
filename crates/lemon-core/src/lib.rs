@@ -26,42 +26,39 @@ pub mod widget;
 pub mod prelude {
     pub use crate::animation::{AnimationConfig, AnimationHandle, Easing};
     pub use crate::children;
-    pub use crate::element::builders::{Column, ColumnView, Component, Row, RowView, Text, View};
+    pub use crate::element::builders::{ColumnView, Component, RowView, Text, View};
     pub use crate::element::decoration::Decorate;
     pub use crate::element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
     pub use crate::element::style::{Align, Color, Distribution, Justify, Overflow, Placement};
     pub use crate::element::Element;
-    pub use crate::runtime::cx::{Cx, OpenWindowParams};
-    pub use crate::runtime::signal::Signal;
+    pub use crate::host::OpenWindowParams;
+    pub use crate::runtime::cx::Cx;
     pub use crate::widget::{
         Button, Image, Scroll, ScrollStyle, SecureField, Select, SelectStyle, Slider, SliderStyle,
         TextField, TextFieldState, TextFieldStyle,
     };
-    #[allow(deprecated)]
-    pub use crate::widget::{TextInput, TextInputStyle};
     pub use crate::State;
+    pub use lemon_reactive::signal::Signal;
 }
 
-pub use animation::{
-    animation_frame_signal, request_animation_frame, AnimRegistry, AnimSlot, AnimationConfig,
-    AnimationHandle, Easing,
-};
+pub use animation::{AnimRegistry, AnimSlot, AnimationConfig, AnimationHandle, Easing};
 pub use asset::ImageHandle;
-pub use element::builders::{Column, ColumnView, Component, Row, RowView, Text, View};
+pub use element::builders::{ColumnView, Component, RowView, Text, View};
 pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 pub use element::style::{
     BoxShadow, Color, Distribution, LinearGradient, Overflow, Placement, StyleProps,
 };
 pub use font::{register_font_bytes, register_font_path, FontRegistrationError};
+pub use host::OpenWindowParams;
 pub use layout::{
     layout_pass, layout_pass_if_dirty, measure_element_height,
     measure_element_height_with_font_context, scroll_content_max_offset, sync_scroll_layout_max,
     LayoutMap, LayoutRect, Viewport,
 };
+pub use lemon_reactive::Signal;
 pub use paint::{paint_pass, PaintStats};
 pub use retained::RetainedTree;
-pub use runtime::cx::{Cx, OpenWindowParams};
-pub use runtime::signal::Signal;
+pub use runtime::cx::Cx;
 
 /// Shared reactive application state, returned by [`Cx::state`].
 ///
@@ -87,7 +84,5 @@ pub use widget::{
     Button, Image, Scroll, ScrollStyle, SecureField, Select, SelectStyle, Slider, SliderStyle,
     TextField, TextFieldState, TextFieldStyle,
 };
-#[allow(deprecated)]
-pub use widget::{TextInput, TextInputStyle};
 
 pub use crate::element::decoration::Decorate;

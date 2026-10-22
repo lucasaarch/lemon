@@ -152,35 +152,3 @@ fn distribution_uses_stacking_direction_without_overwriting_other_axis() {
         assert_eq!(((first.x, first.y), (second.x, second.y)), expected);
     }
 }
-
-#[test]
-#[allow(deprecated)]
-fn legacy_style_builders_forward_to_the_same_fields() {
-    use lemon_core::element::style::{Align, Justify};
-    use lemon_core::Color;
-    let Element::View(old) = View::new()
-        .padding(10.0)
-        .margin(4.0)
-        .gap(8.0)
-        .background(Color::rgb8(1, 2, 3))
-        .radius(6.0)
-        .align_items(Align::Center)
-        .justify_content(Justify::Center)
-        .into_element()
-    else {
-        panic!("view")
-    };
-    let Element::View(new) = View::new()
-        .inset(10.0)
-        .outset(4.0)
-        .spacing(8.0)
-        .surface(Color::rgb8(1, 2, 3))
-        .rounding(6.0)
-        .center()
-        .into_element()
-    else {
-        panic!("view")
-    };
-    assert_eq!(old.style, new.style);
-    assert_eq!(old.paint.resolve(), new.paint.resolve());
-}

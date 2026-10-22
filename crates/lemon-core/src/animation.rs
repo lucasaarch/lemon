@@ -1,24 +1,15 @@
 //! Per-frame animation support for widget authors and headless hosts.
 //!
-//! Widgets that need to animate over time (e.g. a sliding fill, a fading transition) use two
-//! primitives:
-//!
-//! - [`animation_frame_signal`] — a [`Signal<u32>`] that the platform increments once per frame
-//!   while at least one widget has requested an animation tick.  Read it from `into_element` to
-//!   subscribe the component to frame events so the runtime re-renders on each tick.
-//! - [`request_animation_frame`] — call this from `into_element` when custom animation state has
-//!   not yet reached its target.  The platform will call `request_redraw` and advance the frame
-//!   signal on the next `about_to_wait`.
-//!
-//! Both primitives use the active host context; separate applications have independent clocks.  Most widgets should prefer
-//! [`Cx::motion`](crate::Cx::motion), which wraps these primitives in a stable
-//! hook-backed [`AnimationHandle`].
+//! Use [`Cx::motion`](crate::Cx::motion) for component-owned animations. Custom
+//! hosts own an [`AnimRegistry`] through [`HostContext::animations`](crate::host::HostContext::animations),
+//! tick it once per frame and present while it has active slots or pending requests.
+//! Animation handles retain the registry that created them.
 
 use std::cell::{Cell, RefCell};
 use std::rc::{Rc, Weak};
 use std::time::{Duration, Instant};
 
-use crate::runtime::signal::Signal;
+use lemon_reactive::signal::Signal;
 
 /// Easing curve applied to an animation's normalized progress.
 ///
@@ -128,7 +119,7 @@ impl Default for AnimationConfig {
 /// ```
 /// use lemon_core::{AnimRegistry, AnimSlot, AnimationConfig};
 ///
-/// let handle = AnimRegistry::shared().register(AnimSlot::new(AnimationConfig::default()));
+/// let handle = AnimRegistry::default().register(AnimSlot::new(AnimationConfig::default()));
 /// assert_eq!(handle.progress(), 0.0);
 /// ```
 #[derive(Clone, Debug, PartialEq)]
@@ -282,16 +273,16 @@ impl AnimationHandle {
 
 /// Registry that owns animation slots and frame requests for one host.
 ///
-/// [`shared`](Self::shared) returns the active host registry used by
-/// [`Cx::motion`](crate::Cx::motion). Hosts with custom lifetimes can create a
-/// separate registry with [`default`](Self::default) and register slots manually.
+/// [`Cx::motion`](crate::Cx::motion) registers slots with its originating host.
+/// Custom hosts can use [`default`](Self::default) for an independent registry,
+/// or obtain an existing host's registry with [`HostContext::animations`](crate::host::HostContext::animations).
 ///
 /// # Examples
 ///
 /// ```
 /// use lemon_core::{AnimRegistry, AnimSlot, AnimationConfig};
 ///
-/// let registry = AnimRegistry::shared();
+/// let registry = AnimRegistry::default();
 /// let handle = registry.register(AnimSlot::new(AnimationConfig::default()));
 /// handle.play();
 /// assert!(handle.is_playing());
@@ -305,12 +296,6 @@ pub struct AnimRegistry {
 }
 
 impl AnimRegistry {
-    /// Returns the animation registry of the active host context.
-    /// Outside a host scope, this uses the compatibility fallback context.
-    pub fn shared() -> Self {
-        crate::host::HostContext::current().animations()
-    }
-
     /// Returns the frame signal for this registry.
     pub fn frame_signal(&self) -> Signal<u32> {
         self.frame.clone()
@@ -375,40 +360,6 @@ impl AnimRegistry {
         });
         !active.is_empty()
     }
-}
-
-/// Returns the active host's frame-tick [`Signal<u32>`].
-///
-/// The platform increments this signal once per frame while animation is active.  Call this from
-/// `into_element` and read the returned signal to subscribe the current component to frame events:
-///
-/// ```ignore
-/// if progress < 1.0 {
-///     lemon_core::animation_frame_signal().get(); // subscribe
-///     lemon_core::request_animation_frame();      // keep ticking
-/// }
-/// ```
-pub fn animation_frame_signal() -> Signal<u32> {
-    AnimRegistry::shared().frame_signal()
-}
-
-/// Requests that the platform render one more frame and advance the animation clock.
-///
-/// Call this from `into_element` whenever your animation has not yet converged.  The platform
-/// will respond by incrementing [`animation_frame_signal`] and calling `request_redraw`, which
-/// drives the reactive re-render needed to advance the interpolation.
-pub fn request_animation_frame() {
-    AnimRegistry::shared().request_frame();
-}
-
-/// Clears the active host's pending flag and returns its previous value.
-pub fn take_animation_pending() -> bool {
-    AnimRegistry::shared().take_pending()
-}
-
-/// Advances the active host's frame signal and notifies subscribers.
-pub fn tick_animation_frame() {
-    AnimRegistry::shared().tick_frame();
 }
 
 impl Default for AnimRegistry {

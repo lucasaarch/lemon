@@ -1,5 +1,4 @@
 pub mod cx;
-pub use lemon_reactive::{derived, effect, observer, signal};
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -12,9 +11,7 @@ use crate::element::{
     Element,
 };
 use cx::Cx;
-use effect::Effect;
-
-pub use signal::Signal;
+use lemon_reactive::Effect;
 
 type ViewFn = Rc<dyn Fn(&Cx) -> Element>;
 
@@ -76,7 +73,7 @@ impl Runtime {
 
     /// Re-runs dirty views, diffs against the previous tree, and queues patches.
     ///
-    /// Call after changing a [`Signal`] (or other tracked state), then [`take_patches`](Self::take_patches).
+    /// Call after changing a [`State`](crate::State) (or other tracked state), then [`take_patches`](Self::take_patches).
     pub fn flush_effects(&mut self) {
         crate::lemon_trace!(Runtime, "flush_effects ({} root slot(s))", self.slots.len());
         for slot in &mut self.slots {
@@ -355,7 +352,7 @@ fn mount_component_slot(
 
 fn render_without_subscribing(slot: &ComponentSlot) -> Element {
     let _scope = slot.cx.borrow().enter_host();
-    crate::runtime::observer::without_observer(|| {
+    lemon_reactive::observer::without_observer(|| {
         slot.cx.borrow().reset_hooks();
         freeze_element(&slot.view.borrow()(&slot.cx.borrow()))
     })
@@ -707,6 +704,7 @@ fn freeze_border_colors(
 mod tests {
     use super::*;
     use crate::element::builders::Text;
+    use lemon_reactive::Signal;
 
     #[test]
     fn no_patches_on_first_mount() {

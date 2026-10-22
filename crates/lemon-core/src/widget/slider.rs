@@ -1,14 +1,13 @@
 use std::time::Instant;
 
 use crate::{
-    animation_frame_signal,
     element::{
         builders::View,
         events::Cursor,
         style::{Color, ColorSource},
         Element,
     },
-    request_animation_frame, Cx, State,
+    AnimRegistry, Cx, State,
 };
 
 /// Duration of a value-change animation in seconds.
@@ -102,6 +101,7 @@ impl SliderStyle {
 /// }
 /// ```
 pub struct Slider {
+    frames: AnimRegistry,
     value: State<f32>,
     anim: State<AnimState>,
     hovered: State<bool>,
@@ -149,6 +149,7 @@ impl Slider {
         });
 
         Self {
+            frames: cx.animations(),
             value,
             anim,
             hovered: cx.state(false),
@@ -254,8 +255,8 @@ impl Slider {
 
         // Subscribe to the frame clock while animating so the platform drives re-renders.
         if anim.is_animating() {
-            animation_frame_signal().get();
-            request_animation_frame();
+            self.frames.frame_signal().get();
+            self.frames.request_frame();
         }
 
         let anim_down = self.anim.clone();
@@ -325,6 +326,26 @@ mod tests {
         let slider = Slider::new(&cx, value);
         let anim = slider.anim.clone();
         (slider.into_element(), anim)
+    }
+
+    #[test]
+    fn animation_frames_belong_to_the_constructor_context() {
+        let first = crate::host::HostContext::new(crate::Theme::default());
+        let second = crate::host::HostContext::new(crate::Theme::default());
+        let cx = {
+            let _scope = first.enter();
+            Cx::new()
+        };
+        let _scope = second.enter();
+        let slider = Slider::new(&cx, State::new(0.0));
+        slider.anim.set(AnimState {
+            from: 0.0,
+            to: 1.0,
+            started_at: Instant::now(),
+        });
+        slider.into_element();
+        assert!(first.animations().take_pending());
+        assert!(!second.animations().take_pending());
     }
 
     #[test]

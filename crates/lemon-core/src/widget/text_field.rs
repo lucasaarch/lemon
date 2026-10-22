@@ -42,22 +42,10 @@ impl TextFieldStyle {
         self
     }
 
-    /// Deprecated name for [`inset`](Self::inset).
-    #[deprecated(note = "use .inset(...) instead")]
-    pub fn padding(self, value: f32) -> Self {
-        self.inset(value)
-    }
-
     /// Overrides the border radius in logical points.
     pub fn rounding(mut self, value: f32) -> Self {
         self.radius = Some(value);
         self
-    }
-
-    /// Deprecated name for [`rounding`](Self::rounding).
-    #[deprecated(note = "use .rounding(...) instead")]
-    pub fn radius(self, value: f32) -> Self {
-        self.rounding(value)
     }
 
     /// Overrides the focus ring color.
@@ -67,7 +55,7 @@ impl TextFieldStyle {
     }
 }
 
-/// Single-line editable text field, formerly named `TextInput`.
+/// Single-line editable text field.
 ///
 /// `TextField` is a **pure builder** — it reads reactive state at build time and registers
 /// reactive dependencies so the parent re-renders when the field value changes.
@@ -186,22 +174,10 @@ impl TextField {
         self
     }
 
-    /// Deprecated name for [`inset`](Self::inset).
-    #[deprecated(note = "use .inset(...) instead")]
-    pub fn padding(self, value: f32) -> Self {
-        self.inset(value)
-    }
-
     /// Overrides the border radius for this widget.
     pub fn rounding(mut self, value: f32) -> Self {
         self.style.radius = Some(value);
         self
-    }
-
-    /// Deprecated name for [`rounding`](Self::rounding).
-    #[deprecated(note = "use .rounding(...) instead")]
-    pub fn radius(self, value: f32) -> Self {
-        self.rounding(value)
     }
 
     /// Overrides the focus ring color for this widget.
@@ -352,14 +328,6 @@ impl From<TextField> for Element {
         input.into_element()
     }
 }
-
-/// Deprecated name for [`TextField`]; replace `TextInput` with `TextField`.
-#[deprecated(note = "renamed to TextField; use TextField instead")]
-pub type TextInput = TextField;
-
-/// Deprecated name for [`TextFieldStyle`]; use it for both plain and secure fields.
-#[deprecated(note = "renamed to TextFieldStyle; use TextFieldStyle instead")]
-pub type TextInputStyle = TextFieldStyle;
 
 #[cfg(test)]
 mod tests {

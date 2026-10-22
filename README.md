@@ -112,22 +112,6 @@ also declare state, so put dynamic widget instances in component scopes rather t
 loops on a shared `Cx`. `State<T>` clones share a value; element trees are built during rendering,
 not cached with `cx.derive(...)`.
 
-### Migrating existing code
-
-Old spellings remain deprecated aliases using the same state slots and style fields.
-
-| Previous API | Canonical API |
-|--------------|---------------|
-| `cx.use_signal` / `cx.use_memo` / `cx.use_effect` | `cx.state` / `cx.derive` / `cx.watch` |
-| `cx.use_animation` / `cx.use_theme` | `cx.motion` / `cx.theme` |
-| `.gap` / `.padding` / `.margin` | `.spacing` / `.inset` / `.outset` |
-| `.align_items` / `.justify_content` | `.place(...)` or `.align(...)` / `.distribute(...)` |
-| `.background` / `.radius` / `.box_shadow` | `.surface` / `.rounding` / `.shadow` |
-| `.font_size` / `.font_family` / `.line_height` | `.size` / `.font` / `.leading` |
-| `.on_click` | `.action` |
-
-Low-level `StyleProps` and the rendering backend retain their existing representation.
-
 ### Shared decoration
 
 Every builder and custom widget implementing `Into<Element>` supports the same
@@ -160,7 +144,7 @@ internal parts such as a slider fill or select dropdown. See `custom` for a runn
 Lemon is intentionally built as a pipeline of small layers:
 
 1. **Runtime**: signals, derived values, effects, and hook-like APIs through `Cx`
-2. **Element tree**: builders such as `ColumnView`, `RowView`, `View`, `Text`, and `Button` (`Box_` was renamed to `View`; see `cargo doc -p lemon`)
+2. **Element tree**: builders such as `ColumnView`, `RowView`, `View`, `Text`, and `Button`
 3. **Diff**: compare virtual trees and emit patches
 4. **Retained tree**: store live nodes, handlers, and Taffy layout IDs
 5. **Layout**: compute flex layout and text measurement
@@ -176,19 +160,16 @@ and use the same root/prelude imports.
 
 | Path | Role |
 |------|------|
-| `crates/lemon/` | Public facade, compatibility reexports, and app examples |
+| `crates/lemon/` | Public facade and app examples |
 | `crates/lemon-reactive/` | Signals, derived values, effects, and observer tracking; no dependencies |
 | `crates/lemon-core/` | Elements, widgets, runtime, diff, retained state, layout, paint, logical input, theme |
-| `crates/lemon-ui/` | Compatibility reexports from core; no separate widget implementation |
 | `crates/lemon-desktop/` | Native windows/event conversion, clipboard, GPU surfaces, and presentation |
 | `crates/lemon/examples/*.rs` | Runnable examples (`cargo run --example <name>`) |
 
 Dependencies flow from `lemon` to core and desktop, desktop to core, and core
 to reactive. Core owns primitive builders and composed widgets in one engine.
-`lemon-ui` remains a compatibility facade so existing imports continue to compile;
-the application facade no longer depends on it. `lemon_core::widget` exposes both
-containers and controls. Primitive implementations are split into container, text,
-button and component modules behind the existing builder imports.
+`lemon_core::widget` exposes both containers and controls. Primitive implementations
+are split into container, text, button and component modules.
 Layout and paint stay together in core until a concrete independent consumer
 justifies another crate boundary.
 
@@ -201,14 +182,14 @@ requested cursor. Desktop windows delegate UI processing to this headless state.
 Run `make check` from the workspace root to validate every crate and example.
 For focused work, use `cargo test -p lemon-reactive` or `cargo test -p lemon-core`.
 For crates.io releases, publish dependencies before their consumers:
-`lemon-reactive`, `lemon-core`, `lemon-ui`/`lemon-desktop`, then `lemon`.
+`lemon-reactive`, `lemon-core`, `lemon-desktop`, then `lemon`.
 All internal dependencies carry both a local path and an exact version.
 
-### Low-level migration notes
+### Headless engine APIs
 
-- Application imports through `lemon` and `lemon::prelude` remain unchanged.
-- Canonical container names are `RowView` and `ColumnView`; `Row` and `Column`
-  remain compatibility aliases. Element enum variants retain their engine names.
+- Applications import public types through `lemon` and `lemon::prelude`.
+- Container builders are `RowView` and `ColumnView`. Element enum variants retain
+  their engine names.
 - `UiState` and `RetainedTree` expose read-only inspection through methods such as
   `retained()`, `root()`, `layout_map()`, `scene()` and dirty getters. Use
   `apply_updates()`, `apply_patches()`, `invalidate_layout()` or `invalidate_paint()`
@@ -219,8 +200,10 @@ All internal dependencies carry both a local path and an exact version.
   or use `..Default::default()`. `Scroll` sets this marker automatically.
 - `Cx::theme` reads the originating host's live theme, not whichever
   unrelated window happened to activate a theme last.
-- Existing public mutable engine fields remain available for custom hosts.
-  This migration does not remove them or claim to fully encapsulate that API.
+- Access window UI explicitly through `WindowState::ui`; there is no dereferencing
+  bridge to the engine. Native window requests are drained from `HostContext`.
+- Animation clocks and frame requests use the host's `AnimRegistry`. Standalone
+  `Cx` instances own independent resources; enter a host scope to share them.
 
 ## Current Capabilities
 
@@ -261,8 +244,7 @@ dark.radius.md = 10.0;
 run_with_theme(WindowConfig::default(), ThemePair::new(light, dark), app);
 ```
 
-Passing a single `Theme` to `run_with_theme` keeps that palette fixed, preserving
-existing custom-theme code. Local widget overrides continue to take precedence.
+Passing a single `Theme` to `run_with_theme` keeps that palette fixed. Local widget overrides continue to take precedence.
 Native window decorations retain the system appearance.
 
 Detection and live change events use winit's macOS and Windows support. When the
@@ -277,8 +259,6 @@ application UI, and their defaults come from the active `Theme`. Start there whe
 matches your product. Use `run_with_theme` for app-wide tokens and widget style types such as
 `SelectStyle`, `SliderStyle`, and `TextFieldStyle` for local overrides.
 
-`TextField` replaces `TextInput`; `TextFieldStyle` replaces `TextInputStyle`.
-The old names and `widget::text_input` module remain as deprecated aliases.
 `SecureField` shares `TextFieldState` and `TextFieldStyle`, displays bullets, and
 blocks clipboard copy/cut shortcuts. Its state retains the original value for app code.
 

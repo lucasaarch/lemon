@@ -11,7 +11,7 @@
 //! ```
 
 /// Primitive containers, text and component construction share this entry point
-/// with composed widgets. The old `element::builders` imports remain supported.
+/// with composed widgets.
 pub use crate::element::builders::{ColumnView, Component, RowView, Text, View};
 pub use crate::element::decoration::Decorate;
 
@@ -24,10 +24,6 @@ pub mod slider;
 pub mod text_field;
 pub mod text_field_state;
 
-/// Deprecated module path; use [`text_field`] instead.
-#[deprecated(note = "renamed to text_field; use widget::text_field instead")]
-pub use text_field as text_input;
-
 pub use button::Button;
 pub use image::Image;
 pub use scroll::{Scroll, ScrollStyle};
@@ -36,9 +32,6 @@ pub use select::{Select, SelectStyle};
 pub use slider::{Slider, SliderStyle};
 pub use text_field::{TextField, TextFieldStyle};
 pub use text_field_state::TextFieldState;
-
-#[allow(deprecated)]
-pub use text_field::{TextInput, TextInputStyle};
 
 #[cfg(test)]
 mod text_field_tests {

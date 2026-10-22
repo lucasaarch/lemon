@@ -74,22 +74,10 @@ impl SecureField {
         self
     }
 
-    /// Deprecated name for [`inset`](Self::inset).
-    #[deprecated(note = "use .inset(...) instead")]
-    pub fn padding(self, value: f32) -> Self {
-        self.inset(value)
-    }
-
     /// Overrides the corner radius in logical points.
     pub fn rounding(mut self, value: f32) -> Self {
         self.0 = self.0.rounding(value);
         self
-    }
-
-    /// Deprecated name for [`rounding`](Self::rounding).
-    #[deprecated(note = "use .rounding(...) instead")]
-    pub fn radius(self, value: f32) -> Self {
-        self.rounding(value)
     }
 
     /// Overrides the focus ring color.
@@ -120,9 +108,10 @@ impl From<SecureField> for Element {
 mod tests {
     use super::*;
     use crate::{
-        element::types::BoxElement, runtime::effect::Effect, ui::UiState, KeyEvent, KeyState,
-        LemonKey, Modifiers, NamedKey, Viewport,
+        element::types::BoxElement, ui::UiState, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey,
+        Viewport,
     };
+    use lemon_reactive::Effect;
     use std::{cell::Cell, rc::Rc};
 
     fn view(element: Element) -> BoxElement {

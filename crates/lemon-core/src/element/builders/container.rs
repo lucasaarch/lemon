@@ -24,11 +24,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`spacing`](Self::spacing).
-            #[deprecated(note = "use .spacing(...) instead")]
-            pub fn gap(self, v: f32) -> Self {
-                self.spacing(v)
-            }
             /// Horizontal spacing between columns, overriding uniform [`spacing`](Self::spacing)
             /// for this axis.
             ///
@@ -39,11 +34,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`horizontal_spacing`](Self::horizontal_spacing).
-            #[deprecated(note = "use .horizontal_spacing(...) instead")]
-            pub fn column_gap(self, v: f32) -> Self {
-                self.horizontal_spacing(v)
-            }
             /// Vertical spacing between rows, overriding uniform [`spacing`](Self::spacing)
             /// for this axis.
             ///
@@ -54,11 +44,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`vertical_spacing`](Self::vertical_spacing).
-            #[deprecated(note = "use .vertical_spacing(...) instead")]
-            pub fn row_gap(self, v: f32) -> Self {
-                self.vertical_spacing(v)
-            }
             /// Sets a paint-only opacity multiplier for this container and its descendants.
             ///
             /// Values are clamped to `0.0..=1.0`; non-finite inputs fall back to `1.0`.
@@ -76,11 +61,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`inset`](Self::inset).
-            #[deprecated(note = "use .inset(...) instead")]
-            pub fn padding(self, v: f32) -> Self {
-                self.inset(v)
-            }
             /// Padding on the left and right sides, in logical points.
             pub fn inset_horizontal(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.padding.take().unwrap_or_default();
@@ -90,11 +70,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`inset_horizontal`](Self::inset_horizontal).
-            #[deprecated(note = "use .inset_horizontal(...) instead")]
-            pub fn padding_x(self, v: f32) -> Self {
-                self.inset_horizontal(v)
-            }
             /// Padding on the top and bottom sides, in logical points.
             pub fn inset_vertical(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.padding.take().unwrap_or_default();
@@ -104,11 +79,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`inset_vertical`](Self::inset_vertical).
-            #[deprecated(note = "use .inset_vertical(...) instead")]
-            pub fn padding_y(self, v: f32) -> Self {
-                self.inset_vertical(v)
-            }
             /// Padding on the top side only, in logical points.
             pub fn inset_top(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.padding.take().unwrap_or_default();
@@ -117,11 +87,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`inset_top`](Self::inset_top).
-            #[deprecated(note = "use .inset_top(...) instead")]
-            pub fn padding_top(self, v: f32) -> Self {
-                self.inset_top(v)
-            }
             /// Padding on the right side only, in logical points.
             pub fn inset_right(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.padding.take().unwrap_or_default();
@@ -130,11 +95,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`inset_right`](Self::inset_right).
-            #[deprecated(note = "use .inset_right(...) instead")]
-            pub fn padding_right(self, v: f32) -> Self {
-                self.inset_right(v)
-            }
             /// Padding on the bottom side only, in logical points.
             pub fn inset_bottom(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.padding.take().unwrap_or_default();
@@ -143,11 +103,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`inset_bottom`](Self::inset_bottom).
-            #[deprecated(note = "use .inset_bottom(...) instead")]
-            pub fn padding_bottom(self, v: f32) -> Self {
-                self.inset_bottom(v)
-            }
             /// Padding on the left side only, in logical points.
             pub fn inset_left(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.padding.take().unwrap_or_default();
@@ -156,11 +111,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`inset_left`](Self::inset_left).
-            #[deprecated(note = "use .inset_left(...) instead")]
-            pub fn padding_left(self, v: f32) -> Self {
-                self.inset_left(v)
-            }
             /// Fixed width in logical points.
             pub fn width(mut self, v: f32) -> Self {
                 self.0.style.width = Some(crate::element::style::Dimension::Points(v));
@@ -256,39 +206,18 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`grow`](Self::grow).
-            #[deprecated(note = "use .grow(...) instead")]
-            pub fn flex_grow(self, v: f32) -> Self {
-                self.grow(v)
-            }
             /// Aligns children perpendicular to this container's stacking direction; use `.place(...)` for physical positioning.
             pub fn align(mut self, v: crate::element::style::Align) -> Self {
                 self.0.style.align_items = Some(v);
                 self
             }
 
-            /// Deprecated name for [`align`](Self::align).
-            #[deprecated(note = "use .align(...) instead")]
-            pub fn align_items(self, v: crate::element::style::Align) -> Self {
-                self.align(v)
-            }
             /// Distributes spare space along the stacking direction, preserving perpendicular alignment.
             pub fn distribute(mut self, v: impl Into<crate::element::style::Distribution>) -> Self {
                 self.0.style.justify_content = Some(v.into().into());
                 self
             }
 
-            /// Deprecated name for [`distribute`](Self::distribute).
-            #[deprecated(note = "use .distribute(...) instead")]
-            pub fn justify_content(self, v: crate::element::style::Justify) -> Self {
-                self.distribute(v)
-            }
-            /// Deprecated overflow switch; use `.clip()` or `.unclip()`.
-            #[deprecated(note = "use .clip() or .unclip() instead")]
-            pub fn overflow(mut self, v: Overflow) -> Self {
-                self.0.style.overflow = v;
-                self
-            }
             /// Paint-only z-order among siblings (`0` keeps normal traversal order).
             ///
             /// Non-zero values are deferred to a sorted paint pass (ascending `z_index`) and do
@@ -298,11 +227,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`layer`](Self::layer).
-            #[deprecated(note = "use .layer(...) instead")]
-            pub fn z_index(self, z: i32) -> Self {
-                self.layer(z)
-            }
             /// Solid fill painted inside this container’s rounded bounds.
             ///
             /// Calling this clears any previously configured [`gradient`](Self::gradient).
@@ -312,11 +236,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`surface`](Self::surface).
-            #[deprecated(note = "use .surface(...) instead")]
-            pub fn background(self, c: impl Into<ColorSource>) -> Self {
-                self.surface(c)
-            }
             /// Two-stop linear gradient fill painted inside this container’s rounded bounds.
             pub fn gradient(mut self, gradient: LinearGradient) -> Self {
                 self.0.paint.background_gradient = Some(gradient);
@@ -324,22 +243,12 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`gradient`](Self::gradient).
-            #[deprecated(note = "use .gradient(...) instead")]
-            pub fn linear_gradient(self, gradient: LinearGradient) -> Self {
-                self.gradient(gradient)
-            }
             /// Blurred outer shadow painted before the background and borders.
             pub fn shadow(mut self, shadow: BoxShadow) -> Self {
                 self.0.paint.box_shadow = Some(shadow);
                 self
             }
 
-            /// Deprecated name for [`shadow`](Self::shadow).
-            #[deprecated(note = "use .shadow(...) instead")]
-            pub fn box_shadow(self, shadow: BoxShadow) -> Self {
-                self.shadow(shadow)
-            }
             /// Border color and uniform width on all sides, in logical points.
             pub fn border(mut self, color: Color, width: f32) -> Self {
                 self.0.paint.border_color = Edges::all(Some(ColorSource::Static(color)));
@@ -379,11 +288,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`border_horizontal`](Self::border_horizontal).
-            #[deprecated(note = "use .border_horizontal(...) instead")]
-            pub fn border_x(self, color: Color, width: f32) -> Self {
-                self.border_horizontal(color, width)
-            }
             /// Border on the top and bottom sides.
             pub fn border_vertical(mut self, color: Color, width: f32) -> Self {
                 self.0.paint.border_color.top = Some(ColorSource::Static(color));
@@ -393,11 +297,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`border_vertical`](Self::border_vertical).
-            #[deprecated(note = "use .border_vertical(...) instead")]
-            pub fn border_y(self, color: Color, width: f32) -> Self {
-                self.border_vertical(color, width)
-            }
             /// Uniform border color on all sides, preserving existing widths.
             pub fn border_color(mut self, color: Color) -> Self {
                 self.0.paint.border_color = Edges::all(Some(ColorSource::Static(color)));
@@ -449,55 +348,30 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`rounding`](Self::rounding).
-            #[deprecated(note = "use .rounding(...) instead")]
-            pub fn radius(self, r: f32) -> Self {
-                self.rounding(r)
-            }
             /// Top-left corner radius only.
             pub fn rounding_top_left(mut self, r: f32) -> Self {
                 self.0.paint.radius.top_left = r;
                 self
             }
 
-            /// Deprecated name for [`rounding_top_left`](Self::rounding_top_left).
-            #[deprecated(note = "use .rounding_top_left(...) instead")]
-            pub fn radius_top_left(self, r: f32) -> Self {
-                self.rounding_top_left(r)
-            }
             /// Top-right corner radius only.
             pub fn rounding_top_right(mut self, r: f32) -> Self {
                 self.0.paint.radius.top_right = r;
                 self
             }
 
-            /// Deprecated name for [`rounding_top_right`](Self::rounding_top_right).
-            #[deprecated(note = "use .rounding_top_right(...) instead")]
-            pub fn radius_top_right(self, r: f32) -> Self {
-                self.rounding_top_right(r)
-            }
             /// Bottom-right corner radius only.
             pub fn rounding_bottom_right(mut self, r: f32) -> Self {
                 self.0.paint.radius.bottom_right = r;
                 self
             }
 
-            /// Deprecated name for [`rounding_bottom_right`](Self::rounding_bottom_right).
-            #[deprecated(note = "use .rounding_bottom_right(...) instead")]
-            pub fn radius_bottom_right(self, r: f32) -> Self {
-                self.rounding_bottom_right(r)
-            }
             /// Bottom-left corner radius only.
             pub fn rounding_bottom_left(mut self, r: f32) -> Self {
                 self.0.paint.radius.bottom_left = r;
                 self
             }
 
-            /// Deprecated name for [`rounding_bottom_left`](Self::rounding_bottom_left).
-            #[deprecated(note = "use .rounding_bottom_left(...) instead")]
-            pub fn radius_bottom_left(self, r: f32) -> Self {
-                self.rounding_bottom_left(r)
-            }
             /// Radius on both top corners (left and right).
             pub fn rounding_top(mut self, r: f32) -> Self {
                 self.0.paint.radius.top_left = r;
@@ -505,11 +379,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`rounding_top`](Self::rounding_top).
-            #[deprecated(note = "use .rounding_top(...) instead")]
-            pub fn radius_top(self, r: f32) -> Self {
-                self.rounding_top(r)
-            }
             /// Radius on both bottom corners.
             pub fn rounding_bottom(mut self, r: f32) -> Self {
                 self.0.paint.radius.bottom_left = r;
@@ -517,11 +386,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`rounding_bottom`](Self::rounding_bottom).
-            #[deprecated(note = "use .rounding_bottom(...) instead")]
-            pub fn radius_bottom(self, r: f32) -> Self {
-                self.rounding_bottom(r)
-            }
             /// Radius on both left corners (top and bottom).
             pub fn rounding_left(mut self, r: f32) -> Self {
                 self.0.paint.radius.top_left = r;
@@ -529,11 +393,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`rounding_left`](Self::rounding_left).
-            #[deprecated(note = "use .rounding_left(...) instead")]
-            pub fn radius_left(self, r: f32) -> Self {
-                self.rounding_left(r)
-            }
             /// Radius on both right corners (top and bottom).
             pub fn rounding_right(mut self, r: f32) -> Self {
                 self.0.paint.radius.top_right = r;
@@ -541,11 +400,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`rounding_right`](Self::rounding_right).
-            #[deprecated(note = "use .rounding_right(...) instead")]
-            pub fn radius_right(self, r: f32) -> Self {
-                self.rounding_right(r)
-            }
             /// Sets an image to draw inside this container using object-fit: contain scaling.
             ///
             /// The image is scaled uniformly to fit within the container's layout rectangle while
@@ -594,11 +448,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`action`](Self::action).
-            #[deprecated(note = "use .action(...) instead")]
-            pub fn on_click(self, f: impl Fn() + 'static) -> Self {
-                self.action(f)
-            }
             pub fn on_key_down(
                 mut self,
                 f: impl Fn(crate::element::events::KeyEvent) + 'static,
@@ -623,7 +472,7 @@ macro_rules! container_builder {
             }
             /// Mouse wheel handler; `delta` is the vertical scroll amount in logical pixels.
             ///
-            /// Used by scrollable regions (such as `lemon-ui`'s `Scroll`). The platform
+            /// Used by scrollable regions (such as [`Scroll`](crate::widget::Scroll)). The platform
             /// dispatches wheel events to the deepest node under the cursor with this handler.
             pub fn on_scroll(mut self, f: impl Fn(f64) + 'static) -> Self {
                 self.0.handlers.on_scroll = Some(Rc::new(f));
@@ -687,11 +536,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`outset`](Self::outset).
-            #[deprecated(note = "use .outset(...) instead")]
-            pub fn margin(self, v: f32) -> Self {
-                self.outset(v)
-            }
             /// Margin on the left and right sides, in logical points.
             pub fn outset_horizontal(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.margin.take().unwrap_or_default();
@@ -701,11 +545,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`outset_horizontal`](Self::outset_horizontal).
-            #[deprecated(note = "use .outset_horizontal(...) instead")]
-            pub fn margin_x(self, v: f32) -> Self {
-                self.outset_horizontal(v)
-            }
             /// Margin on the top and bottom sides, in logical points.
             pub fn outset_vertical(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.margin.take().unwrap_or_default();
@@ -715,11 +554,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`outset_vertical`](Self::outset_vertical).
-            #[deprecated(note = "use .outset_vertical(...) instead")]
-            pub fn margin_y(self, v: f32) -> Self {
-                self.outset_vertical(v)
-            }
             /// Sets top margin in logical points (other sides unchanged).
             ///
             /// Negative values shift content up without changing layout size — useful for
@@ -731,11 +565,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`outset_top`](Self::outset_top).
-            #[deprecated(note = "use .outset_top(...) instead")]
-            pub fn margin_top(self, v: f32) -> Self {
-                self.outset_top(v)
-            }
             /// Sets right margin in logical points (other sides unchanged).
             pub fn outset_right(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.margin.take().unwrap_or_default();
@@ -744,11 +573,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`outset_right`](Self::outset_right).
-            #[deprecated(note = "use .outset_right(...) instead")]
-            pub fn margin_right(self, v: f32) -> Self {
-                self.outset_right(v)
-            }
             /// Sets bottom margin in logical points (other sides unchanged).
             pub fn outset_bottom(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.margin.take().unwrap_or_default();
@@ -757,11 +581,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`outset_bottom`](Self::outset_bottom).
-            #[deprecated(note = "use .outset_bottom(...) instead")]
-            pub fn margin_bottom(self, v: f32) -> Self {
-                self.outset_bottom(v)
-            }
             /// Sets left margin in logical points (other sides unchanged).
             pub fn outset_left(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.margin.take().unwrap_or_default();
@@ -770,11 +589,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`outset_left`](Self::outset_left).
-            #[deprecated(note = "use .outset_left(...) instead")]
-            pub fn margin_left(self, v: f32) -> Self {
-                self.outset_left(v)
-            }
             /// Sets the top inset in logical points.
             ///
             /// Use with [`.floating()`](Self::floating) to position an overlay relative to its
@@ -825,11 +639,6 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Deprecated name for [`floating`](Self::floating).
-            #[deprecated(note = "use .floating(...) instead")]
-            pub fn absolute(self) -> Self {
-                self.floating()
-            }
             /// Cursor shown when the pointer is over this node.
             pub fn cursor(mut self, c: crate::element::events::Cursor) -> Self {
                 self.0.style.cursor = c;
@@ -858,13 +667,13 @@ container_builder!(
     ColumnView,
     Column,
     true,
-    "Vertical container: children stack from top to bottom.\n\nFormerly `Column`; `Column` remains a compatibility alias. Spacing defaults to zero and size is automatic.\n\n```\nuse lemon_core::{ColumnView, Text};\nlet column = ColumnView::new().spacing(12.0).child(Text::new(\"Hello\")).into_element();\n```"
+    "Vertical container: children stack from top to bottom.\n\nSpacing defaults to zero and size is automatic.\n\n```\nuse lemon_core::{ColumnView, Text};\nlet column = ColumnView::new().spacing(12.0).child(Text::new(\"Hello\")).into_element();\n```"
 );
 container_builder!(
     RowView,
     Row,
     false,
-    "Horizontal container: children stack from left to right.\n\nFormerly `Row`; `Row` remains a compatibility alias. Spacing defaults to zero and size is automatic.\n\n```\nuse lemon_core::{RowView, Text};\nlet row = RowView::new().spacing(12.0).child(Text::new(\"Hello\")).into_element();\n```"
+    "Horizontal container: children stack from left to right.\n\nSpacing defaults to zero and size is automatic.\n\n```\nuse lemon_core::{RowView, Text};\nlet row = RowView::new().spacing(12.0).child(Text::new(\"Hello\")).into_element();\n```"
 );
 container_builder!(
     View,

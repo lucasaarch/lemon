@@ -7,10 +7,6 @@ pub use component::Component;
 pub use container::{ColumnView, RowView, View};
 pub use primitive_button::Button;
 pub use text::Text;
-/// Compatibility name for [`ColumnView`]; new code should use `ColumnView`.
-pub type Column = ColumnView;
-/// Compatibility name for [`RowView`]; new code should use `RowView`.
-pub type Row = RowView;
 #[cfg(test)]
 mod tests {
     use super::*;

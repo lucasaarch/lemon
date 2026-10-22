@@ -10,7 +10,6 @@
 //! LEMON_DEBUG=runtime,patches,input,layout cargo run -p components
 //! ```
 //!
-//! `LEMON_TRACE=1` is an alias for `LEMON_DEBUG=1` (all categories).
 //!
 //! # Categories
 //!
@@ -143,12 +142,6 @@ fn config() -> &'static DebugConfig {
             let mut cfg = DebugConfig::disabled();
             parse_env_value(&mut cfg, &value);
             log_startup(&cfg, "LEMON_DEBUG", &value);
-            return cfg;
-        }
-        if let Ok(value) = std::env::var("LEMON_TRACE") {
-            let mut cfg = DebugConfig::disabled();
-            parse_env_value(&mut cfg, &value);
-            log_startup(&cfg, "LEMON_TRACE", &value);
             return cfg;
         }
         DebugConfig::disabled()

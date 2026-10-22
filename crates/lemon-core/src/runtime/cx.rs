@@ -1,23 +1,14 @@
 use crate::animation::{AnimSlot, AnimationConfig, AnimationHandle};
 use crate::element::Element;
-use crate::runtime::derived::Derived;
-use crate::runtime::effect::Effect;
-use crate::runtime::signal::Signal;
+use lemon_reactive::derived::Derived;
+use lemon_reactive::effect::Effect;
+use lemon_reactive::signal::Signal;
 use std::any::Any;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::sync::Arc;
 
-/// Host request types, reexported here for compatibility with earlier releases.
-pub use crate::host::{OpenWindowParams, OpenWindowRequest};
-
-/// Drains requests for the currently active host context.
-///
-/// Custom hosts should prefer their own [`HostContext::take_window_requests`](crate::host::HostContext::take_window_requests).
-/// Outside a host scope this drains the legacy thread-local fallback context.
-pub fn take_open_window_requests() -> Vec<OpenWindowRequest> {
-    crate::host::HostContext::current().take_window_requests()
-}
+use crate::host::{OpenWindowParams, OpenWindowRequest};
 
 /// Reactive context passed to your root view and to [`Component`](crate::element::builders::Component) views.
 ///
@@ -32,6 +23,11 @@ pub struct Cx {
 }
 
 impl Cx {
+    /// Creates a context using the active host, or an independent headless context.
+    ///
+    /// Without a host scope, this captures the current theme and owns its animation
+    /// registry and window request queue. Enter a `HostContext` before constructing
+    /// contexts when a custom host needs to share or drain those resources.
     pub fn new() -> Self {
         Cx {
             host: crate::host::HostContext::current(),
@@ -43,6 +39,10 @@ impl Cx {
 
     pub(crate) fn set_deferred_sink(&self, sink: Rc<RefCell<Vec<Effect>>>) {
         *self.deferred_sink.borrow_mut() = Some(sink);
+    }
+
+    pub(crate) fn animations(&self) -> crate::AnimRegistry {
+        self.host.animations()
     }
 
     pub(crate) fn enter_host(&self) -> crate::host::HostScope {
@@ -194,7 +194,7 @@ impl Cx {
     /// Returns a stable animation handle for this component instance.
     ///
     /// The same hook index on later renders returns the same [`AnimationHandle`]; changing hook
-    /// order between renders will panic. The handle is registered with the shared
+    /// order between renders will panic. The handle is registered with the originating host's
     /// [`crate::AnimRegistry`] and can be cloned into dynamic element closures.
     ///
     /// # Examples
@@ -223,39 +223,6 @@ impl Cx {
             handle
         }
     }
-
-    /// Deprecated name for [`Self::state`].
-    #[deprecated(note = "use cx.state(initial) instead")]
-    pub fn use_signal<T: Clone + 'static>(&self, initial: T) -> Signal<T> {
-        self.state(initial)
-    }
-
-    /// Deprecated name for [`Self::derive`].
-    #[deprecated(note = "use cx.derive(compute) instead")]
-    pub fn use_memo<T: Clone + PartialEq + 'static>(
-        &self,
-        f: impl Fn() -> T + 'static,
-    ) -> Derived<T> {
-        self.derive(f)
-    }
-
-    /// Deprecated name for [`Self::watch`].
-    #[deprecated(note = "use cx.watch(callback) instead")]
-    pub fn use_effect(&self, f: impl Fn() + 'static) {
-        self.watch(f);
-    }
-
-    /// Deprecated name for [`Self::theme`].
-    #[deprecated(note = "use cx.theme() instead")]
-    pub fn use_theme(&self) -> crate::theme::Theme {
-        self.theme()
-    }
-
-    /// Deprecated name for [`Self::motion`].
-    #[deprecated(note = "use cx.motion(config) instead")]
-    pub fn use_animation(&self, config: AnimationConfig) -> AnimationHandle {
-        self.motion(config)
-    }
 }
 
 pub(crate) fn flush_deferred_sink(sink: &Rc<RefCell<Vec<Effect>>>) {
@@ -276,14 +243,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn use_signal_returns_signal() {
+    fn standalone_contexts_do_not_share_window_queues_or_animation_requests() {
+        let first = Cx::new();
+        let second = Cx::new();
+        first.open_window(OpenWindowParams::default(), |_| {
+            crate::Text::new("child").into_element()
+        });
+        assert!(second.host.take_window_requests().is_empty());
+        assert_eq!(first.host.take_window_requests().len(), 1);
+        let animation = first.motion(AnimationConfig::default());
+        animation.play();
+        assert!(first.host.animations().take_pending());
+        assert!(!second.host.animations().take_pending());
+    }
+
+    #[test]
+    fn state_returns_signal() {
         let cx = Cx::new();
         let s = cx.state(42i32);
         assert_eq!(s.get(), 42);
     }
 
     #[test]
-    fn use_signal_same_signal_on_second_call() {
+    fn state_same_signal_on_second_call() {
         let cx = Cx::new();
         let s1 = cx.state(0i32);
         s1.set(7);
@@ -293,7 +275,7 @@ mod tests {
     }
 
     #[test]
-    fn use_memo_returns_derived() {
+    fn derive_returns_derived() {
         let cx = Cx::new();
         let s = cx.state(5i32);
         let s2 = s.clone();
@@ -304,7 +286,7 @@ mod tests {
     }
 
     #[test]
-    fn use_effect_deferred_until_flush() {
+    fn watch_deferred_until_flush() {
         use std::cell::Cell;
         use std::rc::Rc;
 
@@ -325,8 +307,8 @@ mod tests {
     }
 
     #[test]
-    fn use_effect_runs_once_on_mount_not_on_rerender() {
-        use crate::runtime::signal::Signal;
+    fn watch_runs_once_on_mount_not_on_rerender() {
+        use lemon_reactive::signal::Signal;
         use std::cell::Cell;
         use std::rc::Rc;
 
@@ -363,7 +345,7 @@ mod tests {
     }
 
     #[test]
-    fn use_theme_returns_active_theme() {
+    fn theme_returns_active_theme() {
         use crate::theme::{current_theme, set_active_theme, Theme};
 
         let previous = current_theme();
@@ -378,7 +360,7 @@ mod tests {
     }
 
     #[test]
-    fn use_animation_returns_stable_handle_on_second_call() {
+    fn motion_returns_stable_handle_on_second_call() {
         let cx = Cx::new();
         let first = cx.motion(AnimationConfig::default());
         first.play();
@@ -392,23 +374,23 @@ mod tests {
     }
 
     #[test]
-    fn open_window_queues_request_to_thread_local_sink() {
+    fn open_window_queues_request_to_originating_host() {
         use crate::element::builders::Text;
 
-        // Drain any stale requests left by other tests before we begin.
-        let _ = super::take_open_window_requests();
+        let host = crate::host::HostContext::new(crate::Theme::default());
+        let _scope = host.enter();
 
         let cx = Cx::new();
         let params = OpenWindowParams::default().title("Test").size(400.0, 300.0);
         cx.open_window(params.clone(), |_cx| Text::new("hello").into_element());
 
-        let requests = super::take_open_window_requests();
+        let requests = host.take_window_requests();
         assert_eq!(requests.len(), 1);
         assert_eq!(requests[0].params.title, "Test");
         assert_eq!(requests[0].params.width, 400.0);
         assert_eq!(requests[0].params.height, 300.0);
 
         // Queue should be empty after draining.
-        assert!(super::take_open_window_requests().is_empty());
+        assert!(host.take_window_requests().is_empty());
     }
 }

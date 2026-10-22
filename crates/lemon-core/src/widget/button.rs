@@ -82,22 +82,10 @@ impl Button {
         self
     }
 
-    /// Deprecated name for [`action`](Self::action).
-    #[deprecated(note = "use .action(...) instead")]
-    pub fn on_click(self, f: impl Fn() + 'static) -> Self {
-        self.action(f)
-    }
-
     /// Fill color behind the label ([`Color`] or reactive [`ColorSource`]).
     pub fn surface(mut self, c: impl Into<ColorSource>) -> Self {
         self.background = Some(c.into());
         self
-    }
-
-    /// Deprecated name for [`surface`](Self::surface).
-    #[deprecated(note = "use .surface(...) instead")]
-    pub fn background(self, c: impl Into<ColorSource>) -> Self {
-        self.surface(c)
     }
 
     /// Uniform padding on all sides, in logical points.
@@ -106,22 +94,10 @@ impl Button {
         self
     }
 
-    /// Deprecated name for [`inset`](Self::inset).
-    #[deprecated(note = "use .inset(...) instead")]
-    pub fn padding(self, v: f32) -> Self {
-        self.inset(v)
-    }
-
     /// Corner radius in logical points.
     pub fn rounding(mut self, r: f32) -> Self {
         self.radius = r;
         self
-    }
-
-    /// Deprecated name for [`rounding`](Self::rounding).
-    #[deprecated(note = "use .rounding(...) instead")]
-    pub fn radius(self, r: f32) -> Self {
-        self.rounding(r)
     }
 
     /// Fixed width in logical points.

@@ -59,20 +59,6 @@ pub struct WindowState {
     mounted: bool,
 }
 
-impl std::ops::Deref for WindowState {
-    type Target = UiState;
-
-    fn deref(&self) -> &Self::Target {
-        &self.ui
-    }
-}
-
-impl std::ops::DerefMut for WindowState {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.ui
-    }
-}
-
 impl WindowState {
     fn new(host: HostContext, root_component: RootComponent) -> Self {
         Self {
@@ -316,7 +302,7 @@ impl WindowState {
     }
 
     fn needs_redraw(&self) -> bool {
-        self.layout_dirty() || self.paint_dirty()
+        self.ui.layout_dirty() || self.ui.paint_dirty()
     }
 }
 
@@ -468,15 +454,11 @@ impl AppState {
         requested || active
     }
 
-    /// Opens a new native window from a queued [`OpenWindowRequest`](crate::runtime::cx::OpenWindowRequest).
+    /// Opens a new native window from a queued [`OpenWindowRequest`](crate::host::OpenWindowRequest).
     ///
     /// Creates the OS window, attaches the GPU surface and renderer, and inserts the new
     /// [`WindowState`] into [`windows`](Self::windows) under its `winit` [`WindowId`].
-    fn spawn_window(
-        &mut self,
-        event_loop: &ActiveEventLoop,
-        req: crate::runtime::cx::OpenWindowRequest,
-    ) {
+    fn spawn_window(&mut self, event_loop: &ActiveEventLoop, req: crate::host::OpenWindowRequest) {
         let window = Arc::new(
             event_loop
                 .create_window(
@@ -864,10 +846,10 @@ mod tests {
         });
         let window_state = state.make_window_state();
 
-        assert!(window_state.layout_dirty());
-        assert!(window_state.paint_dirty());
+        assert!(window_state.ui.layout_dirty());
+        assert!(window_state.ui.paint_dirty());
         assert!(window_state.window.is_none());
-        assert!(window_state.retained().is_none());
+        assert!(window_state.ui.retained().is_none());
         assert!(!window_state.mounted);
         assert!(window_state.ui.focused().is_none());
     }
@@ -950,7 +932,7 @@ mod tests {
             .unwrap();
         assert!(app.apply_system_theme(Some(NativeTheme::Dark)));
         assert_eq!(app.windows[&id].host.theme(), Theme::default_dark());
-        assert!(app.windows[&id].paint_dirty());
+        assert!(app.windows[&id].ui.paint_dirty());
         assert_eq!(app.make_window_state().host.theme(), Theme::default_dark());
         app.windows
             .get_mut(&id)
@@ -968,7 +950,7 @@ mod tests {
             .unwrap();
         assert!(!app.apply_system_theme(Some(NativeTheme::Dark)));
         assert!(
-            !app.windows[&id].paint_dirty(),
+            !app.windows[&id].ui.paint_dirty(),
             "duplicate native events need no repaint"
         );
     }
