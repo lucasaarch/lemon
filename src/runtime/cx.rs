@@ -2,13 +2,13 @@ use crate::animation::{AnimSlot, AnimationConfig, AnimationHandle};
 use crate::element::Element;
 use crate::reactive::derived::Derived;
 use crate::reactive::effect::Effect;
-use crate::reactive::signal::Signal;
+use crate::reactive::state::State;
 use std::any::Any;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::host::{OpenWindowParams, OpenWindowRequest};
+use crate::{host::OpenWindowRequest, WindowConfig};
 
 /// Reactive context passed to your root view and to [`Component`](crate::element::builders::Component) views.
 ///
@@ -73,11 +73,11 @@ impl Cx {
         let mut hooks = self.hooks.borrow_mut();
         if idx < hooks.len() {
             hooks[idx]
-                .downcast_ref::<Signal<T>>()
+                .downcast_ref::<State<T>>()
                 .expect("state: hook type mismatch — called with different type on re-render")
                 .clone()
         } else {
-            let s = Signal::new(initial);
+            let s = State::new(initial);
             hooks.push(Box::new(s.clone()));
             s
         }
@@ -155,7 +155,7 @@ impl Cx {
         self.host.theme()
     }
 
-    /// Queues a request to open a new native window with the given parameters.
+    /// Queues a new native window using the same [`WindowConfig`] as [`crate::run`].
     ///
     /// The request is pushed to this context's host queue and drained by the platform layer after
     /// the current event batch. The new window is independent and participates in the same
@@ -168,25 +168,22 @@ impl Cx {
     ///
     /// ```no_run
     /// use lemon::prelude::*;
-    /// use lemon::OpenWindowParams;
-    /// use lemon::element::builders::Button;
+    /// use lemon::WindowConfig;
     ///
     /// fn settings(_cx: &Cx) -> Element {
     ///     Text::new("Settings").into_element()
     /// }
     ///
     /// fn view(cx: &Cx) -> Element {
-    ///     let open = cx.state(false);
-    ///     if open.get() {
-    ///         cx.open_window(OpenWindowParams::default().title("Settings"), settings);
-    ///     }
-    ///     let open2 = open.clone();
-    ///     Button::new("Open").action(move || open2.set(true)).into_element()
+    ///     let windows = Cx::new();
+    ///     Button::new(cx, "Open").action(move || {
+    ///         windows.open_window(WindowConfig::default().title("Settings"), settings);
+    ///     }).into_element()
     /// }
     /// ```
-    pub fn open_window(&self, params: OpenWindowParams, root: impl Fn(&Cx) -> Element + 'static) {
+    pub fn open_window(&self, config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) {
         self.host.request_window(OpenWindowRequest {
-            params,
+            config,
             root: Arc::new(root),
         });
     }
@@ -246,7 +243,7 @@ mod tests {
     fn standalone_contexts_do_not_share_window_queues_or_animation_requests() {
         let first = Cx::new();
         let second = Cx::new();
-        first.open_window(OpenWindowParams::default(), |_| {
+        first.open_window(WindowConfig::default(), |_| {
             crate::Text::new("child").into_element()
         });
         assert!(second.host.take_window_requests().is_empty());
@@ -308,7 +305,7 @@ mod tests {
 
     #[test]
     fn watch_runs_once_on_mount_not_on_rerender() {
-        use crate::reactive::signal::Signal;
+        use crate::reactive::state::State;
         use std::cell::Cell;
         use std::rc::Rc;
 
@@ -316,7 +313,7 @@ mod tests {
         let sink = Rc::new(RefCell::new(Vec::new()));
         let cx = Cx::new();
         cx.set_deferred_sink(Rc::clone(&sink));
-        let trigger = Signal::new(0u32);
+        let trigger = State::new(0u32);
 
         cx.reset_hooks();
         let r = run_count.clone();
@@ -381,14 +378,15 @@ mod tests {
         let _scope = host.enter();
 
         let cx = Cx::new();
-        let params = OpenWindowParams::default().title("Test").size(400.0, 300.0);
+        let params = WindowConfig::default().title("Test").size(400.0, 300.0);
         cx.open_window(params.clone(), |_cx| Text::new("hello").into_element());
 
         let requests = host.take_window_requests();
         assert_eq!(requests.len(), 1);
-        assert_eq!(requests[0].params.title, "Test");
-        assert_eq!(requests[0].params.width, 400.0);
-        assert_eq!(requests[0].params.height, 300.0);
+        assert_eq!(requests[0].config, params);
+        assert_eq!(requests[0].config.title, "Test");
+        assert_eq!(requests[0].config.width, 400.0);
+        assert_eq!(requests[0].config.height, 300.0);
 
         // Queue should be empty after draining.
         assert!(host.take_window_requests().is_empty());

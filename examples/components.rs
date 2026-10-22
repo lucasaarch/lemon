@@ -15,13 +15,30 @@ fn counter(cx: &Cx) -> Element {
         .into_element()
 }
 
-fn app(_cx: &Cx) -> Element {
+fn settings(cx: &Cx) -> Element {
+    let name = cx.state(String::new());
+    ColumnView::new()
+        .inset(24.0)
+        .spacing(12.0)
+        .child(Text::new("Settings").size(24.0))
+        .child(TextField::new(cx, name).placeholder("Name"))
+        .into_element()
+}
+
+fn app(cx: &Cx) -> Element {
+    let windows = Cx::new();
     ColumnView::new()
         .inset(24.0)
         .spacing(12.0)
         // Stable keys distinguish sibling instances of the same function.
         .child(Component::new(counter).key(1))
         .child(Component::new(counter).key(2))
+        .child(Button::new(cx, "Settings").action(move || {
+            windows.open_window(
+                WindowConfig::default().title("Settings").size(480.0, 360.0),
+                settings,
+            );
+        }))
         .into_element()
 }
 

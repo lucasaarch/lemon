@@ -15,7 +15,7 @@ Lemon is already useful as a serious experimental codebase and an early foundati
 
 ## Why Lemon
 
-- Reactive state with explicit `Signal`, `Effect`, and `Cx` primitives
+- Reactive state with explicit `State`, `Effect`, and `Cx` primitives
 - Fluent UI builders for composing trees in plain Rust
 - Incremental updates through diff + retained tree, rather than full rebuilds of every downstream stage
 - Modern native rendering pipeline built on `wgpu` and `vello`
@@ -76,7 +76,7 @@ Each example has one job. Sources live in [`examples`](examples).
 | Example | Topic |
 |---------|-------|
 | `counter` | Minimal signal, reactive text, and button |
-| `reactivity` | Signals, memoized values, and effects (output in the terminal) |
+| `reactivity` | State, derived values, and effects (output in the terminal) |
 | `components` | Independent hook state in keyed component instances |
 | `keys` | Stable row identity during removal and reordering |
 | `layout` | Rows, columns, spacing, alignment, and styled views |
@@ -161,7 +161,7 @@ organized by responsibility:
 | Path | Role |
 |------|------|
 | `src/lib.rs`, `src/prelude.rs` | Public API and application imports |
-| `src/reactive/` | Signals, derived values, effects, and observer tracking |
+| `src/reactive/` | State, derived values, effects, and observer tracking |
 | `src/runtime/` | Component lifecycle, state slots, and reactive rendering |
 | `src/element/`, `src/widget/` | Element model, builders, shared styling, and controls |
 | `src/diff/`, `src/retained/` | Reconciliation, patches, retained state and invalidation |
@@ -274,7 +274,7 @@ matches your product. Use `run_with_theme` for app-wide tokens and widget style 
 blocks clipboard copy/cut shortcuts. Its string state retains the original value for app code.
 
 When a widget almost fits but the visual structure does not, rebuild the control from primitives:
-`View`, `ColumnView`, `RowView`, `Text`, `Button`, `Signal`, and event handlers. This keeps the app in the
+`View`, `ColumnView`, `RowView`, `Text`, `Button`, `State`, and event handlers. This keeps the app in the
 normal Lemon pipeline while giving you control over layout, paint, hover/press state, and copy.
 For repeated dynamic rows, give siblings stable `.key(id)` values so diffing preserves identity.
 For colors that depend on live state, pass a closure to paint builders such as `.surface(...)`;
@@ -453,3 +453,24 @@ immediately. Pointer interaction always uses the current layout.
 The `animation` example combines explicit `cx.motion(...)` with implicit transitions.
 Native windows schedule frames automatically; custom hosts use `UiState::update`
 or `update_at` with a monotonic timestamp and honor their host's frame requests.
+
+### Additional windows
+
+`WindowConfig` configures both `run(...)` and `cx.open_window(...)`. The same
+initialization applies registered fonts and the application theme to every window.
+Each request opens an independent window; closing the last window exits the app.
+The `components` example includes a Settings button showing the same API:
+
+```rust
+use lemon::prelude::*;
+fn settings(_cx: &Cx) -> Element { Text::new("Settings").into_element() }
+fn app(cx: &Cx) -> Element {
+    let windows = Cx::new();
+    Button::new(cx, "Settings").action(move || {
+        windows.open_window(WindowConfig::default().title("Settings").size(480.0, 360.0), settings);
+    }).into_element()
+}
+```
+
+`State` is the reactive cell type throughout the toolkit. Buttons and images render
+through ordinary views and text; low-level controls use these same primitives.

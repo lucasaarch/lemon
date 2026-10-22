@@ -120,7 +120,7 @@ impl Scroll {
         let mut viewport = View::new()
             .height(viewport_h)
             .clip()
-            .scroll_bar()
+            .scroll_viewport()
             .scroll_layout_max(layout_max)
             .on_scroll(move |delta| {
                 let measured_max = layout_max_for_scroll.get();
@@ -174,7 +174,7 @@ mod tests {
     }
 
     #[test]
-    fn scroll_viewport_uses_scroll_bar_paint_flag() {
+    fn scroll_uses_shared_viewport_marker() {
         let offset = State::new(10.0f64);
         let root = Scroll::with_offset(offset.clone(), crate::element::builders::Text::new("item"))
             .height(200.0)
@@ -185,8 +185,7 @@ mod tests {
             panic!("expected scroll viewport View");
         };
         assert_eq!(viewport.style.overflow, Overflow::Hidden);
-        assert!(viewport.scroll_bar);
-        assert!(!viewport.scroll_viewport);
+        assert!(viewport.scroll_viewport);
         assert!(viewport.handlers.on_scroll.is_some());
         assert!(viewport.handlers.scroll_layout_max.is_some());
 

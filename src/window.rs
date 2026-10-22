@@ -1,4 +1,18 @@
-/// Window size and title passed to [`crate::platform::run`].
+//! Backend-independent window configuration and root content.
+
+/// Root content shared by window requests and native window initialization.
+///
+/// The function runs on the UI thread and may capture shared [`crate::State`] values.
+///
+/// ```
+/// use lemon::{window::RootComponent, Text};
+/// let root: RootComponent = std::sync::Arc::new(|_| Text::new("Window").into_element());
+/// ```
+pub type RootComponent = std::sync::Arc<dyn Fn(&crate::Cx) -> crate::element::Element>;
+
+/// Native window configuration used by [`crate::run`] and [`crate::Cx::open_window`].
+///
+/// Defaults to a resizable 900 × 600 logical-point window titled "Lemon".
 ///
 /// Sizes are in **logical points** (winit logical pixels), not physical pixels.
 ///

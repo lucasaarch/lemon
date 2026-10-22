@@ -1,4 +1,4 @@
-//! Signals hold state; memos derive values; effects perform side effects.
+//! State holds values; derived values cache computations; effects perform side effects.
 //! Watch the terminal for effect output. Reset uses `set`, increment uses `update`.
 
 use lemon::prelude::*;
@@ -18,7 +18,7 @@ fn app(cx: &Cx) -> Element {
         .spacing(12.0)
         .children(children![
             Text::new(move || format!("Count: {}", label.get())),
-            Text::new(move || format!("Doubled (memo): {}", doubled.get())),
+            Text::new(move || format!("Doubled (derived): {}", doubled.get())),
             Button::new(cx, "Increment").action(move || increment.update(|n| *n += 1)),
             Button::new(cx, "Reset").action(move || count.set(0)),
         ])

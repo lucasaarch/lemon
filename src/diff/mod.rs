@@ -65,7 +65,6 @@ pub enum Patch {
         node: NodePath,
         text_input: Option<crate::element::types::TextInputMeta>,
         scroll_viewport: bool,
-        scroll_bar: bool,
     },
     ReplaceNode {
         node: NodePath,
@@ -265,57 +264,6 @@ pub(crate) fn reconcile(
                 new_element: Element::None,
             });
         }
-        (Button(o), Button(n)) => {
-            if o.style != n.style {
-                patches.push(Patch::UpdateStyle {
-                    node: path.clone(),
-                    style: n.style,
-                });
-            }
-            let old_handlers = crate::retained::EventHandlers {
-                on_click: o.on_click.clone(),
-                ..Default::default()
-            };
-            let new_handlers = crate::retained::EventHandlers {
-                on_click: n.on_click.clone(),
-                ..Default::default()
-            };
-            if old_handlers != new_handlers {
-                patches.push(Patch::UpdateHandlers {
-                    node: path.clone(),
-                    handlers: new_handlers,
-                });
-            }
-            let ol = o.label.resolve();
-            let nl = n.label.resolve();
-            if ol != nl {
-                patches.push(Patch::UpdateText {
-                    node: path.clone(),
-                    content: nl,
-                });
-            }
-            let op = o.paint.resolve();
-            let np = n.paint.resolve();
-            if op != np {
-                patches.push(Patch::UpdatePaint {
-                    node: path,
-                    paint: np,
-                });
-            }
-        }
-        (Image(o), Image(n)) => {
-            if o.src != n.src {
-                patches.push(Patch::ReplaceNode {
-                    node: path,
-                    new_element: Image(n),
-                });
-            } else if o.style != n.style {
-                patches.push(Patch::UpdateStyle {
-                    node: path,
-                    style: n.style,
-                });
-            }
-        }
         (None, None) => {}
         // Different types — replace entirely
         (_, new) => {
@@ -353,8 +301,6 @@ pub(crate) fn element_key(element: &Element) -> Option<crate::element::types::Ke
     match element {
         Text(text) => text.key.clone(),
         Column(container) | Row(container) | View(container) => container.key.clone(),
-        Button(button) => button.key.clone(),
-        Image(image) => image.key.clone(),
         Component(component) => component.key().cloned(),
         Fragment(_) => Option::None,
         Element::None => Option::None,
@@ -467,10 +413,7 @@ fn push_remove_child(element: &Element, parent: &NodePath, index: usize, patches
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::element::{
-        builders::{Button, ColumnView, Component, Text},
-        types::ImageElement,
-    };
+    use crate::element::builders::{ColumnView, Component, Text};
 
     fn txt(s: &'static str) -> Element {
         Text::new(s).into_element()
@@ -506,7 +449,9 @@ mod tests {
     fn different_types_produces_replace() {
         let patches = diff(
             Text::new("x").into_element(),
-            Button::new("x").into_element(),
+            crate::View::new()
+                .child(crate::Text::new("x"))
+                .into_element(),
             NodePath::root(),
         );
         assert_eq!(patches.len(), 1);
@@ -605,47 +550,31 @@ mod tests {
     }
 
     #[test]
-    fn button_style_change_produces_update_style() {
-        let old = Element::Button(crate::element::types::ButtonElement {
-            label: "ok".into(),
-            style: Default::default(),
-            paint: Default::default(),
-            on_click: None,
-            key: None,
-        });
-        let new_style = crate::element::style::StyleProps {
-            width: Some(crate::element::style::Dimension::Points(120.0)),
-            ..Default::default()
-        };
-        let new = Element::Button(crate::element::types::ButtonElement {
-            label: "ok".into(),
-            style: new_style,
-            paint: Default::default(),
-            on_click: None,
-            key: None,
-        });
+    fn view_style_change_produces_update_style() {
+        let old = crate::View::new().child(Text::new("ok")).into_element();
+        let new = crate::View::new()
+            .width(120.0)
+            .child(Text::new("ok"))
+            .into_element();
         let patches = diff(old, new, NodePath::root());
         assert!(patches
             .iter()
             .any(|p| matches!(p, Patch::UpdateStyle { .. })));
+    }
+
+    fn image_handle(red: u8) -> crate::ImageHandle {
+        crate::ImageHandle::from_arc(std::sync::Arc::new(crate::asset::image_handle::ImageData {
+            width: 1,
+            height: 1,
+            pixels: vec![red, 0, 0, 255],
+        }))
     }
 
     #[test]
     fn image_style_change_produces_update_style() {
-        let old = Element::Image(ImageElement {
-            src: "a.png".to_owned(),
-            style: Default::default(),
-            key: None,
-        });
-        let new_style = crate::element::style::StyleProps {
-            height: Some(crate::element::style::Dimension::Points(64.0)),
-            ..Default::default()
-        };
-        let new = Element::Image(ImageElement {
-            src: "a.png".to_owned(),
-            style: new_style,
-            key: None,
-        });
+        let handle = image_handle(1);
+        let old = crate::View::new().image(handle.clone()).into_element();
+        let new = crate::View::new().image(handle).height(64.0).into_element();
         let patches = diff(old, new, NodePath::root());
         assert!(patches
             .iter()
@@ -653,21 +582,11 @@ mod tests {
     }
 
     #[test]
-    fn image_src_change_produces_replace() {
-        let old = Element::Image(ImageElement {
-            src: "a.png".to_owned(),
-            style: Default::default(),
-            key: None,
-        });
-        let new = Element::Image(ImageElement {
-            src: "b.png".to_owned(),
-            style: Default::default(),
-            key: None,
-        });
+    fn image_handle_change_updates_paint_without_replacing_the_node() {
+        let old = crate::View::new().image(image_handle(1)).into_element();
+        let new = crate::View::new().image(image_handle(2)).into_element();
         let patches = diff(old, new, NodePath::root());
-        assert!(patches
-            .iter()
-            .any(|p| matches!(p, Patch::ReplaceNode { .. })));
+        assert!(matches!(patches.as_slice(), [Patch::UpdatePaint { .. }]));
     }
 
     #[test]

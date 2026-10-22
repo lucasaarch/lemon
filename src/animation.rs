@@ -9,7 +9,7 @@ use std::cell::{Cell, RefCell};
 use std::rc::{Rc, Weak};
 use std::time::{Duration, Instant};
 
-use crate::reactive::signal::Signal;
+use crate::reactive::state::State;
 
 /// Easing curve applied to an animation's normalized progress.
 ///
@@ -196,7 +196,7 @@ impl AnimSlot {
 pub struct AnimationHandle {
     slot: Rc<RefCell<AnimSlot>>,
     active_slots: Rc<RefCell<Vec<Weak<RefCell<AnimSlot>>>>>,
-    frame: Signal<u32>,
+    frame: State<u32>,
     pending: Rc<Cell<bool>>,
 }
 
@@ -291,13 +291,13 @@ impl AnimationHandle {
 pub struct AnimRegistry {
     slots: Rc<RefCell<Vec<Weak<RefCell<AnimSlot>>>>>,
     active_slots: Rc<RefCell<Vec<Weak<RefCell<AnimSlot>>>>>,
-    frame: Signal<u32>,
+    frame: State<u32>,
     pending: Rc<Cell<bool>>,
 }
 
 impl AnimRegistry {
     /// Returns the frame signal for this registry.
-    pub fn frame_signal(&self) -> Signal<u32> {
+    pub fn frame_signal(&self) -> State<u32> {
         self.frame.clone()
     }
 
@@ -367,7 +367,7 @@ impl Default for AnimRegistry {
         Self {
             slots: Rc::default(),
             active_slots: Rc::default(),
-            frame: Signal::new(0),
+            frame: State::new(0),
             pending: Rc::new(Cell::new(false)),
         }
     }

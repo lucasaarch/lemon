@@ -3,8 +3,8 @@
 //! These primitives depend only on the standard library and do not import UI or platform modules.
 //!
 //! ```
-//! use lemon::reactive::{Derived, Signal};
-//! let count = Signal::new(2);
+//! use lemon::reactive::{Derived, State};
+//! let count = State::new(2);
 //! let source = count.clone();
 //! let doubled = Derived::new(move || source.get() * 2);
 //! assert_eq!(doubled.get(), 4);
@@ -15,8 +15,8 @@
 pub mod derived;
 pub mod effect;
 pub mod observer;
-pub mod signal;
+pub mod state;
 
 pub use derived::Derived;
 pub use effect::Effect;
-pub use signal::Signal;
+pub use state::State;

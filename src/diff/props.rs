@@ -37,15 +37,11 @@ pub(crate) fn diff_container_chrome(
     path: &NodePath,
     patches: &mut Vec<Patch>,
 ) {
-    if old.text_input != new.text_input
-        || old.scroll_viewport != new.scroll_viewport
-        || old.scroll_bar != new.scroll_bar
-    {
+    if old.text_input != new.text_input || old.scroll_viewport != new.scroll_viewport {
         patches.push(Patch::UpdateWidgetChrome {
             node: path.clone(),
             text_input: new.text_input.clone(),
             scroll_viewport: new.scroll_viewport,
-            scroll_bar: new.scroll_bar,
         });
     }
 }

@@ -70,6 +70,7 @@ pub mod theme;
 pub mod transition;
 pub mod ui;
 pub mod widget;
+pub mod window;
 
 pub mod platform;
 pub mod reactive;
@@ -88,31 +89,17 @@ pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, Named
 pub use element::style::{
     BoxShadow, Color, Distribute, LinearGradient, Overflow, Placement, Position, StyleProps,
 };
-pub use host::OpenWindowParams;
 pub use layout::{
     layout_pass, layout_pass_if_dirty, measure_element_height,
     measure_element_height_with_font_context, scroll_content_max_offset, sync_scroll_layout_max,
     LayoutMap, LayoutRect, Viewport,
 };
-pub use reactive::Signal;
-/// Shared reactive application state, returned by [`Cx::state`].
-///
-/// Clones refer to the same value. Read with `.get()`, replace with `.set(...)`,
-/// or mutate with `.update(...)`. Component-owned state must be declared in a stable
-/// order through `cx.state(...)`; `State::new(...)` creates independent external state.
-///
-/// ```
-/// use lemon::State;
-/// let count = State::new(0);
-/// let shared = count.clone();
-/// count.update(|value| *value += 1);
-/// assert_eq!(shared.get(), 1);
-/// ```
-pub type State<T> = Signal<T>;
+pub use reactive::State;
+pub use window::WindowConfig;
+
 pub use paint::{paint_pass, PaintStats};
 pub use platform::{
-    run, run_with_fonts, run_with_theme, run_with_theme_and_fonts, AppState, WindowConfig,
-    WindowState,
+    run, run_with_fonts, run_with_theme, run_with_theme_and_fonts, AppState, WindowState,
 };
 pub use retained::RetainedTree;
 pub use runtime::cx::Cx;
@@ -130,7 +117,6 @@ pub use element::decoration::Decorate;
 mod tests {
     use super::*;
     use crate::diff::Patch;
-    use crate::element::builders::Button as RawButton;
     use parley::FontContext;
     use std::thread::sleep;
     use std::time::{Duration, Instant};
@@ -154,7 +140,7 @@ mod tests {
 
     #[test]
     fn counter_increments_produce_update_text_patches() {
-        let count = Signal::new(0i32);
+        let count = State::new(0i32);
         let c = count.clone();
 
         let mut rt = Runtime::new();
@@ -188,7 +174,7 @@ mod tests {
 
     #[test]
     fn conditional_child_produces_insert_and_remove_patches() {
-        let show = Signal::new(false);
+        let show = State::new(false);
         let s = show.clone();
 
         let mut rt = Runtime::new();
@@ -226,8 +212,8 @@ mod tests {
 
     #[test]
     fn multiple_signals_each_trigger_patch() {
-        let name = Signal::new("Alice".to_owned());
-        let age = Signal::new(30u32);
+        let name = State::new("Alice".to_owned());
+        let age = State::new(30u32);
         let n = name.clone();
         let a = age.clone();
 
@@ -258,7 +244,7 @@ mod tests {
 
     #[test]
     fn runtime_patches_drive_relayout_height_change() {
-        let text = Signal::new("A".to_owned());
+        let text = State::new("A".to_owned());
         let t = text.clone();
 
         let mut rt = Runtime::new();
@@ -336,7 +322,7 @@ mod tests {
                 .spacing(12.0)
                 .inset(24.0)
                 .child(Text::new("0").size(24.0))
-                .child(RawButton::new("Incrementar"))
+                .child(Button::new(&Cx::new(), "Incrementar"))
                 .into_element(),
         )
         .unwrap();
@@ -359,18 +345,18 @@ mod tests {
 
     #[test]
     fn end_to_end_runtime_layout_paint_without_panic() {
-        let count = Signal::new(0i32);
+        let count = State::new(0i32);
         let c = count.clone();
 
         let mut rt = Runtime::new();
-        rt.mount(move |_cx| {
+        rt.mount(move |cx| {
             let c2 = c.clone();
             ColumnView::new()
                 .width(200.0)
                 .spacing(8.0)
                 .child(Text::new(move || format!("Count: {}", c2.get())).size(16.0))
                 .child(
-                    RawButton::new("Increment")
+                    Button::new(cx, "Increment")
                         .width(120.0)
                         .height(40.0)
                         .surface(Color::rgb8(50, 100, 150)),

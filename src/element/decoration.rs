@@ -35,8 +35,6 @@ pub trait Decorate: Into<Element> + Sized {
                 let mut leaf = leaf;
                 let key = match &mut leaf {
                     Element::Text(node) => node.key.take(),
-                    Element::Button(node) => node.key.take(),
-                    Element::Image(node) => node.key.take(),
                     Element::Component(node) => node.key().cloned(),
                     _ => None,
                 };

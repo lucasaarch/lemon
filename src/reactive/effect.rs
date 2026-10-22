@@ -1,4 +1,4 @@
-//! Signal-dependent side effects.
+//! State-dependent side effects.
 
 use crate::reactive::observer::{with_observer, Subscriber};
 use std::cell::{Cell, RefCell};
@@ -78,7 +78,7 @@ impl Effect {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::reactive::signal::Signal;
+    use crate::reactive::state::State;
     use std::cell::Cell;
     use std::rc::Rc;
 
@@ -94,7 +94,7 @@ mod tests {
 
     #[test]
     fn reruns_on_signal_change() {
-        let s = Signal::new(0i32);
+        let s = State::new(0i32);
         let count = Rc::new(Cell::new(0u32));
         let c = count.clone();
         let s2 = s.clone();
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn stops_rerunning_after_drop() {
-        let s = Signal::new(0i32);
+        let s = State::new(0i32);
         let count = Rc::new(Cell::new(0u32));
         let c = count.clone();
         let s2 = s.clone();

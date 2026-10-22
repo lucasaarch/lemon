@@ -30,10 +30,10 @@ impl Default for Theme {
 }
 
 impl Theme {
-    /// Returns the default light theme.
+    /// Returns the default light palette with the shared typography, spacing and radius scales.
     pub fn default_light() -> Self {
-        Self {
-            colors: ColorTokens {
+        Self::with_palette(
+            ColorTokens {
                 background: Color::rgb8(248, 250, 252),
                 surface: Color::rgb8(255, 255, 255),
                 surface_hover: Color::rgb8(241, 245, 249),
@@ -48,34 +48,13 @@ impl Theme {
                 error: Color::rgb8(220, 38, 38),
                 border: Color::rgb8(203, 213, 225),
             },
-            chrome: WidgetChromeTokens {
+            WidgetChromeTokens {
                 scrollbar_track: Color::rgb8(229, 231, 235),
                 scrollbar_thumb: Color::rgb8(156, 163, 175),
                 caret: Color::rgb8(15, 23, 42),
                 focus_ring: Color::rgb8(59, 130, 246),
             },
-            typography: TypographyTokens {
-                font_size_sm: 12.0,
-                font_size_md: 14.0,
-                font_size_lg: 18.0,
-                font_size_xl: 24.0,
-                font_family: "system-ui".to_string(),
-                line_height: 1.5,
-                letter_spacing: 0.0,
-            },
-            spacing: SpacingTokens {
-                xs: 4.0,
-                sm: 8.0,
-                md: 12.0,
-                lg: 16.0,
-                xl: 24.0,
-            },
-            radius: RadiusTokens {
-                sm: 4.0,
-                md: 8.0,
-                lg: 12.0,
-            },
-        }
+        )
     }
 
     /// Returns Lemon's neutral graphite dark palette, typography, spacing and corner radii.
@@ -93,8 +72,8 @@ impl Theme {
     /// run_with_theme(WindowConfig::default(), themes, |_| View::new().fill().into_element());
     /// ```
     pub fn default_dark() -> Self {
-        Self {
-            colors: ColorTokens {
+        Self::with_palette(
+            ColorTokens {
                 background: Color::rgb8(24, 24, 24),
                 surface: Color::rgb8(34, 34, 34),
                 surface_hover: Color::rgb8(44, 44, 44),
@@ -109,12 +88,18 @@ impl Theme {
                 error: Color::rgb8(248, 113, 113),
                 border: Color::rgb8(72, 72, 72),
             },
-            chrome: WidgetChromeTokens {
+            WidgetChromeTokens {
                 scrollbar_track: Color::rgb8(30, 30, 30),
                 scrollbar_thumb: Color::rgb8(101, 101, 101),
                 caret: Color::rgb8(237, 237, 237),
                 focus_ring: Color::rgb8(59, 130, 246),
             },
+        )
+    }
+    fn with_palette(colors: ColorTokens, chrome: WidgetChromeTokens) -> Self {
+        Self {
+            colors,
+            chrome,
             typography: TypographyTokens {
                 font_size_sm: 12.0,
                 font_size_md: 14.0,

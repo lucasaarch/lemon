@@ -20,7 +20,7 @@
 //! | `layout`   | Layout pass entry/exit                                        |
 //! | `paint`    | Paint pass stats                                              |
 //! | `input`    | Clicks, keyboard dispatch, hit targets                         |
-//! | `signal`   | Signal `set` / `update` (very noisy)                          |
+//! | `signal`   | State `set` / `update` (very noisy)                          |
 //! | `retained` | Retained-tree mount and structural changes                    |
 //!
 //! Use `1`, `true`, `yes`, or `all` to enable every category.
@@ -48,7 +48,7 @@ pub enum Category {
     Layout,
     Paint,
     Input,
-    Signal,
+    State,
     Retained,
 }
 
@@ -59,7 +59,7 @@ impl Category {
         Category::Layout,
         Category::Paint,
         Category::Input,
-        Category::Signal,
+        Category::State,
         Category::Retained,
     ];
 
@@ -70,7 +70,7 @@ impl Category {
             Category::Layout => "layout",
             Category::Paint => "paint",
             Category::Input => "input",
-            Category::Signal => "signal",
+            Category::State => "signal",
             Category::Retained => "retained",
         }
     }
@@ -82,7 +82,7 @@ impl Category {
             "layout" => Some(Category::Layout),
             "paint" => Some(Category::Paint),
             "input" => Some(Category::Input),
-            "signal" | "signals" => Some(Category::Signal),
+            "signal" | "signals" => Some(Category::State),
             "retained" => Some(Category::Retained),
             _ => None,
         }
@@ -307,8 +307,6 @@ pub fn element_kind(element: &Element) -> &'static str {
         Element::Row(_) => "Row",
         Element::Column(_) => "Column",
         Element::Text(_) => "Text",
-        Element::Button(_) => "Button",
-        Element::Image(_) => "Image",
         Element::Component(_) => "Component",
         Element::Fragment(_) => "Fragment",
         Element::None => "None",

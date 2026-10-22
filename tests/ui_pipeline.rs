@@ -2,7 +2,7 @@ use lemon::diff::{NodePath, Patch};
 use lemon::element::Element;
 use lemon::host::HostContext;
 use lemon::ui::UiState;
-use lemon::{Color, ColumnView, Signal, Text, Theme, Viewport};
+use lemon::{Color, ColumnView, State, Text, Theme, Viewport};
 
 fn viewport() -> Viewport {
     Viewport {
@@ -13,7 +13,7 @@ fn viewport() -> Viewport {
 
 #[test]
 fn batches_reactive_updates_until_geometry_is_requested() {
-    let text = Signal::new("first".to_owned());
+    let text = State::new("first".to_owned());
     let source = text.clone();
     let mut ui = UiState::default();
     ui.mount(move |_| Text::new(source.get()).into_element())
@@ -37,7 +37,7 @@ fn batches_reactive_updates_until_geometry_is_requested() {
 
 #[test]
 fn paint_only_runtime_updates_keep_text_layout_cache() {
-    let color = Signal::new(Color::rgb8(1, 2, 3));
+    let color = State::new(Color::rgb8(1, 2, 3));
     let source = color.clone();
     let mut ui = UiState::default();
     ui.mount(move |_| {
@@ -59,7 +59,7 @@ fn paint_only_runtime_updates_keep_text_layout_cache() {
 fn render_uses_originating_theme_even_when_another_host_sets_signal() {
     let host = HostContext::new(Theme::default_light());
     let other = HostContext::new(Theme::default_dark());
-    let signal = Signal::new(0);
+    let signal = State::new(0);
     let source = signal.clone();
     let mut ui = UiState::default();
     {

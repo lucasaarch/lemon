@@ -24,7 +24,6 @@ fn paint_and_chrome_do_not_invalidate_clean_geometry() {
         node: NodePath::root(),
         text_input: None,
         scroll_viewport: false,
-        scroll_bar: false,
     })
     .unwrap();
     assert!(!tree.layout_dirty());

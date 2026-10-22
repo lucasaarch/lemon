@@ -332,7 +332,7 @@ fn measure_text_node(
         }
     }
 
-    let font_size = effective_font_size(&snapshot.style);
+    let font_size = snapshot.style.resolved_font_size();
     let weight = FontWeight::new(snapshot.style.font_weight as f32);
     let line_height = effective_line_height(&snapshot.style);
     let font_family = effective_font_family(&snapshot.style);
@@ -363,14 +363,6 @@ fn measure_text_node(
     size
 }
 
-fn effective_font_size(style: &TextStyle) -> f32 {
-    if style.font_size > 0.0 {
-        style.font_size
-    } else {
-        crate::theme::current_theme().typography.font_size_md
-    }
-}
-
 fn effective_font_family(style: &TextStyle) -> Cow<'_, str> {
     if style.font_family.trim().is_empty() {
         Cow::Owned(crate::theme::current_theme().typography.font_family)
@@ -395,7 +387,7 @@ pub fn measure_single_line_width(content: &str, style: &TextStyle) -> f32 {
 
     let mut font_cx = FontContext::new();
     let mut layout_cx = LayoutContext::<ParleyBrush>::new();
-    let font_size = effective_font_size(style);
+    let font_size = style.resolved_font_size();
     let weight = FontWeight::new(style.font_weight as f32);
     let line_height = effective_line_height(style);
     let font_family = effective_font_family(style);
@@ -927,19 +919,20 @@ mod tests {
     }
 
     #[test]
-    fn button_with_fixed_width_clears_label_needs_layout() {
-        use crate::element::builders::Button;
-
+    fn fixed_width_view_clears_child_text_needs_layout() {
         let mut tree = RetainedTree::mount(
             View::new()
                 .width(200.0)
-                .child(Button::new("+").width(44.0))
+                .child(crate::View::new().child(crate::Text::new("+")).width(44.0))
                 .into_element(),
         )
         .unwrap();
 
         let button = &tree.root.as_ref().unwrap().children[0];
-        assert!(button.text.as_ref().is_some_and(|text| text.needs_layout));
+        assert!(button.children[0]
+            .text
+            .as_ref()
+            .is_some_and(|text| text.needs_layout));
 
         layout_pass(
             &mut tree,
@@ -951,7 +944,7 @@ mod tests {
         .unwrap();
 
         let button = &tree.root.as_ref().unwrap().children[0];
-        let label = button.text.as_ref().unwrap();
+        let label = button.children[0].text.as_ref().unwrap();
         assert!(label.parley_layout.is_some());
         assert!(!label.needs_layout);
         assert!(!tree.text_needs_reflow());
@@ -994,13 +987,12 @@ mod tests {
     }
 
     #[test]
-    fn button_in_column_sizes_to_content_not_full_width() {
-        use crate::element::builders::Button;
-
+    fn start_aligned_view_in_column_sizes_to_content_not_full_width() {
         let mut tree = RetainedTree::mount(
             ColumnView::new()
                 .inset(24.0)
-                .child(Button::new("Incrementar"))
+                .align(crate::element::style::Align::Start)
+                .child(crate::View::new().child(crate::Text::new("Incrementar")))
                 .into_element(),
         )
         .unwrap();
@@ -1025,7 +1017,7 @@ mod tests {
 
     #[test]
     fn same_fn_sibling_components_update_text_at_index_five_reflows() {
-        use crate::element::builders::{Button, ColumnView, Component, RowView, Text};
+        use crate::element::builders::{ColumnView, Component, RowView, Text};
         use crate::runtime::Runtime;
         use crate::Cx;
 
@@ -1034,7 +1026,7 @@ mod tests {
             let label = n.clone();
             RowView::new()
                 .child(Text::new(move || format!("{}", label.get())).size(16.0))
-                .child(Button::new("+").width(44.0))
+                .child(crate::View::new().child(crate::Text::new("+")).width(44.0))
                 .into_element()
         }
 

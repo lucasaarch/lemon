@@ -520,6 +520,16 @@ pub struct TextStyle {
     pub color: Option<Color>,
 }
 
+impl TextStyle {
+    pub(crate) fn resolved_font_size(&self) -> f32 {
+        if self.font_size > 0.0 {
+            self.font_size
+        } else {
+            crate::theme::current_theme().typography.font_size_md
+        }
+    }
+}
+
 impl Default for TextStyle {
     fn default() -> Self {
         let typography = crate::theme::current_theme().typography;

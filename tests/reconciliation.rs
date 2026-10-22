@@ -1,6 +1,6 @@
 use lemon::diff::{diff, NodePath};
 use lemon::element::Element;
-use lemon::{ColumnView, Component, Cx, RetainedTree, Runtime, Signal, Text};
+use lemon::{ColumnView, Component, Cx, RetainedTree, Runtime, State, Text};
 
 fn tree(keys: &[u64]) -> Element {
     ColumnView::new()
@@ -52,7 +52,7 @@ fn all_keyed_insert_remove_reorder_combinations_apply_to_expected_tree() {
 
 #[test]
 fn runtime_and_plain_diff_agree_on_keyed_operations() {
-    let order = Signal::new(vec![0, 1, 2]);
+    let order = State::new(vec![0, 1, 2]);
     let source = order.clone();
     let mut runtime = Runtime::new();
     runtime.mount(move |_| tree(&source.get()));
@@ -79,7 +79,7 @@ fn keyed_component_state_follows_identity_on_reorder() {
         let identity = cx.state(*key);
         Text::new(move || identity.get().to_string()).into_element()
     }
-    let order = Signal::new(vec![0, 1, 2]);
+    let order = State::new(vec![0, 1, 2]);
     let source = order.clone();
     let mut runtime = Runtime::new();
     runtime.mount(move |_| {
@@ -121,7 +121,7 @@ fn inserted_component_subtrees_mount_and_keep_state_after_reorders() {
         let identity = cx.state(*key);
         Text::new(move || identity.get().to_string()).into_element()
     }
-    let order = Signal::new(vec![0, 1]);
+    let order = State::new(vec![0, 1]);
     let source = order.clone();
     let mut ui = UiState::default();
     ui.mount(move |_| {
@@ -169,7 +169,7 @@ fn replacing_component_types_or_container_subtrees_mounts_the_new_output() {
     fn second(_: &Cx) -> Element {
         Text::new("second").into_element()
     }
-    let mode = Signal::new(0);
+    let mode = State::new(0);
     let source = mode.clone();
     let mut ui = UiState::default();
     ui.mount(move |_| {
@@ -224,7 +224,7 @@ fn component_fragment_outputs_use_keyed_reconciliation_and_preserve_hook_state()
                 .collect(),
         )
     }
-    let order = Signal::new(vec![0, 1, 2]);
+    let order = State::new(vec![0, 1, 2]);
     let source = order.clone();
     let mut ui = UiState::default();
     ui.mount(move |_| Component::new_with_props(fragment, Keys(source.get())).into_element())

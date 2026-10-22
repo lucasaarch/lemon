@@ -622,11 +622,6 @@ macro_rules! container_builder {
                 self.0.scroll_viewport = true;
                 self
             }
-            /// Paints a widget-style scrollbar track and thumb from layout measurements.
-            pub fn scroll_bar(mut self) -> Self {
-                self.0.scroll_bar = true;
-                self
-            }
             /// Animates visual changes in this view and its descendants.
             ///
             /// Initial mounting is immediate. Layout changes are not animated.

@@ -13,8 +13,8 @@ use crate::element::{
 /// on each render:
 ///
 /// ```no_run
-/// # use lemon::{Signal, element::builders::Text};
-/// # let count = Signal::new(0);
+/// # use lemon::{State, element::builders::Text};
+/// # let count = State::new(0);
 /// # let c = count.clone();
 /// Text::new(move || format!("{}", c.get()));
 /// ```

@@ -1,11 +1,9 @@
 //! Primitive element builders. Composed controls live alongside them in `crate::widget`.
 mod component;
 mod container;
-mod primitive_button;
 mod text;
 pub use component::Component;
 pub use container::{ColumnView, RowView, View};
-pub use primitive_button::Button;
 pub use text::Text;
 #[cfg(test)]
 mod tests {
@@ -234,13 +232,12 @@ mod tests {
 
     #[test]
     fn children_macro_accepts_mixed_builders() {
-        use super::Button;
         use crate::{children, ColumnView, RowView, Text};
 
         let Element::Column(col) = ColumnView::new()
             .children(children![
                 Text::new("title"),
-                Button::new("ok"),
+                crate::View::new().child(crate::Text::new("ok")),
                 RowView::new().child(Text::new("nested")),
             ])
             .into_element()
@@ -382,20 +379,27 @@ mod tests {
     }
 
     #[test]
-    fn button_on_click_fires() {
+    fn view_action_fires() {
         let fired = Rc::new(Cell::new(false));
         let f = fired.clone();
-        let Element::Button(el) = Button::new("OK").action(move || f.set(true)).into_element()
+        let Element::View(el) = crate::View::new()
+            .child(crate::Text::new("OK"))
+            .action(move || f.set(true))
+            .into_element()
         else {
             panic!()
         };
-        el.on_click.unwrap()();
+        el.handlers.on_click.unwrap()();
         assert!(fired.get());
     }
 
     #[test]
-    fn button_builder_sets_padding() {
-        let Element::Button(el) = Button::new("OK").inset(12.0).into_element() else {
+    fn view_builder_sets_padding() {
+        let Element::View(el) = crate::View::new()
+            .child(crate::Text::new("OK"))
+            .inset(12.0)
+            .into_element()
+        else {
             panic!()
         };
         assert_eq!(el.style.padding, Some(Edges::all(12.0)));

@@ -10,7 +10,7 @@ use crate::element::style::{
     Align, Color, CornerRadii, Dimension, Distribute, Edges, PaintData, StyleProps, TextStyle,
 };
 use crate::element::{
-    types::{BoxElement, ButtonElement, ImageElement, TextElement},
+    types::{BoxElement, TextElement},
     Element,
 };
 
@@ -163,16 +163,13 @@ impl std::fmt::Debug for EventHandlers {
     }
 }
 
+/// Rendering role of a retained node; composed controls use ordinary containers and text.
 #[derive(Clone, Debug, PartialEq)]
 pub enum RetainedKind {
     View,
     Row,
     Column,
     Text,
-    Button,
-    Image {
-        src: String,
-    },
     Component {
         type_id: std::any::TypeId,
         key: Option<crate::element::types::Key>,
@@ -202,7 +199,6 @@ pub struct RetainedNode {
     pub text: Option<TextCache>,
     pub text_input: Option<crate::element::types::TextInputMeta>,
     pub scroll_viewport: bool,
-    pub scroll_bar: bool,
 }
 
 impl RetainedNode {
@@ -245,7 +241,6 @@ impl RetainedNode {
             }),
             text_input: None,
             scroll_viewport: false,
-            scroll_bar: false,
         }
     }
 
@@ -365,8 +360,6 @@ impl RetainedTree {
             Element::Row(node) => self.build_box_node(RetainedKind::Row, node),
             Element::Column(node) => self.build_box_node(RetainedKind::Column, node),
             Element::Text(node) => self.build_text_node(node),
-            Element::Button(node) => self.build_button_node(node),
-            Element::Image(node) => self.build_image_node(node),
             Element::Component(_component) => {
                 self.build_text_node(crate::element::types::TextElement {
                     content: crate::element::content::TextContent::Static(String::new()),
@@ -392,7 +385,6 @@ impl RetainedTree {
             handlers,
             text_input,
             scroll_viewport,
-            scroll_bar,
         } = node;
         let flat_children = crate::diff::flatten_children(node_children);
         let mut children = Vec::with_capacity(flat_children.len());
@@ -418,7 +410,6 @@ impl RetainedTree {
             text: None,
             text_input: text_input.clone(),
             scroll_viewport,
-            scroll_bar,
         };
         if let Some(meta) = &text_input {
             sync_text_input_caret(&mut retained, meta);
@@ -435,59 +426,6 @@ impl RetainedTree {
         let taffy_id = self.taffy.new_leaf(Style::default())?;
 
         Ok(RetainedNode::text(taffy_id, content, node.style, color))
-    }
-
-    fn build_button_node(&mut self, node: ButtonElement) -> Result<RetainedNode, RetainedError> {
-        let label = node.label.resolve();
-        let taffy_id = self.taffy.new_leaf(node.style.to_taffy_style())?;
-        let label_style = TextStyle {
-            font_size: 16.0,
-            font_weight: 500,
-            font_family: crate::theme::current_theme().typography.font_family.clone(),
-            line_height: 1.0,
-            letter_spacing: 0.0,
-            color: Some(crate::theme::current_theme().colors.on_accent),
-        };
-
-        Ok(RetainedNode {
-            kind: RetainedKind::Button,
-            taffy_id: Some(taffy_id),
-            style: node.style,
-            paint: node.paint.resolve(),
-            children: Vec::new(),
-            handlers: EventHandlers {
-                on_click: node.on_click,
-                ..Default::default()
-            },
-            text: Some(TextCache {
-                content: label,
-                style: label_style,
-                caret: 0,
-                needs_layout: true,
-                parley_layout: None,
-                layout_max_width: None,
-            }),
-            text_input: None,
-            scroll_viewport: false,
-            scroll_bar: false,
-        })
-    }
-
-    fn build_image_node(&mut self, node: ImageElement) -> Result<RetainedNode, RetainedError> {
-        let taffy_id = self.taffy.new_leaf(node.style.to_taffy_style())?;
-
-        Ok(RetainedNode {
-            kind: RetainedKind::Image { src: node.src },
-            taffy_id: Some(taffy_id),
-            style: node.style,
-            paint: PaintData::default(),
-            children: Vec::new(),
-            handlers: EventHandlers::default(),
-            text: None,
-            text_input: None,
-            scroll_viewport: false,
-            scroll_bar: false,
-        })
     }
 
     /// Applies one validated patch, preserving accumulated invalidation on failure.
@@ -543,7 +481,6 @@ impl RetainedTree {
                     text: None,
                     text_input: None,
                     scroll_viewport: false,
-                    scroll_bar: false,
                 };
                 self.replace_with_wrapper(node, wrapper)?;
             }
@@ -571,12 +508,10 @@ impl RetainedTree {
                 node,
                 text_input,
                 scroll_viewport,
-                scroll_bar,
             } => {
                 let retained = self.node_mut(&node)?;
                 retained.text_input = text_input.clone();
                 retained.scroll_viewport = scroll_viewport;
-                retained.scroll_bar = scroll_bar;
                 if let Some(meta) = text_input.as_ref() {
                     sync_text_input_caret(retained, meta);
                 }
@@ -868,8 +803,8 @@ impl StyleProps {
                         taffy::LengthPercentage::Length(v)
                     }),
             },
-            align_items: self.align_items.clone().map(into_taffy_align_items),
-            align_self: self.align_self.clone().map(into_taffy_align_self),
+            align_items: self.align_items.clone().map(into_taffy_align),
+            align_self: self.align_self.clone().map(into_taffy_align),
             justify_content: self.justify_content.map(into_taffy_justify_content),
             flex_grow: self.flex_grow.unwrap_or(0.0),
             flex_shrink: self.flex_shrink.unwrap_or(1.0),
@@ -927,17 +862,7 @@ fn into_taffy_margin(edges: &Edges<f32>) -> Rect<taffy::LengthPercentageAuto> {
     }
 }
 
-fn into_taffy_align_self(align: Align) -> taffy::AlignSelf {
-    match align {
-        Align::Stretch => taffy::AlignSelf::Stretch,
-        Align::Start => taffy::AlignSelf::Start,
-        Align::End => taffy::AlignSelf::End,
-        Align::Center => taffy::AlignSelf::Center,
-        Align::Baseline => taffy::AlignSelf::Baseline,
-    }
-}
-
-fn into_taffy_align_items(align: Align) -> taffy::AlignItems {
+fn into_taffy_align(align: Align) -> taffy::AlignItems {
     match align {
         Align::Stretch => taffy::AlignItems::Stretch,
         Align::Start => taffy::AlignItems::Start,
@@ -1073,7 +998,7 @@ mod tests {
     use std::{cell::Cell, rc::Rc};
 
     use crate::diff::{NodePath, Patch};
-    use crate::element::builders::{Button, ColumnView, RowView, Text, View};
+    use crate::element::builders::{ColumnView, RowView, Text, View};
     use crate::element::events::{KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
     use crate::element::style::{Align, Color, Dimension, Distribute, Edges, StyleProps};
     use crate::element::types::ComponentElement;
@@ -1225,10 +1150,11 @@ mod tests {
     }
 
     #[test]
-    fn mount_resolves_paint_and_handlers_for_button_nodes() {
+    fn mount_resolves_paint_and_handlers_for_clickable_views() {
         let fired = Rc::new(Cell::new(false));
         let click = fired.clone();
-        let element = Button::new("Press")
+        let element = crate::View::new()
+            .child(crate::Text::new("Press"))
             .surface(Color::rgb8(10, 20, 30))
             .action(move || click.set(true))
             .into_element();
@@ -1236,9 +1162,9 @@ mod tests {
         let tree = RetainedTree::mount(element).unwrap();
         let root = tree.root.as_ref().unwrap();
 
-        assert!(matches!(root.kind, RetainedKind::Button));
+        assert!(matches!(root.kind, RetainedKind::View));
         assert_eq!(root.paint.background, Some(Color::rgb8(10, 20, 30)));
-        assert_eq!(root.text_content(), Some("Press"));
+        assert_eq!(root.children[0].text_content(), Some("Press"));
 
         let handler = root.handlers.on_click.as_ref().unwrap();
         handler();
@@ -1268,7 +1194,6 @@ mod tests {
                 value: "hi".into(),
             }),
             scroll_viewport: false,
-            scroll_bar: false,
         })
         .unwrap();
         tree.apply_patch(Patch::UpdateText {
@@ -1303,7 +1228,6 @@ mod tests {
                 value: "hi".into(),
             }),
             scroll_viewport: false,
-            scroll_bar: false,
         })
         .unwrap();
         tree.apply_patch(Patch::UpdateText {
@@ -1318,7 +1242,6 @@ mod tests {
                 value: "hi".into(),
             }),
             scroll_viewport: false,
-            scroll_bar: false,
         })
         .unwrap();
 
@@ -1636,7 +1559,6 @@ mod tests {
             text: None,
             text_input: None,
             scroll_viewport: false,
-            scroll_bar: false,
         };
 
         assert_eq!(wrapper.children[0].text_content(), Some("child"));

@@ -4,21 +4,30 @@ use crate::reactive::observer::{current_observer, Subscriber};
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
-struct SignalInner<T> {
+struct StateInner<T> {
     value: T,
     subscribers: Vec<Weak<dyn Subscriber>>,
 }
 
-/// Mutable reactive cell shared via [`Clone`].
+/// Shared reactive application state, returned by [`Cx::state`](crate::Cx::state).
 ///
-/// Prefer a UI context's signal hook inside views. Standalone [`Signal::new`] is useful for state held
-/// outside the UI tree (e.g. in `main`) that you pass into a view by cloning before `run`.
-pub struct Signal<T>(Rc<RefCell<SignalInner<T>>>);
+/// Clones refer to the same value. Read with `.get()`, replace with `.set(...)`,
+/// or mutate with `.update(...)`. Component-owned state must be declared in a stable
+/// order through `cx.state(...)`; `State::new(...)` creates independent external state.
+///
+/// ```
+/// use lemon::State;
+/// let count = State::new(0);
+/// let shared = count.clone();
+/// count.update(|value| *value += 1);
+/// assert_eq!(shared.get(), 1);
+/// ```
+pub struct State<T>(Rc<RefCell<StateInner<T>>>);
 
-impl<T: Clone + 'static> Signal<T> {
-    /// Creates a signal with no subscribers until something reads it under an effect or render.
+impl<T: Clone + 'static> State<T> {
+    /// Creates state with no subscribers until something reads it under an effect or render.
     pub fn new(value: T) -> Self {
-        Signal(Rc::new(RefCell::new(SignalInner {
+        State(Rc::new(RefCell::new(StateInner {
             value,
             subscribers: Vec::new(),
         })))
@@ -79,9 +88,9 @@ impl<T: Clone + 'static> Signal<T> {
     }
 }
 
-impl<T> Clone for Signal<T> {
+impl<T> Clone for State<T> {
     fn clone(&self) -> Self {
-        Signal(Rc::clone(&self.0))
+        State(Rc::clone(&self.0))
     }
 }
 
@@ -101,27 +110,27 @@ mod tests {
 
     #[test]
     fn get_returns_initial_value() {
-        let s = Signal::new(42i32);
+        let s = State::new(42i32);
         assert_eq!(s.get(), 42);
     }
 
     #[test]
     fn set_updates_value() {
-        let s = Signal::new(0i32);
+        let s = State::new(0i32);
         s.set(99);
         assert_eq!(s.get(), 99);
     }
 
     #[test]
     fn update_mutates_value() {
-        let s = Signal::new(10i32);
+        let s = State::new(10i32);
         s.update(|v| *v += 5);
         assert_eq!(s.get(), 15);
     }
 
     #[test]
     fn set_notifies_subscriber() {
-        let s = Signal::new(0i32);
+        let s = State::new(0i32);
         let counter = Rc::new(Counter(Cell::new(0)));
         with_observer(Rc::downgrade(&counter) as _, || {
             s.get();
@@ -132,7 +141,7 @@ mod tests {
 
     #[test]
     fn dead_subscriber_is_skipped() {
-        let s = Signal::new(0i32);
+        let s = State::new(0i32);
         let counter = Rc::new(Counter(Cell::new(0)));
         with_observer(Rc::downgrade(&counter) as _, || {
             s.get();
@@ -143,7 +152,7 @@ mod tests {
 
     #[test]
     fn clone_shares_state() {
-        let s1 = Signal::new(5i32);
+        let s1 = State::new(5i32);
         let s2 = s1.clone();
         s1.set(10);
         assert_eq!(s2.get(), 10);

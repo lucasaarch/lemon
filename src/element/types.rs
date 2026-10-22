@@ -64,8 +64,6 @@ pub struct BoxElement {
     pub text_input: Option<TextInputMeta>,
     /// Marks a clipped viewport that may show a vertical scrollbar when content overflows.
     pub scroll_viewport: bool,
-    /// Marks a clipped viewport whose scrollbar track and thumb are painted by the paint pass.
-    pub scroll_bar: bool,
 }
 
 #[derive(Clone)]
@@ -79,44 +77,6 @@ impl std::fmt::Debug for TextElement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("TextElement")
             .field("content", &format!("{:?}", self.content.resolve()))
-            .field("style", &self.style)
-            .field("key", &self.key)
-            .finish()
-    }
-}
-
-#[derive(Clone)]
-pub struct ButtonElement {
-    pub label: TextContent,
-    pub style: StyleProps,
-    pub paint: PaintProps,
-    pub on_click: Option<Rc<dyn Fn()>>,
-    pub key: Option<Key>,
-}
-
-impl std::fmt::Debug for ButtonElement {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ButtonElement")
-            .field("label", &format!("{:?}", self.label.resolve()))
-            .field("style", &self.style)
-            .field("paint", &self.paint)
-            .field("on_click", &self.on_click.as_ref().map(|_| "Box<dyn Fn()>"))
-            .field("key", &self.key)
-            .finish()
-    }
-}
-
-#[derive(Clone)]
-pub struct ImageElement {
-    pub src: String,
-    pub style: StyleProps,
-    pub key: Option<Key>,
-}
-
-impl std::fmt::Debug for ImageElement {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ImageElement")
-            .field("src", &self.src)
             .field("style", &self.style)
             .field("key", &self.key)
             .finish()

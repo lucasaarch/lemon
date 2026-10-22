@@ -7,7 +7,7 @@ use crate::diff::{NodePath, Patch};
 use crate::element::{
     content::TextContent,
     style::{ColorSource, PaintProps},
-    types::{BoxElement, ButtonElement, ComponentElement, TextElement},
+    types::{BoxElement, ComponentElement, TextElement},
     Element,
 };
 use crate::reactive::Effect;
@@ -644,14 +644,6 @@ fn freeze_element(element: &Element) -> Element {
         Element::View(container) => Element::View(freeze_box(container)),
         Element::Row(container) => Element::Row(freeze_box(container)),
         Element::Column(container) => Element::Column(freeze_box(container)),
-        Element::Button(button) => Element::Button(ButtonElement {
-            label: TextContent::Static(button.label.resolve()),
-            style: button.style.clone(),
-            paint: freeze_paint(&button.paint),
-            on_click: button.on_click.clone(),
-            key: button.key.clone(),
-        }),
-        Element::Image(image) => Element::Image(image.clone()),
         Element::Component(component) => Element::Component(component.clone()),
         Element::Fragment(children) => {
             Element::Fragment(children.iter().map(freeze_element).collect())
@@ -669,7 +661,6 @@ fn freeze_box(container: &BoxElement) -> BoxElement {
         handlers: container.handlers.clone(),
         text_input: container.text_input.clone(),
         scroll_viewport: container.scroll_viewport,
-        scroll_bar: container.scroll_bar,
     }
 }
 
@@ -704,7 +695,7 @@ fn freeze_border_colors(
 mod tests {
     use super::*;
     use crate::element::builders::Text;
-    use crate::reactive::Signal;
+    use crate::reactive::State;
 
     #[test]
     fn no_patches_on_first_mount() {
@@ -718,7 +709,7 @@ mod tests {
         use crate::element::builders::{RowView, View};
         use crate::element::types::TextInputMeta;
 
-        let state = Signal::new((String::new(), 0usize));
+        let state = State::new((String::new(), 0usize));
         let field = state.clone();
         let mut rt = Runtime::new();
         rt.mount(move |_cx| {
@@ -748,7 +739,7 @@ mod tests {
     }
 
     #[test]
-    fn deferred_use_effect_runs_on_flush() {
+    fn deferred_watch_runs_on_flush() {
         use std::cell::Cell;
         use std::rc::Rc;
 
@@ -769,7 +760,7 @@ mod tests {
 
     #[test]
     fn signal_change_produces_update_text_patch() {
-        let s = Signal::new("before".to_owned());
+        let s = State::new("before".to_owned());
         let s2 = s.clone();
         let mut rt = Runtime::new();
         rt.mount(move |_cx| {
@@ -808,7 +799,7 @@ mod tests {
         );
         let inactive_shadow = BoxShadow::new(Color::rgb8(0, 0, 0).with_alpha(0.2), 0.0, 2.0, 4.0);
         let active_shadow = BoxShadow::new(Color::rgb8(0, 0, 0).with_alpha(0.3), 1.0, 6.0, 10.0);
-        let trigger = Signal::new(false);
+        let trigger = State::new(false);
         let watched = trigger.clone();
         let mut rt = Runtime::new();
         rt.mount(move |_cx| {
@@ -854,8 +845,8 @@ mod tests {
     }
 
     #[test]
-    fn signal_from_use_signal_persists_across_rerenders() {
-        let trigger = Signal::new(0u32);
+    fn state_hook_persists_across_rerenders() {
+        let trigger = State::new(0u32);
         let t2 = trigger.clone();
         let mut rt = Runtime::new();
         rt.mount(move |_cx| {
@@ -882,7 +873,7 @@ mod tests {
         use crate::element::builders::{ColumnView, Component};
 
         thread_local! {
-            static SIGNAL: RefCell<Option<Signal<i32>>> = const { RefCell::new(None) };
+            static SIGNAL: RefCell<Option<State<i32>>> = const { RefCell::new(None) };
         }
 
         fn child(cx: &Cx) -> Element {
@@ -960,7 +951,7 @@ mod tests {
             Text::new(move || count.get().to_string()).into_element()
         }
 
-        let trigger = Signal::new(0u32);
+        let trigger = State::new(0u32);
         let t2 = trigger.clone();
         let mut runtime = Runtime::new();
         runtime.mount(move |_cx| {
@@ -1002,7 +993,7 @@ mod tests {
 
         RENDERS.with(|renders| renders.set(0));
 
-        let trigger = Signal::new(0u32);
+        let trigger = State::new(0u32);
         let t2 = trigger.clone();
         let mut runtime = Runtime::new();
         runtime.mount(move |_cx| {
@@ -1050,7 +1041,7 @@ mod tests {
             Text::new("b").into_element()
         }
 
-        let phase = Signal::new(0u32);
+        let phase = State::new(0u32);
         let p2 = phase.clone();
         let mut runtime = Runtime::new();
         runtime.mount(move |_cx| {
@@ -1098,7 +1089,7 @@ mod tests {
 
     #[test]
     fn keyed_list_add_remove_patches_apply_without_error() {
-        use crate::element::builders::{Button, ColumnView, RowView};
+        use crate::element::builders::{ColumnView, RowView};
         use crate::element::style::{Align, Color};
         use crate::retained::RetainedTree;
 
@@ -1108,7 +1099,7 @@ mod tests {
             label: String,
         }
 
-        let items = Signal::new(Vec::<Item>::new());
+        let items = State::new(Vec::<Item>::new());
         let items_for_view = items.clone();
         let mut rt = Runtime::new();
         rt.mount(move |_cx| {
@@ -1128,7 +1119,8 @@ mod tests {
                                 .color(Color::rgb8(210, 210, 230)),
                         )
                         .child(
-                            Button::new("Remove")
+                            crate::View::new()
+                                .child(crate::Text::new("Remove"))
                                 .surface(Color::rgb8(180, 50, 50))
                                 .action(move || {
                                     items_remove.update(|list| list.retain(|i| i.id != item_id));
@@ -1140,7 +1132,7 @@ mod tests {
                 .inset(24.0)
                 .spacing(12.0)
                 .child(Text::new("Keyed List").size(20.0))
-                .child(Button::new("Add item"))
+                .child(crate::View::new().child(crate::Text::new("Add item")))
                 .child(col)
                 .into_element()
         });
@@ -1177,7 +1169,7 @@ mod tests {
         use crate::retained::RetainedTree;
 
         thread_local! {
-            static LABELS: RefCell<Option<Signal<Vec<String>>>> = const { RefCell::new(None) };
+            static LABELS: RefCell<Option<State<Vec<String>>>> = const { RefCell::new(None) };
         }
 
         fn list(_cx: &Cx) -> Element {
@@ -1191,7 +1183,7 @@ mod tests {
             )
         }
 
-        let labels = Signal::new(vec!["a".to_owned(), "b".to_owned()]);
+        let labels = State::new(vec!["a".to_owned(), "b".to_owned()]);
         LABELS.with(|cell| *cell.borrow_mut() = Some(labels.clone()));
 
         let mut runtime = Runtime::new();
@@ -1226,12 +1218,12 @@ mod tests {
     fn sibling_component_counters_update_independently() {
         use std::cell::RefCell;
 
-        use crate::element::builders::{Button, ColumnView, Component, RowView};
+        use crate::element::builders::{ColumnView, Component, RowView};
         use crate::retained::RetainedTree;
 
         thread_local! {
-            static FIRST: RefCell<Option<Signal<i32>>> = const { RefCell::new(None) };
-            static SECOND: RefCell<Option<Signal<i32>>> = const { RefCell::new(None) };
+            static FIRST: RefCell<Option<State<i32>>> = const { RefCell::new(None) };
+            static SECOND: RefCell<Option<State<i32>>> = const { RefCell::new(None) };
         }
 
         fn first(cx: &Cx) -> Element {
@@ -1240,7 +1232,7 @@ mod tests {
             let label = n.clone();
             RowView::new()
                 .child(Text::new(move || format!("{}", label.get())).size(16.0))
-                .child(Button::new("+").width(44.0))
+                .child(crate::View::new().child(crate::Text::new("+")).width(44.0))
                 .into_element()
         }
 
@@ -1250,7 +1242,7 @@ mod tests {
             let label = n.clone();
             RowView::new()
                 .child(Text::new(move || format!("{}", label.get())).size(16.0))
-                .child(Button::new("+").width(44.0))
+                .child(crate::View::new().child(crate::Text::new("+")).width(44.0))
                 .into_element()
         }
 
@@ -1343,7 +1335,7 @@ mod tests {
             Text::new("b").into_element()
         }
 
-        let swap = Signal::new(false);
+        let swap = State::new(false);
         let s2 = swap.clone();
         let mut runtime = Runtime::new();
         runtime.mount(move |_cx| {

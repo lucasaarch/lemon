@@ -1,10 +1,7 @@
 //! Desktop host: native windows, GPU presentation, and frame scheduling.
 
-mod window;
-
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
-use std::sync::Arc as StdArc;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -32,10 +29,7 @@ use crate::runtime::cx::Cx;
 use crate::theme::{Theme, ThemePair};
 use crate::ui::UiState;
 
-pub use window::WindowConfig;
-
-/// Root view function type used by [`AppState`] and [`WindowState`].
-pub type RootComponent = Arc<dyn Fn(&Cx) -> Element>;
+use crate::window::{RootComponent, WindowConfig};
 
 /// Per-window platform state owned by [`AppState`].
 ///
@@ -56,7 +50,6 @@ pub struct WindowState {
     root_component: Option<RootComponent>,
     host: HostContext,
     last_cursor: Option<(f32, f32)>,
-    mounted: bool,
 }
 
 impl WindowState {
@@ -70,7 +63,6 @@ impl WindowState {
             host,
             root_component: Some(root_component),
             last_cursor: None,
-            mounted: false,
         }
     }
 
@@ -110,13 +102,12 @@ impl WindowState {
     }
 
     fn ensure_mounted(&mut self) {
-        if self.mounted {
+        if self.ui.retained().is_some() {
             return;
         }
         let _scope = self.activate_theme();
-        let root = Arc::clone(self.root_component.as_ref().expect("root component"));
+        let root = self.root_component.take().expect("root component");
         self.ui.mount(move |cx| root(cx)).expect("UI mount");
-        self.mounted = true;
         self.ui.invalidate_layout();
     }
 
@@ -327,7 +318,7 @@ pub struct AppState {
 #[derive(Clone)]
 struct RegisteredFont {
     family_name: String,
-    bytes: StdArc<Vec<u8>>,
+    bytes: Arc<Vec<u8>>,
 }
 
 impl AppState {
@@ -381,12 +372,12 @@ impl AppState {
         true
     }
 
-    fn window_config(&self) -> &WindowConfig {
-        &self.window_config
+    fn make_window_state(&self) -> WindowState {
+        self.make_window_state_with_root(Arc::clone(&self.root_component))
     }
 
-    fn make_window_state(&self) -> WindowState {
-        let mut state = WindowState::new(self.host.clone(), Arc::clone(&self.root_component));
+    fn make_window_state_with_root(&self, root: RootComponent) -> WindowState {
+        let mut state = WindowState::new(self.host.clone(), root);
         for registered in &self.registered_fonts {
             state
                 .ui
@@ -394,7 +385,7 @@ impl AppState {
                     register_font_data(
                         fonts,
                         registered.family_name.clone(),
-                        StdArc::clone(&registered.bytes),
+                        Arc::clone(&registered.bytes),
                     )
                 })
                 .expect("font registration was validated before storing");
@@ -413,14 +404,14 @@ impl AppState {
         bytes: impl Into<Vec<u8>>,
     ) -> Result<(), FontRegistrationError> {
         let family_name = family_name.into();
-        let bytes = StdArc::new(bytes.into());
+        let bytes = Arc::new(bytes.into());
 
         let mut probe = FontContext::new();
-        register_font_data(&mut probe, family_name.clone(), StdArc::clone(&bytes))?;
+        register_font_data(&mut probe, family_name.clone(), Arc::clone(&bytes))?;
 
         for window in self.windows.values_mut() {
             window.ui.edit_fonts(|fonts| {
-                register_font_data(fonts, family_name.clone(), StdArc::clone(&bytes))
+                register_font_data(fonts, family_name.clone(), Arc::clone(&bytes))
             })?;
             window.ui.invalidate_layout();
         }
@@ -461,17 +452,12 @@ impl AppState {
     fn spawn_window(&mut self, event_loop: &ActiveEventLoop, req: crate::host::OpenWindowRequest) {
         let window = Arc::new(
             event_loop
-                .create_window(
-                    Window::default_attributes()
-                        .with_title(req.params.title.clone())
-                        .with_inner_size(LogicalSize::new(req.params.width, req.params.height))
-                        .with_resizable(req.params.resizable),
-                )
+                .create_window(native_window_attributes(&req.config))
                 .expect("create window"),
         );
         let window_id = window.id();
         self.apply_system_theme(window.theme());
-        let mut window_state = WindowState::new(self.host.clone(), req.root);
+        let mut window_state = self.make_window_state_with_root(req.root);
         window_state.attach_window(&mut self.render_cx, window);
         window_state.request_redraw();
         self.windows.insert(window_id, window_state);
@@ -491,15 +477,10 @@ impl ApplicationHandler for LemonApplication {
             return;
         }
 
-        let config = state.window_config().clone();
+        let config = state.window_config.clone();
         let window = Arc::new(
             event_loop
-                .create_window(
-                    Window::default_attributes()
-                        .with_title(config.title.clone())
-                        .with_inner_size(LogicalSize::new(config.width, config.height))
-                        .with_resizable(config.resizable),
-                )
+                .create_window(native_window_attributes(&config))
                 .expect("create window"),
         );
 
@@ -660,6 +641,13 @@ impl ApplicationHandler for LemonApplication {
             }
         }
     }
+}
+
+fn native_window_attributes(config: &WindowConfig) -> winit::window::WindowAttributes {
+    Window::default_attributes()
+        .with_title(config.title.clone())
+        .with_inner_size(LogicalSize::new(config.width, config.height))
+        .with_resizable(config.resizable)
 }
 
 fn resolve_native_theme(themes: &ThemePair, appearance: Option<NativeTheme>) -> Theme {
@@ -836,7 +824,7 @@ mod tests {
         });
 
         assert!(state.windows.is_empty());
-        assert_eq!(state.window_config().title, WindowConfig::default().title);
+        assert_eq!(state.window_config.title, WindowConfig::default().title);
     }
 
     #[test]
@@ -850,7 +838,6 @@ mod tests {
         assert!(window_state.ui.paint_dirty());
         assert!(window_state.window.is_none());
         assert!(window_state.ui.retained().is_none());
-        assert!(!window_state.mounted);
         assert!(window_state.ui.focused().is_none());
     }
 
@@ -882,6 +869,37 @@ mod tests {
             .collection
             .family_by_name("PlatformFontBytes")
             .is_some()));
+    }
+
+    #[test]
+    fn requested_windows_receive_registered_fonts_and_their_own_root() {
+        let mut app = AppState::new(WindowConfig::default(), |_| {
+            Text::new("Main").into_element()
+        });
+        app.register_font_path("SettingsFont", test_font_path())
+            .unwrap();
+        let host = app.host.clone();
+        let _scope = host.enter();
+        let config = WindowConfig::default()
+            .title("Settings")
+            .size(480.0, 360.0)
+            .resizable(false);
+        Cx::new().open_window(config.clone(), |_| Text::new("Settings").into_element());
+        let request = host.take_window_requests().pop().unwrap();
+        assert_eq!(request.config, config);
+        let attributes = native_window_attributes(&request.config);
+        assert_eq!(attributes.title, "Settings");
+        assert!(!attributes.resizable);
+        // This is the same initialization path used by the native spawn handler.
+        let mut window = app.make_window_state_with_root(request.root);
+        assert!(window
+            .ui
+            .edit_fonts(|fonts| fonts.collection.family_by_name("SettingsFont").is_some()));
+        window.ensure_mounted();
+        assert_eq!(
+            window.ui.retained().unwrap().root().unwrap().text_content(),
+            Some("Settings")
+        );
     }
 
     #[test]
@@ -980,13 +998,15 @@ mod tests {
 
     #[test]
     fn system_theme_change_preserves_mounted_component_state_and_updates_background() {
-        use crate::element::builders::{Button, ColumnView};
+        use crate::element::builders::ColumnView;
         fn app(cx: &Cx) -> Element {
             let count = cx.state(0);
             let label = count.clone();
             ColumnView::new()
                 .child(Text::new(move || format!("Count: {}", label.get())))
-                .child(Button::new("Increment").action(move || count.update(|n| *n += 1)))
+                .child(
+                    crate::Button::new(cx, "Increment").action(move || count.update(|n| *n += 1)),
+                )
                 .into_element()
         }
         let mut state = AppState::new(WindowConfig::default(), app);
@@ -995,10 +1015,10 @@ mod tests {
         let Element::Column(root) = window.ui.runtime().root_element().unwrap() else {
             panic!("column")
         };
-        let Element::Button(button) = &root.children[1] else {
+        let Element::View(button) = &root.children[1] else {
             panic!("button")
         };
-        button.on_click.as_ref().unwrap()();
+        button.handlers.on_click.as_ref().unwrap()();
         let id = WindowId::dummy();
         state.windows.insert(id, window);
         state.apply_system_theme(Some(NativeTheme::Light));

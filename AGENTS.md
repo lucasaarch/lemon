@@ -18,14 +18,14 @@ Lemon is a single Cargo package. Run Cargo and Make commands from the repository
 | `src/lib.rs`, `prelude.rs` | Public API and application imports |
 | `examples/` | Runnable application examples |
 | `tests/examples/` | Example tests, included by the corresponding example modules |
-| `src/reactive/` | Signals, derived values, effects, observer tracking |
+| `src/reactive/` | State, derived values, effects, observer tracking |
 | `src/runtime/` | Component rendering, hook state, tree freezing |
 | `src/element/` | Element model, primitive builders (split by type), shared decoration, styles, events |
 | `src/diff/` | Patches, property comparisons, child reconciliation |
 | `src/retained/` | Retained nodes, patch application, focus traversal |
 | `src/layout/`, `paint/` | Geometry/text layout and Vello scene generation |
 | `src/ui.rs` | Headless update, layout, and scene orchestration (`UiState`) |
-| `src/host.rs`, `host_requests.rs` | Host context, scoped theme, window request queue/types |
+| `src/host.rs`, `host_requests.rs`, `window.rs` | Host context, scoped theme, window request queue/types |
 | `src/widget/` | Composed widgets; common app-facing builders are also reexported here |
 | `src/platform/` | Native windows/event conversion, clipboard, frame scheduling, presentation |
 | `src/input/` | Headless input dispatch, hit testing, focus and capture |
@@ -67,7 +67,9 @@ Use only the canonical API in code, examples, and docs. Do not retain deprecated
 
 - Apply shared root styling with `Decorate::decorate`, available for any `Into<Element>` builder. Decoration runs after widget defaults and preserves container kind, keys, children, handlers and physical placement. Widget-specific styles configure internal parts; avoid copying the full container API onto each widget.
 - Preserve fluent builders: `ColumnView::new()`, `RowView::new()`, `View::new()`, `Text::new(...)`.
-- The app-facing `Button` exported by `lemon`/its prelude is the composed widget: `Button::new(cx, label)`. Core also has a lower-level `element::builders::Button::new(label)`; use the appropriate layer.
+- `Button::new(cx, label)` is the only button builder. Controls and images compose `View`/`Text`; do not add parallel element variants or rendering paths for them.
+- `WindowConfig` lives in `src/window.rs` and configures both `run` and `Cx::open_window`. Window requests carry configuration and root content; native attributes and per-window font initialization belong to platform.
+- Scrollbars use one `.scroll_viewport()` marker and one paint path, measured from the explicit `.scroll_content()` wrapper.
 - `Component::new` takes `fn(&Cx) -> Element`. Capturing closures do not fit this API.
 - `Component::new_with_props` takes a typed function pointer and `Clone + PartialEq + 'static` props. Use it for components that need per-instance data and isolated hook state. Use keyed primitive rows when isolated component state is unnecessary.
 - Call hooks in a stable order on every render. Widget constructors such as `Button::new` consume hook slots too: do not put them in a changing loop or conditional on a shared `Cx`. Use component scopes or primitives there.

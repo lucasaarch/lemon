@@ -232,7 +232,7 @@ pub fn hit_test_scroll<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::element::builders::{Button, ColumnView, Text, View};
+    use crate::element::builders::{ColumnView, Text, View};
     use crate::layout::{LayoutMap, Viewport};
     use crate::retained::RetainedTree;
     use parley::FontContext;
@@ -262,7 +262,8 @@ mod tests {
                 .width(200.0)
                 .height(200.0)
                 .child(
-                    Button::new("Click")
+                    crate::View::new()
+                        .child(crate::Text::new("Click"))
                         .width(80.0)
                         .height(40.0)
                         .action(move || flag.set(true)),
@@ -299,7 +300,8 @@ mod tests {
                 .height(120.0)
                 .child(Text::new("label").size(16.0))
                 .child(
-                    Button::new("OK")
+                    crate::View::new()
+                        .child(crate::Text::new("OK"))
                         .width(60.0)
                         .height(30.0)
                         .action(move || flag.set(true)),

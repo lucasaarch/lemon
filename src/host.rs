@@ -3,9 +3,9 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-pub use crate::host_requests::{OpenWindowParams, OpenWindowRequest};
+pub use crate::host_requests::OpenWindowRequest;
 use crate::theme::{current_theme, set_active_theme, Theme};
-use crate::Signal;
+use crate::State;
 
 type ClipboardWrite = Rc<dyn Fn(&str)>;
 
@@ -15,17 +15,17 @@ type ClipboardWrite = Rc<dyn Fn(&str)>;
 /// contexts have independent queues, even on the same thread.
 ///
 /// ```
-/// use lemon::{host::HostContext, Cx, OpenWindowParams, Text, Theme};
+/// use lemon::{host::HostContext, Cx, WindowConfig, Text, Theme};
 /// let host = HostContext::new(Theme::default_light());
 /// {
 ///     let _scope = host.enter();
-///     Cx::new().open_window(OpenWindowParams::default(), |_| Text::new("Child").into_element());
+///     Cx::new().open_window(WindowConfig::default(), |_| Text::new("Child").into_element());
 /// }
 /// assert_eq!(host.take_window_requests().len(), 1);
 /// ```
 #[derive(Clone)]
 pub struct HostContext {
-    theme: Signal<Theme>,
+    theme: State<Theme>,
     clipboard_read: Option<Rc<dyn Fn() -> Option<String>>>,
     clipboard_write: Option<ClipboardWrite>,
     animations: crate::animation::AnimRegistry,
@@ -40,7 +40,7 @@ impl HostContext {
     /// Creates an independent host context with `theme` and an empty request queue.
     pub fn new(theme: Theme) -> Self {
         Self {
-            theme: Signal::new(theme),
+            theme: State::new(theme),
             clipboard_read: None,
             clipboard_write: None,
             animations: crate::animation::AnimRegistry::default(),
@@ -174,7 +174,7 @@ impl Drop for HostScope {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Cx, OpenWindowParams, Text};
+    use crate::{Cx, Text, WindowConfig};
 
     #[test]
     fn requests_remain_with_originating_application_after_scope_exit() {
@@ -185,9 +185,7 @@ mod tests {
             Cx::new()
         };
         let _scope = second.enter();
-        cx.open_window(OpenWindowParams::default(), |_| {
-            Text::new("hi").into_element()
-        });
+        cx.open_window(WindowConfig::default(), |_| Text::new("hi").into_element());
         assert!(second.take_window_requests().is_empty());
         assert_eq!(first.take_window_requests().len(), 1);
         assert_eq!(cx.theme(), Theme::default_light());

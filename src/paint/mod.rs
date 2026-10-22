@@ -234,7 +234,6 @@ fn paint_node<'a>(
         stats,
     );
     paint_scrollbar(node, rect, layout, scene, ctx, stats);
-    paint_widget_scroll_bar(node, rect, layout, scene, ctx, stats);
 
     if use_opacity_layer {
         scene.pop_layer();
@@ -282,7 +281,7 @@ fn paint_container(
 ) {
     let is_container = matches!(
         node.kind,
-        RetainedKind::View | RetainedKind::Row | RetainedKind::Column | RetainedKind::Button
+        RetainedKind::View | RetainedKind::Row | RetainedKind::Column
     );
     if !is_container {
         return;
@@ -429,7 +428,7 @@ fn paint_per_side_borders(
 fn paint_image(node: &RetainedNode, rect: &LayoutRect, scene: &mut Scene, ctx: PaintContext) {
     let is_container = matches!(
         node.kind,
-        RetainedKind::View | RetainedKind::Row | RetainedKind::Column | RetainedKind::Button
+        RetainedKind::View | RetainedKind::Row | RetainedKind::Column
     );
     if !is_container {
         return;
@@ -478,7 +477,7 @@ fn paint_text(
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
-    let is_text = matches!(node.kind, RetainedKind::Text | RetainedKind::Button);
+    let is_text = matches!(node.kind, RetainedKind::Text);
     if !is_text {
         return;
     }
@@ -494,17 +493,7 @@ fn paint_text(
         .visual(node)
         .and_then(|visual| visual.text_color)
         .unwrap_or_else(|| crate::element::style::resolved_text_color(&text.style));
-    let (origin_x, origin_y) = if matches!(node.kind, RetainedKind::Button) {
-        let content = node
-            .style
-            .padding
-            .as_ref()
-            .map(|pad| inset_rect(rect, pad))
-            .unwrap_or(*rect);
-        centered_origin(&content, layout.width(), layout.height())
-    } else {
-        (rect.x, rect.y)
-    };
+    let (origin_x, origin_y) = (rect.x, rect.y);
     paint_parley_layout(scene, ctx, layout, origin_x, origin_y, color, stats);
 }
 
@@ -515,13 +504,6 @@ fn inset_rect(outer: &LayoutRect, padding: &Edges<f32>) -> LayoutRect {
         width: (outer.width - padding.left - padding.right).max(0.0),
         height: (outer.height - padding.top - padding.bottom).max(0.0),
     }
-}
-
-fn centered_origin(content: &LayoutRect, text_width: f32, text_height: f32) -> (f32, f32) {
-    (
-        content.x + ((content.width - text_width) * 0.5).max(0.0),
-        content.y + ((content.height - text_height) * 0.5).max(0.0),
-    )
 }
 
 fn paint_parley_layout(
@@ -774,7 +756,7 @@ fn paint_text_input_caret(
     const CARET_HEIGHT_RATIO: f32 = 0.88;
     /// Extra length below center so the caret sits slightly lower without moving the top.
     const CARET_BOTTOM_EXTEND_RATIO: f32 = 0.1;
-    let font_size = effective_font_size(&text_style);
+    let font_size = text_style.resolved_font_size();
     let caret_height = font_size * CARET_HEIGHT_RATIO;
     let caret_bottom_extend = font_size * CARET_BOTTOM_EXTEND_RATIO;
 
@@ -819,14 +801,6 @@ fn paint_text_input_caret(
     stats.strokes += 1;
 }
 
-fn effective_font_size(style: &crate::element::style::TextStyle) -> f32 {
-    if style.font_size > 0.0 {
-        style.font_size
-    } else {
-        crate::theme::current_theme().typography.font_size_md
-    }
-}
-
 const WIDGET_SCROLLBAR_WIDTH: f32 = 8.0;
 const WIDGET_SCROLLBAR_THUMB_MIN: f32 = 20.0;
 
@@ -837,7 +811,7 @@ fn scroll_offset_from_inner(node: &RetainedNode) -> f32 {
         .unwrap_or(0.0)
 }
 
-fn paint_widget_scroll_bar(
+fn paint_scrollbar(
     node: &RetainedNode,
     viewport_rect: &LayoutRect,
     layout: &LayoutMap,
@@ -845,7 +819,7 @@ fn paint_widget_scroll_bar(
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
-    if !node.scroll_bar {
+    if !node.scroll_viewport {
         return;
     }
     let Some(content_height) = crate::layout::scroll_content_extent(node, layout) else {
@@ -878,8 +852,10 @@ fn paint_widget_scroll_bar(
     );
     stats.fills += 1;
 
-    let thumb_height = (viewport_height / content_height * viewport_height)
-        .clamp(WIDGET_SCROLLBAR_THUMB_MIN, viewport_height);
+    let thumb_height = (viewport_height / content_height * viewport_height).clamp(
+        WIDGET_SCROLLBAR_THUMB_MIN.min(viewport_height),
+        viewport_height,
+    );
     let thumb_travel = (viewport_height - thumb_height).max(0.0);
     let thumb_y = viewport_rect.y + (scroll_offset / max_offset).clamp(0.0, 1.0) * thumb_travel;
     let thumb = Rect::new(
@@ -902,84 +878,10 @@ fn paint_widget_scroll_bar(
     stats.fills += 1;
 }
 
-fn paint_scrollbar(
-    node: &RetainedNode,
-    viewport_rect: &LayoutRect,
-    layout: &LayoutMap,
-    scene: &mut Scene,
-    ctx: PaintContext,
-    stats: &mut PaintStats,
-) {
-    if !node.scroll_viewport {
-        return;
-    }
-    let Some(content) = crate::layout::scroll_content_node(node) else {
-        return;
-    };
-    let Some(content_id) = content.taffy_id else {
-        return;
-    };
-    let Some(content_rect) = layout.get(content_id) else {
-        return;
-    };
-
-    let content_height = content_rect.height;
-    let viewport_height = viewport_rect.height;
-    if content_height <= viewport_height + 1.0 {
-        return;
-    }
-
-    let scroll_offset = scroll_offset_from_inner(node);
-    let max_offset = (content_height - viewport_height).max(1.0);
-    let track_width = 6.0;
-    let track_x = viewport_rect.x + viewport_rect.width - track_width - 2.0;
-    let track = Rect::new(
-        f64::from(track_x),
-        f64::from(viewport_rect.y + 2.0),
-        f64::from(track_x + track_width),
-        f64::from(viewport_rect.y + viewport_rect.height - 2.0),
-    );
-    scene.fill(
-        Fill::NonZero,
-        ctx.base,
-        to_peniko_color(
-            ctx.paint(node)
-                .scroll_track_color
-                .unwrap_or(crate::theme::current_theme().chrome.scrollbar_track),
-        ),
-        None,
-        &track,
-    );
-    stats.fills += 1;
-
-    let thumb_height = (viewport_height / content_height * viewport_height).max(16.0);
-    let thumb_travel = (viewport_height - thumb_height - 4.0).max(0.0);
-    let thumb_y =
-        viewport_rect.y + 2.0 + (scroll_offset / max_offset).clamp(0.0, 1.0) * thumb_travel;
-    let thumb = Rect::new(
-        f64::from(track_x + 1.0),
-        f64::from(thumb_y),
-        f64::from(track_x + track_width - 1.0),
-        f64::from(thumb_y + thumb_height),
-    );
-    scene.fill(
-        Fill::NonZero,
-        ctx.base,
-        to_peniko_color(
-            ctx.paint(node)
-                .scroll_thumb_color
-                .unwrap_or(crate::theme::current_theme().chrome.scrollbar_thumb),
-        ),
-        None,
-        &thumb,
-    );
-    stats.fills += 1;
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::element::builders::{Button, ColumnView, Text, View};
+    use crate::element::builders::{ColumnView, Text, View};
     use crate::layout::{LayoutMap, Viewport};
     use crate::retained::RetainedTree;
     use parley::FontContext;
@@ -1161,9 +1063,10 @@ mod tests {
     }
 
     #[test]
-    fn button_paints_background_then_label() {
+    fn view_paints_background_then_label() {
         let mut tree = RetainedTree::mount(
-            Button::new("Press")
+            crate::View::new()
+                .child(crate::Text::new("Press"))
                 .width(120.0)
                 .height(48.0)
                 .surface(Color::rgb8(30, 60, 90))
@@ -1332,6 +1235,27 @@ mod tests {
     }
 
     #[test]
+    fn a_small_scroll_viewport_paints_one_scrollbar_without_invalid_thumb_bounds() {
+        let mut tree = RetainedTree::mount(
+            View::new()
+                .width(100.0)
+                .height(8.0)
+                .clip()
+                .scroll_viewport()
+                .on_scroll(|_| {})
+                .child(
+                    View::new()
+                        .scroll_content()
+                        .child(View::new().height(200.0)),
+                )
+                .into_element(),
+        )
+        .unwrap();
+        let stats = layout_and_paint(&mut tree, 1.0);
+        assert_eq!(stats.fills, 2, "one track and one thumb");
+    }
+
+    #[test]
     fn partial_opacity_paints_without_panic() {
         let mut tree = RetainedTree::mount(
             ColumnView::new()
@@ -1426,7 +1350,7 @@ mod tests {
 
     #[test]
     fn z_index_absolute_column_dropdown_paints_background() {
-        // Mirrors lemon_widgets::Select open dropdown: Column + absolute + z_index + background.
+        // Select dropdown: column + absolute position + layer + background.
         let mut tree = RetainedTree::mount(
             ColumnView::new()
                 .width(200.0)
@@ -1553,7 +1477,6 @@ mod tests {
 
         // Build a scroll-bar viewport whose content is taller than the viewport.
         // Structure mirrors the Scroll widget: viewport -> inner wrapper -> content.
-        // The viewport must have scroll_bar, overflow: hidden, and on_scroll so that
         // scroll_content_extent returns a height and the scrollbar is drawn.
         let content = View::new()
             .width(100.0)
@@ -1564,7 +1487,7 @@ mod tests {
             .width(100.0)
             .height(80.0)
             .clip()
-            .scroll_bar()
+            .scroll_viewport()
             .on_scroll(|_| {})
             .child(inner);
 

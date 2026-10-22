@@ -69,8 +69,8 @@ fn nested_fill_uses_parent_content_area() {
 
 #[test]
 fn reactive_fill_keeps_columns_vertical() {
-    use lemon::Signal;
-    let fill = Signal::new(false);
+    use lemon::State;
+    let fill = State::new(false);
     let source = fill.clone();
     let mut ui = UiState::default();
     ui.mount(move |_| {

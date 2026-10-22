@@ -50,8 +50,8 @@ impl<T: Clone + PartialEq + 'static> Subscriber for DerivedInner<T> {
 /// Cached reactive computation, notifying dependents only when its value changes.
 ///
 /// ```
-/// use lemon::reactive::{Derived, Signal};
-/// let source = Signal::new(2);
+/// use lemon::reactive::{Derived, State};
+/// let source = State::new(2);
 /// let input = source.clone();
 /// let doubled = Derived::new(move || input.get() * 2);
 /// assert_eq!(doubled.get(), 4);
@@ -102,13 +102,13 @@ impl<T> Clone for Derived<T> {
 mod tests {
     use super::*;
     use crate::reactive::effect::Effect;
-    use crate::reactive::signal::Signal;
+    use crate::reactive::state::State;
     use std::cell::Cell;
     use std::rc::Rc;
 
     #[test]
     fn computes_on_first_get() {
-        let s = Signal::new(2i32);
+        let s = State::new(2i32);
         let d = Derived::new(move || s.get() * 3);
         assert_eq!(d.get(), 6);
     }
@@ -117,7 +117,7 @@ mod tests {
     fn caches_result() {
         let count = Rc::new(Cell::new(0u32));
         let c = count.clone();
-        let s = Signal::new(1i32);
+        let s = State::new(1i32);
         let d = Derived::new(move || {
             c.set(c.get() + 1);
             s.get()
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn recomputes_when_signal_changes() {
-        let s = Signal::new(10i32);
+        let s = State::new(10i32);
         let s_clone = s.clone();
         let d = Derived::new(move || s_clone.get() + 1);
         assert_eq!(d.get(), 11);
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn does_not_notify_downstream_when_computed_value_unchanged() {
-        let s = Signal::new(10i32);
+        let s = State::new(10i32);
         let s_clone = s.clone();
         let d = Derived::new(move || s_clone.get() / 10 * 10);
 

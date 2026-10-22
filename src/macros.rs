@@ -10,15 +10,15 @@
 /// # Examples
 ///
 /// ```
-/// use lemon::{children, ColumnView, RowView, Text};
-/// use lemon::element::builders::Button;
+/// use lemon::{children, Button, ColumnView, Cx, RowView, Text};
+/// let cx = Cx::new();
 ///
 /// let _tree = ColumnView::new()
 ///     .children(children![
 ///         Text::new("Title").size(22.0),
 ///         RowView::new().children(children![
-///             Button::new("OK"),
-///             Button::new("Cancel"),
+///             Button::new(&cx, "OK"),
+///             Button::new(&cx, "Cancel"),
 ///         ]),
 ///     ])
 ///     .into_element();
