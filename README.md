@@ -71,7 +71,7 @@ cargo run --example counter
 
 ## Examples
 
-Each example has one job. Sources live in [`crates/lemon/examples`](crates/lemon/examples).
+Each example has one job. Sources live in [`examples`](examples).
 
 | Example | Topic |
 |---------|-------|
@@ -155,35 +155,36 @@ This layering matters. Lemon is designed so that state changes do not imply full
 
 ## Repository Layout
 
-The repository is a Cargo workspace. Applications continue to depend on `lemon`
-and use the same root/prelude imports.
+Lemon is one Cargo package. Its implementation lives in `src/`, with modules
+organized by responsibility:
 
 | Path | Role |
 |------|------|
-| `crates/lemon/` | Public facade and app examples |
-| `crates/lemon-reactive/` | Signals, derived values, effects, and observer tracking; no dependencies |
-| `crates/lemon-core/` | Elements, widgets, runtime, diff, retained state, layout, paint, logical input, theme |
-| `crates/lemon-desktop/` | Native windows/event conversion, clipboard, GPU surfaces, and presentation |
-| `crates/lemon/examples/*.rs` | Runnable examples (`cargo run --example <name>`) |
+| `src/lib.rs`, `src/prelude.rs` | Public API and application imports |
+| `src/reactive/` | Signals, derived values, effects, and observer tracking |
+| `src/runtime/` | Component lifecycle, state slots, and reactive rendering |
+| `src/element/`, `src/widget/` | Element model, builders, shared styling, and controls |
+| `src/diff/`, `src/retained/` | Reconciliation, patches, retained state and invalidation |
+| `src/layout/`, `src/paint/` | Geometry, text measurement, and scene construction |
+| `src/input/`, `src/ui.rs` | Logical input and headless UI processing |
+| `src/host.rs`, `src/animation.rs`, `src/theme.rs` | Host resources, animation clocks and themes |
+| `src/platform/` | Native windows, event conversion, clipboard, GPU surfaces and presentation |
+| `examples/` | Runnable applications (`cargo run --example <name>`) |
+| `tests/` | Integration tests and tests included by examples |
 
-Dependencies flow from `lemon` to core and desktop, desktop to core, and core
-to reactive. Core owns primitive builders and composed widgets in one engine.
-`lemon_core::widget` exposes both containers and controls. Primitive implementations
-are split into container, text, button and component modules.
-Layout and paint stay together in core until a concrete independent consumer
-justifies another crate boundary.
+`lemon::widget` exposes containers and controls. Primitive implementations are
+split into container, text, button and component modules under `element::builders`.
+Reactive primitives use only the standard library. Rendering and input processing
+stay independent of native windowing, which belongs to `platform`.
 
-`lemon-core::ui::UiState` runs the update/layout/scene pipeline without a native
-window. `lemon-core::host::HostContext` owns an application's window requests and
-scopes its theme, animations and clipboard callbacks. Logical input runs through
-`UiState::dispatch_input`; the desktop converts native events and applies the
-requested cursor. Desktop windows delegate UI processing to this headless state.
+`lemon::ui::UiState` runs update, layout, input and scene construction without
+opening a native window. `lemon::host::HostContext` owns window requests, themes,
+animations and clipboard callbacks. The platform converts native events and
+presents the resulting scene.
 
-Run `make check` from the workspace root to validate every crate and example.
-For focused work, use `cargo test -p lemon-reactive` or `cargo test -p lemon-core`.
-For crates.io releases, publish dependencies before their consumers:
-`lemon-reactive`, `lemon-core`, `lemon-desktop`, then `lemon`.
-All internal dependencies carry both a local path and an exact version.
+Run `make check` from the repository root. For focused work, use
+`cargo test reactive::` or `cargo test --test reconciliation`. Publish the
+single package with `cargo publish`.
 
 ### Headless engine APIs
 
@@ -297,7 +298,7 @@ Lemon should be understood as an early-stage library with a real architecture, n
 That means:
 
 - the internal model is strong enough to build on
-- the workspace has meaningful tests and CI gates
+- the package has meaningful tests and CI gates
 - the public surface is still evolving
 - some application-level widgets and interaction patterns are still missing
 
@@ -378,7 +379,7 @@ In practice, good changes in this repository usually:
 - stay small and explicit
 - add or update tests near the affected module
 - verify examples when public APIs change
-- pass `fmt`, `clippy`, and workspace tests
+- pass `fmt`, `clippy`, and package tests
 
 For repository-specific contributor guidance, see [AGENTS.md](AGENTS.md).
 

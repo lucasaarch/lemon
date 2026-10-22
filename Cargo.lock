@@ -1050,29 +1050,8 @@ dependencies = [
 name = "lemon"
 version = "0.2.0-alpha.21"
 dependencies = [
- "lemon-core",
- "lemon-desktop",
- "parley",
- "vello",
-]
-
-[[package]]
-name = "lemon-core"
-version = "0.2.0-alpha.21"
-dependencies = [
- "image",
- "lemon-reactive",
- "parley",
- "taffy",
- "vello",
-]
-
-[[package]]
-name = "lemon-desktop"
-version = "0.2.0-alpha.21"
-dependencies = [
  "arboard",
- "lemon-core",
+ "image",
  "parley",
  "pollster",
  "taffy",
@@ -1080,10 +1059,6 @@ dependencies = [
  "wgpu",
  "winit",
 ]
-
-[[package]]
-name = "lemon-reactive"
-version = "0.2.0-alpha.21"
 
 [[package]]
 name = "libc"

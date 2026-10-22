@@ -1,7 +1,0 @@
-[package]
-name = "lemon-reactive"
-version = "0.2.0-alpha.21"
-edition = "2021"
-license = "MIT"
-description = "Single-threaded reactive primitives for Lemon"
-repository = "https://github.com/lucasaarch/lemon"
