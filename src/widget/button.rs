@@ -16,7 +16,8 @@ use crate::{
 /// By default this button reads the active theme through [`Cx::theme`] and applies:
 ///
 /// - `theme.colors.accent` as the background
-/// - `theme.spacing.sm` as uniform padding
+/// - theme typography and `theme.spacing.sm` padding, matching the default height
+///   of [`TextField`](super::TextField) and [`SecureField`](super::SecureField) for single-line labels
 /// - `theme.radius.md` as the corner radius
 ///
 /// You can still override those defaults with the usual builder methods.
@@ -54,6 +55,10 @@ pub struct Button {
 
 impl Button {
     /// Creates a new button whose default styling comes from the active theme.
+    ///
+    /// Single-line labels use the same font size, line height and padding as text
+    /// fields. Explicit [`.height()`](Self::height) and [`.inset()`](Self::inset)
+    /// overrides take precedence over this natural height.
     pub fn new(cx: &Cx, label: impl Into<TextContent>) -> Self {
         let theme = cx.theme();
         Self {
@@ -161,7 +166,7 @@ impl Button {
             } else {
                 Cursor::Pointer
             })
-            .child(Text::new(label).size(16.0).weight(500).color(text_color));
+            .child(Text::new(label).weight(500).color(text_color));
 
         if let Some(width) = self.width {
             button = button.width(width);

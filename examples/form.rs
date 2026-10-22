@@ -1,3 +1,4 @@
+//! Buttons and fields share the theme typography and default padding.
 //! Compose plain/secure fields, select, slider, and scroll widgets in a small form.
 //! The optional password is cleared on submit and never added to the history.
 //! Type a name, choose a role, and submit settings to the scrollable history.
