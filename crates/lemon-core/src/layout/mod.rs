@@ -160,26 +160,14 @@ pub fn scroll_content_node(node: &RetainedNode) -> Option<&RetainedNode> {
 
 /// Total scrollable content height inside a clipped viewport (logical points).
 ///
-/// Uses the children of the marked scroll-content wrapper. Unmarked primitive
-/// trees retain the legacy viewport → offset wrapper → content convention.
+/// Uses the explicitly marked scroll-content wrapper. Unmarked trees are not
+/// scroll regions; set `StyleProps::scroll_content` on the offset wrapper.
 pub fn scroll_content_extent(node: &RetainedNode, layout: &LayoutMap) -> Option<f32> {
     if node.handlers.on_scroll.is_none() || node.style.overflow != Overflow::Hidden {
         return None;
     }
-    if let Some(inner) = scroll_content_node(node) {
-        let bounds = union_descendant_bounds(inner, layout)?;
-        return Some(bounds.height);
-    }
-    let inner = node.children.first()?;
-    // Measure the content subtree only (e.g. the list `Column`), not the offset wrapper.
-    // Using viewport-relative bounds here would shrink as `margin_top` shifts during scroll,
-    // making the thumb appear to grow while scrolling down.
-    let content = inner.children.first().unwrap_or(inner);
-    if let Some(bounds) = union_descendant_bounds(content, layout) {
-        Some(bounds.height)
-    } else {
-        Some(layout.get(content.taffy_id?)?.height)
-    }
+    let inner = scroll_content_node(node)?;
+    Some(union_descendant_bounds(inner, layout)?.height)
 }
 
 /// Maximum scroll offset for a clipped viewport with an inner content wrapper, from layout results.
@@ -540,7 +528,7 @@ fn union_layout_rects(a: LayoutRect, b: LayoutRect) -> LayoutRect {
 mod tests {
     use super::*;
     use crate::diff::{NodePath, Patch};
-    use crate::element::builders::{Column, Text, View};
+    use crate::element::builders::{ColumnView, Text, View};
     use crate::element::types::ComponentElement;
     use std::path::PathBuf;
 
@@ -569,7 +557,7 @@ mod tests {
 
     #[test]
     fn font_size_16px_measures_in_logical_points_not_display_scale() {
-        let mut tree = RetainedTree::mount(Text::new("Ag").font_size(16.0).into_element()).unwrap();
+        let mut tree = RetainedTree::mount(Text::new("Ag").size(16.0).into_element()).unwrap();
 
         let map = layout_pass(
             &mut tree,
@@ -594,14 +582,14 @@ mod tests {
         let mut compact = RetainedTree::mount(
             View::new()
                 .width(100.0)
-                .child(Text::new(content).font_size(14.0).line_height(1.0))
+                .child(Text::new(content).size(14.0).leading(1.0))
                 .into_element(),
         )
         .unwrap();
         let mut loose = RetainedTree::mount(
             View::new()
                 .width(100.0)
-                .child(Text::new(content).font_size(14.0).line_height(2.0))
+                .child(Text::new(content).size(14.0).leading(2.0))
                 .into_element(),
         )
         .unwrap();
@@ -636,27 +624,27 @@ mod tests {
 
     #[test]
     fn scroll_content_max_offset_matches_measured_inner_height() {
-        use crate::element::builders::{Column, Row, Text};
+        use crate::element::builders::{ColumnView, RowView, Text};
         use crate::retained::RetainedTree;
 
-        let mut list = Column::new().gap(4.0);
+        let mut list = ColumnView::new().spacing(4.0);
         for i in 0..12 {
             list = list.child(
-                Row::new()
-                    .padding(4.0)
-                    .child(Text::new(format!("{:02}. item", i + 1)).font_size(14.0)),
+                RowView::new()
+                    .inset(4.0)
+                    .child(Text::new(format!("{:02}. item", i + 1)).size(14.0)),
             );
         }
 
         let offset = std::rc::Rc::new(std::cell::Cell::new(f64::MAX));
-        let root = Column::new()
+        let root = ColumnView::new()
             .child(
                 View::new()
                     .height(100.0)
-                    .overflow(Overflow::Hidden)
+                    .clip()
                     .scroll_layout_max(offset.clone())
                     .on_scroll(|_| {})
-                    .child(View::new().child(list)),
+                    .child(View::new().scroll_content().child(list)),
             )
             .into_element();
 
@@ -680,25 +668,17 @@ mod tests {
     #[test]
     fn absolute_column_overlay_expands_to_descendant_bounds() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(100.0)
                 .child(View::new().width(100.0).height(40.0))
                 .child(
-                    Column::new()
-                        .absolute()
+                    ColumnView::new()
+                        .floating()
                         .top(40.0)
                         .left(0.0)
                         .width(100.0)
-                        .child(
-                            View::new()
-                                .padding(8.0)
-                                .child(Text::new("A").font_size(14.0)),
-                        )
-                        .child(
-                            View::new()
-                                .padding(8.0)
-                                .child(Text::new("B").font_size(14.0)),
-                        ),
+                        .child(View::new().inset(8.0).child(Text::new("A").size(14.0)))
+                        .child(View::new().inset(8.0).child(Text::new("B").size(14.0))),
                 )
                 .into_element(),
         )
@@ -727,7 +707,7 @@ mod tests {
         let mut tree = RetainedTree::mount(
             View::new()
                 .width(120.0)
-                .child(Text::new("hello").font_size(16.0))
+                .child(Text::new("hello").size(16.0))
                 .into_element(),
         )
         .unwrap();
@@ -794,8 +774,8 @@ mod tests {
     #[test]
     fn column_children_stack_vertically() {
         let mut tree = RetainedTree::mount(
-            Column::new()
-                .gap(8.0)
+            ColumnView::new()
+                .spacing(8.0)
                 .child(Text::new("hi"))
                 .child(Text::new("hello world"))
                 .into_element(),
@@ -832,8 +812,8 @@ mod tests {
         use crate::element::builders::Button;
 
         let mut tree = RetainedTree::mount(
-            Column::new()
-                .padding(24.0)
+            ColumnView::new()
+                .inset(24.0)
                 .child(Button::new("Incrementar"))
                 .into_element(),
         )
@@ -859,22 +839,22 @@ mod tests {
 
     #[test]
     fn same_fn_sibling_components_update_text_at_index_five_reflows() {
-        use crate::element::builders::{Button, Column, Component, Row, Text};
+        use crate::element::builders::{Button, ColumnView, Component, RowView, Text};
         use crate::runtime::Runtime;
         use crate::Cx;
 
         fn mini(cx: &Cx) -> crate::element::Element {
-            let n = cx.use_signal(0i32);
+            let n = cx.state(0i32);
             let label = n.clone();
-            Row::new()
-                .child(Text::new(move || format!("{}", label.get())).font_size(16.0))
+            RowView::new()
+                .child(Text::new(move || format!("{}", label.get())).size(16.0))
                 .child(Button::new("+").width(44.0))
                 .into_element()
         }
 
         let mut runtime = Runtime::new();
         runtime.mount(|_cx| {
-            Column::new()
+            ColumnView::new()
                 .child(Text::new("a"))
                 .child(Text::new("b"))
                 .child(Text::new("c"))
@@ -998,9 +978,9 @@ mod tests {
     #[test]
     fn column_padding_left_offsets_children() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(200.0)
-                .padding_left(30.0)
+                .inset_left(30.0)
                 .child(View::new().height(10.0))
                 .into_element(),
         )
@@ -1029,9 +1009,9 @@ mod tests {
     fn column_row_gap_spaces_children() {
         let gap = 20.0;
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(100.0)
-                .row_gap(gap)
+                .vertical_spacing(gap)
                 .child(View::new().height(10.0))
                 .child(View::new().height(10.0))
                 .into_element(),
@@ -1062,9 +1042,9 @@ mod tests {
     #[test]
     fn column_margin_all_sides_offsets_node() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(200.0)
-                .child(View::new().height(10.0).margin(16.0))
+                .child(View::new().height(10.0).outset(16.0))
                 .into_element(),
         )
         .unwrap();
@@ -1132,8 +1112,7 @@ mod tests {
         assert!(font_cx.collection.family_by_name(family).is_some());
 
         let mut tree =
-            RetainedTree::mount(Text::new("font bytes").font_family(family).into_element())
-                .unwrap();
+            RetainedTree::mount(Text::new("font bytes").font(family).into_element()).unwrap();
         super::layout_pass(
             &mut tree,
             &mut font_cx,
@@ -1170,7 +1149,7 @@ mod tests {
         assert!(font_cx.collection.family_by_name(family).is_some());
 
         let mut tree =
-            RetainedTree::mount(Text::new("font path").font_family(family).into_element()).unwrap();
+            RetainedTree::mount(Text::new("font path").font(family).into_element()).unwrap();
         super::layout_pass(
             &mut tree,
             &mut font_cx,

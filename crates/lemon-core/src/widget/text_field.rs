@@ -1,19 +1,21 @@
 use crate::{
     element::{
-        builders::{Row, Text, View},
+        builders::{RowView, Text, View},
         events::Cursor,
-        style::{Color, ColorSource, Overflow},
+        style::{Color, ColorSource},
         types::TextInputMeta,
         Element,
     },
-    Cx, Signal,
+    Cx, LemonKey, State,
 };
 
 use crate::TextFieldState;
 
-/// Per-widget visual overrides for [`TextInput`].
+/// Visual overrides shared by [`TextField`] and [`SecureField`](super::SecureField).
+///
+/// Unset properties use the current host theme. Apply these with either field's `.style(...)` method.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct TextInputStyle {
+pub struct TextFieldStyle {
     placeholder_color: Option<Color>,
     border_color: Option<Color>,
     padding: Option<f32>,
@@ -21,7 +23,7 @@ pub struct TextInputStyle {
     focus_ring_color: Option<Color>,
 }
 
-impl TextInputStyle {
+impl TextFieldStyle {
     /// Overrides the placeholder text color.
     pub fn placeholder_color(mut self, color: Color) -> Self {
         self.placeholder_color = Some(color);
@@ -35,15 +37,27 @@ impl TextInputStyle {
     }
 
     /// Overrides the container padding in logical points.
-    pub fn padding(mut self, value: f32) -> Self {
+    pub fn inset(mut self, value: f32) -> Self {
         self.padding = Some(value);
         self
     }
 
+    /// Deprecated name for [`inset`](Self::inset).
+    #[deprecated(note = "use .inset(...) instead")]
+    pub fn padding(self, value: f32) -> Self {
+        self.inset(value)
+    }
+
     /// Overrides the border radius in logical points.
-    pub fn radius(mut self, value: f32) -> Self {
+    pub fn rounding(mut self, value: f32) -> Self {
         self.radius = Some(value);
         self
+    }
+
+    /// Deprecated name for [`rounding`](Self::rounding).
+    #[deprecated(note = "use .rounding(...) instead")]
+    pub fn radius(self, value: f32) -> Self {
+        self.rounding(value)
     }
 
     /// Overrides the focus ring color.
@@ -53,9 +67,9 @@ impl TextInputStyle {
     }
 }
 
-/// Single-line text input widget.
+/// Single-line editable text field, formerly named `TextInput`.
 ///
-/// `TextInput` is a **pure builder** — it reads reactive state at build time and registers
+/// `TextField` is a **pure builder** — it reads reactive state at build time and registers
 /// reactive dependencies so the parent re-renders when the field value changes.
 ///
 /// Keyboard focus is handled by the platform ([`FocusManager`](crate::retained::focus::FocusManager)):
@@ -64,22 +78,22 @@ impl TextInputStyle {
 /// # Examples
 ///
 /// ```no_run
-/// use lemon_ui::{Color, Cx, element::Element};
-/// use lemon_ui::widget::{TextInput, TextFieldState, TextInputStyle};
+/// use lemon_core::{Color, Cx, element::Element};
+/// use lemon_core::widget::{TextField, TextFieldState, TextFieldStyle};
 ///
 /// fn my_view(cx: &Cx) -> Element {
-///     let state = cx.use_signal(TextFieldState::new(""));
-///     TextInput::new(cx, state)
-///         .style(TextInputStyle::default().border_color(Color::rgb8(200, 80, 80)))
+///     let state = cx.state(TextFieldState::new(""));
+///     TextField::new(cx, state)
+///         .style(TextFieldStyle::default().border_color(Color::rgb8(200, 80, 80)))
 ///         .placeholder("Type here…")
 ///         .width(240.0)
 ///         .into_element()
 /// }
 /// ```
-pub struct TextInput {
-    state: Signal<TextFieldState>,
-    hovered: Signal<bool>,
-    pressed: Signal<bool>,
+pub struct TextField {
+    state: State<TextFieldState>,
+    hovered: State<bool>,
+    pressed: State<bool>,
     placeholder: String,
     width: Option<f32>,
     placeholder_color: Color,
@@ -93,21 +107,23 @@ pub struct TextInput {
     padding: f32,
     radius: f32,
     focus_ring_color: Color,
-    style: TextInputStyle,
+    style: TextFieldStyle,
     disabled: bool,
+    secure: bool,
 }
 
-impl TextInput {
-    /// Creates a new `TextInput` backed by `state`.
+impl TextField {
+    /// Creates a new `TextField` backed by `state`.
     ///
-    /// The builder reads the signal immediately so the parent component re-renders
-    /// whenever the field value or cursor changes.
-    pub fn new(cx: &Cx, state: Signal<TextFieldState>) -> Self {
-        let theme = cx.use_theme();
-        TextInput {
+    /// The returned builder uses theme defaults and is enabled with no placeholder.
+    /// Building its element reads `state`, subscribing the parent to value/cursor changes.
+    /// This constructor consumes hook slots; call it in a stable order on every render.
+    pub fn new(cx: &Cx, state: State<TextFieldState>) -> Self {
+        let theme = cx.theme();
+        TextField {
             state,
-            hovered: cx.use_signal(false),
-            pressed: cx.use_signal(false),
+            hovered: cx.state(false),
+            pressed: cx.state(false),
             placeholder: String::new(),
             width: None,
             placeholder_color: theme.colors.foreground_secondary,
@@ -121,8 +137,16 @@ impl TextInput {
             padding: theme.spacing.sm,
             radius: theme.radius.sm,
             focus_ring_color: theme.chrome.focus_ring,
-            style: TextInputStyle::default(),
+            style: TextFieldStyle::default(),
             disabled: false,
+            secure: false,
+        }
+    }
+
+    pub(super) fn new_secure(cx: &Cx, state: State<TextFieldState>) -> Self {
+        Self {
+            secure: true,
+            ..Self::new(cx, state)
         }
     }
 
@@ -139,7 +163,7 @@ impl TextInput {
     }
 
     /// Replaces all text input style overrides.
-    pub fn style(mut self, style: TextInputStyle) -> Self {
+    pub fn style(mut self, style: TextFieldStyle) -> Self {
         self.style = style;
         self
     }
@@ -157,15 +181,27 @@ impl TextInput {
     }
 
     /// Overrides the container padding for this widget.
-    pub fn padding(mut self, value: f32) -> Self {
+    pub fn inset(mut self, value: f32) -> Self {
         self.style.padding = Some(value);
         self
     }
 
+    /// Deprecated name for [`inset`](Self::inset).
+    #[deprecated(note = "use .inset(...) instead")]
+    pub fn padding(self, value: f32) -> Self {
+        self.inset(value)
+    }
+
     /// Overrides the border radius for this widget.
-    pub fn radius(mut self, value: f32) -> Self {
+    pub fn rounding(mut self, value: f32) -> Self {
         self.style.radius = Some(value);
         self
+    }
+
+    /// Deprecated name for [`rounding`](Self::rounding).
+    #[deprecated(note = "use .rounding(...) instead")]
+    pub fn radius(self, value: f32) -> Self {
+        self.rounding(value)
     }
 
     /// Overrides the focus ring color for this widget.
@@ -186,7 +222,22 @@ impl TextInput {
     pub fn into_element(self) -> Element {
         let field = self.state.get();
         let disabled = self.disabled;
-        let current_value = field.value.clone();
+        let secure = self.secure;
+        // Paint and retained metadata only receive display text and display byte offsets.
+        // Editing continues to use the original UTF-8 value/cursor in the signal.
+        let (current_value, cursor) = if secure {
+            let cursor_chars = field
+                .value
+                .char_indices()
+                .take_while(|(offset, _)| *offset < field.cursor)
+                .count();
+            (
+                "•".repeat(field.value.chars().count()),
+                cursor_chars * '•'.len_utf8(),
+            )
+        } else {
+            (field.value, field.cursor)
+        };
         let placeholder = self.placeholder.clone();
         let placeholder_color = self
             .style
@@ -232,36 +283,42 @@ impl TextInput {
                 .color(placeholder_color)
                 .into_element()
         } else {
-            Text::new(current_value).color(text_color).into_element()
+            Text::new(current_value.clone())
+                .color(text_color)
+                .into_element()
         };
 
         let mut container = View::new()
-            .background(surface_color)
-            .padding(padding)
+            .surface(surface_color)
+            .inset(padding)
             .border(border_color, 1.5)
-            .radius(radius)
-            .overflow(Overflow::Hidden)
+            .rounding(radius)
+            .clip()
             .cursor(if disabled {
                 Cursor::NotAllowed
             } else {
                 Cursor::Text
             })
-            .child(
-                Row::new()
-                    .overflow(Overflow::Hidden)
-                    .flex_grow(1.0)
-                    .child(text_child),
-            );
+            .child(RowView::new().clip().grow(1.0).child(text_child));
         if !disabled {
             container = container
                 .focusable()
                 .text_input(TextInputMeta {
-                    cursor: field.cursor,
-                    value: field.value,
+                    cursor,
+                    value: current_value,
                 })
                 .on_key_down({
                     let state = self.state.clone();
-                    move |ev| state.update(|s| s.handle_key(&ev))
+                    move |ev| {
+                        if secure
+                            && (ev.modifiers.ctrl || ev.modifiers.meta)
+                            && matches!(&ev.key, LemonKey::Character(key)
+                                if key.eq_ignore_ascii_case("c") || key.eq_ignore_ascii_case("x"))
+                        {
+                            return;
+                        }
+                        state.update(|s| s.handle_key(&ev));
+                    }
                 });
             let hovered_enter = self.hovered.clone();
             let hovered_leave = self.hovered.clone();
@@ -290,11 +347,19 @@ impl TextInput {
     }
 }
 
-impl From<TextInput> for Element {
-    fn from(input: TextInput) -> Self {
+impl From<TextField> for Element {
+    fn from(input: TextField) -> Self {
         input.into_element()
     }
 }
+
+/// Deprecated name for [`TextField`]; replace `TextInput` with `TextField`.
+#[deprecated(note = "renamed to TextField; use TextField instead")]
+pub type TextInput = TextField;
+
+/// Deprecated name for [`TextFieldStyle`]; use it for both plain and secure fields.
+#[deprecated(note = "renamed to TextFieldStyle; use TextFieldStyle instead")]
+pub type TextInputStyle = TextFieldStyle;
 
 #[cfg(test)]
 mod tests {
@@ -306,7 +371,7 @@ mod tests {
     };
 
     #[test]
-    fn text_input_defaults_follow_active_theme() {
+    fn text_field_defaults_follow_active_theme() {
         let previous = current_theme();
         let mut custom = Theme::default_dark();
         custom.colors.foreground_secondary = Color::rgb8(120, 121, 122);
@@ -316,8 +381,8 @@ mod tests {
         set_active_theme(custom.clone());
 
         let cx = Cx::new();
-        let state = Signal::new(TextFieldState::new(""));
-        let Element::View(view) = TextInput::new(&cx, state)
+        let state = State::new(TextFieldState::new(""));
+        let Element::View(view) = TextField::new(&cx, state)
             .placeholder("Type here")
             .into_element()
         else {
@@ -345,8 +410,8 @@ mod tests {
 
         let mut field = TextFieldState::new("hello");
         field.cursor = 5;
-        let state_with_text = Signal::new(field);
-        let Element::View(filled) = TextInput::new(&cx, state_with_text).into_element() else {
+        let state_with_text = State::new(field);
+        let Element::View(filled) = TextField::new(&cx, state_with_text).into_element() else {
             panic!("expected View element");
         };
         let Element::Row(filled_row) = &filled.children[0] else {
@@ -363,7 +428,7 @@ mod tests {
     }
 
     #[test]
-    fn text_input_style_overrides_and_fallbacks() {
+    fn text_field_style_overrides_and_fallbacks() {
         let previous = current_theme();
         let mut custom = Theme::default_dark();
         custom.colors.foreground_secondary = Color::rgb8(120, 121, 122);
@@ -374,10 +439,10 @@ mod tests {
         set_active_theme(custom);
 
         let cx = Cx::new();
-        let state = Signal::new(TextFieldState::new(""));
-        let Element::View(view) = TextInput::new(&cx, state)
+        let state = State::new(TextFieldState::new(""));
+        let Element::View(view) = TextField::new(&cx, state)
             .style(
-                TextInputStyle::default()
+                TextFieldStyle::default()
                     .border_color(Color::rgb8(1, 2, 3))
                     .focus_ring_color(Color::rgb8(4, 5, 6)),
             )
@@ -415,7 +480,7 @@ mod tests {
     }
 
     #[test]
-    fn text_input_hover_and_press_states_update_surface_color() {
+    fn text_field_hover_and_press_states_update_surface_color() {
         let previous = current_theme();
         let mut custom = Theme::default_dark();
         custom.colors.surface = Color::rgb8(1, 2, 3);
@@ -424,8 +489,8 @@ mod tests {
         set_active_theme(custom.clone());
 
         let cx = Cx::new();
-        let state = Signal::new(TextFieldState::new(""));
-        let Element::View(view) = TextInput::new(&cx, state).into_element() else {
+        let state = State::new(TextFieldState::new(""));
+        let Element::View(view) = TextField::new(&cx, state).into_element() else {
             panic!("expected View element");
         };
 
@@ -459,15 +524,15 @@ mod tests {
     }
 
     #[test]
-    fn disabled_text_input_ignores_keyboard_and_uses_disabled_colors() {
+    fn disabled_text_field_ignores_keyboard_and_uses_disabled_colors() {
         let previous = current_theme();
         let mut custom = Theme::default_dark();
         custom.colors.foreground_disabled = Color::rgb8(9, 10, 11);
         set_active_theme(custom.clone());
 
         let cx = Cx::new();
-        let state = Signal::new(TextFieldState::new(""));
-        let Element::View(view) = TextInput::new(&cx, state.clone())
+        let state = State::new(TextFieldState::new(""));
+        let Element::View(view) = TextField::new(&cx, state.clone())
             .placeholder("Type here")
             .disabled(true)
             .into_element()

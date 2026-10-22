@@ -4,7 +4,7 @@ pub use lemon_reactive::{derived, effect, observer, signal};
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::diff::{diff, diff_container_chrome, diff_container_props, NodePath, Patch};
+use crate::diff::{NodePath, Patch};
 use crate::element::{
     content::TextContent,
     style::{ColorSource, PaintProps},
@@ -65,7 +65,7 @@ impl Runtime {
         self.slots.push(slot);
         if let Some(initial) = self.slots.first().and_then(|s| s.previous.clone()) {
             bootstrap_initial_components(
-                &mut self.slots,
+                &mut self.slots[0].children,
                 &initial,
                 NodePath::root(),
                 &mut self.patch_queue,
@@ -89,7 +89,7 @@ impl Runtime {
         std::mem::take(&mut self.patch_queue)
     }
 
-    /// Run mount-time `use_effect` hooks queued during render (after first paint).
+    /// Run mount-time `Cx::watch` callbacks queued during render (after first paint).
     pub fn flush_deferred_effects(&mut self) {
         cx::flush_deferred_sink(&self.deferred_effects);
     }
@@ -200,31 +200,14 @@ fn find_slot_mut<'a>(
     None
 }
 
-/// Child component slots for `path` live in the parent slot's `children` list.
-fn slots_bucket_mut<'a>(
-    roots: &'a mut Vec<ComponentSlot>,
-    path: &NodePath,
-) -> &'a mut Vec<ComponentSlot> {
-    if path.0.is_empty() {
-        return roots;
-    }
-    let parent = NodePath(path.0[..path.0.len() - 1].to_vec());
-    &mut find_slot_mut(roots, &parent)
-        .expect("parent component slot must exist")
-        .children
-}
-
-fn unmount_component_slot(slots: &mut Vec<ComponentSlot>, path: &NodePath) -> bool {
-    if let Some(index) = slots.iter().position(|slot| &slot.path == path) {
-        slots.remove(index);
-        return true;
-    }
-    for slot in slots.iter_mut() {
-        if unmount_component_slot(&mut slot.children, path) {
-            return true;
+fn unmount_subtree_slots(slots: &mut Vec<ComponentSlot>, path: &NodePath) {
+    slots.retain_mut(|slot| {
+        if slot.path.0.starts_with(&path.0) {
+            return false;
         }
-    }
-    false
+        unmount_subtree_slots(&mut slot.children, path);
+        true
+    });
 }
 
 fn bootstrap_initial_components(
@@ -236,15 +219,16 @@ fn bootstrap_initial_components(
 ) {
     match element {
         Element::Component(component) => {
-            let bucket = slots_bucket_mut(slots, &path);
             mount_component_slot(
-                bucket,
+                slots,
                 path.clone(),
                 component.clone(),
                 Rc::clone(&deferred_effects),
             );
-            let rendered = find_slot_mut(slots, &path)
-                .and_then(|slot| slot.previous.clone())
+            let slot = slots.last_mut().expect("component slot was just mounted");
+            let rendered = slot
+                .previous
+                .clone()
                 .expect("component slot must render on mount");
             let rendered_children = component_output_children(rendered.clone());
             if rendered_children.len() == 1 {
@@ -254,7 +238,7 @@ fn bootstrap_initial_components(
                     new_element: child.clone(),
                 });
                 bootstrap_initial_components(
-                    slots,
+                    &mut slot.children,
                     &child,
                     path.clone(),
                     patches,
@@ -272,7 +256,7 @@ fn bootstrap_initial_components(
                     component: component.clone(),
                 });
                 bootstrap_component_output(
-                    slots,
+                    &mut slot.children,
                     rendered_children,
                     path,
                     patches,
@@ -431,21 +415,19 @@ fn handle_component_pair(
             component: new_for_patch,
         });
     } else {
-        unmount_component_slot(parent_slots, &path);
-        patches.push(Patch::UnmountComponent { node: path.clone() });
-        patches.push(Patch::MountComponent {
+        unmount_subtree_slots(parent_slots, &path);
+        // Replace the entire old wrapper, including every fragment root, before mounting.
+        patches.push(Patch::ReplaceNode {
             node: path.clone(),
-            component: new_for_patch.clone(),
+            new_element: crate::Text::new("").into_element(),
         });
-        mount_component_slot(
+        bootstrap_initial_components(
             parent_slots,
-            path.clone(),
-            new,
-            Rc::clone(&deferred_effects),
+            &Element::Component(new),
+            path,
+            patches,
+            deferred_effects,
         );
-        if let Some(slot) = find_slot_mut(parent_slots, &path) {
-            render_slot(slot, patches);
-        }
     }
 }
 
@@ -489,213 +471,127 @@ fn diff_component_output_children(
     patches: &mut Vec<Patch>,
     deferred_effects: Rc<RefCell<Vec<Effect>>>,
 ) {
-    let min = old_children.len().min(new_children.len());
-    for i in 0..min {
-        let child_path = if i == 0 && old_children.len() == 1 {
-            parent.clone()
-        } else {
-            parent.child(i)
-        };
-        diff_with_nested_components(
+    crate::diff::reconcile_children_at(
+        &mut SlotReconciler {
             slots,
-            old_children[i].clone(),
-            new_children[i].clone(),
-            child_path,
-            patches,
-            Rc::clone(&deferred_effects),
-        );
-    }
-
-    for (index, element) in new_children.iter().enumerate().skip(min) {
-        push_insert_child_slot(
-            slots,
-            element,
-            parent,
-            index,
-            patches,
-            Rc::clone(&deferred_effects),
-        );
-    }
-
-    for i in (min..old_children.len()).rev() {
-        push_remove_child_slot(slots, &old_children[i], parent, i, patches);
-    }
+            effects: deferred_effects,
+        },
+        old_children.to_vec(),
+        new_children.to_vec(),
+        parent,
+        patches,
+        |_, index| {
+            if index == 0 && old_children.len() == 1 {
+                parent.clone()
+            } else {
+                parent.child(index)
+            }
+        },
+    );
 }
 
-fn diff_children_slots(
-    slots: &mut Vec<ComponentSlot>,
-    old_children: &[Element],
-    new_children: &[Element],
-    parent: &NodePath,
-    patches: &mut Vec<Patch>,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
-) {
-    let old_children = crate::diff::flatten_children(old_children.to_vec());
-    let new_children = crate::diff::flatten_children(new_children.to_vec());
-    if crate::diff::children_are_fully_keyed(&old_children)
-        && crate::diff::children_are_fully_keyed(&new_children)
-    {
-        diff_children_slots_keyed(
-            slots,
-            &old_children,
-            &new_children,
-            parent,
-            patches,
-            deferred_effects,
-        );
-    } else {
-        diff_children_slots_by_index(
-            slots,
-            &old_children,
-            &new_children,
-            parent,
-            patches,
-            deferred_effects,
-        );
-    }
+struct SlotReconciler<'a> {
+    slots: &'a mut Vec<ComponentSlot>,
+    effects: Rc<RefCell<Vec<Effect>>>,
 }
-
-fn push_insert_child_slot(
-    slots: &mut Vec<ComponentSlot>,
-    element: &Element,
-    parent: &NodePath,
-    index: usize,
-    patches: &mut Vec<Patch>,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
-) {
-    let path = parent.child(index);
-    match element {
-        Element::Component(component) => {
-            patches.push(Patch::MountComponent {
-                node: path.clone(),
-                component: component.clone(),
-            });
-            mount_component_slot(slots, path, component.clone(), Rc::clone(&deferred_effects));
-        }
-        element => patches.push(Patch::InsertChild {
+impl crate::diff::Reconciler for SlotReconciler<'_> {
+    fn insert(
+        &mut self,
+        element: Element,
+        parent: &NodePath,
+        index: usize,
+        patches: &mut Vec<Patch>,
+    ) {
+        patches.push(Patch::InsertChild {
             parent: parent.clone(),
             index,
             element: element.clone(),
-        }),
+        });
+        bootstrap_initial_components(
+            self.slots,
+            &element,
+            parent.child(index),
+            patches,
+            self.effects.clone(),
+        );
     }
-}
-
-fn push_remove_child_slot(
-    slots: &mut Vec<ComponentSlot>,
-    element: &Element,
-    parent: &NodePath,
-    index: usize,
-    patches: &mut Vec<Patch>,
-) {
-    let path = parent.child(index);
-    match element {
-        Element::Component(_) => {
-            unmount_component_slot(slots, &path);
-            patches.push(Patch::UnmountComponent { node: path });
-        }
-        _ => patches.push(Patch::RemoveChild {
+    fn remove(
+        &mut self,
+        _element: &Element,
+        parent: &NodePath,
+        index: usize,
+        patches: &mut Vec<Patch>,
+    ) {
+        unmount_subtree_slots(self.slots, &parent.child(index));
+        patches.push(Patch::RemoveChild {
             parent: parent.clone(),
             index,
-        }),
+        });
     }
-}
-
-fn diff_children_slots_by_index(
-    slots: &mut Vec<ComponentSlot>,
-    old_children: &[Element],
-    new_children: &[Element],
-    parent: &NodePath,
-    patches: &mut Vec<Patch>,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
-) {
-    let min = old_children.len().min(new_children.len());
-    for i in 0..min {
-        diff_with_nested_components(
-            slots,
-            old_children[i].clone(),
-            new_children[i].clone(),
-            parent.child(i),
-            patches,
-            Rc::clone(&deferred_effects),
-        );
-    }
-
-    for (index, element) in new_children.iter().enumerate().skip(min) {
-        push_insert_child_slot(
-            slots,
-            element,
-            parent,
-            index,
-            patches,
-            Rc::clone(&deferred_effects),
-        );
-    }
-
-    for i in (min..old_children.len()).rev() {
-        push_remove_child_slot(slots, &old_children[i], parent, i, patches);
-    }
-}
-
-fn diff_children_slots_keyed(
-    slots: &mut Vec<ComponentSlot>,
-    old_children: &[Element],
-    new_children: &[Element],
-    parent: &NodePath,
-    patches: &mut Vec<Patch>,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
-) {
-    use crate::diff::{keyed_plan, ChildOp};
-
-    for op in keyed_plan(old_children, new_children) {
-        match op {
-            ChildOp::Remove(index) => {
-                push_remove_child_slot(slots, &old_children[index], parent, index, patches);
-                reindex_slots(slots, parent, &|current| match current.cmp(&index) {
-                    std::cmp::Ordering::Less => Some(current),
-                    std::cmp::Ordering::Equal => None,
-                    std::cmp::Ordering::Greater => Some(current - 1),
-                });
-            }
-            ChildOp::Insert(index) => {
-                reindex_slots(slots, parent, &|current| {
-                    Some(current + usize::from(current >= index))
-                });
-                push_insert_child_slot(
-                    slots,
-                    &new_children[index],
-                    parent,
-                    index,
+    fn component_transition(
+        &mut self,
+        old: &Element,
+        new: &Element,
+        path: &NodePath,
+        patches: &mut Vec<Patch>,
+    ) -> bool {
+        match (old, new) {
+            (Element::Component(old), Element::Component(new)) => {
+                handle_component_pair(
+                    self.slots,
+                    old,
+                    new.clone(),
+                    path.clone(),
                     patches,
-                    Rc::clone(&deferred_effects),
+                    self.effects.clone(),
                 );
+                true
             }
-            ChildOp::Move { from, to } => {
-                reindex_slots(slots, parent, &|current| {
-                    Some(if current == from {
-                        to
-                    } else if from < to && current > from && current <= to {
-                        current - 1
-                    } else if to < from && current >= to && current < from {
-                        current + 1
-                    } else {
-                        current
-                    })
+            (Element::Component(_), new) => {
+                unmount_subtree_slots(self.slots, path);
+                patches.push(Patch::ReplaceNode {
+                    node: path.clone(),
+                    new_element: new.clone(),
                 });
-                patches.push(Patch::MoveChild {
-                    parent: parent.clone(),
-                    from,
-                    to,
-                });
+                bootstrap_initial_components(
+                    self.slots,
+                    new,
+                    path.clone(),
+                    patches,
+                    self.effects.clone(),
+                );
+                true
             }
-            ChildOp::Update { old, new } => diff_with_nested_components(
-                slots,
-                old_children[old].clone(),
-                new_children[new].clone(),
-                parent.child(new),
-                patches,
-                Rc::clone(&deferred_effects),
-            ),
+            (_, Element::Component(_)) => {
+                unmount_subtree_slots(self.slots, path);
+                patches.push(Patch::ReplaceNode {
+                    node: path.clone(),
+                    new_element: crate::Text::new("").into_element(),
+                });
+                bootstrap_initial_components(
+                    self.slots,
+                    new,
+                    path.clone(),
+                    patches,
+                    self.effects.clone(),
+                );
+                true
+            }
+            _ => false,
         }
+    }
+    fn replaced(&mut self, element: &Element, path: &NodePath, patches: &mut Vec<Patch>) {
+        unmount_subtree_slots(self.slots, path);
+        bootstrap_initial_components(
+            self.slots,
+            element,
+            path.clone(),
+            patches,
+            self.effects.clone(),
+        );
+    }
+    fn relocate(&mut self, parent: &NodePath, op: &crate::diff::ChildOp) {
+        reindex_slots(self.slots, parent, &|index| op.relocated_index(index));
     }
 }
 
@@ -716,54 +612,6 @@ fn reindex_slots(
     });
 }
 
-fn sync_slots_for_emitted_patches(
-    slots: &mut Vec<ComponentSlot>,
-    emitted: &[Patch],
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
-) {
-    for patch in emitted {
-        match patch {
-            Patch::MountComponent { node, component } if find_slot_mut(slots, node).is_none() => {
-                mount_component_slot(
-                    slots_bucket_mut(slots, node),
-                    node.clone(),
-                    component.clone(),
-                    Rc::clone(&deferred_effects),
-                );
-            }
-            Patch::UnmountComponent { node } => {
-                unmount_component_slot(slots, node);
-            }
-            Patch::UpdateComponent { node, component } => {
-                if let Some(slot) = find_slot_mut(slots, node) {
-                    let props_changed = slot
-                        .component
-                        .as_ref()
-                        .is_none_or(|previous| !previous.props_eq(component));
-                    let should_sync_render = if component.has_props() {
-                        props_changed
-                    } else {
-                        true
-                    };
-                    if should_sync_render {
-                        *slot.view.borrow_mut() = component.view();
-                        sync_render(slot);
-                    }
-                    slot.component = Some(component.clone());
-                } else {
-                    mount_component_slot(
-                        slots_bucket_mut(slots, node),
-                        node.clone(),
-                        component.clone(),
-                        Rc::clone(&deferred_effects),
-                    );
-                }
-            }
-            _ => {}
-        }
-    }
-}
-
 fn diff_with_nested_components(
     slots: &mut Vec<ComponentSlot>,
     old: Element,
@@ -772,46 +620,30 @@ fn diff_with_nested_components(
     patches: &mut Vec<Patch>,
     deferred_effects: Rc<RefCell<Vec<Effect>>>,
 ) {
-    match (old, new) {
-        (Element::Component(old_component), Element::Component(new_component)) => {
-            handle_component_pair(
-                slots,
-                &old_component,
-                new_component,
-                path,
-                patches,
-                deferred_effects,
-            );
-        }
-        (Element::Column(old), Element::Column(new))
-        | (Element::Row(old), Element::Row(new))
-        | (Element::View(old), Element::View(new)) => {
-            diff_container_props(&old, &new, &path, patches);
-            diff_children_slots(
-                slots,
-                &old.children,
-                &new.children,
-                &path,
-                patches,
-                deferred_effects,
-            );
-            diff_container_chrome(&old, &new, &path, patches);
-        }
-        (old, new) => {
-            let emitted = diff(old, new, path);
-            sync_slots_for_emitted_patches(slots, &emitted, deferred_effects);
-            patches.extend(emitted);
-        }
-    }
+    patches.extend(crate::diff::reconcile(
+        &mut SlotReconciler {
+            slots,
+            effects: deferred_effects,
+        },
+        old,
+        new,
+        path,
+    ));
 }
 
 fn freeze_element(element: &Element) -> Element {
     match element {
-        Element::Text(text) => Element::Text(TextElement {
-            content: TextContent::Static(text.content.resolve()),
-            style: text.style.clone(),
-            key: text.key.clone(),
-        }),
+        Element::Text(text) => {
+            // Resolve the theme default while freezing so diffing sees theme changes
+            // even when the app did not provide an explicit foreground color.
+            let mut style = text.style.clone();
+            style.color = Some(crate::element::style::resolved_text_color(&style));
+            Element::Text(TextElement {
+                content: TextContent::Static(text.content.resolve()),
+                style,
+                key: text.key.clone(),
+            })
+        }
         Element::View(container) => Element::View(freeze_box(container)),
         Element::Row(container) => Element::Row(freeze_box(container)),
         Element::Column(container) => Element::Column(freeze_box(container)),
@@ -885,7 +717,7 @@ mod tests {
 
     #[test]
     fn runtime_emits_widget_chrome_when_text_input_meta_changes() {
-        use crate::element::builders::{Row, View};
+        use crate::element::builders::{RowView, View};
         use crate::element::types::TextInputMeta;
 
         let state = Signal::new((String::new(), 0usize));
@@ -898,7 +730,7 @@ mod tests {
                     cursor,
                     value: value.clone(),
                 })
-                .child(Row::new().child(Text::new(value)))
+                .child(RowView::new().child(Text::new(value)))
                 .into_element()
         });
 
@@ -927,7 +759,7 @@ mod tests {
         let mut rt = Runtime::new();
         rt.mount(move |cx| {
             let flag = flag.clone();
-            cx.use_effect(move || {
+            cx.watch(move || {
                 flag.set(true);
             });
             Text::new("x").into_element()
@@ -996,8 +828,8 @@ mod tests {
             let mut view = View::new()
                 .width(80.0)
                 .height(40.0)
-                .linear_gradient(gradient)
-                .box_shadow(shadow)
+                .gradient(gradient)
+                .shadow(shadow)
                 .border(Color::rgb8(80, 80, 80), 2.0);
             if active {
                 view = view.border_color_top(Color::rgb8(255, 0, 0));
@@ -1029,7 +861,7 @@ mod tests {
         let t2 = trigger.clone();
         let mut rt = Runtime::new();
         rt.mount(move |_cx| {
-            let count = _cx.use_signal(0u32);
+            let count = _cx.state(0u32);
             count.update(|n| *n += 1);
             t2.get(); // track trigger signal to force re-render
             Text::new(move || count.get().to_string()).into_element()
@@ -1049,14 +881,14 @@ mod tests {
     fn nested_component_effect_subscribes_to_signal_on_mount() {
         use std::cell::RefCell;
 
-        use crate::element::builders::{Column, Component};
+        use crate::element::builders::{ColumnView, Component};
 
         thread_local! {
             static SIGNAL: RefCell<Option<Signal<i32>>> = const { RefCell::new(None) };
         }
 
         fn child(cx: &Cx) -> Element {
-            let n = cx.use_signal(0i32);
+            let n = cx.state(0i32);
             SIGNAL.with(|cell| *cell.borrow_mut() = Some(n.clone()));
             let read = n.clone();
             Text::new(move || read.get().to_string()).into_element()
@@ -1064,7 +896,7 @@ mod tests {
 
         let mut runtime = Runtime::new();
         runtime.mount(|_cx| {
-            Column::new()
+            ColumnView::new()
                 .child(Component::new(child).key(1))
                 .into_element()
         });
@@ -1088,7 +920,7 @@ mod tests {
 
     #[test]
     fn flush_effects_processes_nested_component_slot_patches() {
-        use crate::element::builders::{Column, Component};
+        use crate::element::builders::{ColumnView, Component};
 
         fn child(_cx: &Cx) -> Element {
             Text::new("0").into_element()
@@ -1096,7 +928,7 @@ mod tests {
 
         let mut runtime = Runtime::new();
         runtime.mount(move |_cx| {
-            Column::new()
+            ColumnView::new()
                 .child(Component::new(child).key(1))
                 .into_element()
         });
@@ -1122,10 +954,10 @@ mod tests {
 
     #[test]
     fn nested_component_state_survives_parent_rerender_when_identity_matches() {
-        use crate::element::builders::{Column, Component};
+        use crate::element::builders::{ColumnView, Component};
 
         fn child(cx: &Cx) -> Element {
-            let count = cx.use_signal(0u32);
+            let count = cx.state(0u32);
             count.update(|value| *value += 1);
             Text::new(move || count.get().to_string()).into_element()
         }
@@ -1135,7 +967,7 @@ mod tests {
         let mut runtime = Runtime::new();
         runtime.mount(move |_cx| {
             t2.get();
-            Column::new()
+            ColumnView::new()
                 .child(Component::new(child).key(1))
                 .into_element()
         });
@@ -1154,7 +986,7 @@ mod tests {
     fn typed_props_component_skips_rerender_when_props_unchanged() {
         use std::cell::Cell;
 
-        use crate::element::builders::{Column, Component};
+        use crate::element::builders::{ColumnView, Component};
 
         #[derive(Clone, PartialEq)]
         struct Props {
@@ -1177,7 +1009,7 @@ mod tests {
         let mut runtime = Runtime::new();
         runtime.mount(move |_cx| {
             t2.get();
-            Column::new()
+            ColumnView::new()
                 .child(Component::new_with_props(child, Props { value: 42 }))
                 .into_element()
         });
@@ -1208,10 +1040,10 @@ mod tests {
 
     #[test]
     fn unmounting_component_slot_drops_cx_hooks() {
-        use crate::element::builders::{Column, Component};
+        use crate::element::builders::{ColumnView, Component};
 
         fn counting_child(cx: &Cx) -> Element {
-            let count = cx.use_signal(0u32);
+            let count = cx.state(0u32);
             count.update(|value| *value += 1);
             Text::new(move || count.get().to_string()).into_element()
         }
@@ -1228,7 +1060,7 @@ mod tests {
                 0 | 2 | 3 => counting_child,
                 _ => child_b,
             };
-            Column::new()
+            ColumnView::new()
                 .child(Component::new(view).key(1))
                 .into_element()
         });
@@ -1244,8 +1076,8 @@ mod tests {
         assert!(
             remount_patches
                 .iter()
-                .any(|patch| matches!(patch, Patch::UnmountComponent { .. })),
-            "expected unmount when swapping back to counting_child, got {remount_patches:?}"
+                .any(|patch| matches!(patch, Patch::ReplaceNode { new_element: Element::Text(text), .. } if text.content.resolve() == "1")),
+            "expected fresh hook state when swapping back to counting_child, got {remount_patches:?}"
         );
         assert!(
             remount_patches
@@ -1268,7 +1100,7 @@ mod tests {
 
     #[test]
     fn keyed_list_add_remove_patches_apply_without_error() {
-        use crate::element::builders::{Button, Column, Row};
+        use crate::element::builders::{Button, ColumnView, RowView};
         use crate::element::style::{Align, Color};
         use crate::retained::RetainedTree;
 
@@ -1282,34 +1114,34 @@ mod tests {
         let items_for_view = items.clone();
         let mut rt = Runtime::new();
         rt.mount(move |_cx| {
-            let mut col = Column::new().gap(8.0);
+            let mut col = ColumnView::new().spacing(8.0);
             for item in items_for_view.get() {
                 let items_remove = items_for_view.clone();
                 let item_id = item.id;
                 let label = item.label.clone();
                 col = col.child(
-                    Row::new()
+                    RowView::new()
                         .key(item.id)
-                        .gap(8.0)
-                        .align_items(Align::Center)
+                        .spacing(8.0)
+                        .align(Align::Center)
                         .child(
                             Text::new(label)
-                                .font_size(15.0)
+                                .size(15.0)
                                 .color(Color::rgb8(210, 210, 230)),
                         )
                         .child(
                             Button::new("Remove")
-                                .background(Color::rgb8(180, 50, 50))
-                                .on_click(move || {
+                                .surface(Color::rgb8(180, 50, 50))
+                                .action(move || {
                                     items_remove.update(|list| list.retain(|i| i.id != item_id));
                                 }),
                         ),
                 );
             }
-            Column::new()
-                .padding(24.0)
-                .gap(12.0)
-                .child(Text::new("Keyed List").font_size(20.0))
+            ColumnView::new()
+                .inset(24.0)
+                .spacing(12.0)
+                .child(Text::new("Keyed List").size(20.0))
                 .child(Button::new("Add item"))
                 .child(col)
                 .into_element()
@@ -1343,7 +1175,7 @@ mod tests {
     fn component_fragment_output_mounts_and_updates_in_retained_tree() {
         use std::cell::RefCell;
 
-        use crate::element::builders::{Column, Component};
+        use crate::element::builders::{ColumnView, Component};
         use crate::retained::RetainedTree;
 
         thread_local! {
@@ -1366,7 +1198,7 @@ mod tests {
 
         let mut runtime = Runtime::new();
         runtime.mount(|_cx| {
-            Column::new()
+            ColumnView::new()
                 .child(Component::new(list).key(1))
                 .into_element()
         });
@@ -1396,7 +1228,7 @@ mod tests {
     fn sibling_component_counters_update_independently() {
         use std::cell::RefCell;
 
-        use crate::element::builders::{Button, Column, Component, Row};
+        use crate::element::builders::{Button, ColumnView, Component, RowView};
         use crate::retained::RetainedTree;
 
         thread_local! {
@@ -1405,28 +1237,28 @@ mod tests {
         }
 
         fn first(cx: &Cx) -> Element {
-            let n = cx.use_signal(0i32);
+            let n = cx.state(0i32);
             FIRST.with(|cell| *cell.borrow_mut() = Some(n.clone()));
             let label = n.clone();
-            Row::new()
-                .child(Text::new(move || format!("{}", label.get())).font_size(16.0))
+            RowView::new()
+                .child(Text::new(move || format!("{}", label.get())).size(16.0))
                 .child(Button::new("+").width(44.0))
                 .into_element()
         }
 
         fn second(cx: &Cx) -> Element {
-            let n = cx.use_signal(0i32);
+            let n = cx.state(0i32);
             SECOND.with(|cell| *cell.borrow_mut() = Some(n.clone()));
             let label = n.clone();
-            Row::new()
-                .child(Text::new(move || format!("{}", label.get())).font_size(16.0))
+            RowView::new()
+                .child(Text::new(move || format!("{}", label.get())).size(16.0))
                 .child(Button::new("+").width(44.0))
                 .into_element()
         }
 
         let mut runtime = Runtime::new();
         runtime.mount(|_cx| {
-            Column::new()
+            ColumnView::new()
                 .child(Text::new("a"))
                 .child(Text::new("b"))
                 .child(Text::new("c"))
@@ -1502,8 +1334,8 @@ mod tests {
     }
 
     #[test]
-    fn nested_component_identity_change_unmounts_and_mounts() {
-        use crate::element::builders::{Column, Component};
+    fn nested_component_identity_change_replaces_output_and_mounts() {
+        use crate::element::builders::{ColumnView, Component};
 
         fn child_a(_cx: &Cx) -> Element {
             Text::new("a").into_element()
@@ -1518,20 +1350,25 @@ mod tests {
         let mut runtime = Runtime::new();
         runtime.mount(move |_cx| {
             let child = if s2.get() { child_b } else { child_a };
-            Column::new()
+            ColumnView::new()
                 .child(Component::new(child).key(1))
                 .into_element()
         });
 
+        let mut tree = crate::RetainedTree::mount(runtime.root_element().unwrap()).unwrap();
+        tree.apply_patches(runtime.take_patches()).unwrap();
         swap.set(true);
         runtime.flush_effects();
         let patches = runtime.take_patches();
-
-        assert!(patches
-            .iter()
-            .any(|patch| matches!(patch, Patch::UnmountComponent { .. })));
         assert!(patches
             .iter()
             .any(|patch| matches!(patch, Patch::MountComponent { .. })));
+        tree.apply_patches(patches).unwrap();
+        let child = &tree.root().unwrap().children[0];
+        assert!(matches!(
+            child.kind,
+            crate::retained::RetainedKind::Component { .. }
+        ));
+        assert_eq!(child.children[0].text_content(), Some("b"));
     }
 }

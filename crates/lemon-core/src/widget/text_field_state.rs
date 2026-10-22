@@ -1,5 +1,5 @@
+use crate::host::HostContext;
 use crate::{KeyEvent, KeyState, LemonKey, NamedKey};
-use arboard::Clipboard;
 
 /// Plain editing state for a text field.
 ///
@@ -9,8 +9,8 @@ use arboard::Clipboard;
 /// # Examples
 ///
 /// ```
-/// use lemon_ui::{KeyEvent, KeyState, LemonKey, Modifiers};
-/// use lemon_ui::widget::TextFieldState;
+/// use lemon_core::{KeyEvent, KeyState, LemonKey, Modifiers};
+/// use lemon_core::widget::TextFieldState;
 ///
 /// let mut state = TextFieldState::new("");
 /// state.handle_key(&KeyEvent {
@@ -172,16 +172,11 @@ impl TextFieldState {
             return;
         }
 
-        if let Ok(mut clipboard) = Clipboard::new() {
-            let _ = clipboard.set_text(text);
-        }
+        HostContext::current().set_clipboard_text(text);
     }
 
     fn paste_from_clipboard(&mut self) {
-        let Ok(mut clipboard) = Clipboard::new() else {
-            return;
-        };
-        let Ok(text) = clipboard.get_text() else {
+        let Some(text) = HostContext::current().clipboard_text() else {
             return;
         };
         if text.is_empty() {

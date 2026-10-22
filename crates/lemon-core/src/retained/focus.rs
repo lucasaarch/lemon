@@ -3,10 +3,14 @@ use taffy::NodeId;
 use crate::retained::{RetainedNode, RetainedTree};
 
 pub struct FocusManager {
-    pub focused: Option<NodeId>,
+    pub(crate) focused: Option<NodeId>,
 }
 
 impl FocusManager {
+    /// Returns the current focus; use `cycle` or `focus_by_id` to change it.
+    pub fn focused(&self) -> Option<NodeId> {
+        self.focused
+    }
     pub fn new() -> Self {
         Self { focused: None }
     }
@@ -14,6 +18,7 @@ impl FocusManager {
     pub fn cycle(&mut self, tree: &RetainedTree, forward: bool) {
         let focusable = collect_focusable(tree);
         if focusable.is_empty() {
+            self.focused = None;
             return;
         }
 
@@ -68,11 +73,11 @@ fn collect_focusable_node(node: &RetainedNode, out: &mut Vec<NodeId>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::element::builders::{Column, View};
+    use crate::element::builders::{ColumnView, View};
 
     #[test]
     fn collect_focusable_finds_marked_nodes() {
-        let element = Column::new()
+        let element = ColumnView::new()
             .child(View::new().width(10.0).height(10.0).focusable())
             .child(View::new().width(10.0).height(10.0))
             .child(View::new().width(10.0).height(10.0).focusable())
@@ -85,7 +90,7 @@ mod tests {
 
     #[test]
     fn cycle_forward_advances_through_focusable_nodes() {
-        let element = Column::new()
+        let element = ColumnView::new()
             .child(View::new().width(10.0).height(10.0).focusable())
             .child(View::new().width(10.0).height(10.0).focusable())
             .into_element();
@@ -106,7 +111,7 @@ mod tests {
 
     #[test]
     fn cycle_backward_wraps_correctly() {
-        let element = Column::new()
+        let element = ColumnView::new()
             .child(View::new().width(10.0).height(10.0).focusable())
             .child(View::new().width(10.0).height(10.0).focusable())
             .into_element();
@@ -121,7 +126,7 @@ mod tests {
 
     #[test]
     fn no_focusable_nodes_cycle_is_noop() {
-        let element = Column::new()
+        let element = ColumnView::new()
             .child(View::new().width(10.0).height(10.0))
             .into_element();
         let tree = RetainedTree::mount(element).unwrap();

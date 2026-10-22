@@ -3,72 +3,96 @@
 //! Import from the crate root or the facade's `lemon::prelude`:
 //!
 //! ```no_run
-//! use lemon_ui::prelude::*;
+//! use lemon_core::prelude::*;
 //!
 //! fn app(cx: &Cx) -> Element {
-//!     Column::new().child(Text::new("Hello")).into_element()
+//!     ColumnView::new().child(Text::new("Hello")).into_element()
 //! }
 //! ```
+
+/// Primitive containers, text and component construction share this entry point
+/// with composed widgets. The old `element::builders` imports remain supported.
+pub use crate::element::builders::{ColumnView, Component, RowView, Text, View};
+pub use crate::element::decoration::Decorate;
 
 pub mod button;
 pub mod image;
 pub mod scroll;
+pub mod secure_field;
 pub mod select;
 pub mod slider;
+pub mod text_field;
 pub mod text_field_state;
-pub mod text_input;
+
+/// Deprecated module path; use [`text_field`] instead.
+#[deprecated(note = "renamed to text_field; use widget::text_field instead")]
+pub use text_field as text_input;
 
 pub use button::Button;
 pub use image::Image;
 pub use scroll::{Scroll, ScrollStyle};
+pub use secure_field::SecureField;
 pub use select::{Select, SelectStyle};
 pub use slider::{Slider, SliderStyle};
+pub use text_field::{TextField, TextFieldStyle};
 pub use text_field_state::TextFieldState;
-pub use text_input::{TextInput, TextInputStyle};
+
+#[allow(deprecated)]
+pub use text_field::{TextInput, TextInputStyle};
 
 #[cfg(test)]
-mod text_input_tests {
+mod text_field_tests {
     use super::*;
     use crate::element::Element;
-    use crate::{Cursor, Cx, KeyEvent, KeyState, LemonKey, Modifiers, Signal};
+    use crate::{Cursor, Cx, KeyEvent, KeyState, LemonKey, Modifiers, State};
 
     #[test]
-    fn text_input_renders_placeholder_when_value_is_empty() {
+    fn text_field_renders_placeholder_when_value_is_empty() {
         fn root(cx: &Cx) -> Element {
-            let state = cx.use_signal(TextFieldState::new(""));
-            TextInput::new(cx, state)
+            let state = cx.state(TextFieldState::new(""));
+            TextField::new(cx, state)
                 .placeholder("Enter text...")
                 .into_element()
         }
-        let _ = root;
+        let Element::View(field) = root(&Cx::new()) else {
+            panic!("expected field")
+        };
+        let Element::Row(row) = &field.children[0] else {
+            panic!("expected text wrapper")
+        };
+        let Element::Text(text) = &row.children[0] else {
+            panic!("expected placeholder")
+        };
+        assert_eq!(text.content.resolve(), "Enter text...");
+        assert_eq!(field.text_input.as_ref().unwrap().value, "");
     }
 
     #[test]
-    fn text_input_is_focusable_and_has_text_cursor() {
+    fn text_field_is_focusable_and_has_text_cursor() {
         let cx = Cx::new();
-        let state = Signal::new(TextFieldState::new(""));
-        let el = TextInput::new(&cx, state).into_element();
+        let state = State::new(TextFieldState::new(""));
+        let el = TextField::new(&cx, state).into_element();
 
         let Element::View(view) = el else {
-            panic!("expected View element from TextInput");
+            panic!("expected View element from TextField");
         };
-        assert!(view.style.focusable, "TextInput must be focusable");
+        assert!(view.style.focusable, "TextField must be focusable");
         assert_eq!(
             view.style.cursor,
             Cursor::Text,
-            "TextInput must use Text cursor"
+            "TextField must use Text cursor"
         );
-        assert!(view.text_input.is_some(), "TextInput must attach metadata");
+        assert!(view.text_input.is_some(), "TextField must attach metadata");
     }
 
     #[test]
-    fn text_input_on_key_down_updates_state() {
+    fn text_field_on_key_down_updates_state() {
         let cx = Cx::new();
-        let state = Signal::new(TextFieldState::new(""));
-        let el = TextInput::new(&cx, state.clone()).into_element();
+        let state = State::new(TextFieldState::new(""));
+        let el = TextField::new(&cx, state.clone()).into_element();
 
         let Element::View(view) = el else {
-            panic!("expected View element from TextInput");
+            panic!("expected View element from TextField");
         };
         let on_key_down = view
             .handlers
@@ -87,13 +111,13 @@ mod text_input_tests {
     }
 
     #[test]
-    fn text_input_runtime_tree_carries_cursor_after_key() {
+    fn text_field_runtime_tree_carries_cursor_after_key() {
         use crate::runtime::Runtime;
 
-        let state = Signal::new(TextFieldState::new(""));
+        let state = State::new(TextFieldState::new(""));
         let mut runtime = Runtime::new();
         let mount_state = state.clone();
-        runtime.mount(move |cx| TextInput::new(cx, mount_state.clone()).into_element());
+        runtime.mount(move |cx| TextField::new(cx, mount_state.clone()).into_element());
 
         let Element::View(view) = runtime.root_element().expect("root element") else {
             panic!("expected View root");
@@ -120,12 +144,12 @@ mod text_input_tests {
     }
 
     #[test]
-    fn text_input_diff_emits_widget_chrome_when_value_and_cursor_change() {
+    fn text_field_diff_emits_widget_chrome_when_value_and_cursor_change() {
         use crate::diff::{diff, NodePath, Patch};
 
-        let state = Signal::new(TextFieldState::new(""));
+        let state = State::new(TextFieldState::new(""));
         let cx = Cx::new();
-        let before = TextInput::new(&cx, state.clone()).into_element();
+        let before = TextField::new(&cx, state.clone()).into_element();
         state.update(|s| {
             s.handle_key(&KeyEvent {
                 key: LemonKey::Character("hi".into()),
@@ -134,7 +158,7 @@ mod text_input_tests {
                 state: KeyState::Pressed,
             });
         });
-        let after = TextInput::new(&cx, state).into_element();
+        let after = TextField::new(&cx, state).into_element();
         let patches = diff(before, after, NodePath::root());
         assert!(
             patches
@@ -149,10 +173,10 @@ mod text_input_tests {
         use crate::diff::{diff, NodePath, Patch};
         use crate::runtime::Runtime;
 
-        let state = Signal::new(TextFieldState::new(""));
+        let state = State::new(TextFieldState::new(""));
         let mut runtime = Runtime::new();
         let mount_state = state.clone();
-        runtime.mount(move |cx| TextInput::new(cx, mount_state.clone()).into_element());
+        runtime.mount(move |cx| TextField::new(cx, mount_state.clone()).into_element());
 
         let old = runtime.root_element().expect("root before key");
         let Element::View(view) = old.clone() else {
@@ -185,7 +209,7 @@ mod text_input_tests {
     }
 
     #[test]
-    fn text_input_typing_updates_retained_cursor_via_patches() {
+    fn text_field_typing_updates_retained_cursor_via_patches() {
         use crate::diff::Patch;
         use crate::retained::RetainedNode;
         use crate::retained::RetainedTree;
@@ -205,10 +229,10 @@ mod text_input_tests {
             None
         }
 
-        let state = Signal::new(TextFieldState::new(""));
+        let state = State::new(TextFieldState::new(""));
         let mut runtime = Runtime::new();
         let mount_state = state.clone();
-        runtime.mount(move |cx| TextInput::new(cx, mount_state.clone()).into_element());
+        runtime.mount(move |cx| TextField::new(cx, mount_state.clone()).into_element());
 
         let mut tree =
             RetainedTree::mount(runtime.root_element().expect("initial root")).expect("mount");
@@ -244,24 +268,24 @@ mod text_input_tests {
     }
 
     #[test]
-    fn text_input_has_border() {
+    fn text_field_has_border() {
         let cx = Cx::new();
-        let state = Signal::new(TextFieldState::new(""));
-        let el = TextInput::new(&cx, state).into_element();
+        let state = State::new(TextFieldState::new(""));
+        let el = TextField::new(&cx, state).into_element();
 
         let Element::View(view) = el else {
-            panic!("expected View element from TextInput");
+            panic!("expected View element from TextField");
         };
         assert!(
             view.paint.border_color.top.is_some()
                 || view.paint.border_color.right.is_some()
                 || view.paint.border_color.bottom.is_some()
                 || view.paint.border_color.left.is_some(),
-            "TextInput must always have a border color"
+            "TextField must always have a border color"
         );
         assert!(
             view.paint.border_width.any_positive(),
-            "TextInput must have a non-zero border width"
+            "TextField must have a non-zero border width"
         );
     }
 }
@@ -270,7 +294,7 @@ mod text_input_tests {
 mod tests {
     use super::*;
     use crate::element::Element;
-    use crate::{Cx, Overflow, Signal};
+    use crate::{Cx, Overflow, State};
 
     #[test]
     fn scroll_new_compiles_with_cx() {
@@ -287,7 +311,7 @@ mod tests {
     fn scroll_builds_hidden_viewport_and_updates_offset() {
         use crate::element::builders::Text;
 
-        let offset = Signal::new(10.0f64);
+        let offset = State::new(10.0f64);
         let root = Scroll::with_offset(offset.clone(), Text::new("item"))
             .height(200.0)
             .width(300.0)

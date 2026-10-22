@@ -39,15 +39,15 @@ It is not trying to imitate a web framework in Rust, and it is not trying to cla
 use lemon::prelude::*;
 
 fn counter(cx: &Cx) -> Element {
-    let count = cx.use_signal(0i32);
+    let count = cx.state(0i32);
     let count_text = count.clone();
     let count_btn = count.clone();
 
-    Column::new()
-        .gap(12.0)
-        .padding(24.0)
-        .child(Text::new(move || count_text.get().to_string()).font_size(24.0))
-        .child(Button::new(cx, "Increment").on_click(move || {
+    ColumnView::new()
+        .spacing(12.0)
+        .inset(24.0)
+        .child(Text::new(move || count_text.get().to_string()).size(24.0))
+        .child(Button::new(cx, "Increment").action(move || {
             count_btn.update(|n| *n += 1);
         }))
         .into_element()
@@ -80,7 +80,8 @@ Each example has one job. Sources live in [`crates/lemon/examples`](crates/lemon
 | `components` | Independent hook state in keyed component instances |
 | `keys` | Stable row identity during removal and reordering |
 | `layout` | Rows, columns, spacing, alignment, and styled views |
-| `form` | TextInput, Select, Slider, and scrollable submission history |
+| `custom` | A form centered in a view that fills the window |
+| `form` | TextField, SecureField, Select, Slider, and scrollable submission history |
 | `images` | In-memory RGBA pixels and shared image handles |
 | `custom_select` | A mouse-operated picker composed from primitives |
 | `animation` | Animation progress, opacity, and theme tokens |
@@ -93,17 +94,78 @@ cargo run --example reactivity
 cargo run --example form
 ```
 
+## Application API
+
+Lemon describes the intent of a view through fluent builders:
+
+- `cx.state(initial)` declares shared component state; `cx.derive(...)` computes comparable data from it.
+- `cx.watch(...)` runs a callback after mount and whenever its reactive reads change.
+- `cx.motion(...)` declares an animation; `cx.theme()` reads the originating host's theme.
+- `.fill()` follows the parent content size (the viewport for a root view); `.fill_width()` and `.fill_height()` select an axis.
+- `.center()` and `.place(Placement::BottomRight)` position children in physical directions, the same for rows and columns.
+- `.spacing(...)` separates children; `.inset(...)` adds inner space; `.outset(...)` adds outer space.
+- `.surface(...)`, `.rounding(...)`, `.gradient(...)`, `.shadow(...)`, and `.layer(...)` decorate a container.
+- Text uses `.size(...)`, `.font(...)`, `.leading(...)`, and `.color(...)`; primary activation uses `.action(...)`.
+
+Component resources still require stable declaration order across renders. Widget constructors
+also declare state, so put dynamic widget instances in component scopes rather than changing
+loops on a shared `Cx`. `State<T>` clones share a value; element trees are built during rendering,
+not cached with `cx.derive(...)`.
+
+### Migrating existing code
+
+Old spellings remain deprecated aliases using the same state slots and style fields.
+
+| Previous API | Canonical API |
+|--------------|---------------|
+| `cx.use_signal` / `cx.use_memo` / `cx.use_effect` | `cx.state` / `cx.derive` / `cx.watch` |
+| `cx.use_animation` / `cx.use_theme` | `cx.motion` / `cx.theme` |
+| `.gap` / `.padding` / `.margin` | `.spacing` / `.inset` / `.outset` |
+| `.align_items` / `.justify_content` | `.place(...)` or `.align(...)` / `.distribute(...)` |
+| `.background` / `.radius` / `.box_shadow` | `.surface` / `.rounding` / `.shadow` |
+| `.font_size` / `.font_family` / `.line_height` | `.size` / `.font` / `.leading` |
+| `.on_click` | `.action` |
+
+Low-level `StyleProps` and the rendering backend retain their existing representation.
+
+### Shared decoration
+
+Every builder and custom widget implementing `Into<Element>` supports the same
+root styling through `Decorate` (included in the prelude):
+
+```rust
+use lemon::prelude::*;
+
+fn field(view: View) -> View {
+    view.width(300.0).inset(12.0).rounding(10.0)
+}
+
+fn login(cx: &Cx) -> Element {
+    let name = cx.state(TextFieldState::new(""));
+    let password = cx.state(TextFieldState::new(""));
+    ColumnView::new().spacing(12.0)
+        .child(TextField::new(cx, name).placeholder("Name").decorate(field))
+        .child(SecureField::new(cx, password).placeholder("Password").decorate(field))
+        .into_element()
+}
+```
+
+Decoration modifies the existing root after widget defaults; explicit changes win.
+Containers preserve their kind, keys, handlers and children. Text, raw leaves and
+components receive a surrounding view. Widget-specific `.style(...)` still controls
+internal parts such as a slider fill or select dropdown. See `custom` for a runnable example.
+
 ## Mental Model
 
 Lemon is intentionally built as a pipeline of small layers:
 
 1. **Runtime**: signals, derived values, effects, and hook-like APIs through `Cx`
-2. **Element tree**: builders such as `Column`, `Row`, `View`, `Text`, and `Button` (`Box_` was renamed to `View`; see `cargo doc -p lemon`)
+2. **Element tree**: builders such as `ColumnView`, `RowView`, `View`, `Text`, and `Button` (`Box_` was renamed to `View`; see `cargo doc -p lemon`)
 3. **Diff**: compare virtual trees and emit patches
 4. **Retained tree**: store live nodes, handlers, and Taffy layout IDs
 5. **Layout**: compute flex layout and text measurement
 6. **Paint**: build a Vello scene
-7. **Platform**: dispatch input, manage the window, and present frames
+7. **Input and platform**: core dispatches logical input; desktop translates native events and presents frames
 
 This layering matters. Lemon is designed so that state changes do not imply full re-execution of every lower-level concern beyond what is actually dirty.
 
@@ -116,20 +178,25 @@ and use the same root/prelude imports.
 |------|------|
 | `crates/lemon/` | Public facade, compatibility reexports, and app examples |
 | `crates/lemon-reactive/` | Signals, derived values, effects, and observer tracking; no dependencies |
-| `crates/lemon-core/` | Elements, component runtime, diff, retained state, layout, scene construction, and theme |
-| `crates/lemon-ui/` | Composed widgets (`TextInput`, `Scroll`, `Select`, `Slider`, `Image`, …) |
-| `crates/lemon-desktop/` | Native windows, input dispatch, GPU surfaces, and presentation |
+| `crates/lemon-core/` | Elements, widgets, runtime, diff, retained state, layout, paint, logical input, theme |
+| `crates/lemon-ui/` | Compatibility reexports from core; no separate widget implementation |
+| `crates/lemon-desktop/` | Native windows/event conversion, clipboard, GPU surfaces, and presentation |
 | `crates/lemon/examples/*.rs` | Runnable examples (`cargo run --example <name>`) |
 
-Dependencies flow from `lemon` to `lemon-ui` and `lemon-desktop`, both to
-`lemon-core`, then to `lemon-reactive`. Core does not depend on UI or desktop.
-Primitive element builders remain in core; composed/themed widgets live in UI.
+Dependencies flow from `lemon` to core and desktop, desktop to core, and core
+to reactive. Core owns primitive builders and composed widgets in one engine.
+`lemon-ui` remains a compatibility facade so existing imports continue to compile;
+the application facade no longer depends on it. `lemon_core::widget` exposes both
+containers and controls. Primitive implementations are split into container, text,
+button and component modules behind the existing builder imports.
 Layout and paint stay together in core until a concrete independent consumer
 justifies another crate boundary.
 
 `lemon-core::ui::UiState` runs the update/layout/scene pipeline without a native
 window. `lemon-core::host::HostContext` owns an application's window requests and
-scopes its theme. Desktop windows delegate UI processing to this headless state.
+scopes its theme, animations and clipboard callbacks. Logical input runs through
+`UiState::dispatch_input`; the desktop converts native events and applies the
+requested cursor. Desktop windows delegate UI processing to this headless state.
 
 Run `make check` from the workspace root to validate every crate and example.
 For focused work, use `cargo test -p lemon-reactive` or `cargo test -p lemon-core`.
@@ -140,12 +207,17 @@ All internal dependencies carry both a local path and an exact version.
 ### Low-level migration notes
 
 - Application imports through `lemon` and `lemon::prelude` remain unchanged.
-- `WindowState` now owns `ui: UiState`; normal field access to the old UI fields
-  forwards through `Deref`/`DerefMut`. Code destructuring `WindowState` must use
-  the new `ui` field.
+- Canonical container names are `RowView` and `ColumnView`; `Row` and `Column`
+  remain compatibility aliases. Element enum variants retain their engine names.
+- `UiState` and `RetainedTree` expose read-only inspection through methods such as
+  `retained()`, `root()`, `layout_map()`, `scene()` and dirty getters. Use
+  `apply_updates()`, `apply_patches()`, `invalidate_layout()` or `invalidate_paint()`
+  to change processing state. Font changes go through `edit_fonts(...)`.
+- `UiState::update` detects viewport, scale, focus and caret changes automatically.
+  Paint-only style and text-color changes keep geometry and measured text caches.
 - Manual `StyleProps` initializers must set `scroll_content` (normally `false`)
   or use `..Default::default()`. `Scroll` sets this marker automatically.
-- `Cx::use_theme` reads the originating host's captured theme, not whichever
+- `Cx::theme` reads the originating host's live theme, not whichever
   unrelated window happened to activate a theme last.
 - Existing public mutable engine fields remain available for custom hosts.
   This migration does not remove them or claim to fully encapsulate that API.
@@ -164,18 +236,57 @@ Today, the codebase includes:
 - hover enter/leave handling and cursor selection
 - example applications that exercise composition, keyed updates, and interaction
 
+## System appearance and custom themes
+
+`run(...)` and `run_with_fonts(...)` follow the native light/dark appearance, both
+when the window opens and when the system changes it. Widget defaults, implicit
+text colors, and the window background update together without resetting component
+state. Read semantic tokens with `cx.theme()` instead of hardcoding a light/dark
+surface and relying on an unrelated foreground color.
+
+Applications can supply their own light/dark pair using the same entry point:
+
+```rust
+use lemon::{run_with_theme, Theme, ThemePair, WindowConfig};
+use lemon::prelude::*;
+
+fn app(_cx: &Cx) -> Element {
+    Text::new("Hello").into_element()
+}
+
+let mut light = Theme::default_light();
+let mut dark = Theme::default_dark();
+light.radius.md = 10.0;
+dark.radius.md = 10.0;
+run_with_theme(WindowConfig::default(), ThemePair::new(light, dark), app);
+```
+
+Passing a single `Theme` to `run_with_theme` keeps that palette fixed, preserving
+existing custom-theme code. Local widget overrides continue to take precedence.
+Native window decorations retain the system appearance.
+
+Detection and live change events use winit's macOS and Windows support. When the
+platform does not report an appearance (including the current X11/Wayland API),
+Lemon uses the dark palette. `Theme::default()` remains a deterministic dark palette
+for headless use; it does not query the OS. See the [winit platform limits](https://docs.rs/winit/0.30.13/winit/window/struct.Window.html#method.theme).
+
 ## Primitive-First Customization
 
-Built-in widgets such as `Button`, `Select`, `Slider`, `Scroll`, and `TextInput` cover common
+Built-in widgets such as `Button`, `Select`, `Slider`, `Scroll`, `TextField`, and `SecureField` cover common
 application UI, and their defaults come from the active `Theme`. Start there when the widget shape
 matches your product. Use `run_with_theme` for app-wide tokens and widget style types such as
-`SelectStyle`, `SliderStyle`, and `TextInputStyle` for local overrides.
+`SelectStyle`, `SliderStyle`, and `TextFieldStyle` for local overrides.
+
+`TextField` replaces `TextInput`; `TextFieldStyle` replaces `TextInputStyle`.
+The old names and `widget::text_input` module remain as deprecated aliases.
+`SecureField` shares `TextFieldState` and `TextFieldStyle`, displays bullets, and
+blocks clipboard copy/cut shortcuts. Its state retains the original value for app code.
 
 When a widget almost fits but the visual structure does not, rebuild the control from primitives:
-`View`, `Column`, `Row`, `Text`, `Button`, `Signal`, and event handlers. This keeps the app in the
+`View`, `ColumnView`, `RowView`, `Text`, `Button`, `Signal`, and event handlers. This keeps the app in the
 normal Lemon pipeline while giving you control over layout, paint, hover/press state, and copy.
 For repeated dynamic rows, give siblings stable `.key(id)` values so diffing preserves identity.
-For colors that depend on live state, pass a closure to paint builders such as `.background(...)`;
+For colors that depend on live state, pass a closure to paint builders such as `.surface(...)`;
 the closure is stored as a dynamic `ColorSource` and is resolved as the tree is frozen.
 
 The `custom_select` example demonstrates this escape hatch by building a select-like control from

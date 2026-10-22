@@ -785,7 +785,6 @@ const WIDGET_SCROLLBAR_THUMB_MIN: f32 = 20.0;
 
 fn scroll_offset_from_inner(node: &RetainedNode) -> f32 {
     crate::layout::scroll_content_node(node)
-        .or_else(|| node.children.first())
         .and_then(|inner| inner.style.margin.as_ref())
         .map(|m| (-m.top).max(0.0))
         .unwrap_or(0.0)
@@ -867,10 +866,9 @@ fn paint_scrollbar(
     if !node.scroll_viewport {
         return;
     }
-    let Some(inner) = node.children.first() else {
+    let Some(content) = crate::layout::scroll_content_node(node) else {
         return;
     };
-    let content = inner.children.first().unwrap_or(inner);
     let Some(content_id) = content.taffy_id else {
         return;
     };
@@ -934,7 +932,7 @@ fn paint_scrollbar(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::element::builders::{Button, Column, Text, View};
+    use crate::element::builders::{Button, ColumnView, Text, View};
     use crate::layout::{LayoutMap, Viewport};
     use crate::retained::RetainedTree;
     use parley::FontContext;
@@ -963,10 +961,10 @@ mod tests {
     #[test]
     fn column_with_background_emits_fill() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(100.0)
                 .height(80.0)
-                .background(Color::rgb8(40, 80, 120))
+                .surface(Color::rgb8(40, 80, 120))
                 .into_element(),
         )
         .unwrap();
@@ -980,10 +978,10 @@ mod tests {
     #[test]
     fn column_with_linear_gradient_emits_fill() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(100.0)
                 .height(80.0)
-                .linear_gradient(crate::element::style::LinearGradient::new(
+                .gradient(crate::element::style::LinearGradient::new(
                     (0.0, 0.0),
                     (1.0, 1.0),
                     Color::rgb8(40, 80, 120),
@@ -1002,16 +1000,16 @@ mod tests {
     #[test]
     fn column_with_box_shadow_emits_fill_before_background() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(100.0)
                 .height(80.0)
-                .box_shadow(crate::element::style::BoxShadow::new(
+                .shadow(crate::element::style::BoxShadow::new(
                     Color::rgb8(0, 0, 0).with_alpha(0.25),
                     0.0,
                     6.0,
                     12.0,
                 ))
-                .background(Color::rgb8(40, 80, 120))
+                .surface(Color::rgb8(40, 80, 120))
                 .into_element(),
         )
         .unwrap();
@@ -1025,7 +1023,7 @@ mod tests {
     #[test]
     fn container_border_emits_stroke() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(100.0)
                 .height(80.0)
                 .border(Color::rgb8(255, 0, 0), 2.0)
@@ -1042,7 +1040,7 @@ mod tests {
     #[test]
     fn container_border_colors_per_side_emit_one_fill_per_side() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(100.0)
                 .height(80.0)
                 .border(Color::rgb8(255, 0, 0), 2.0)
@@ -1063,7 +1061,7 @@ mod tests {
     #[test]
     fn container_border_top_only_paints_one_side() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(100.0)
                 .height(80.0)
                 .border_top(Color::rgb8(255, 0, 0), 2.0)
@@ -1079,8 +1077,7 @@ mod tests {
 
     #[test]
     fn text_with_parley_layout_emits_glyph_runs() {
-        let mut tree =
-            RetainedTree::mount(Text::new("hello").font_size(16.0).into_element()).unwrap();
+        let mut tree = RetainedTree::mount(Text::new("hello").size(16.0).into_element()).unwrap();
 
         let stats = layout_and_paint(&mut tree, 1.0);
 
@@ -1092,8 +1089,7 @@ mod tests {
 
     #[test]
     fn text_without_parley_layout_skips_glyphs() {
-        let mut tree =
-            RetainedTree::mount(Text::new("hello").font_size(16.0).into_element()).unwrap();
+        let mut tree = RetainedTree::mount(Text::new("hello").size(16.0).into_element()).unwrap();
         let layout = layout_pass(
             &mut tree,
             Viewport {
@@ -1123,7 +1119,7 @@ mod tests {
             Button::new("Press")
                 .width(120.0)
                 .height(48.0)
-                .background(Color::rgb8(30, 60, 90))
+                .surface(Color::rgb8(30, 60, 90))
                 .into_element(),
         )
         .unwrap();
@@ -1137,11 +1133,11 @@ mod tests {
     #[test]
     fn hidpi_scale_factor_runs_without_panic() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(80.0)
                 .height(60.0)
-                .background(Color::rgb8(1, 2, 3))
-                .child(Text::new("Hi").font_size(14.0))
+                .surface(Color::rgb8(1, 2, 3))
+                .child(Text::new("Hi").size(14.0))
                 .into_element(),
         )
         .unwrap();
@@ -1154,8 +1150,8 @@ mod tests {
     #[test]
     fn missing_layout_entry_skips_subtree_without_panic() {
         let tree = RetainedTree::mount(
-            Column::new()
-                .background(Color::rgb8(10, 20, 30))
+            ColumnView::new()
+                .surface(Color::rgb8(10, 20, 30))
                 .into_element(),
         )
         .unwrap();
@@ -1168,15 +1164,13 @@ mod tests {
 
     #[test]
     fn overflow_hidden_emits_extra_push_pop_layer() {
-        use crate::element::style::Overflow;
-
         // Without overflow:hidden — children painted with no extra clip layer.
         let mut tree_no_clip = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(100.0)
                 .height(80.0)
-                .background(Color::rgb8(40, 80, 120))
-                .child(Text::new("inner").font_size(12.0))
+                .surface(Color::rgb8(40, 80, 120))
+                .child(Text::new("inner").size(12.0))
                 .into_element(),
         )
         .unwrap();
@@ -1184,12 +1178,12 @@ mod tests {
 
         // With overflow:hidden — paint_node wraps children in an extra clip layer.
         let mut tree_clip = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(100.0)
                 .height(80.0)
-                .background(Color::rgb8(40, 80, 120))
-                .overflow(Overflow::Hidden)
-                .child(Text::new("inner").font_size(12.0))
+                .surface(Color::rgb8(40, 80, 120))
+                .clip()
+                .child(Text::new("inner").size(12.0))
                 .into_element(),
         )
         .unwrap();
@@ -1204,21 +1198,21 @@ mod tests {
     #[test]
     fn z_index_children_are_painted_without_panic() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(120.0)
                 .height(120.0)
                 .child(
                     View::new()
                         .width(80.0)
                         .height(40.0)
-                        .background(Color::rgb8(255, 0, 0)),
+                        .surface(Color::rgb8(255, 0, 0)),
                 )
                 .child(
                     View::new()
                         .width(80.0)
                         .height(40.0)
-                        .background(Color::rgb8(0, 255, 0))
-                        .z_index(1),
+                        .surface(Color::rgb8(0, 255, 0))
+                        .layer(1),
                 )
                 .into_element(),
         )
@@ -1230,25 +1224,23 @@ mod tests {
 
     #[test]
     fn z_index_children_with_overflow_hidden_are_painted_without_panic() {
-        use crate::element::style::Overflow;
-
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(120.0)
                 .height(120.0)
-                .overflow(Overflow::Hidden)
+                .clip()
                 .child(
                     View::new()
                         .width(80.0)
                         .height(40.0)
-                        .background(Color::rgb8(255, 0, 0)),
+                        .surface(Color::rgb8(255, 0, 0)),
                 )
                 .child(
                     View::new()
                         .width(80.0)
                         .height(40.0)
-                        .background(Color::rgb8(0, 255, 0))
-                        .z_index(2),
+                        .surface(Color::rgb8(0, 255, 0))
+                        .layer(2),
                 )
                 .into_element(),
         )
@@ -1261,12 +1253,12 @@ mod tests {
     #[test]
     fn partial_opacity_paints_without_panic() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(100.0)
                 .height(80.0)
-                .background(Color::rgb8(40, 80, 120))
+                .surface(Color::rgb8(40, 80, 120))
                 .opacity(0.5)
-                .child(Text::new("hello").font_size(12.0))
+                .child(Text::new("hello").size(12.0))
                 .into_element(),
         )
         .unwrap();
@@ -1281,21 +1273,21 @@ mod tests {
         // A column with two children: z_index=0 (red) and z_index=1 (green).
         // With global deferral both must be painted; green deferred node paints last.
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(120.0)
                 .height(120.0)
                 .child(
                     View::new()
                         .width(80.0)
                         .height(40.0)
-                        .background(Color::rgb8(255, 0, 0)),
+                        .surface(Color::rgb8(255, 0, 0)),
                 )
                 .child(
                     View::new()
                         .width(80.0)
                         .height(40.0)
-                        .background(Color::rgb8(0, 255, 0))
-                        .z_index(1),
+                        .surface(Color::rgb8(0, 255, 0))
+                        .layer(1),
                 )
                 .into_element(),
         )
@@ -1311,12 +1303,12 @@ mod tests {
         // a trigger (z=0) and a dropdown (z=10), alongside a sibling Column (z=0).
         // The dropdown must paint on top of the sibling, not behind it.
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(200.0)
                 .height(200.0)
                 // Select wrapper
                 .child(
-                    Column::new()
+                    ColumnView::new()
                         .width(100.0)
                         .height(100.0)
                         // trigger
@@ -1324,15 +1316,15 @@ mod tests {
                             View::new()
                                 .width(100.0)
                                 .height(20.0)
-                                .background(Color::rgb8(80, 80, 80)),
+                                .surface(Color::rgb8(80, 80, 80)),
                         )
                         // dropdown with high z_index
                         .child(
                             View::new()
                                 .width(100.0)
                                 .height(60.0)
-                                .background(Color::rgb8(35, 35, 52))
-                                .z_index(10),
+                                .surface(Color::rgb8(35, 35, 52))
+                                .layer(10),
                         ),
                 )
                 // sibling that dropdown must overlay
@@ -1340,7 +1332,7 @@ mod tests {
                     View::new()
                         .width(200.0)
                         .height(80.0)
-                        .background(Color::rgb8(60, 60, 60)),
+                        .surface(Color::rgb8(60, 60, 60)),
                 )
                 .into_element(),
         )
@@ -1355,37 +1347,37 @@ mod tests {
     fn z_index_absolute_column_dropdown_paints_background() {
         // Mirrors lemon_widgets::Select open dropdown: Column + absolute + z_index + background.
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(200.0)
                 .height(200.0)
                 .child(
-                    Column::new()
+                    ColumnView::new()
                         .width(100.0)
                         .child(
                             View::new()
                                 .width(100.0)
                                 .height(40.0)
-                                .background(Color::rgb8(55, 120, 220)),
+                                .surface(Color::rgb8(55, 120, 220)),
                         )
                         .child(
-                            Column::new()
-                                .z_index(10)
-                                .absolute()
+                            ColumnView::new()
+                                .layer(10)
+                                .floating()
                                 .top(40.0)
                                 .left(0.0)
                                 .width(100.0)
-                                .background(Color::rgb8(35, 35, 52))
+                                .surface(Color::rgb8(35, 35, 52))
                                 .border(Color::rgb8(80, 80, 110), 1.0)
-                                .radius(6.0)
+                                .rounding(6.0)
                                 .child(
                                     View::new()
-                                        .padding(8.0)
-                                        .child(Text::new("Option A").font_size(14.0)),
+                                        .inset(8.0)
+                                        .child(Text::new("Option A").size(14.0)),
                                 )
                                 .child(
                                     View::new()
-                                        .padding(8.0)
-                                        .child(Text::new("Option B").font_size(14.0)),
+                                        .inset(8.0)
+                                        .child(Text::new("Option B").size(14.0)),
                                 ),
                         ),
                 )
@@ -1412,10 +1404,10 @@ mod tests {
         }
 
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(100.0)
                 .height(80.0)
-                .background(Color::rgb8(200, 100, 50))
+                .surface(Color::rgb8(200, 100, 50))
                 .child(Text::new("label"))
                 .into_element(),
         )
@@ -1465,7 +1457,6 @@ mod tests {
     /// used the fill counts would be wrong.
     #[test]
     fn scrollbar_paints_two_fills_with_custom_chrome_theme() {
-        use crate::element::style::Overflow;
         use crate::theme::{set_active_theme, Theme, WidgetChromeTokens};
 
         let original = crate::theme::current_theme();
@@ -1486,12 +1477,12 @@ mod tests {
         let content = View::new()
             .width(100.0)
             .height(300.0)
-            .background(Color::rgb8(200, 200, 200));
-        let inner = View::new().child(content);
+            .surface(Color::rgb8(200, 200, 200));
+        let inner = View::new().scroll_content().child(content);
         let viewport = View::new()
             .width(100.0)
             .height(80.0)
-            .overflow(Overflow::Hidden)
+            .clip()
             .scroll_bar()
             .on_scroll(|_| {})
             .child(inner);
@@ -1567,10 +1558,10 @@ mod tests {
         let original = crate::theme::current_theme();
 
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(100.0)
                 .height(80.0)
-                .background(Color::rgb8(40, 80, 120))
+                .surface(Color::rgb8(40, 80, 120))
                 .into_element(),
         )
         .unwrap();

@@ -46,11 +46,13 @@ pub struct Key(pub u64);
 /// Editing metadata for a single-line text field (caret painting, focus chrome).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TextInputMeta {
+    /// UTF-8 byte offset in the displayed `value`, used to position the caret.
     pub cursor: usize,
+    /// Displayed text; secure widgets provide only their mask, never the stored secret.
     pub value: String,
 }
 
-/// Shared backing struct for [`View`](crate::element::builders::View), [`Row`](crate::element::builders::Row), and [`Column`](crate::element::builders::Column).
+/// Shared backing struct for [`View`](crate::element::builders::View), [`Row`](crate::element::builders::RowView), and [`Column`](crate::element::builders::ColumnView).
 #[derive(Clone, Default, Debug)]
 pub struct BoxElement {
     pub style: StyleProps,

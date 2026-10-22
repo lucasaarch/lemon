@@ -1052,7 +1052,6 @@ version = "0.2.0-alpha.21"
 dependencies = [
  "lemon-core",
  "lemon-desktop",
- "lemon-ui",
  "parley",
  "vello",
 ]
@@ -1072,6 +1071,7 @@ dependencies = [
 name = "lemon-desktop"
 version = "0.2.0-alpha.21"
 dependencies = [
+ "arboard",
  "lemon-core",
  "parley",
  "pollster",
@@ -1089,9 +1089,7 @@ version = "0.2.0-alpha.21"
 name = "lemon-ui"
 version = "0.2.0-alpha.21"
 dependencies = [
- "arboard",
  "lemon-core",
- "parley",
 ]
 
 [[package]]

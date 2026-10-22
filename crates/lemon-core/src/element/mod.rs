@@ -1,5 +1,6 @@
 pub mod builders;
 pub mod content;
+pub mod decoration;
 pub mod events;
 pub mod style;
 pub mod types;

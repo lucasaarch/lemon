@@ -343,6 +343,7 @@ pub fn format_patch(patch: &Patch) -> String {
         Patch::UpdateStyle { node, .. } => {
             format!("UpdateStyle path={}", format_path(node))
         }
+        Patch::UpdateHandlers { node, .. } => format!("UpdateHandlers {}", format_path(node)),
         Patch::UpdatePaint { node, .. } => {
             format!("UpdatePaint path={}", format_path(node))
         }

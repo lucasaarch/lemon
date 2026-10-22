@@ -3,20 +3,20 @@
 /// Builds a `Vec<Element>` from heterogeneous widget builders.
 ///
 /// Each item must implement [`Into`]`<`[`Element`](crate::element::Element)`>`.
-/// Use with [`.children`](crate::element::builders::Column::children) on
-/// [`Column`](crate::element::builders::Column),
-/// [`Row`](crate::element::builders::Row), or [`View`](crate::element::builders::View).
+/// Use with [`.children`](crate::element::builders::ColumnView::children) on
+/// [`Column`](crate::element::builders::ColumnView),
+/// [`Row`](crate::element::builders::RowView), or [`View`](crate::element::builders::View).
 ///
 /// # Examples
 ///
 /// ```
-/// use lemon_core::{children, Column, Row, Text};
+/// use lemon_core::{children, ColumnView, RowView, Text};
 /// use lemon_core::element::builders::Button;
 ///
-/// let _tree = Column::new()
+/// let _tree = ColumnView::new()
 ///     .children(children![
-///         Text::new("Title").font_size(22.0),
-///         Row::new().children(children![
+///         Text::new("Title").size(22.0),
+///         RowView::new().children(children![
 ///             Button::new("OK"),
 ///             Button::new("Cancel"),
 ///         ]),

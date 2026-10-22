@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use crate::{
     element::{builders::View, style::Color, style::ColorSource, Element},
-    Cx, Overflow, Signal,
+    Cx, State,
 };
 
 /// Per-widget visual overrides for [`Scroll`].
@@ -35,7 +35,7 @@ impl ScrollStyle {
 /// without manual height estimates.
 pub struct Scroll {
     child: Element,
-    offset: Signal<f64>,
+    offset: State<f64>,
     height: f32,
     width: Option<f32>,
     /// Fallback max scroll before the first layout measurement (virtualized lists).
@@ -47,11 +47,11 @@ pub struct Scroll {
 impl Scroll {
     /// Creates a scroll region that owns its scroll offset (starts at `0`).
     pub fn new(cx: &Cx, child: impl Into<Element>) -> Self {
-        Self::with_offset(cx.use_signal(0.0f64), child)
+        Self::with_offset(cx.state(0.0f64), child)
     }
 
     /// Creates a scroll region backed by a caller-owned offset signal (advanced use).
-    pub fn with_offset(offset: Signal<f64>, child: impl Into<Element>) -> Self {
+    pub fn with_offset(offset: State<f64>, child: impl Into<Element>) -> Self {
         Self {
             child: child.into(),
             offset,
@@ -114,12 +114,12 @@ impl Scroll {
 
         let inner = View::new()
             .scroll_content()
-            .margin_top(-offset_value)
+            .outset_top(-offset_value)
             .child(self.child);
 
         let mut viewport = View::new()
             .height(viewport_h)
-            .overflow(Overflow::Hidden)
+            .clip()
             .scroll_bar()
             .scroll_layout_max(layout_max)
             .on_scroll(move |delta| {
@@ -162,6 +162,7 @@ mod tests {
     use super::*;
     use crate::element::Element;
     use crate::layout::{LayoutMap, Viewport};
+    use crate::Overflow;
     use parley::FontContext;
 
     fn layout_pass(
@@ -174,7 +175,7 @@ mod tests {
 
     #[test]
     fn scroll_viewport_uses_scroll_bar_paint_flag() {
-        let offset = Signal::new(10.0f64);
+        let offset = State::new(10.0f64);
         let root = Scroll::with_offset(offset.clone(), crate::element::builders::Text::new("item"))
             .height(200.0)
             .width(300.0)
@@ -209,7 +210,7 @@ mod tests {
         ];
 
         for (name, content_height, expected_max_offset) in cases {
-            let offset = Signal::new(0.0f64);
+            let offset = State::new(0.0f64);
             let root =
                 Scroll::with_offset(offset.clone(), crate::element::builders::Text::new("item"))
                     .height(200.0)
@@ -235,20 +236,20 @@ mod tests {
 
     #[test]
     fn scroll_clamps_to_measured_content_after_layout_sync() {
-        use crate::element::builders::{Column, Row, Text};
+        use crate::element::builders::{ColumnView, RowView, Text};
         use crate::{sync_scroll_layout_max, RetainedTree};
 
-        let mut list = Column::new().gap(4.0);
+        let mut list = ColumnView::new().spacing(4.0);
         for i in 0..12 {
             list = list.child(
-                Row::new()
+                RowView::new()
                     .key(i as u64)
-                    .padding(4.0)
-                    .child(Text::new(format!("{:02}. track", i + 1)).font_size(14.0)),
+                    .inset(4.0)
+                    .child(Text::new(format!("{:02}. track", i + 1)).size(14.0)),
             );
         }
 
-        let offset = Signal::new(0.0f64);
+        let offset = State::new(0.0f64);
         let root = Scroll::with_offset(offset.clone(), list)
             .height(180.0)
             .width(400.0)
@@ -280,7 +281,7 @@ mod tests {
 
     #[test]
     fn scroll_layout_max_cell_is_stable_across_into_element_calls() {
-        let offset = Signal::new(0.0f64);
+        let offset = State::new(0.0f64);
         let scroll = Scroll::with_offset(offset, crate::element::builders::Text::new("x"));
         let cell_a = scroll.layout_max.clone();
         let el_a = scroll.into_element();
@@ -294,7 +295,7 @@ mod tests {
 
     #[test]
     fn scroll_style_overrides_set_scrollbar_paint_colors() {
-        let offset = Signal::new(0.0f64);
+        let offset = State::new(0.0f64);
         let root = Scroll::with_offset(offset, crate::element::builders::Text::new("item"))
             .style(
                 ScrollStyle::default()
@@ -313,7 +314,7 @@ mod tests {
 
     #[test]
     fn scroll_style_unset_fields_fall_back_to_theme_tokens() {
-        let offset = Signal::new(0.0f64);
+        let offset = State::new(0.0f64);
         let root = Scroll::with_offset(offset, crate::element::builders::Text::new("item"))
             .style(ScrollStyle::default().scrollbar_thumb_color(Color::rgb8(4, 5, 6)))
             .into_element();

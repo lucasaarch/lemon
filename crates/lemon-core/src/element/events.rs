@@ -43,7 +43,7 @@ pub enum KeyState {
     Released,
 }
 
-/// Keyboard input delivered to [`Column::on_key_down`](crate::element::builders::Column::on_key_down)
+/// Keyboard input delivered to [`ColumnView::on_key_down`](crate::element::builders::ColumnView::on_key_down)
 /// / `on_key_up` on focusable nodes.
 #[derive(Clone, Debug)]
 pub struct KeyEvent {
@@ -53,7 +53,7 @@ pub struct KeyEvent {
     pub state: KeyState,
 }
 
-/// Mouse cursor shape for [`Column::cursor`](crate::element::builders::Column::cursor) and similar.
+/// Mouse cursor shape for [`ColumnView::cursor`](crate::element::builders::ColumnView::cursor) and similar.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum Cursor {
     #[default]

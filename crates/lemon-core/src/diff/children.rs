@@ -51,3 +51,44 @@ pub(crate) fn keyed_plan(old: &[Element], new: &[Element]) -> Vec<ChildOp> {
     }
     ops
 }
+
+/// Both reconciliation entry points consume the same keyed or positional plan.
+pub(crate) fn child_plan(old: &[Element], new: &[Element]) -> Vec<ChildOp> {
+    if super::children_are_fully_keyed(old) && super::children_are_fully_keyed(new) {
+        return keyed_plan(old, new);
+    }
+    let shared = old.len().min(new.len());
+    (0..shared)
+        .map(|index| ChildOp::Update {
+            old: index,
+            new: index,
+        })
+        .chain((shared..new.len()).map(ChildOp::Insert))
+        .chain((shared..old.len()).rev().map(ChildOp::Remove))
+        .collect()
+}
+
+impl ChildOp {
+    pub(crate) fn relocated_index(&self, index: usize) -> Option<usize> {
+        match *self {
+            Self::Remove(at) => {
+                if index == at {
+                    None
+                } else {
+                    Some(index - usize::from(index > at))
+                }
+            }
+            Self::Insert(at) => Some(index + usize::from(index >= at)),
+            Self::Move { from, to } => Some(if index == from {
+                to
+            } else if from < to && index > from && index <= to {
+                index - 1
+            } else if to < from && index >= to && index < from {
+                index + 1
+            } else {
+                index
+            }),
+            Self::Update { .. } => Some(index),
+        }
+    }
+}

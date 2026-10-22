@@ -3,14 +3,14 @@
 use lemon::prelude::*;
 
 fn app(cx: &Cx) -> Element {
-    let count = cx.use_signal(0);
+    let count = cx.state(0);
     let label = count.clone();
 
-    Column::new()
-        .padding(24.0)
-        .gap(12.0)
-        .child(Text::new(move || format!("Count: {}", label.get())).font_size(24.0))
-        .child(Button::new(cx, "Increment").on_click(move || count.update(|n| *n += 1)))
+    ColumnView::new()
+        .inset(24.0)
+        .spacing(12.0)
+        .child(Text::new(move || format!("Count: {}", label.get())).size(24.0))
+        .child(Button::new(cx, "Increment").action(move || count.update(|n| *n += 1)))
         .into_element()
 }
 

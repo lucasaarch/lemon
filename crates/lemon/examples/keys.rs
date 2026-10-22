@@ -3,34 +3,34 @@
 use lemon::prelude::*;
 
 fn app(cx: &Cx) -> Element {
-    let items = cx.use_signal(vec![1_u64, 2, 3]);
+    let items = cx.state(vec![1_u64, 2, 3]);
     let reverse = items.clone();
-    let mut list = Column::new().gap(8.0);
+    let mut list = ColumnView::new().spacing(8.0);
 
     for id in items.get() {
         let remove = items.clone();
         list = list.child(
-            Row::new()
+            RowView::new()
                 .key(id)
-                .gap(12.0)
-                .align_items(Align::Center)
+                .spacing(12.0)
+                .align(Align::Center)
                 .child(Text::new(format!("Item {id}")))
                 // Use primitives so changing list length does not change the hook order.
                 .child(
                     View::new()
-                        .padding(8.0)
+                        .inset(8.0)
                         .cursor(Cursor::Pointer)
-                        .on_click(move || remove.update(|items| items.retain(|item| *item != id)))
+                        .action(move || remove.update(|items| items.retain(|item| *item != id)))
                         .child(Text::new("Remove")),
                 ),
         );
     }
 
-    Column::new()
-        .padding(24.0)
-        .gap(12.0)
-        .child(Button::new(cx, "Reverse").on_click(move || reverse.update(|items| items.reverse())))
-        .child(Button::new(cx, "Reset").on_click(move || items.set(vec![1, 2, 3])))
+    ColumnView::new()
+        .inset(24.0)
+        .spacing(12.0)
+        .child(Button::new(cx, "Reverse").action(move || reverse.update(|items| items.reverse())))
+        .child(Button::new(cx, "Reset").action(move || items.set(vec![1, 2, 3])))
         .child(list)
         .into_element()
 }

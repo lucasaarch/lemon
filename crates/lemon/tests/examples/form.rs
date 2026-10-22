@@ -30,8 +30,24 @@ fn submission_requires_name_and_role_then_clears_the_input() {
         state: KeyState::Pressed,
     });
     runtime.flush_effects();
+    let root = runtime.root_element().unwrap();
+    let Element::View(password) = &support::children(&root)[1] else {
+        panic!("expected secure field")
+    };
+    password.handlers.on_key_down.as_ref().unwrap()(KeyEvent {
+        key: LemonKey::Character("secret".into()),
+        modifiers: Modifiers::default(),
+        repeat: false,
+        state: KeyState::Pressed,
+    });
+    runtime.flush_effects();
+    assert!(!support::text(&runtime.root_element().unwrap()).contains(&"secret".into()));
     support::click(&mut runtime, "Submit");
     let root = runtime.root_element().unwrap();
+    let Element::View(password) = &support::children(&root)[1] else {
+        panic!("expected secure field")
+    };
+    assert_eq!(password.text_input.as_ref().unwrap().value, "");
     assert!(support::text(&root).contains(&"Ada — Reader — 50%".into()));
     let Element::View(input) = &support::children(&root)[0] else {
         panic!("expected text input")

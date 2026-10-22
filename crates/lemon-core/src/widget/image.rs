@@ -11,8 +11,8 @@ use crate::{
 /// # Examples
 ///
 /// ```no_run
-/// use lemon_ui::ImageHandle;
-/// use lemon_ui::widget::Image;
+/// use lemon_core::ImageHandle;
+/// use lemon_core::widget::Image;
 ///
 /// # fn example(handle: ImageHandle) {
 /// let _ = Image::new(handle).width(160.0).height(90.0).into_element();

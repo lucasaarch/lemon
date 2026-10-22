@@ -72,7 +72,7 @@ pub struct EventHandlers {
     pub on_key_up: Option<Rc<dyn Fn(crate::element::events::KeyEvent)>>,
     pub on_hover_enter: Option<Rc<dyn Fn()>>,
     pub on_hover_leave: Option<Rc<dyn Fn()>>,
-    /// Vertical wheel delta in logical pixels; set via [`.on_scroll`](crate::element::builders::Column::on_scroll).
+    /// Vertical wheel delta in logical pixels; set via [`.on_scroll`](crate::element::builders::ColumnView::on_scroll).
     pub on_scroll: Option<Rc<dyn Fn(f64)>>,
     /// Called when a click is dispatched outside this retained node's bounds.
     pub on_click_outside: Option<Rc<dyn Fn()>>,
@@ -84,6 +84,29 @@ pub struct EventHandlers {
     pub on_pointer_up: Option<Rc<dyn Fn(f32, f32)>>,
     /// Updated after each [`layout_pass`](crate::layout::layout_pass) for scroll viewports; used to clamp wheel delta.
     pub scroll_layout_max: Option<Rc<Cell<f64>>>,
+}
+
+impl PartialEq for EventHandlers {
+    fn eq(&self, other: &Self) -> bool {
+        fn same<T: ?Sized>(left: &Option<Rc<T>>, right: &Option<Rc<T>>) -> bool {
+            match (left, right) {
+                (None, None) => true,
+                (Some(a), Some(b)) => Rc::ptr_eq(a, b),
+                _ => false,
+            }
+        }
+        same(&self.on_click, &other.on_click)
+            && same(&self.on_key_down, &other.on_key_down)
+            && same(&self.on_key_up, &other.on_key_up)
+            && same(&self.on_hover_enter, &other.on_hover_enter)
+            && same(&self.on_hover_leave, &other.on_hover_leave)
+            && same(&self.on_scroll, &other.on_scroll)
+            && same(&self.on_click_outside, &other.on_click_outside)
+            && same(&self.on_pointer_down, &other.on_pointer_down)
+            && same(&self.on_pointer_move, &other.on_pointer_move)
+            && same(&self.on_pointer_up, &other.on_pointer_up)
+            && same(&self.scroll_layout_max, &other.scroll_layout_max)
+    }
 }
 
 impl std::fmt::Debug for EventHandlers {
@@ -156,6 +179,18 @@ pub enum RetainedKind {
     },
 }
 
+impl RetainedKind {
+    fn layout_style(&self, props: &StyleProps) -> Style {
+        let mut style = props.to_taffy_style();
+        style.flex_direction = match self {
+            Self::Column => taffy::FlexDirection::Column,
+            Self::Row => taffy::FlexDirection::Row,
+            _ => style.flex_direction,
+        };
+        style
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct RetainedNode {
     pub kind: RetainedKind,
@@ -225,16 +260,64 @@ impl RetainedNode {
 /// patches from [`Runtime::take_patches`](crate::Runtime::take_patches). The desktop
 /// host manages this internally; use it directly in integration tests or custom hosts.
 #[derive(Debug)]
+///
+/// ```compile_fail
+/// let mut tree = lemon_core::RetainedTree::new();
+/// tree.root = None; // topology changes must use patches
+/// ```
 pub struct RetainedTree {
     /// Shared Taffy tree backing flex layout for this UI.
-    pub taffy: TaffyTree<()>,
+    pub(crate) taffy: TaffyTree<()>,
     /// Root retained node, if [`mount`](Self::mount) succeeded.
-    pub root: Option<RetainedNode>,
+    pub(crate) root: Option<RetainedNode>,
     /// When `true`, [`layout_pass`](crate::layout::layout_pass) should run before painting.
-    pub layout_dirty: bool,
+    pub(crate) layout_dirty: bool,
 }
 
 impl RetainedTree {
+    /// Returns the retained root for inspection; mutate through ordered patches.
+    /// This replaces direct mutable access to the former public `root` field.
+    pub fn root(&self) -> Option<&RetainedNode> {
+        self.root.as_ref()
+    }
+
+    /// Returns whether geometry must be recomputed before hit-testing or painting.
+    pub fn layout_dirty(&self) -> bool {
+        self.layout_dirty
+    }
+
+    /// Returns the layout tree for read-only diagnostics.
+    /// Topology and style changes must go through `apply_patch` or `apply_patches`.
+    pub fn layout_tree(&self) -> &TaffyTree<()> {
+        &self.taffy
+    }
+
+    pub(crate) fn invalidate_text(&mut self) {
+        fn clear(node: &mut RetainedNode, ids: &mut Vec<NodeId>) {
+            if let Some(text) = &mut node.text {
+                text.parley_layout = None;
+                text.layout_max_width = None;
+                text.needs_layout = true;
+                if let Some(id) = node.taffy_id {
+                    ids.push(id);
+                }
+            }
+            for child in &mut node.children {
+                clear(child, ids);
+            }
+        }
+        let mut ids = Vec::new();
+        if let Some(root) = &mut self.root {
+            clear(root, &mut ids);
+        }
+        for id in ids {
+            self.taffy
+                .mark_dirty(id)
+                .expect("retained text has a live layout node");
+        }
+        self.layout_dirty = true;
+    }
+
     /// Returns true if any text node still needs a layout pass (e.g. after `UpdateText`).
     pub fn text_needs_reflow(&self) -> bool {
         self.root.as_ref().is_some_and(text_node_needs_reflow)
@@ -317,12 +400,7 @@ impl RetainedTree {
             children.push(self.build_node(child)?);
         }
 
-        let mut style = node_style.to_taffy_style();
-        style.flex_direction = match kind {
-            RetainedKind::Column => taffy::FlexDirection::Column,
-            RetainedKind::Row => taffy::FlexDirection::Row,
-            _ => style.flex_direction,
-        };
+        let style = kind.layout_style(&node_style);
 
         let mut child_ids = Vec::new();
         for child in &children {
@@ -412,9 +490,34 @@ impl RetainedTree {
         })
     }
 
+    /// Applies one validated patch, preserving accumulated invalidation on failure.
+    ///
+    /// Invalid paths, child indices, or component metadata targets return an error
+    /// before structural mutation. Style changes compare actual layout geometry;
+    /// color-only text updates preserve measured text. Earlier successful patches
+    /// are not rolled back if this patch fails.
     pub fn apply_patch(&mut self, patch: Patch) -> Result<(), RetainedError> {
         crate::lemon_trace!(Patches, "apply {}", crate::debug::format_patch(&patch));
-        let invalidates_layout = patch.invalidates_layout();
+        self.validate_structure(&patch)?;
+        let invalidates_layout = match &patch {
+            Patch::UpdateStyle { node, style } => {
+                let old = self.node_mut(node)?;
+                old.kind.layout_style(&old.style) != old.kind.layout_style(style)
+            }
+            Patch::UpdateTextStyle { node, style } => {
+                let text = self
+                    .node_mut(node)?
+                    .text
+                    .as_ref()
+                    .ok_or_else(|| RetainedError::MissingTextCache(node.clone()))?;
+                let mut metrics = text.style.clone();
+                metrics.color = style.color;
+                metrics != *style
+            }
+            _ => patch.invalidates_layout(),
+        };
+        // Mark before mutations: even an error after partial work must retain dirtiness.
+        self.layout_dirty |= invalidates_layout;
         match patch {
             Patch::UpdateComponent { node, component } => {
                 let retained = self.node_mut_exact(&node)?;
@@ -446,12 +549,18 @@ impl RetainedTree {
                 self.unwrap_component(node)?;
             }
             Patch::UpdateStyle { node, style } => {
-                let taffy_id = self
-                    .node_mut(&node)?
+                let retained = self.node_mut(&node)?;
+                let taffy_id = retained
                     .layout_node_id()
                     .ok_or_else(|| RetainedError::InvalidNodePath(node.clone()))?;
-                self.taffy.set_style(taffy_id, style.to_taffy_style())?;
+                let layout_style = retained.kind.layout_style(&style);
+                if invalidates_layout {
+                    self.taffy.set_style(taffy_id, layout_style)?;
+                }
                 self.node_mut(&node)?.style = style;
+            }
+            Patch::UpdateHandlers { node, handlers } => {
+                self.node_mut(&node)?.handlers = handlers;
             }
             Patch::UpdatePaint { node, paint } => {
                 self.node_mut(&node)?.paint = paint;
@@ -492,11 +601,13 @@ impl RetainedTree {
                     .as_mut()
                     .ok_or_else(|| RetainedError::MissingTextCache(node.clone()))?;
                 text.style = style;
-                text.parley_layout = None;
-                text.layout_max_width = None;
-                text.needs_layout = true;
-                if let Some(taffy_id) = retained.taffy_id {
-                    self.taffy.mark_dirty(taffy_id)?;
+                if invalidates_layout {
+                    text.parley_layout = None;
+                    text.layout_max_width = None;
+                    text.needs_layout = true;
+                    if let Some(taffy_id) = retained.taffy_id {
+                        self.taffy.mark_dirty(taffy_id)?;
+                    }
                 }
             }
             Patch::InsertChild {
@@ -521,7 +632,39 @@ impl RetainedTree {
             }
         }
 
-        self.layout_dirty |= invalidates_layout;
+        Ok(())
+    }
+
+    fn validate_structure(&self, patch: &Patch) -> Result<(), RetainedError> {
+        match patch {
+            Patch::InsertChild { parent, index, .. } => {
+                if *index > self.node_exact(parent)?.children.len() {
+                    return Err(RetainedError::InvalidNodePath(parent.child(*index)));
+                }
+            }
+            Patch::RemoveChild { parent, index } => {
+                if *index >= self.node_exact(parent)?.children.len() {
+                    return Err(RetainedError::InvalidNodePath(parent.child(*index)));
+                }
+            }
+            Patch::MoveChild { parent, from, to } => {
+                let len = self.node_exact(parent)?.children.len();
+                if *from >= len || *to >= len {
+                    return Err(RetainedError::InvalidNodePath(parent.clone()));
+                }
+            }
+            Patch::ReplaceNode { node, .. } | Patch::MountComponent { node, .. }
+                if !node.0.is_empty() =>
+            {
+                self.node_exact(node)?;
+            }
+            Patch::UpdateComponent { node, .. } | Patch::UnmountComponent { node }
+                if !matches!(self.node_exact(node)?.kind, RetainedKind::Component { .. }) =>
+            {
+                return Err(RetainedError::InvalidNodePath(node.clone()));
+            }
+            _ => {}
+        }
         Ok(())
     }
 
@@ -906,7 +1049,7 @@ mod tests {
     use std::{cell::Cell, rc::Rc};
 
     use crate::diff::{NodePath, Patch};
-    use crate::element::builders::{Button, Column, Row, Text, View};
+    use crate::element::builders::{Button, ColumnView, RowView, Text, View};
     use crate::element::events::{KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
     use crate::element::style::{Align, Color, Dimension, Edges, Justify, StyleProps};
     use crate::element::types::ComponentElement;
@@ -1030,8 +1173,8 @@ mod tests {
 
     #[test]
     fn mount_builds_retained_tree_for_container_children_and_text() {
-        let element = Column::new()
-            .gap(6.0)
+        let element = ColumnView::new()
+            .spacing(6.0)
             .child(Text::new("hello"))
             .child(Text::new("world"))
             .into_element();
@@ -1062,8 +1205,8 @@ mod tests {
         let fired = Rc::new(Cell::new(false));
         let click = fired.clone();
         let element = Button::new("Press")
-            .background(Color::rgb8(10, 20, 30))
-            .on_click(move || click.set(true))
+            .surface(Color::rgb8(10, 20, 30))
+            .action(move || click.set(true))
             .into_element();
 
         let tree = RetainedTree::mount(element).unwrap();
@@ -1088,7 +1231,7 @@ mod tests {
                     cursor: 0,
                     value: String::new(),
                 })
-                .child(Row::new().child(Text::new("")))
+                .child(RowView::new().child(Text::new("")))
                 .into_element(),
         )
         .unwrap();
@@ -1163,21 +1306,21 @@ mod tests {
 
     #[test]
     fn update_text_on_component_wrapped_row_reflows_after_layout() {
-        use crate::element::builders::{Component, Row};
+        use crate::element::builders::{Component, RowView};
         use crate::element::types::ComponentElement;
 
         fn mini(_cx: &crate::runtime::cx::Cx) -> Element {
-            Row::new().child(Text::new("0")).into_element()
+            RowView::new().child(Text::new("0")).into_element()
         }
 
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .child(Component::new(mini).key(1))
                 .into_element(),
         )
         .unwrap();
 
-        let row = Row::new().child(Text::new("0")).into_element();
+        let row = RowView::new().child(Text::new("0")).into_element();
         tree.apply_patch(Patch::ReplaceNode {
             node: NodePath(vec![0]),
             new_element: row,
@@ -1255,8 +1398,7 @@ mod tests {
 
     #[test]
     fn update_text_style_patch_replaces_style_and_reflows_after_layout() {
-        let mut tree =
-            RetainedTree::mount(Text::new("preview").font_size(16.0).into_element()).unwrap();
+        let mut tree = RetainedTree::mount(Text::new("preview").size(16.0).into_element()).unwrap();
         let first_layout = layout_pass(
             &mut tree,
             Viewport {
@@ -1316,7 +1458,7 @@ mod tests {
     #[test]
     fn insert_and_remove_child_patches_keep_taffy_and_retained_order_in_sync() {
         let mut tree =
-            RetainedTree::mount(Column::new().child(Text::new("a")).into_element()).unwrap();
+            RetainedTree::mount(ColumnView::new().child(Text::new("a")).into_element()).unwrap();
 
         tree.apply_patch(Patch::InsertChild {
             parent: NodePath::root(),
@@ -1351,7 +1493,7 @@ mod tests {
     #[test]
     fn replace_node_patch_rebuilds_subtree_at_same_index() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .child(Text::new("old"))
                 .child(Text::new("keep"))
                 .into_element(),
@@ -1363,7 +1505,7 @@ mod tests {
 
         tree.apply_patch(Patch::ReplaceNode {
             node: NodePath(vec![0]),
-            new_element: Column::new().child(Text::new("new")).into_element(),
+            new_element: ColumnView::new().child(Text::new("new")).into_element(),
         })
         .unwrap();
 
@@ -1379,7 +1521,7 @@ mod tests {
         use crate::element::Element;
 
         let tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .child(Element::Fragment(vec![
                     Text::new("a").into_element(),
                     Text::new("b").into_element(),
@@ -1416,17 +1558,17 @@ mod tests {
 
     #[test]
     fn mount_component_after_replace_node_keeps_sibling_rows_in_taffy_tree() {
-        use crate::element::builders::{Column, Component, Row, Text};
+        use crate::element::builders::{ColumnView, Component, RowView, Text};
         use crate::runtime::Runtime;
         use crate::Cx;
 
         fn mini(_cx: &Cx) -> Element {
-            Row::new().child(Text::new("0")).into_element()
+            RowView::new().child(Text::new("0")).into_element()
         }
 
         let mut runtime = Runtime::new();
         runtime.mount(|_cx| {
-            Column::new()
+            ColumnView::new()
                 .child(Component::new(mini).key(1))
                 .child(Component::new(mini).key(2))
                 .into_element()

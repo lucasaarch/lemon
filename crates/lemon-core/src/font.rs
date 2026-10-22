@@ -45,7 +45,7 @@ impl From<std::io::Error> for FontRegistrationError {
 /// Registers a bundled font (for example from [`include_bytes!`]) under `family_name`.
 ///
 /// After registration, you can select this family from text styles with
-/// [`.font_family(...)`](crate::Text::font_family), for example:
+/// [`.font(...)`](crate::Text::font), for example:
 ///
 /// ```no_run
 /// use lemon_core::register_font_bytes;

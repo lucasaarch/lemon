@@ -1,6 +1,5 @@
 //! Desktop host: native windows, GPU presentation, and frame scheduling.
 
-mod hit_test;
 mod window;
 
 use std::collections::HashMap;
@@ -20,23 +19,18 @@ use winit::event::{
 };
 use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::keyboard::{Key, NamedKey as WinitNamedKey};
-use winit::window::{CursorIcon, Window, WindowId};
+use winit::window::{CursorIcon, Theme as NativeTheme, Window, WindowId};
 
 use crate::animation::AnimRegistry;
 use crate::element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 use crate::element::Element;
 use crate::font::{register_font_data, FontRegistrationError};
 use crate::host::{HostContext, HostScope};
+use crate::input::hit_test::{self, LogicalPoint};
 use crate::layout::Viewport;
-use crate::retained::focus::FocusManager;
 use crate::runtime::cx::Cx;
-use crate::theme::Theme;
+use crate::theme::{Theme, ThemePair};
 use crate::ui::UiState;
-use hit_test::{
-    dispatch_click, dispatch_outside_clicks, find_node_by_taffy_id, hit_test_focusable,
-    hit_test_hover, hit_test_on_click, hit_test_pointer_down, hit_test_scroll, normalize_coords,
-    LogicalPoint,
-};
 
 pub use window::WindowConfig;
 
@@ -55,24 +49,14 @@ pub struct WindowState {
     pub surface: Option<RenderSurface<'static>>,
     /// Vello renderer used for this window's surface.
     pub renderer: Option<Renderer>,
-    /// Headless UI processing state. Legacy field access remains available via dereferencing.
+    /// Headless UI processing state; inspect via its getters and dispatch translated input here.
     pub ui: UiState,
-    /// Keyboard focus traversal and current focused node for this window.
-    pub focus_manager: FocusManager,
-    /// Node currently receiving hover state.
-    pub hovered_node_id: Option<taffy::NodeId>,
-    /// The node currently capturing pointer events (set on pointer-down, cleared on pointer-up).
-    pub mouse_capture_node: Option<taffy::NodeId>,
-    /// True while the left mouse button is held down.
-    pub mouse_button_down: bool,
     /// Currently active keyboard modifiers for events delivered to this window.
     pub active_modifiers: Modifiers,
-    theme: Theme,
     root_component: Option<RootComponent>,
     host: HostContext,
     last_cursor: Option<(f32, f32)>,
     mounted: bool,
-    last_caret_activity: Instant,
 }
 
 impl std::ops::Deref for WindowState {
@@ -90,83 +74,22 @@ impl std::ops::DerefMut for WindowState {
 }
 
 impl WindowState {
-    fn new(theme: Theme, root_component: RootComponent) -> Self {
+    fn new(host: HostContext, root_component: RootComponent) -> Self {
         Self {
             window: None,
             surface: None,
             renderer: None,
             ui: UiState::default(),
-            focus_manager: FocusManager::new(),
-            hovered_node_id: None,
-            mouse_capture_node: None,
-            mouse_button_down: false,
             active_modifiers: Modifiers::default(),
-            host: HostContext::new(theme.clone()),
-            theme,
+            host,
             root_component: Some(root_component),
             last_cursor: None,
             mounted: false,
-            last_caret_activity: Instant::now(),
         }
     }
 
     fn activate_theme(&self) -> HostScope {
         self.host.enter()
-    }
-
-    fn caret_visible_now(&self) -> bool {
-        let elapsed = self.last_caret_activity.elapsed().as_millis();
-        if elapsed < 150 {
-            return true;
-        }
-        (elapsed / 530).is_multiple_of(2)
-    }
-
-    fn focused_text_input(&self) -> bool {
-        let Some(focused_id) = self.focus_manager.focused else {
-            return false;
-        };
-        let Some(root) = self.retained.as_ref().and_then(|t| t.root.as_ref()) else {
-            return false;
-        };
-        find_node_by_taffy_id(root, focused_id).is_some_and(|node| node.text_input.is_some())
-    }
-
-    fn tick_caret_blink(&mut self) {
-        if self.focused_text_input() {
-            self.paint_dirty = true;
-        }
-    }
-
-    fn apply_runtime_patches(&mut self) {
-        let _scope = self.activate_theme();
-        crate::lemon_trace!(
-            Runtime,
-            "{} apply_runtime_patches: flush",
-            crate::debug::frame_tag()
-        );
-        if let Err(err) = self.ui.apply_updates() {
-            eprintln!("apply_patches: {err:?}");
-        }
-        if self.layout_dirty {
-            self.run_layout_pass(crate::debug::frame_tag());
-        }
-    }
-
-    fn run_layout_pass(&mut self, context: impl AsRef<str>) {
-        self.layout_dirty = true;
-        let viewport = self.viewport();
-        let scale = self.scale_factor();
-        let context = context.as_ref();
-        crate::lemon_trace!(
-            Layout,
-            "{context} layout_pass {}x{} scale={scale}",
-            viewport.width,
-            viewport.height
-        );
-        if let Err(err) = self.ui.layout(viewport) {
-            eprintln!("layout_pass: {err:?}");
-        }
     }
 
     fn attach_window(&mut self, render_cx: &mut RenderContext, window: Arc<Window>) {
@@ -197,8 +120,7 @@ impl WindowState {
         self.window = Some(window);
         self.surface = Some(surface);
         self.renderer = Some(renderer);
-        self.layout_dirty = true;
-        self.paint_dirty = true;
+        self.ui.invalidate_layout();
     }
 
     fn ensure_mounted(&mut self) {
@@ -209,8 +131,7 @@ impl WindowState {
         let root = Arc::clone(self.root_component.as_ref().expect("root component"));
         self.ui.mount(move |cx| root(cx)).expect("UI mount");
         self.mounted = true;
-        self.layout_dirty = true;
-        self.paint_dirty = true;
+        self.ui.invalidate_layout();
     }
 
     fn viewport(&self) -> Viewport {
@@ -233,15 +154,15 @@ impl WindowState {
     fn update_frame(&mut self) {
         self.ensure_mounted();
         let _scope = self.activate_theme();
-        self.tick_caret_blink();
+        self.ui.tick_caret_blink();
 
         let frame = crate::debug::next_frame();
         crate::lemon_trace!(Runtime, "frame {frame} update_frame: flush");
 
         let viewport = self.viewport();
         let scale = self.scale_factor();
-        let focused = self.focus_manager.focused;
-        let caret_visible = self.caret_visible_now();
+        let focused = self.ui.focused();
+        let caret_visible = self.ui.caret_visible_now();
         if let Err(err) = self.ui.update(viewport, scale, focused, caret_visible) {
             eprintln!("UI update: {err:?}");
         }
@@ -253,255 +174,59 @@ impl WindowState {
         }
         if let Some(surface) = self.surface.as_mut() {
             render_cx.resize_surface(surface, width, height);
-            self.layout_dirty = true;
-            self.paint_dirty = true;
+            self.ui.invalidate_layout();
         }
     }
 
-    /// Route a pointer click through hit-test and dispatch `on_click` (logical coordinates).
+    fn dispatch_input(&mut self, event: crate::input::InputEvent) -> bool {
+        let _scope = self.activate_theme();
+        match self.ui.dispatch_input(event) {
+            Ok(result) => {
+                if let Some(window) = &self.window {
+                    window.set_cursor(lemon_cursor_to_winit(&result.cursor));
+                }
+                result.handled
+            }
+            Err(error) => {
+                eprintln!("input: {error:?}");
+                false
+            }
+        }
+    }
+
     fn event_pass_click(&mut self, point: LogicalPoint) -> bool {
-        let Some(tree) = self.ui.retained.as_ref() else {
-            return false;
-        };
-        let Some(root) = tree.root.as_ref() else {
-            return false;
-        };
-
-        if let Some(node) = hit_test_focusable(root, &self.layout_map, point) {
-            if let Some(id) = node.taffy_id {
-                self.focus_manager.focused = Some(id);
-                self.last_caret_activity = Instant::now();
-                self.ui.paint_dirty = true;
-            }
-        }
-
-        let Some(node) = hit_test_on_click(root, &self.layout_map, point) else {
-            return false;
-        };
-        let handled = dispatch_click(node);
-        crate::lemon_trace!(
-            Input,
-            "click at ({:.1},{:.1}) taffy_id={:?} handled={handled}",
-            point.x,
-            point.y,
-            node.taffy_id
-        );
-        if handled {
-            self.apply_runtime_patches();
-        }
-        handled
+        self.dispatch_input(crate::input::InputEvent::Click(point))
     }
-
-    /// Dispatch `on_pointer_down` to the deepest node under `point` with that handler, set
-    /// mouse capture, and dispatch `on_click_outside` to all qualifying nodes.
     fn event_pass_pointer_down(&mut self, point: LogicalPoint) -> bool {
-        let Some(root) = self.retained.as_ref().and_then(|t| t.root.as_ref()) else {
-            return false;
-        };
-
-        dispatch_outside_clicks(root, &self.layout_map, point);
-
-        let hit = hit_test_pointer_down(root, &self.layout_map, point);
-        let Some((node, (nx, ny))) = hit else {
-            self.mouse_capture_node = None;
-            self.apply_runtime_patches();
-            return false;
-        };
-
-        let capture_id = node.taffy_id;
-        if let Some(handler) = node.handlers.on_pointer_down.clone() {
-            handler(nx, ny);
-        }
-        self.mouse_capture_node = capture_id;
-        self.apply_runtime_patches();
-        true
+        self.dispatch_input(crate::input::InputEvent::PointerDown(point))
     }
-
-    /// Dispatch `on_pointer_move` to the currently captured node (if any) with normalized coords.
     fn event_pass_pointer_move(&mut self, point: LogicalPoint) -> bool {
-        if !self.mouse_button_down {
-            return false;
-        }
-        let Some(capture_id) = self.mouse_capture_node else {
-            return false;
-        };
-
-        let (handler, rect) = match self
-            .retained
-            .as_ref()
-            .and_then(|t| t.root.as_ref())
-            .and_then(|root| find_node_by_taffy_id(root, capture_id))
-        {
-            Some(node) => {
-                let h = node.handlers.on_pointer_move.clone();
-                let r = node
-                    .taffy_id
-                    .and_then(|id| self.layout_map.get(id))
-                    .copied();
-                (h, r)
-            }
-            None => return false,
-        };
-
-        if let (Some(handler), Some(rect)) = (handler, rect) {
-            let (nx, ny) = normalize_coords(point, &rect);
-            handler(nx, ny);
-            self.apply_runtime_patches();
-            return true;
-        }
-        false
+        self.dispatch_input(crate::input::InputEvent::PointerMove(point))
     }
-
-    /// Dispatch `on_pointer_up` to the currently captured node (if any) with normalized coords.
     fn event_pass_pointer_up(&mut self, point: LogicalPoint) -> bool {
-        let Some(capture_id) = self.mouse_capture_node else {
-            return false;
-        };
-
-        let (handler, rect) = match self
-            .retained
-            .as_ref()
-            .and_then(|t| t.root.as_ref())
-            .and_then(|root| find_node_by_taffy_id(root, capture_id))
-        {
-            Some(node) => {
-                let h = node.handlers.on_pointer_up.clone();
-                let r = node
-                    .taffy_id
-                    .and_then(|id| self.layout_map.get(id))
-                    .copied();
-                (h, r)
-            }
-            None => return false,
-        };
-
-        if let (Some(handler), Some(rect)) = (handler, rect) {
-            let (nx, ny) = normalize_coords(point, &rect);
-            handler(nx, ny);
-            self.apply_runtime_patches();
-            return true;
-        }
-        false
+        self.dispatch_input(crate::input::InputEvent::PointerUp(point))
     }
-
-    fn event_pass_keyboard(&mut self, key_event: WinitKeyEvent) {
-        let lemon_key = winit_key_to_lemon(&key_event.logical_key);
-        let state = if key_event.state == ElementState::Pressed {
-            KeyState::Pressed
-        } else {
-            KeyState::Released
-        };
-
-        if state == KeyState::Pressed
-            && !key_event.repeat
-            && lemon_key == LemonKey::Named(NamedKey::Tab)
-        {
-            if let Some(tree) = self.ui.retained.as_ref() {
-                self.focus_manager.cycle(tree, !self.active_modifiers.shift);
-            }
-            self.last_caret_activity = Instant::now();
-            self.paint_dirty = true;
-            return;
-        }
-
-        let Some(focused_id) = self.focus_manager.focused else {
-            return;
-        };
-
-        let handler = self
-            .retained
-            .as_ref()
-            .and_then(|tree| tree.root.as_ref())
-            .and_then(|root| find_node_by_taffy_id(root, focused_id))
-            .and_then(|node| match state {
-                KeyState::Pressed => node.handlers.on_key_down.clone(),
-                KeyState::Released => node.handlers.on_key_up.clone(),
-            });
-
-        let Some(handler) = handler else {
-            return;
-        };
-
-        handler(KeyEvent {
-            key: lemon_key,
-            modifiers: self.active_modifiers.clone(),
-            repeat: key_event.repeat,
-            state,
-        });
-        self.last_caret_activity = Instant::now();
-        self.apply_runtime_patches();
-    }
-
     fn event_pass_hover(&mut self, point: LogicalPoint) {
-        let new_id = self
-            .retained
-            .as_ref()
-            .and_then(|tree| tree.root.as_ref())
-            .and_then(|root| hit_test_hover(root, &self.layout_map, point))
-            .and_then(|node| node.taffy_id);
-
-        if new_id == self.hovered_node_id {
-            return;
-        }
-
-        let old_leave = self.hovered_node_id.and_then(|old_id| {
-            self.retained
-                .as_ref()
-                .and_then(|tree| tree.root.as_ref())
-                .and_then(|root| find_node_by_taffy_id(root, old_id))
-                .and_then(|node| node.handlers.on_hover_leave.clone())
-        });
-
-        let (new_enter, new_cursor) = if let Some(id) = new_id {
-            self.retained
-                .as_ref()
-                .and_then(|tree| tree.root.as_ref())
-                .and_then(|root| find_node_by_taffy_id(root, id))
-                .map(|node| {
-                    (
-                        node.handlers.on_hover_enter.clone(),
-                        node.style.cursor.clone(),
-                    )
-                })
-                .unwrap_or((None, Cursor::Default))
-        } else {
-            (None, Cursor::Default)
-        };
-
-        if let Some(handler) = old_leave {
-            handler();
-        }
-        if let Some(handler) = new_enter {
-            handler();
-        }
-        if let Some(window) = &self.window {
-            window.set_cursor(lemon_cursor_to_winit(&new_cursor));
-        }
-
-        self.hovered_node_id = new_id;
-        self.layout_dirty = true;
-        self.paint_dirty = true;
+        self.dispatch_input(crate::input::InputEvent::Hover(point));
+    }
+    fn event_pass_scroll(&mut self, point: LogicalPoint, delta_y: f64) -> bool {
+        self.dispatch_input(crate::input::InputEvent::Scroll { point, delta_y })
+    }
+    fn event_pass_keyboard(&mut self, event: WinitKeyEvent) {
+        self.dispatch_input(crate::input::InputEvent::Key(KeyEvent {
+            key: winit_key_to_lemon(&event.logical_key),
+            modifiers: self.active_modifiers.clone(),
+            repeat: event.repeat,
+            state: if event.state == ElementState::Pressed {
+                KeyState::Pressed
+            } else {
+                KeyState::Released
+            },
+        }));
     }
 
     fn cursor_logical(&self, physical_x: f64, physical_y: f64) -> LogicalPoint {
         hit_test::physical_to_logical(physical_x, physical_y, self.scale_factor())
-    }
-
-    /// Route a scroll event through hit-test and dispatch `on_scroll` (logical coordinates).
-    fn event_pass_scroll(&mut self, point: LogicalPoint, delta_y: f64) -> bool {
-        let Some(root) = self.retained.as_ref().and_then(|t| t.root.as_ref()) else {
-            return false;
-        };
-        let Some(node) = hit_test_scroll(root, &self.layout_map, point) else {
-            return false;
-        };
-        if let Some(handler) = node.handlers.on_scroll.clone() {
-            handler(delta_y);
-            self.apply_runtime_patches();
-            true
-        } else {
-            false
-        }
     }
 
     fn present(&mut self, render_cx: &mut RenderContext) {
@@ -523,10 +248,10 @@ impl WindowState {
             .render_to_texture(
                 &device_handle.device,
                 &device_handle.queue,
-                &self.ui.scene,
+                self.ui.scene(),
                 &surface.target_view,
                 &vello::RenderParams {
-                    base_color: theme_background_peniko(self.theme.colors.background),
+                    base_color: theme_background_peniko(self.host.theme().colors.background),
                     width,
                     height,
                     antialiasing_method: AaConfig::Area,
@@ -581,7 +306,7 @@ impl WindowState {
     fn render_frame(&mut self, render_cx: &mut RenderContext) {
         self.update_frame();
         self.present(render_cx);
-        self.runtime.flush_deferred_effects();
+        self.ui.finish_frame();
     }
 
     fn request_redraw(&self) {
@@ -591,7 +316,7 @@ impl WindowState {
     }
 
     fn needs_redraw(&self) -> bool {
-        self.layout_dirty || self.paint_dirty
+        self.layout_dirty() || self.paint_dirty()
     }
 }
 
@@ -606,7 +331,7 @@ pub struct AppState {
     /// Live per-window states keyed by the `WindowId` delivered by `winit` events.
     pub windows: HashMap<WindowId, WindowState>,
     window_config: WindowConfig,
-    theme: Theme,
+    themes: ThemePair,
     root_component: RootComponent,
     animation_registry: AnimRegistry,
     registered_fonts: Vec<RegisteredFont>,
@@ -624,25 +349,50 @@ impl AppState {
     ///
     /// The native window is not created until the event loop is resumed. After resume, the first
     /// window is inserted into [`windows`](Self::windows) under its `winit` [`WindowId`].
+    /// Its appearance follows the system using [`ThemePair::default`], with dark fallback
+    /// when native appearance is unavailable.
     pub fn new(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) -> Self {
-        Self::with_theme(config, Theme::default(), root)
+        Self::with_theme(config, ThemePair::default(), root)
     }
 
     fn with_theme(
         config: WindowConfig,
-        theme: Theme,
+        themes: impl Into<ThemePair>,
         root: impl Fn(&Cx) -> Element + 'static,
     ) -> Self {
+        let themes = themes.into();
+        let host = HostContext::new(resolve_native_theme(&themes, None)).with_clipboard(
+            || arboard::Clipboard::new().ok()?.get_text().ok(),
+            |text| {
+                if let Ok(mut clipboard) = arboard::Clipboard::new() {
+                    let _ = clipboard.set_text(text);
+                }
+            },
+        );
         Self {
             render_cx: RenderContext::new(),
             windows: HashMap::new(),
             window_config: config,
-            host: HostContext::new(theme.clone()),
-            theme,
+            animation_registry: host.animations(),
+            host,
+            themes,
             root_component: Arc::new(root),
-            animation_registry: AnimRegistry::shared(),
             registered_fonts: Vec::new(),
         }
+    }
+
+    fn apply_system_theme(&mut self, appearance: Option<NativeTheme>) -> bool {
+        let theme = resolve_native_theme(&self.themes, appearance);
+        if !self.host.set_theme(theme) {
+            return false;
+        }
+        for window in self.windows.values_mut() {
+            // Reactive views have queued patches. Chrome and the window clear color
+            // also need repainting when no explicit element property changed.
+            window.ui.invalidate_paint();
+            window.request_redraw();
+        }
+        true
     }
 
     fn window_config(&self) -> &WindowConfig {
@@ -650,15 +400,18 @@ impl AppState {
     }
 
     fn make_window_state(&self) -> WindowState {
-        let mut state = WindowState::new(self.theme.clone(), Arc::clone(&self.root_component));
-        state.host = self.host.clone();
+        let mut state = WindowState::new(self.host.clone(), Arc::clone(&self.root_component));
         for registered in &self.registered_fonts {
-            register_font_data(
-                &mut state.font_cx,
-                registered.family_name.clone(),
-                StdArc::clone(&registered.bytes),
-            )
-            .expect("font registration was validated before storing");
+            state
+                .ui
+                .edit_fonts(|fonts| {
+                    register_font_data(
+                        fonts,
+                        registered.family_name.clone(),
+                        StdArc::clone(&registered.bytes),
+                    )
+                })
+                .expect("font registration was validated before storing");
         }
         state
     }
@@ -667,7 +420,7 @@ impl AppState {
     ///
     /// Registered fonts are applied to existing windows immediately and to future windows when
     /// they are created. Use the same family in text styles with
-    /// [`.font_family(...)`](crate::Text::font_family).
+    /// [`.font(...)`](crate::Text::font).
     pub fn register_font_bytes(
         &mut self,
         family_name: impl Into<String>,
@@ -680,13 +433,10 @@ impl AppState {
         register_font_data(&mut probe, family_name.clone(), StdArc::clone(&bytes))?;
 
         for window in self.windows.values_mut() {
-            register_font_data(
-                &mut window.font_cx,
-                family_name.clone(),
-                StdArc::clone(&bytes),
-            )?;
-            window.layout_dirty = true;
-            window.paint_dirty = true;
+            window.ui.edit_fonts(|fonts| {
+                register_font_data(fonts, family_name.clone(), StdArc::clone(&bytes))
+            })?;
+            window.ui.invalidate_layout();
         }
 
         self.registered_fonts
@@ -710,10 +460,10 @@ impl AppState {
     }
 
     fn tick_animations(&mut self) -> bool {
-        let requested = crate::animation::take_animation_pending();
+        let requested = self.animation_registry.take_pending();
         let active = self.animation_registry.tick_active(Instant::now());
         if requested || active {
-            crate::animation::tick_animation_frame();
+            self.animation_registry.tick_frame();
         }
         requested || active
     }
@@ -738,8 +488,8 @@ impl AppState {
                 .expect("create window"),
         );
         let window_id = window.id();
-        let mut window_state = WindowState::new(self.theme.clone(), req.root);
-        window_state.host = self.host.clone();
+        self.apply_system_theme(window.theme());
+        let mut window_state = WindowState::new(self.host.clone(), req.root);
         window_state.attach_window(&mut self.render_cx, window);
         window_state.request_redraw();
         self.windows.insert(window_id, window_state);
@@ -772,6 +522,7 @@ impl ApplicationHandler for LemonApplication {
         );
 
         let window_id = window.id();
+        state.apply_system_theme(window.theme());
         let mut window_state = state.make_window_state();
         window_state.attach_window(&mut state.render_cx, window);
         window_state.request_redraw();
@@ -797,6 +548,11 @@ impl ApplicationHandler for LemonApplication {
                 event_loop.exit();
             }
             WindowEvent::CloseRequested => {}
+            WindowEvent::ThemeChanged(appearance) => {
+                if state.windows.contains_key(&window_id) {
+                    state.apply_system_theme(Some(appearance));
+                }
+            }
             WindowEvent::Resized(size) => {
                 let Some(window_state) = state.windows.get_mut(&window_id) else {
                     return;
@@ -849,7 +605,6 @@ impl ApplicationHandler for LemonApplication {
                     .last_cursor
                     .map(|(x, y)| LogicalPoint::new(x, y))
                     .unwrap_or(LogicalPoint::new(0.0, 0.0));
-                window_state.mouse_button_down = true;
                 let clicked = window_state.event_pass_click(point);
                 let pointer_handled = window_state.event_pass_pointer_down(point);
                 if clicked || pointer_handled {
@@ -869,8 +624,6 @@ impl ApplicationHandler for LemonApplication {
                     .map(|(x, y)| LogicalPoint::new(x, y))
                     .unwrap_or(LogicalPoint::new(0.0, 0.0));
                 let pointer_released = window_state.event_pass_pointer_up(point);
-                window_state.mouse_button_down = false;
-                window_state.mouse_capture_node = None;
                 if pointer_released || window_state.needs_redraw() {
                     window_state.request_redraw();
                 }
@@ -915,8 +668,8 @@ impl ApplicationHandler for LemonApplication {
         if let Some(state) = self.state.as_mut() {
             let animation_redraw = state.tick_animations();
             for window_state in state.windows.values_mut() {
-                window_state.tick_caret_blink();
-                if window_state.focused_text_input()
+                window_state.ui.tick_caret_blink();
+                if window_state.ui.focused_text_input()
                     || window_state.needs_redraw()
                     || animation_redraw
                 {
@@ -927,6 +680,13 @@ impl ApplicationHandler for LemonApplication {
     }
 }
 
+fn resolve_native_theme(themes: &ThemePair, appearance: Option<NativeTheme>) -> Theme {
+    match appearance {
+        Some(NativeTheme::Light) => themes.light.clone(),
+        Some(NativeTheme::Dark) | None => themes.dark.clone(),
+    }
+}
+
 fn theme_background_peniko(color: crate::element::style::Color) -> Color {
     let (r, g, b) = color.to_rgb8();
     Color::from_rgb8(r, g, b)
@@ -934,28 +694,57 @@ fn theme_background_peniko(color: crate::element::style::Color) -> Color {
 
 /// Opens a native window and runs `root` as the UI until the window closes.
 ///
+/// Follows the native system light/dark appearance, including changes while running,
+/// using [`ThemePair::default`]. Native detection and change events are available on
+/// macOS and Windows through winit; unavailable appearance falls back to the dark palette.
+///
 /// `root` is called on the first frame and again whenever reactive state read during the last
-/// render changes (signals, dynamic text closures, etc.). Build widgets with [`Column`](crate::Column),
+/// render changes (signals, dynamic text closures, etc.). Build widgets with [`Column`](crate::ColumnView),
 /// [`Text`](crate::Text), button widgets, and related builders, then finish with
-/// [`.into_element()`](crate::Column::into_element).
+/// [`.into_element()`](crate::ColumnView::into_element).
 ///
 /// # Example
 ///
 /// See the `counter` example in the repository or the crate-level docs in [`crate`].
 pub fn run(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) {
-    run_with_theme(config, Theme::default(), root);
+    run_with_theme(config, ThemePair::default(), root);
 }
 
-/// Opens a native window and runs `root` with `theme` as the active theme.
+/// Runs `root` with a custom fixed palette or an adaptive light/dark pair.
 ///
-/// The provided theme is injected before mount and before each frame/update pass, so calls to
-/// [`Cx::use_theme`](crate::Cx::use_theme) and [`current_theme`](crate::current_theme) during
-/// reactive work see this theme consistently.
-pub fn run_with_theme(config: WindowConfig, theme: Theme, root: impl Fn(&Cx) -> Element + 'static) {
+/// Passing a [`Theme`] keeps that palette fixed. Passing a [`ThemePair`] follows the
+/// system appearance with the supplied palettes, preserving component state when it
+/// changes. Explicit widget style overrides remain in effect. Unknown native appearance
+/// selects the pair's dark palette. Native decorations retain the system appearance.
+///
+/// The theme is scoped to the originating host during rendering, layout, and painting.
+///
+/// ```no_run
+/// use lemon_desktop::{run_with_theme, Theme, ThemePair, WindowConfig};
+/// use lemon_core::prelude::*;
+///
+/// fn app(cx: &Cx) -> Element {
+///     let theme = cx.theme();
+///     Text::new("Hello").color(theme.colors.foreground).into_element()
+/// }
+///
+/// let mut light = Theme::default_light();
+/// let mut dark = Theme::default_dark();
+/// light.radius.md = 10.0;
+/// dark.radius.md = 10.0;
+/// run_with_theme(WindowConfig::default(), ThemePair::new(light, dark), app);
+/// ```
+pub fn run_with_theme(
+    config: WindowConfig,
+    theme: impl Into<ThemePair>,
+    root: impl Fn(&Cx) -> Element + 'static,
+) {
     run_with_theme_and_fonts(config, theme, root, |_| {});
 }
 
-/// Opens a native window and runs `root`, allowing fonts to be registered before the first frame.
+/// Runs `root` with system appearance, registering fonts before the first frame.
+///
+/// Uses the same adaptive palettes and platform fallback as [`run`].
 ///
 /// # Example
 ///
@@ -964,7 +753,7 @@ pub fn run_with_theme(config: WindowConfig, theme: Theme, root: impl Fn(&Cx) -> 
 /// use lemon_desktop::{run_with_fonts, WindowConfig};
 ///
 /// fn app(_cx: &Cx) -> Element {
-///     Text::new("Brand font").font_family("MyApp Sans").into_element()
+///     Text::new("Brand font").font("MyApp Sans").into_element()
 /// }
 ///
 /// fn main() {
@@ -981,14 +770,16 @@ pub fn run_with_fonts(
     root: impl Fn(&Cx) -> Element + 'static,
     register_fonts: impl FnOnce(&mut AppState),
 ) {
-    run_with_theme_and_fonts(config, Theme::default(), root, register_fonts);
+    run_with_theme_and_fonts(config, ThemePair::default(), root, register_fonts);
 }
 
-/// Opens a native window and runs `root` with `theme`, allowing custom fonts to be registered
-/// before the event loop starts.
+/// Runs `root` with a fixed [`Theme`] or adaptive [`ThemePair`], registering fonts first.
+///
+/// `register_fonts` runs before the event loop starts. Theme selection and platform
+/// fallback match [`run_with_theme`].
 pub fn run_with_theme_and_fonts(
     config: WindowConfig,
-    theme: Theme,
+    theme: impl Into<ThemePair>,
     root: impl Fn(&Cx) -> Element + 'static,
     register_fonts: impl FnOnce(&mut AppState),
 ) {
@@ -1073,15 +864,12 @@ mod tests {
         });
         let window_state = state.make_window_state();
 
-        assert!(window_state.layout_dirty);
-        assert!(window_state.paint_dirty);
+        assert!(window_state.layout_dirty());
+        assert!(window_state.paint_dirty());
         assert!(window_state.window.is_none());
-        assert!(window_state.retained.is_none());
+        assert!(window_state.retained().is_none());
         assert!(!window_state.mounted);
-        assert!(window_state.focus_manager.focused.is_none());
-        assert!(window_state.hovered_node_id.is_none());
-        assert!(window_state.mouse_capture_node.is_none());
-        assert!(!window_state.mouse_button_down);
+        assert!(window_state.ui.focused().is_none());
     }
 
     #[test]
@@ -1108,11 +896,10 @@ mod tests {
             .expect("register font bytes");
 
         let mut window_state = state.make_window_state();
-        assert!(window_state
-            .font_cx
+        assert!(window_state.ui.edit_fonts(|fonts| fonts
             .collection
             .family_by_name("PlatformFontBytes")
-            .is_some());
+            .is_some()));
     }
 
     #[test]
@@ -1125,10 +912,138 @@ mod tests {
             .expect("register font path");
 
         let mut window_state = state.make_window_state();
-        assert!(window_state
-            .font_cx
+        assert!(window_state.ui.edit_fonts(|fonts| fonts
             .collection
             .family_by_name("PlatformFontPath")
-            .is_some());
+            .is_some()));
+    }
+
+    #[test]
+    fn system_appearance_selects_default_palette_for_current_and_future_windows() {
+        let mut app = AppState::new(WindowConfig::default(), |_| {
+            Text::new("Hello").into_element()
+        });
+        assert_eq!(
+            app.host.theme(),
+            Theme::default_dark(),
+            "unknown appearance uses dark fallback"
+        );
+        assert!(app.apply_system_theme(Some(NativeTheme::Light)));
+        let mut window = app.make_window_state();
+        window.ensure_mounted();
+        assert_eq!(window.host.theme(), Theme::default_light());
+        let id = WindowId::dummy();
+        app.windows.insert(id, window);
+        app.windows
+            .get_mut(&id)
+            .unwrap()
+            .ui
+            .update(
+                Viewport {
+                    width: 300.0,
+                    height: 200.0,
+                },
+                1.0,
+                None,
+                true,
+            )
+            .unwrap();
+        assert!(app.apply_system_theme(Some(NativeTheme::Dark)));
+        assert_eq!(app.windows[&id].host.theme(), Theme::default_dark());
+        assert!(app.windows[&id].paint_dirty());
+        assert_eq!(app.make_window_state().host.theme(), Theme::default_dark());
+        app.windows
+            .get_mut(&id)
+            .unwrap()
+            .ui
+            .update(
+                Viewport {
+                    width: 300.0,
+                    height: 200.0,
+                },
+                1.0,
+                None,
+                true,
+            )
+            .unwrap();
+        assert!(!app.apply_system_theme(Some(NativeTheme::Dark)));
+        assert!(
+            !app.windows[&id].paint_dirty(),
+            "duplicate native events need no repaint"
+        );
+    }
+
+    #[test]
+    fn fixed_custom_theme_ignores_system_changes_and_adaptive_pair_uses_custom_palettes() {
+        let mut light = Theme::default_light();
+        light.colors.accent = crate::Color::rgb8(160, 40, 80);
+        let mut dark = Theme::default_dark();
+        dark.colors.accent = crate::Color::rgb8(90, 180, 130);
+        let mut fixed = AppState::with_theme(WindowConfig::default(), light.clone(), |_| {
+            Text::new("Fixed").into_element()
+        });
+        assert!(!fixed.apply_system_theme(Some(NativeTheme::Dark)));
+        assert_eq!(fixed.host.theme(), light);
+        let mut adaptive = AppState::with_theme(
+            WindowConfig::default(),
+            ThemePair::new(light.clone(), dark.clone()),
+            |_| Text::new("Adaptive").into_element(),
+        );
+        assert_eq!(adaptive.host.theme(), dark);
+        adaptive.apply_system_theme(Some(NativeTheme::Light));
+        assert_eq!(adaptive.host.theme(), light);
+        adaptive.apply_system_theme(Some(NativeTheme::Dark));
+        assert_eq!(adaptive.host.theme(), dark);
+    }
+
+    #[test]
+    fn system_theme_change_preserves_mounted_component_state_and_updates_background() {
+        use crate::element::builders::{Button, ColumnView};
+        fn app(cx: &Cx) -> Element {
+            let count = cx.state(0);
+            let label = count.clone();
+            ColumnView::new()
+                .child(Text::new(move || format!("Count: {}", label.get())))
+                .child(Button::new("Increment").action(move || count.update(|n| *n += 1)))
+                .into_element()
+        }
+        let mut state = AppState::new(WindowConfig::default(), app);
+        let mut window = state.make_window_state();
+        window.ensure_mounted();
+        let Element::Column(root) = window.ui.runtime().root_element().unwrap() else {
+            panic!("column")
+        };
+        let Element::Button(button) = &root.children[1] else {
+            panic!("button")
+        };
+        button.on_click.as_ref().unwrap()();
+        let id = WindowId::dummy();
+        state.windows.insert(id, window);
+        state.apply_system_theme(Some(NativeTheme::Light));
+        let window = state.windows.get_mut(&id).unwrap();
+        let _scope = window.activate_theme();
+        window
+            .ui
+            .update(
+                Viewport {
+                    width: 400.0,
+                    height: 300.0,
+                },
+                1.0,
+                None,
+                true,
+            )
+            .unwrap();
+        let root = window.ui.retained().unwrap().root().unwrap();
+        let label = root.children[0].text.as_ref().unwrap();
+        assert_eq!(label.content, "Count: 1");
+        assert_eq!(
+            label.style.color,
+            Some(Theme::default_light().colors.foreground)
+        );
+        assert_eq!(
+            window.host.theme().colors.background,
+            Theme::default_light().colors.background
+        );
     }
 }

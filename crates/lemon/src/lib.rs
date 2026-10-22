@@ -9,13 +9,13 @@
 //! use lemon::prelude::*;
 //!
 //! fn app(cx: &Cx) -> Element {
-//!     let count = cx.use_signal(0i32);
+//!     let count = cx.state(0i32);
 //!     let label = count.clone();
 //!     let inc = count.clone();
-//!     Column::new()
+//!     ColumnView::new()
 //!         .children(children![
 //!             Text::new(move || label.get().to_string()),
-//!             Button::new(cx, "+").on_click(move || inc.update(|n| *n += 1)),
+//!             Button::new(cx, "+").action(move || inc.update(|n| *n += 1)),
 //!         ])
 //!         .into_element()
 //! }
@@ -28,13 +28,13 @@
 //! # How an update flows
 //!
 //! 1. Your root function (`app`) returns an [`element::Element`] tree built with builders.
-//! 2. [`Cx::use_signal`] and dynamic [`Text::new`] closures subscribe to reactive state.
+//! 2. [`Cx::state`] and dynamic [`Text::new`] closures subscribe to reactive state.
 //! 3. When state changes, the runtime diffs the previous tree against the new one and emits patches.
 //! 4. The platform layer applies patches to a retained tree, runs layout (Taffy), then paints (Vello).
 //!
 //! # Keys and lists
 //!
-//! Give stable [`.key(id)`](Column::key) values to siblings that are inserted, removed, or reordered
+//! Give stable [`.key(id)`](ColumnView::key) values to siblings that are inserted, removed, or reordered
 //! (see the `keys` example). Without keys, children are reconciled by index only.
 //!
 //! # Components
@@ -64,25 +64,28 @@
 
 pub mod prelude;
 
+pub use lemon_core::widget;
 pub use lemon_core::{
     animation, asset, children, debug, diff, element, font, layout, lemon_trace, paint, retained,
     runtime, theme,
 };
-pub use lemon_core::{host, ui};
+pub use lemon_core::{host, input, ui};
 pub use lemon_desktop::platform;
-pub use lemon_ui::widget;
 
 pub use animation::{
     animation_frame_signal, request_animation_frame, AnimRegistry, AnimSlot, AnimationConfig,
     AnimationHandle, Easing,
 };
 pub use asset::ImageHandle;
-pub use element::builders::{Column, Component, Row, Text, View};
+pub use element::builders::{Column, ColumnView, Component, Row, RowView, Text, View};
 pub use font::{register_font_bytes, register_font_path, FontRegistrationError};
 pub use widget::{
-    Button, Image, Scroll, ScrollStyle, Select, SelectStyle, Slider, SliderStyle, TextFieldState,
-    TextInput, TextInputStyle,
+    Button, Image, Scroll, ScrollStyle, SecureField, Select, SelectStyle, Slider, SliderStyle,
+    TextField, TextFieldState, TextFieldStyle,
 };
+
+#[allow(deprecated)]
+pub use crate::widget::{TextInput, TextInputStyle};
 
 /// Deprecated alias for [`View`]; use [`View`] in new code.
 #[deprecated(
@@ -92,12 +95,15 @@ pub use widget::{
 pub use element::builders::View as Box_;
 
 pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
-pub use element::style::{BoxShadow, Color, LinearGradient, Overflow, StyleProps};
+pub use element::style::{
+    BoxShadow, Color, Distribution, LinearGradient, Overflow, Placement, StyleProps,
+};
 pub use layout::{
     layout_pass, layout_pass_if_dirty, measure_element_height,
     measure_element_height_with_font_context, scroll_content_max_offset, sync_scroll_layout_max,
     LayoutMap, LayoutRect, Viewport,
 };
+pub use lemon_core::State;
 pub use paint::{paint_pass, PaintStats};
 pub use platform::{
     run, run_with_fonts, run_with_theme, run_with_theme_and_fonts, AppState, WindowConfig,
@@ -108,11 +114,13 @@ pub use runtime::cx::{Cx, OpenWindowParams};
 pub use runtime::signal::Signal;
 pub use runtime::Runtime;
 pub use theme::{
-    current_theme, set_active_theme, ColorTokens, RadiusTokens, SpacingTokens, Theme,
+    current_theme, set_active_theme, ColorTokens, RadiusTokens, SpacingTokens, Theme, ThemePair,
     TypographyTokens, WidgetChromeTokens,
 };
 
 pub use debug::Category as DebugCategory;
+
+pub use lemon_core::element::decoration::Decorate;
 
 #[cfg(test)]
 mod tests {
@@ -148,7 +156,7 @@ mod tests {
         let mut rt = Runtime::new();
         rt.mount(move |_cx| {
             let c2 = c.clone();
-            Column::new()
+            ColumnView::new()
                 .child(Text::new(move || format!("Count: {}", c2.get())))
                 .into_element()
         });
@@ -182,7 +190,7 @@ mod tests {
         let mut rt = Runtime::new();
         rt.mount(move |_cx| {
             let visible = s.get();
-            let mut col = Column::new();
+            let mut col = ColumnView::new();
             if visible {
                 col = col.child(Text::new("visible"));
             }
@@ -223,7 +231,7 @@ mod tests {
         rt.mount(move |_cx| {
             let n2 = n.clone();
             let a2 = a.clone();
-            Column::new()
+            ColumnView::new()
                 .child(Text::new(move || n2.get()))
                 .child(Text::new(move || a2.get().to_string()))
                 .into_element()
@@ -252,9 +260,9 @@ mod tests {
         let mut rt = Runtime::new();
         rt.mount(move |_cx| {
             let t2 = t.clone();
-            Column::new()
+            ColumnView::new()
                 .width(120.0)
-                .child(Text::new(move || t2.get()).font_size(16.0))
+                .child(Text::new(move || t2.get()).size(16.0))
                 .into_element()
         });
 
@@ -266,7 +274,7 @@ mod tests {
         };
 
         let map_before = layout_pass(&mut tree, viewport).unwrap();
-        let text_id = tree.root.as_ref().unwrap().children[0].taffy_id.unwrap();
+        let text_id = tree.root().unwrap().children[0].taffy_id.unwrap();
         let height_before = map_before.get(text_id).unwrap().height;
 
         text.set("Line one\nLine two\nLine three".to_owned());
@@ -280,7 +288,7 @@ mod tests {
         );
         tree.apply_patches(patches).unwrap();
 
-        let updated_content = &tree.root.as_ref().unwrap().children[0]
+        let updated_content = &tree.root().unwrap().children[0]
             .text
             .as_ref()
             .unwrap()
@@ -290,14 +298,14 @@ mod tests {
             "retained text not updated: {updated_content:?}"
         );
         assert!(
-            tree.root.as_ref().unwrap().children[0]
+            tree.root().unwrap().children[0]
                 .text
                 .as_ref()
                 .unwrap()
                 .needs_layout
         );
 
-        assert!(tree.layout_dirty);
+        assert!(tree.layout_dirty());
         let map_after = layout_pass_if_dirty(&mut tree, viewport)
             .unwrap()
             .expect("layout should run after patches");
@@ -307,9 +315,9 @@ mod tests {
             height_after > height_before,
             "height should grow after longer text: before={height_before} after={height_after}"
         );
-        assert!(!tree.layout_dirty);
+        assert!(!tree.layout_dirty());
         assert!(
-            !tree.root.as_ref().unwrap().children[0]
+            !tree.root().unwrap().children[0]
                 .text
                 .as_ref()
                 .unwrap()
@@ -320,10 +328,10 @@ mod tests {
     #[test]
     fn counter_demo_paints_text_and_button_without_explicit_styles() {
         let mut tree = RetainedTree::mount(
-            Column::new()
-                .gap(12.0)
-                .padding(24.0)
-                .child(Text::new("0").font_size(24.0))
+            ColumnView::new()
+                .spacing(12.0)
+                .inset(24.0)
+                .child(Text::new("0").size(24.0))
                 .child(RawButton::new("Incrementar"))
                 .into_element(),
         )
@@ -353,15 +361,15 @@ mod tests {
         let mut rt = Runtime::new();
         rt.mount(move |_cx| {
             let c2 = c.clone();
-            Column::new()
+            ColumnView::new()
                 .width(200.0)
-                .gap(8.0)
-                .child(Text::new(move || format!("Count: {}", c2.get())).font_size(16.0))
+                .spacing(8.0)
+                .child(Text::new(move || format!("Count: {}", c2.get())).size(16.0))
                 .child(
                     RawButton::new("Increment")
                         .width(120.0)
                         .height(40.0)
-                        .background(Color::rgb8(50, 100, 150)),
+                        .surface(Color::rgb8(50, 100, 150)),
                 )
                 .into_element()
         });
@@ -390,12 +398,12 @@ mod tests {
         use crate::prelude::*;
 
         fn _app(cx: &Cx) -> Element {
-            let n = cx.use_signal(0);
+            let n = cx.state(0);
             let n2 = n.clone();
             let anim: AnimationHandle =
-                cx.use_animation(AnimationConfig::default().easing(Easing::Linear));
+                cx.motion(AnimationConfig::default().easing(Easing::Linear));
             anim.reset();
-            Column::new()
+            ColumnView::new()
                 .children(children![Text::new(move || n2.get().to_string())])
                 .into_element()
         }

@@ -62,7 +62,7 @@ impl Effect {
         Effect { _inner: inner }
     }
 
-    /// Run the effect body once (used for deferred `use_effect` hooks after first paint).
+    /// Run the effect body once (used for deferred `Cx::watch` callbacks after first paint).
     pub fn run_deferred_initial(&self) {
         if self._inner.is_running.get() {
             return;

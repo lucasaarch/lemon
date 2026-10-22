@@ -8,12 +8,12 @@ use crate::{
         style::{Align, Color, ColorSource, Justify},
         Element,
     },
-    Cx, Signal,
+    Cx, State,
 };
 
 /// Theme-aware button widget for app-facing examples and widgets.
 ///
-/// By default this button reads the active theme through [`Cx::use_theme`] and applies:
+/// By default this button reads the active theme through [`Cx::theme`] and applies:
 ///
 /// - `theme.colors.accent` as the background
 /// - `theme.spacing.sm` as uniform padding
@@ -24,8 +24,8 @@ use crate::{
 /// # Examples
 ///
 /// ```no_run
-/// use lemon_ui::{Cx, element::Element};
-/// use lemon_ui::widget::Button;
+/// use lemon_core::{Cx, element::Element};
+/// use lemon_core::widget::Button;
 ///
 /// fn my_view(cx: &Cx) -> Element {
 ///     Button::new(cx, "Save")
@@ -47,15 +47,15 @@ pub struct Button {
     disabled_background: Color,
     text_color: Color,
     disabled_text_color: Color,
-    hovered: Signal<bool>,
-    pressed: Signal<bool>,
+    hovered: State<bool>,
+    pressed: State<bool>,
     disabled: bool,
 }
 
 impl Button {
     /// Creates a new button whose default styling comes from the active theme.
     pub fn new(cx: &Cx, label: impl Into<TextContent>) -> Self {
-        let theme = cx.use_theme();
+        let theme = cx.theme();
         Self {
             label: label.into(),
             on_click: None,
@@ -70,34 +70,58 @@ impl Button {
             disabled_background: theme.colors.surface,
             text_color: theme.colors.on_accent,
             disabled_text_color: theme.colors.foreground_disabled,
-            hovered: cx.use_signal(false),
-            pressed: cx.use_signal(false),
+            hovered: cx.state(false),
+            pressed: cx.state(false),
             disabled: false,
         }
     }
 
     /// Called when the button is clicked (after hit-testing).
-    pub fn on_click(mut self, f: impl Fn() + 'static) -> Self {
+    pub fn action(mut self, f: impl Fn() + 'static) -> Self {
         self.on_click = Some(Rc::new(f));
         self
     }
 
+    /// Deprecated name for [`action`](Self::action).
+    #[deprecated(note = "use .action(...) instead")]
+    pub fn on_click(self, f: impl Fn() + 'static) -> Self {
+        self.action(f)
+    }
+
     /// Fill color behind the label ([`Color`] or reactive [`ColorSource`]).
-    pub fn background(mut self, c: impl Into<ColorSource>) -> Self {
+    pub fn surface(mut self, c: impl Into<ColorSource>) -> Self {
         self.background = Some(c.into());
         self
     }
 
+    /// Deprecated name for [`surface`](Self::surface).
+    #[deprecated(note = "use .surface(...) instead")]
+    pub fn background(self, c: impl Into<ColorSource>) -> Self {
+        self.surface(c)
+    }
+
     /// Uniform padding on all sides, in logical points.
-    pub fn padding(mut self, v: f32) -> Self {
+    pub fn inset(mut self, v: f32) -> Self {
         self.padding = v;
         self
     }
 
+    /// Deprecated name for [`inset`](Self::inset).
+    #[deprecated(note = "use .inset(...) instead")]
+    pub fn padding(self, v: f32) -> Self {
+        self.inset(v)
+    }
+
     /// Corner radius in logical points.
-    pub fn radius(mut self, r: f32) -> Self {
+    pub fn rounding(mut self, r: f32) -> Self {
         self.radius = r;
         self
+    }
+
+    /// Deprecated name for [`rounding`](Self::rounding).
+    #[deprecated(note = "use .rounding(...) instead")]
+    pub fn radius(self, r: f32) -> Self {
+        self.rounding(r)
     }
 
     /// Fixed width in logical points.
@@ -151,22 +175,17 @@ impl Button {
         };
 
         let mut button = View::new()
-            .padding(self.padding)
-            .background(background)
-            .radius(self.radius)
-            .align_items(Align::Center)
-            .justify_content(Justify::Center)
+            .inset(self.padding)
+            .surface(background)
+            .rounding(self.radius)
+            .align(Align::Center)
+            .distribute(Justify::Center)
             .cursor(if disabled {
                 Cursor::NotAllowed
             } else {
                 Cursor::Pointer
             })
-            .child(
-                Text::new(label)
-                    .font_size(16.0)
-                    .weight(500)
-                    .color(text_color),
-            );
+            .child(Text::new(label).size(16.0).weight(500).color(text_color));
 
         if let Some(width) = self.width {
             button = button.width(width);
@@ -191,7 +210,7 @@ impl Button {
                 .on_pointer_up(move |_, _| pressed_up.set(false));
 
             if let Some(on_click) = self.on_click {
-                button = button.on_click(move || on_click());
+                button = button.action(move || on_click());
             }
         }
 
@@ -300,7 +319,7 @@ mod tests {
         let clicked = std::rc::Rc::new(std::cell::Cell::new(false));
         let clicked_flag = clicked.clone();
         let Element::View(button) = Button::new(&cx, "Save")
-            .on_click(move || clicked_flag.set(true))
+            .action(move || clicked_flag.set(true))
             .disabled(true)
             .into_element()
         else {

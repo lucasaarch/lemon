@@ -10,8 +10,8 @@
 //!   not yet reached its target.  The platform will call `request_redraw` and advance the frame
 //!   signal on the next `about_to_wait`.
 //!
-//! Both primitives are thread-local and single-window.  Most widgets should prefer
-//! [`Cx::use_animation`](crate::Cx::use_animation), which wraps these primitives in a stable
+//! Both primitives use the active host context; separate applications have independent clocks.  Most widgets should prefer
+//! [`Cx::motion`](crate::Cx::motion), which wraps these primitives in a stable
 //! hook-backed [`AnimationHandle`].
 
 use std::cell::{Cell, RefCell};
@@ -19,12 +19,6 @@ use std::rc::{Rc, Weak};
 use std::time::{Duration, Instant};
 
 use crate::runtime::signal::Signal;
-
-thread_local! {
-    static FRAME_SIGNAL: RefCell<Option<Signal<u32>>> = const { RefCell::new(None) };
-    static PENDING: Cell<bool> = const { Cell::new(false) };
-    static SHARED_REGISTRY: RefCell<Option<AnimRegistry>> = const { RefCell::new(None) };
-}
 
 /// Easing curve applied to an animation's normalized progress.
 ///
@@ -125,7 +119,7 @@ impl Default for AnimationConfig {
 
 /// Stored state for a single animation registered with an [`AnimRegistry`].
 ///
-/// Most app code should create slots through [`Cx::use_animation`](crate::Cx::use_animation) or
+/// Most app code should create slots through [`Cx::motion`](crate::Cx::motion) or
 /// [`AnimRegistry::register`]. The slot stores raw normalized progress; callers read eased
 /// progress through [`AnimationHandle::progress`].
 ///
@@ -202,15 +196,17 @@ impl AnimSlot {
 /// use lemon_core::prelude::*;
 ///
 /// fn view(cx: &Cx) -> Element {
-///     let fade = cx.use_animation(AnimationConfig::default());
+///     let fade = cx.motion(AnimationConfig::default());
 ///     fade.play();
 ///     Text::new(move || format!("{:.2}", fade.progress())).into_element()
 /// }
 /// ```
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct AnimationHandle {
     slot: Rc<RefCell<AnimSlot>>,
     active_slots: Rc<RefCell<Vec<Weak<RefCell<AnimSlot>>>>>,
+    frame: Signal<u32>,
+    pending: Rc<Cell<bool>>,
 }
 
 impl AnimationHandle {
@@ -231,8 +227,8 @@ impl AnimationHandle {
             (slot.eased_progress(), slot.is_playing())
         };
         if playing {
-            animation_frame_signal().get();
-            request_animation_frame();
+            self.frame.get();
+            self.pending.set(true);
         }
         progress
     }
@@ -252,7 +248,7 @@ impl AnimationHandle {
         slot.started_at = Some(now.checked_sub(elapsed).unwrap_or(now));
         drop(slot);
         self.mark_active();
-        request_animation_frame();
+        self.pending.set(true);
     }
 
     /// Stops the animation and returns progress to `0.0`.
@@ -261,6 +257,7 @@ impl AnimationHandle {
         slot.raw_progress = 0.0;
         slot.started_at = None;
         drop(slot);
+        self.pending.set(true);
         self.active_slots.borrow_mut().retain(|active| {
             active
                 .upgrade()
@@ -283,10 +280,10 @@ impl AnimationHandle {
     }
 }
 
-/// Registry that owns animation slots for the current thread.
+/// Registry that owns animation slots and frame requests for one host.
 ///
-/// [`shared`](Self::shared) returns the thread-local registry used by
-/// [`Cx::use_animation`](crate::Cx::use_animation). Hosts with custom lifetimes can create a
+/// [`shared`](Self::shared) returns the active host registry used by
+/// [`Cx::motion`](crate::Cx::motion). Hosts with custom lifetimes can create a
 /// separate registry with [`default`](Self::default) and register slots manually.
 ///
 /// # Examples
@@ -299,19 +296,39 @@ impl AnimationHandle {
 /// handle.play();
 /// assert!(handle.is_playing());
 /// ```
-#[derive(Clone, Debug, Default)]
+#[derive(Clone)]
 pub struct AnimRegistry {
     slots: Rc<RefCell<Vec<Weak<RefCell<AnimSlot>>>>>,
     active_slots: Rc<RefCell<Vec<Weak<RefCell<AnimSlot>>>>>,
+    frame: Signal<u32>,
+    pending: Rc<Cell<bool>>,
 }
 
 impl AnimRegistry {
-    /// Returns the thread-local shared animation registry.
+    /// Returns the animation registry of the active host context.
+    /// Outside a host scope, this uses the compatibility fallback context.
     pub fn shared() -> Self {
-        SHARED_REGISTRY.with(|cell| {
-            let mut registry = cell.borrow_mut();
-            registry.get_or_insert_with(Self::default).clone()
-        })
+        crate::host::HostContext::current().animations()
+    }
+
+    /// Returns the frame signal for this registry.
+    pub fn frame_signal(&self) -> Signal<u32> {
+        self.frame.clone()
+    }
+
+    /// Requests a frame from this registry's host.
+    pub fn request_frame(&self) {
+        self.pending.set(true);
+    }
+
+    /// Clears and returns this registry's pending frame request.
+    pub fn take_pending(&self) -> bool {
+        self.pending.replace(false)
+    }
+
+    /// Advances this registry's frame signal, notifying its subscribers.
+    pub fn tick_frame(&self) {
+        self.frame.update(|frame| *frame = frame.wrapping_add(1));
     }
 
     /// Registers `slot` and returns a handle that controls it.
@@ -321,6 +338,8 @@ impl AnimRegistry {
         AnimationHandle {
             slot,
             active_slots: self.active_slots.clone(),
+            frame: self.frame.clone(),
+            pending: self.pending.clone(),
         }
     }
 
@@ -358,7 +377,7 @@ impl AnimRegistry {
     }
 }
 
-/// Returns the shared frame-tick [`Signal<u32>`].
+/// Returns the active host's frame-tick [`Signal<u32>`].
 ///
 /// The platform increments this signal once per frame while animation is active.  Call this from
 /// `into_element` and read the returned signal to subscribe the current component to frame events:
@@ -370,13 +389,7 @@ impl AnimRegistry {
 /// }
 /// ```
 pub fn animation_frame_signal() -> Signal<u32> {
-    FRAME_SIGNAL.with(|cell| {
-        let mut guard = cell.borrow_mut();
-        if guard.is_none() {
-            *guard = Some(Signal::new(0u32));
-        }
-        guard.as_ref().unwrap().clone()
-    })
+    AnimRegistry::shared().frame_signal()
 }
 
 /// Requests that the platform render one more frame and advance the animation clock.
@@ -385,26 +398,43 @@ pub fn animation_frame_signal() -> Signal<u32> {
 /// will respond by incrementing [`animation_frame_signal`] and calling `request_redraw`, which
 /// drives the reactive re-render needed to advance the interpolation.
 pub fn request_animation_frame() {
-    PENDING.with(|f| f.set(true));
+    AnimRegistry::shared().request_frame();
 }
 
-/// Clears the pending flag and returns its previous value.
+/// Clears the active host's pending flag and returns its previous value.
 pub fn take_animation_pending() -> bool {
-    PENDING.with(|f| {
-        let was = f.get();
-        f.set(false);
-        was
-    })
+    AnimRegistry::shared().take_pending()
 }
 
-/// Increments the frame signal by one, triggering a reactive re-render in any component that
-/// subscribed to it via [`animation_frame_signal`].
+/// Advances the active host's frame signal and notifies subscribers.
 pub fn tick_animation_frame() {
-    FRAME_SIGNAL.with(|cell| {
-        if let Some(signal) = cell.borrow().as_ref() {
-            signal.update(|v| *v = v.wrapping_add(1));
+    AnimRegistry::shared().tick_frame();
+}
+
+impl Default for AnimRegistry {
+    fn default() -> Self {
+        Self {
+            slots: Rc::default(),
+            active_slots: Rc::default(),
+            frame: Signal::new(0),
+            pending: Rc::new(Cell::new(false)),
         }
-    });
+    }
+}
+
+impl std::fmt::Debug for AnimationHandle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AnimationHandle")
+            .field("slot", &self.slot)
+            .finish_non_exhaustive()
+    }
+}
+impl std::fmt::Debug for AnimRegistry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AnimRegistry")
+            .field("slots", &self.live_slots())
+            .finish_non_exhaustive()
+    }
 }
 
 #[cfg(test)]

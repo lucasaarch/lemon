@@ -1,11 +1,11 @@
 use crate::{
     element::{
-        builders::{Column, Text, View},
+        builders::{ColumnView, Text, View},
         events::Cursor,
         style::{Align, Color, ColorSource, Justify},
         Element,
     },
-    Cx, Signal,
+    Cx, State,
 };
 
 /// Per-widget visual overrides for [`Select`].
@@ -30,27 +30,51 @@ impl SelectStyle {
     }
 
     /// Overrides trigger padding in logical points.
-    pub fn trigger_padding(mut self, value: f32) -> Self {
+    pub fn trigger_inset(mut self, value: f32) -> Self {
         self.trigger_padding = Some(value);
         self
     }
 
+    /// Deprecated name for [`trigger_inset`](Self::trigger_inset).
+    #[deprecated(note = "use .trigger_inset(...) instead")]
+    pub fn trigger_padding(self, value: f32) -> Self {
+        self.trigger_inset(value)
+    }
+
     /// Overrides trigger background color.
-    pub fn trigger_background(mut self, color: Color) -> Self {
+    pub fn trigger_surface(mut self, color: Color) -> Self {
         self.trigger_background = Some(color);
         self
     }
 
+    /// Deprecated name for [`trigger_surface`](Self::trigger_surface).
+    #[deprecated(note = "use .trigger_surface(...) instead")]
+    pub fn trigger_background(self, color: Color) -> Self {
+        self.trigger_surface(color)
+    }
+
     /// Overrides trigger corner radius in logical points.
-    pub fn trigger_radius(mut self, value: f32) -> Self {
+    pub fn trigger_rounding(mut self, value: f32) -> Self {
         self.trigger_radius = Some(value);
         self
     }
 
+    /// Deprecated name for [`trigger_rounding`](Self::trigger_rounding).
+    #[deprecated(note = "use .trigger_rounding(...) instead")]
+    pub fn trigger_radius(self, value: f32) -> Self {
+        self.trigger_rounding(value)
+    }
+
     /// Overrides dropdown background color.
-    pub fn dropdown_background(mut self, color: Color) -> Self {
+    pub fn dropdown_surface(mut self, color: Color) -> Self {
         self.dropdown_background = Some(color);
         self
+    }
+
+    /// Deprecated name for [`dropdown_surface`](Self::dropdown_surface).
+    #[deprecated(note = "use .dropdown_surface(...) instead")]
+    pub fn dropdown_background(self, color: Color) -> Self {
+        self.dropdown_surface(color)
     }
 
     /// Overrides dropdown border color.
@@ -60,15 +84,27 @@ impl SelectStyle {
     }
 
     /// Overrides dropdown corner radius in logical points.
-    pub fn dropdown_radius(mut self, value: f32) -> Self {
+    pub fn dropdown_rounding(mut self, value: f32) -> Self {
         self.dropdown_radius = Some(value);
         self
     }
 
+    /// Deprecated name for [`dropdown_rounding`](Self::dropdown_rounding).
+    #[deprecated(note = "use .dropdown_rounding(...) instead")]
+    pub fn dropdown_radius(self, value: f32) -> Self {
+        self.dropdown_rounding(value)
+    }
+
     /// Overrides option-item padding in logical points.
-    pub fn item_padding(mut self, value: f32) -> Self {
+    pub fn item_inset(mut self, value: f32) -> Self {
         self.item_padding = Some(value);
         self
+    }
+
+    /// Deprecated name for [`item_inset`](Self::item_inset).
+    #[deprecated(note = "use .item_inset(...) instead")]
+    pub fn item_padding(self, value: f32) -> Self {
+        self.item_inset(value)
     }
 
     /// Overrides dropdown option label color.
@@ -92,14 +128,14 @@ impl SelectStyle {
 /// # Examples
 ///
 /// ```no_run
-/// use lemon_ui::{Color, Cx, element::Element};
-/// use lemon_ui::widget::{Select, SelectStyle};
+/// use lemon_core::{Color, Cx, element::Element};
+/// use lemon_core::widget::{Select, SelectStyle};
 ///
 /// #[derive(Clone, PartialEq)]
 /// enum Size { Small, Medium, Large }
 ///
 /// fn my_view(cx: &Cx) -> Element {
-///     let size = cx.use_signal(None::<Size>);
+///     let size = cx.state(None::<Size>);
 ///     Select::new(
 ///         cx,
 ///         size,
@@ -109,17 +145,17 @@ impl SelectStyle {
 ///             (Size::Large, "Large".to_string()),
 ///         ],
 ///     )
-///     .style(SelectStyle::default().dropdown_background(Color::rgb8(30, 30, 40)))
+///     .style(SelectStyle::default().dropdown_surface(Color::rgb8(30, 30, 40)))
 ///     .placeholder("Choose a size")
 ///     .width(180.0)
 ///     .into_element()
 /// }
 /// ```
 pub struct Select<T> {
-    value: Signal<Option<T>>,
-    open: Signal<bool>,
-    trigger_hovered: Signal<bool>,
-    trigger_pressed: Signal<bool>,
+    value: State<Option<T>>,
+    open: State<bool>,
+    trigger_hovered: State<bool>,
+    trigger_pressed: State<bool>,
     options: Vec<(T, String)>,
     width: Option<f32>,
     placeholder: String,
@@ -146,8 +182,8 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
     ///
     /// - `value` — caller-owned signal updated with the chosen option when the user selects one.
     /// - `options` — ordered list of `(value, label)` pairs shown as choices.
-    pub fn new(cx: &Cx, value: Signal<Option<T>>, options: Vec<(T, String)>) -> Self {
-        Self::with_open(cx, value, cx.use_signal(false), options)
+    pub fn new(cx: &Cx, value: State<Option<T>>, options: Vec<(T, String)>) -> Self {
+        Self::with_open(cx, value, cx.state(false), options)
     }
 
     /// Creates a `Select` with a caller-supplied open signal.
@@ -155,19 +191,19 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
     /// Useful when you need to control or observe the open state externally (e.g. in tests).
     ///
     /// `cx` supplies the active theme so the widget can derive its default trigger and dropdown
-    /// styling from [`Cx::use_theme`](crate::Cx::use_theme).
+    /// styling from [`Cx::theme`](crate::Cx::theme).
     pub fn with_open(
         cx: &Cx,
-        value: Signal<Option<T>>,
-        open: Signal<bool>,
+        value: State<Option<T>>,
+        open: State<bool>,
         options: Vec<(T, String)>,
     ) -> Self {
-        let theme = cx.use_theme();
+        let theme = cx.theme();
         Self {
             value,
             open,
-            trigger_hovered: cx.use_signal(false),
-            trigger_pressed: cx.use_signal(false),
+            trigger_hovered: cx.state(false),
+            trigger_pressed: cx.state(false),
             options,
             width: None,
             placeholder: "Select…".to_string(),
@@ -217,15 +253,27 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
     }
 
     /// Overrides trigger background color for this widget.
-    pub fn trigger_background(mut self, color: Color) -> Self {
+    pub fn trigger_surface(mut self, color: Color) -> Self {
         self.style.trigger_background = Some(color);
         self
     }
 
+    /// Deprecated name for [`trigger_surface`](Self::trigger_surface).
+    #[deprecated(note = "use .trigger_surface(...) instead")]
+    pub fn trigger_background(self, color: Color) -> Self {
+        self.trigger_surface(color)
+    }
+
     /// Overrides dropdown background color for this widget.
-    pub fn dropdown_background(mut self, color: Color) -> Self {
+    pub fn dropdown_surface(mut self, color: Color) -> Self {
         self.style.dropdown_background = Some(color);
         self
+    }
+
+    /// Deprecated name for [`dropdown_surface`](Self::dropdown_surface).
+    #[deprecated(note = "use .dropdown_surface(...) instead")]
+    pub fn dropdown_background(self, color: Color) -> Self {
+        self.dropdown_surface(color)
     }
 
     /// Overrides dropdown border color for this widget.
@@ -308,12 +356,12 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
                 })));
 
         let mut trigger = View::new()
-            .padding(trigger_padding)
-            .background(trigger_background)
-            .radius(trigger_radius)
+            .inset(trigger_padding)
+            .surface(trigger_background)
+            .rounding(trigger_radius)
             .height(trigger_height)
-            .align_items(Align::Center)
-            .justify_content(Justify::Center)
+            .align(Align::Center)
+            .distribute(Justify::Center)
             .cursor(if disabled {
                 Cursor::NotAllowed
             } else {
@@ -321,7 +369,7 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
             })
             .child(
                 Text::new(format!("{trigger_label} ▾"))
-                    .font_size(14.0)
+                    .size(14.0)
                     .color(trigger_text_color),
             );
         if let Some(w) = width {
@@ -335,7 +383,7 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
             let pressed_up = trigger_pressed.clone();
             let pressed_leave = trigger_pressed.clone();
             trigger = trigger
-                .on_click(move || {
+                .action(move || {
                     open_for_trigger.update(|b| *b = !*b);
                 })
                 .on_hover_enter(move || hovered_enter.set(true))
@@ -348,7 +396,7 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
         }
 
         // Outer container: on_click_outside closes the dropdown when the user clicks elsewhere.
-        let mut container = Column::new();
+        let mut container = ColumnView::new();
         if !disabled {
             let open_for_outside = open.clone();
             container = container.on_click_outside(move || open_for_outside.set(false));
@@ -361,14 +409,14 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
         if is_open {
             // Dropdown list: absolutely positioned so it overlays content without shifting
             // siblings, and z_index=10 so it paints above them.
-            let mut dropdown = Column::new()
-                .z_index(10)
-                .absolute()
+            let mut dropdown = ColumnView::new()
+                .layer(10)
+                .floating()
                 .top(trigger_height)
                 .left(0.0)
-                .background(dropdown_background)
+                .surface(dropdown_background)
                 .border(dropdown_border, 1.0)
-                .radius(dropdown_radius);
+                .rounding(dropdown_radius);
             if let Some(w) = width {
                 dropdown = dropdown.width(w);
             }
@@ -377,11 +425,11 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
                 let open_c = open.clone();
                 let val_c = value.clone();
                 let mut item = View::new()
-                    .padding(item_padding)
+                    .inset(item_padding)
                     .cursor(Cursor::Pointer)
-                    .child(Text::new(label).font_size(14.0).color(item_text_color));
+                    .child(Text::new(label).size(14.0).color(item_text_color));
                 if !disabled {
-                    item = item.on_click(move || {
+                    item = item.action(move || {
                         val_c.set(Some(opt.clone()));
                         open_c.set(false);
                     });
@@ -436,8 +484,8 @@ mod tests {
 
     #[test]
     fn select_closed_shows_placeholder_in_trigger() {
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(false);
+        let value = State::new(None::<Color>);
+        let open = State::new(false);
         let cx = Cx::new();
         let el = Select::with_open(&cx, value, open, make_options()).into_element();
 
@@ -461,8 +509,8 @@ mod tests {
 
     #[test]
     fn select_closed_shows_selected_label_in_trigger() {
-        let value = Signal::new(Some(Color::Green));
-        let open = Signal::new(false);
+        let value = State::new(Some(Color::Green));
+        let open = State::new(false);
         let cx = Cx::new();
         let el = Select::with_open(&cx, value, open, make_options()).into_element();
 
@@ -484,8 +532,8 @@ mod tests {
 
     #[test]
     fn select_open_shows_options_as_children() {
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(true);
+        let value = State::new(None::<Color>);
+        let open = State::new(true);
         let cx = Cx::new();
         let el = Select::with_open(&cx, value, open, make_options()).into_element();
 
@@ -509,10 +557,10 @@ mod tests {
     fn select_open_dropdown_lays_out_below_trigger() {
         use crate::RetainedTree;
 
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(true);
+        let value = State::new(None::<Color>);
+        let open = State::new(true);
         let cx = Cx::new();
-        let root = Column::new()
+        let root = ColumnView::new()
             .child(
                 Select::with_open(&cx, value, open, make_options())
                     .placeholder("Pick")
@@ -554,8 +602,8 @@ mod tests {
     fn mount_open_select_root_dropdown_has_nonzero_height() {
         use crate::RetainedTree;
 
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(true);
+        let value = State::new(None::<Color>);
+        let open = State::new(true);
         let cx = Cx::new();
         let el = Select::with_open(&cx, value, open, make_options())
             .width(180.0)
@@ -579,8 +627,8 @@ mod tests {
         use crate::diff::{diff, NodePath};
         use crate::RetainedTree;
 
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(false);
+        let value = State::new(None::<Color>);
+        let open = State::new(false);
         let cx = Cx::new();
         let closed = Select::with_open(&cx, value.clone(), open.clone(), make_options())
             .width(180.0)
@@ -616,8 +664,8 @@ mod tests {
     fn select_open_dropdown_retains_background_paint() {
         use crate::RetainedTree;
 
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(true);
+        let value = State::new(None::<Color>);
+        let open = State::new(true);
         let cx = Cx::new();
         let root = Select::with_open(&cx, value, open, make_options())
             .width(180.0)
@@ -641,8 +689,8 @@ mod tests {
 
     #[test]
     fn select_trigger_click_toggles_open_state() {
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(false);
+        let value = State::new(None::<Color>);
+        let open = State::new(false);
         let cx = Cx::new();
         let el = Select::with_open(&cx, value, open.clone(), make_options()).into_element();
 
@@ -663,8 +711,8 @@ mod tests {
 
     #[test]
     fn select_option_click_updates_value_and_closes() {
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(true);
+        let value = State::new(None::<Color>);
+        let open = State::new(true);
         let cx = Cx::new();
         let el = Select::with_open(&cx, value.clone(), open.clone(), make_options()).into_element();
 
@@ -694,8 +742,8 @@ mod tests {
 
     #[test]
     fn select_click_outside_closes_dropdown() {
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(true);
+        let value = State::new(None::<Color>);
+        let open = State::new(true);
         let cx = Cx::new();
         let el = Select::with_open(&cx, value, open.clone(), make_options()).into_element();
 
@@ -713,8 +761,8 @@ mod tests {
 
     #[test]
     fn select_custom_placeholder_appears_in_trigger() {
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(false);
+        let value = State::new(None::<Color>);
+        let open = State::new(false);
         let cx = Cx::new();
         let el = Select::with_open(&cx, value, open, make_options())
             .placeholder("Pick a color")
@@ -754,8 +802,8 @@ mod tests {
         set_active_theme(custom.clone());
 
         let cx = Cx::new();
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(true);
+        let value = State::new(None::<Color>);
+        let open = State::new(true);
         let Element::Column(root) =
             Select::with_open(&cx, value, open, make_options()).into_element()
         else {
@@ -807,13 +855,13 @@ mod tests {
         set_active_theme(custom);
 
         let cx = Cx::new();
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(true);
+        let value = State::new(None::<Color>);
+        let open = State::new(true);
         let Element::Column(root) = Select::with_open(&cx, value, open, make_options())
             .style(
                 SelectStyle::default()
-                    .trigger_background(crate::Color::rgb8(1, 2, 3))
-                    .dropdown_background(crate::Color::rgb8(4, 5, 6))
+                    .trigger_surface(crate::Color::rgb8(1, 2, 3))
+                    .dropdown_surface(crate::Color::rgb8(4, 5, 6))
                     .dropdown_border(crate::Color::rgb8(7, 8, 9)),
             )
             .into_element()
@@ -854,8 +902,8 @@ mod tests {
         custom.colors.accent_pressed = crate::Color::rgb8(7, 8, 9);
         crate::set_active_theme(custom.clone());
 
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(false);
+        let value = State::new(None::<Color>);
+        let open = State::new(false);
         let cx = Cx::new();
         let Element::Column(root) =
             Select::with_open(&cx, value, open, make_options()).into_element()
@@ -903,8 +951,8 @@ mod tests {
 
     #[test]
     fn disabled_select_has_no_interaction_handlers() {
-        let value = Signal::new(None::<Color>);
-        let open = Signal::new(false);
+        let value = State::new(None::<Color>);
+        let open = State::new(false);
         let cx = Cx::new();
         let Element::Column(root) = Select::with_open(&cx, value, open.clone(), make_options())
             .disabled(true)

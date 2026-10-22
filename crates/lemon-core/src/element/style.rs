@@ -60,6 +60,124 @@ pub enum Justify {
     SpaceEvenly,
 }
 
+/// Position of a container's children within its available space.
+///
+/// Positions use the visible horizontal/vertical directions, independent of whether
+/// the container is a [`RowView`](crate::RowView), [`ColumnView`](crate::ColumnView), or [`View`](crate::View).
+/// Placement does not change the container's size; use `.fill()` to request parent space.
+///
+/// ```
+/// use lemon_core::{ColumnView, Placement, Text};
+/// let panel = ColumnView::new().fill().place(Placement::BottomRight).child(Text::new("Status"));
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Placement {
+    /// Upper-left corner.
+    TopLeft,
+    /// Top edge, horizontally centered.
+    Top,
+    /// Upper-right corner.
+    TopRight,
+    /// Left edge, vertically centered.
+    Left,
+    /// Centered horizontally and vertically.
+    #[default]
+    Center,
+    /// Right edge, vertically centered.
+    Right,
+    /// Lower-left corner.
+    BottomLeft,
+    /// Bottom edge, horizontally centered.
+    Bottom,
+    /// Lower-right corner.
+    BottomRight,
+}
+
+impl Placement {
+    pub(crate) fn axes(self, vertical: bool) -> (Align, Justify) {
+        let (horizontal, vertical_alignment) = match self {
+            Self::TopLeft => (0, 0),
+            Self::Top => (1, 0),
+            Self::TopRight => (2, 0),
+            Self::Left => (0, 1),
+            Self::Center => (1, 1),
+            Self::Right => (2, 1),
+            Self::BottomLeft => (0, 2),
+            Self::Bottom => (1, 2),
+            Self::BottomRight => (2, 2),
+        };
+        let (cross, main) = if vertical {
+            (horizontal, vertical_alignment)
+        } else {
+            (vertical_alignment, horizontal)
+        };
+        let align = match cross {
+            0 => Align::Start,
+            1 => Align::Center,
+            _ => Align::End,
+        };
+        let justify = match main {
+            0 => Justify::Start,
+            1 => Justify::Center,
+            _ => Justify::End,
+        };
+        (align, justify)
+    }
+}
+
+/// How children share spare space along their container's stacking direction.
+///
+/// Rows distribute horizontally; columns distribute vertically. This leaves the
+/// perpendicular alignment unchanged. Use `.place(...)` for physical positioning.
+///
+/// ```
+/// use lemon_core::{Distribution, RowView, Text};
+/// let header = RowView::new().fill_width().distribute(Distribution::Between)
+///     .child(Text::new("Left")).child(Text::new("Right"));
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Distribution {
+    /// Group children at the start of the stacking direction.
+    #[default]
+    Start,
+    /// Group children in the center.
+    Center,
+    /// Group children at the end.
+    End,
+    /// Put spare space between children, with none at the outer edges.
+    Between,
+    /// Put space around each child, with half-sized gaps at the outer edges.
+    Around,
+    /// Put equal gaps between children and at both outer edges.
+    Evenly,
+}
+
+impl From<Justify> for Distribution {
+    fn from(value: Justify) -> Self {
+        match value {
+            Justify::Start => Self::Start,
+            Justify::Center => Self::Center,
+            Justify::End => Self::End,
+            Justify::SpaceBetween => Self::Between,
+            Justify::SpaceAround => Self::Around,
+            Justify::SpaceEvenly => Self::Evenly,
+        }
+    }
+}
+
+impl From<Distribution> for Justify {
+    fn from(value: Distribution) -> Self {
+        match value {
+            Distribution::Start => Self::Start,
+            Distribution::Center => Self::Center,
+            Distribution::End => Self::End,
+            Distribution::Between => Self::SpaceBetween,
+            Distribution::Around => Self::SpaceAround,
+            Distribution::Evenly => Self::SpaceEvenly,
+        }
+    }
+}
+
 /// How children are clipped when they exceed a container’s bounds.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum Overflow {
@@ -91,7 +209,7 @@ impl CornerRadii {
 
 /// Low-level layout and interaction fields for a node.
 ///
-/// App code usually sets these through builder methods ([`Column::gap`](crate::element::builders::Column::gap), etc.)
+/// App code usually sets these through builder methods ([`ColumnView::spacing`](crate::element::builders::ColumnView::spacing), etc.)
 /// rather than constructing `StyleProps` directly.
 #[derive(Clone, Debug, PartialEq)]
 pub struct StyleProps {
@@ -101,7 +219,7 @@ pub struct StyleProps {
     pub margin: Option<Edges<f32>>,
     /// Absolute or relative inset offsets in logical points.
     ///
-    /// For nodes created with [`.absolute()`](crate::element::builders::View::absolute), these
+    /// For nodes created with [`.floating()`](crate::element::builders::View::floating), these
     /// values position the node relative to its containing flex ancestor. Use builder methods such
     /// as [`.top()`](crate::element::builders::View::top) and
     /// [`.left()`](crate::element::builders::View::left) rather than setting this field directly.
@@ -111,8 +229,8 @@ pub struct StyleProps {
     ///
     /// `column_gap` is the gap between columns (Taffy `gap.width`).
     /// `row_gap` is the gap between rows (Taffy `gap.height`).
-    /// Use the builder methods [`column_gap`](crate::element::builders::Column::column_gap) and
-    /// [`row_gap`](crate::element::builders::Column::row_gap) rather than setting these directly.
+    /// Use the builder methods [`column_gap`](crate::element::builders::ColumnView::horizontal_spacing) and
+    /// [`row_gap`](crate::element::builders::ColumnView::vertical_spacing) rather than setting these directly.
     pub column_gap: Option<f32>,
     pub row_gap: Option<f32>,
     /// Opacity multiplier applied to this node's painted output and descendants.
@@ -142,7 +260,7 @@ pub struct StyleProps {
     /// When `true` the node is removed from normal flow and positioned by Taffy's
     /// absolute-position algorithm relative to its nearest flex ancestor.
     ///
-    /// Use the builder method [`.absolute()`](crate::element::builders::View::absolute) rather
+    /// Use the builder method [`.floating()`](crate::element::builders::View::floating) rather
     /// than setting this field directly.
     pub position_absolute: bool,
 }
@@ -258,7 +376,7 @@ impl LinearGradient {
     /// use lemon_core::{Color, LinearGradient, View};
     ///
     /// let _ = View::new()
-    ///     .linear_gradient(LinearGradient::new(
+    ///     .gradient(LinearGradient::new(
     ///         (0.0, 0.0),
     ///         (1.0, 1.0),
     ///         Color::rgb8(255, 128, 64),
@@ -296,7 +414,7 @@ impl BoxShadow {
     /// use lemon_core::{BoxShadow, Color, View};
     ///
     /// let _ = View::new()
-    ///     .box_shadow(BoxShadow::new(
+    ///     .shadow(BoxShadow::new(
     ///         Color::rgb8(0, 0, 0).with_alpha(0.25),
     ///         0.0,
     ///         8.0,

@@ -6,8 +6,9 @@ use crate::element::style::Color;
 ///
 /// Use [`Theme::default_light`] or [`Theme::default_dark`] as sensible base palettes.
 ///
-/// [`Default`] and the desktop host use [`Theme::default_dark`] so new apps get light
-/// foreground text on the default near-black window clear color.
+/// [`Default`] returns the dark palette as a deterministic headless fallback.
+/// The desktop host selects the system appearance by default through [`ThemePair`].
+/// A single `Theme` passed to `run_with_theme` keeps a fixed palette.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Theme {
     /// Color tokens used for backgrounds, text, accents, and borders.
@@ -126,6 +127,49 @@ impl Theme {
     }
 }
 
+/// Light and dark palettes selected by the desktop host's system appearance.
+///
+/// The default pair contains Lemon's built-in light and dark palettes. Pass a pair
+/// to `run_with_theme` to customize both appearances while following system changes.
+/// A single [`Theme`] converts to a pair with identical palettes, keeping its existing
+/// fixed-theme behavior. Unknown native appearance uses the dark palette.
+///
+/// ```
+/// use lemon_core::{Theme, ThemePair};
+/// let mut light = Theme::default_light();
+/// let mut dark = Theme::default_dark();
+/// light.radius.md = 10.0;
+/// dark.radius.md = 10.0;
+/// let themes = ThemePair::new(light, dark);
+/// assert_eq!(themes.light.radius.md, themes.dark.radius.md);
+/// ```
+#[derive(Clone, Debug, PartialEq)]
+pub struct ThemePair {
+    /// Palette used when the system requests a light appearance.
+    pub light: Theme,
+    /// Palette used for dark appearance, and when appearance is unavailable.
+    pub dark: Theme,
+}
+
+impl ThemePair {
+    /// Pairs `light` and `dark` palettes for automatic system appearance selection.
+    pub fn new(light: Theme, dark: Theme) -> Self {
+        Self { light, dark }
+    }
+}
+
+impl Default for ThemePair {
+    fn default() -> Self {
+        Self::new(Theme::default_light(), Theme::default_dark())
+    }
+}
+
+impl From<Theme> for ThemePair {
+    fn from(theme: Theme) -> Self {
+        Self::new(theme.clone(), theme)
+    }
+}
+
 /// Color token group used by controls and surfaces.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ColorTokens {
@@ -153,9 +197,9 @@ pub struct ColorTokens {
 ///
 /// These tokens control the colors of UI decorations such as scrollbar tracks and thumbs,
 /// the text-input caret, and the focus ring. They are read at paint time via
-/// [`current_theme`], so swapping the active theme with [`set_active_theme`] or
-/// The desktop host's `run_with_theme` entry point changes widget chrome without
-/// recompiling any widget code.
+/// [`current_theme`] within the host's paint scope. The desktop host refreshes that
+/// scope on system appearance changes; [`crate::host::HostContext::set_theme`] does
+/// the same for custom hosts. No widget recompilation is needed.
 ///
 /// # Example
 ///
@@ -186,7 +230,7 @@ pub struct TypographyTokens {
     pub font_size_md: f32,
     pub font_size_lg: f32,
     pub font_size_xl: f32,
-    /// CSS-like font family list used by default text styles.
+    /// Ordered font family fallback list used by default text styles.
     pub font_family: String,
     /// Unitless line-height multiplier relative to font size.
     pub line_height: f32,
@@ -216,7 +260,12 @@ thread_local! {
     static ACTIVE_THEME: RefCell<Rc<Theme>> = RefCell::new(Rc::new(Theme::default_dark()));
 }
 
-/// Sets the active theme for the current thread.
+/// Sets the active theme for the current thread's current scope.
+///
+/// Entering a [`HostContext`](crate::host::HostContext) overrides this value until its
+/// guard is dropped. Applications should pass a [`Theme`] or [`ThemePair`] to the
+/// desktop entry point; custom hosts should use [`HostContext::set_theme`](crate::host::HostContext::set_theme)
+/// to notify their views of lasting changes.
 pub fn set_active_theme(theme: Theme) {
     ACTIVE_THEME.with(|active| {
         *active.borrow_mut() = Rc::new(theme);

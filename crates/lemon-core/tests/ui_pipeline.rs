@@ -2,7 +2,7 @@ use lemon_core::diff::{NodePath, Patch};
 use lemon_core::element::Element;
 use lemon_core::host::HostContext;
 use lemon_core::ui::UiState;
-use lemon_core::{Color, Column, Signal, Text, Theme, Viewport};
+use lemon_core::{Color, ColumnView, Signal, Text, Theme, Viewport};
 
 fn viewport() -> Viewport {
     Viewport {
@@ -19,26 +19,20 @@ fn batches_reactive_updates_until_geometry_is_requested() {
     ui.mount(move |_| Text::new(source.get()).into_element())
         .unwrap();
     ui.update(viewport(), 1.0, None, true).unwrap();
-    assert!(!ui.layout_dirty);
+    assert!(!ui.layout_dirty());
     text.set("second".into());
     ui.apply_updates().unwrap();
     text.set("third".into());
     ui.apply_updates().unwrap();
-    assert!(ui.layout_dirty);
-    assert!(ui.paint_dirty);
+    assert!(ui.layout_dirty());
+    assert!(ui.paint_dirty());
     assert_eq!(
-        ui.retained
-            .as_ref()
-            .unwrap()
-            .root
-            .as_ref()
-            .unwrap()
-            .text_content(),
+        ui.retained().unwrap().root().unwrap().text_content(),
         Some("third")
     );
     ui.update(viewport(), 1.0, None, true).unwrap();
-    assert!(!ui.layout_dirty);
-    assert!(!ui.paint_dirty);
+    assert!(!ui.layout_dirty());
+    assert!(!ui.paint_dirty());
 }
 
 #[test]
@@ -47,8 +41,8 @@ fn paint_only_runtime_updates_keep_text_layout_cache() {
     let source = color.clone();
     let mut ui = UiState::default();
     ui.mount(move |_| {
-        Column::new()
-            .background(source.get())
+        ColumnView::new()
+            .surface(source.get())
             .child(Text::new("stable"))
             .into_element()
     })
@@ -56,9 +50,9 @@ fn paint_only_runtime_updates_keep_text_layout_cache() {
     ui.update(viewport(), 1.0, None, true).unwrap();
     color.set(Color::rgb8(4, 5, 6));
     ui.apply_updates().unwrap();
-    assert!(!ui.layout_dirty);
-    assert!(ui.paint_dirty);
-    assert!(!ui.retained.as_ref().unwrap().text_needs_reflow());
+    assert!(!ui.layout_dirty());
+    assert!(ui.paint_dirty());
+    assert!(!ui.retained().unwrap().text_needs_reflow());
 }
 
 #[test]
@@ -72,7 +66,7 @@ fn render_uses_originating_theme_even_when_another_host_sets_signal() {
         let _scope = host.enter();
         ui.mount(move |cx| {
             source.get();
-            assert_eq!(cx.use_theme(), Theme::default_light());
+            assert_eq!(cx.theme(), Theme::default_light());
             assert_eq!(lemon_core::current_theme(), Theme::default_light());
             Text::new("light").into_element()
         })
@@ -86,7 +80,7 @@ fn render_uses_originating_theme_even_when_another_host_sets_signal() {
 
 #[test]
 fn scroll_content_marker_survives_an_extra_wrapper_and_reactive_updates() {
-    use lemon_core::{layout, Overflow, View};
+    use lemon_core::{layout, View};
     let make = |offset: f32| -> Element {
         let mut content = View::new().height(600.0).into_element();
         if let Element::View(node) = &mut content {
@@ -94,13 +88,13 @@ fn scroll_content_marker_survives_an_extra_wrapper_and_reactive_updates() {
         }
         View::new()
             .height(100.0)
-            .overflow(Overflow::Hidden)
+            .clip()
             .on_scroll(|_| {})
             .child(
                 View::new().child(
                     View::new()
                         .scroll_content()
-                        .margin_top(-offset)
+                        .outset_top(-offset)
                         .child(content),
                 ),
             )
@@ -109,32 +103,47 @@ fn scroll_content_marker_survives_an_extra_wrapper_and_reactive_updates() {
     let mut ui = UiState::default();
     ui.mount(move |_| make(0.0)).unwrap();
     ui.update(viewport(), 1.0, None, true).unwrap();
-    let tree = ui.retained.as_mut().unwrap();
-    let content = layout::scroll_content_node(tree.root.as_ref().unwrap()).unwrap();
+    let tree = ui.retained().unwrap();
+    let content = layout::scroll_content_node(tree.root().unwrap()).unwrap();
     assert!(content.style.scroll_content);
-    let extent =
-        layout::scroll_content_extent(tree.root.as_ref().unwrap(), &ui.layout_map).unwrap();
+    let extent = layout::scroll_content_extent(tree.root().unwrap(), ui.layout_map()).unwrap();
     assert_eq!(extent, 600.0);
-    tree.apply_patches(lemon_core::diff::diff(
+    ui.apply_patches(lemon_core::diff::diff(
         make(0.0),
         make(30.0),
         NodePath::root(),
     ))
     .unwrap();
     ui.layout(viewport()).unwrap();
-    let root = ui.retained.as_ref().unwrap().root.as_ref().unwrap();
+    let root = ui.retained().unwrap().root().unwrap();
     assert_eq!(
-        layout::scroll_content_extent(root, &ui.layout_map),
+        layout::scroll_content_extent(root, ui.layout_map()),
         Some(extent)
     );
     // A paint-only mutation must not undo geometry invalidation.
-    ui.retained
-        .as_mut()
-        .unwrap()
-        .apply_patch(Patch::UpdatePaint {
-            node: NodePath::root(),
-            paint: Default::default(),
-        })
-        .unwrap();
-    assert!(!ui.retained.as_ref().unwrap().layout_dirty);
+    ui.apply_patches([Patch::UpdatePaint {
+        node: NodePath::root(),
+        paint: Default::default(),
+    }])
+    .unwrap();
+    assert!(!ui.retained().unwrap().layout_dirty());
+}
+
+#[test]
+fn unmarked_scroll_wrappers_are_not_inferred_from_tree_depth() {
+    use lemon_core::{layout, View};
+    let mut ui = UiState::default();
+    ui.mount(|_| {
+        View::new()
+            .height(80.0)
+            .clip()
+            .on_scroll(|_| {})
+            .child(View::new().child(View::new().height(600.0)))
+            .into_element()
+    })
+    .unwrap();
+    ui.layout(viewport()).unwrap();
+    let root = ui.retained().unwrap().root().unwrap();
+    assert!(layout::scroll_content_node(root).is_none());
+    assert!(layout::scroll_content_extent(root, ui.layout_map()).is_none());
 }

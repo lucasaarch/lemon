@@ -8,6 +8,12 @@ pub(crate) fn diff_container_props(
     path: &NodePath,
     patches: &mut Vec<Patch>,
 ) {
+    if old.handlers != new.handlers {
+        patches.push(Patch::UpdateHandlers {
+            node: path.clone(),
+            handlers: new.handlers.clone(),
+        });
+    }
     if old.style != new.style {
         patches.push(Patch::UpdateStyle {
             node: path.clone(),

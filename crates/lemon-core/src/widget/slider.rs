@@ -8,7 +8,7 @@ use crate::{
         style::{Color, ColorSource},
         Element,
     },
-    request_animation_frame, Cx, Signal,
+    request_animation_frame, Cx, State,
 };
 
 /// Duration of a value-change animation in seconds.
@@ -52,8 +52,8 @@ impl AnimState {
 /// # Examples
 ///
 /// ```no_run
-/// use lemon_ui::Color;
-/// use lemon_ui::widget::SliderStyle;
+/// use lemon_core::Color;
+/// use lemon_core::widget::SliderStyle;
 ///
 /// let style = SliderStyle::default().fill_color(Color::rgb8(255, 120, 0));
 /// ```
@@ -91,21 +91,21 @@ impl SliderStyle {
 /// # Examples
 ///
 /// ```no_run
-/// use lemon_ui::{Cx, Color, element::Element};
-/// use lemon_ui::widget::{Slider, SliderStyle};
+/// use lemon_core::{Cx, Color, element::Element};
+/// use lemon_core::widget::{Slider, SliderStyle};
 ///
 /// fn my_view(cx: &Cx) -> Element {
-///     let volume = cx.use_signal(0.5_f32);
+///     let volume = cx.state(0.5_f32);
 ///     Slider::new(cx, volume)
 ///         .style(SliderStyle::default().fill_color(Color::rgb8(255, 120, 0)))
 ///         .into_element()
 /// }
 /// ```
 pub struct Slider {
-    value: Signal<f32>,
-    anim: Signal<AnimState>,
-    hovered: Signal<bool>,
-    pressed: Signal<bool>,
+    value: State<f32>,
+    anim: State<AnimState>,
+    hovered: State<bool>,
+    pressed: State<bool>,
     width: f32,
     height: f32,
     track_color: Color,
@@ -125,17 +125,17 @@ impl Slider {
     ///
     /// `cx` is used to allocate internal hook state for the animation.  Pass the same `&Cx`
     /// received by your view function.
-    pub fn new(cx: &Cx, value: Signal<f32>) -> Self {
-        let theme = cx.use_theme();
+    pub fn new(cx: &Cx, value: State<f32>) -> Self {
+        let theme = cx.theme();
         let initial = value.peek().clamp(0.0, 1.0);
-        let anim = cx.use_signal(AnimState::settled(initial));
+        let anim = cx.state(AnimState::settled(initial));
 
         // When the target value changes from outside (programmatic), start a new animation from
         // the current display position.  Drag bypasses this: the pointer handlers update `anim`
         // before calling `value.set`, so the effect sees `anim.to == target` and does nothing.
         let anim_eff = anim.clone();
         let val_eff = value.clone();
-        cx.use_effect(move || {
+        cx.watch(move || {
             let target = val_eff.get().clamp(0.0, 1.0); // subscribe to value
             let current = anim_eff.peek();
             if (current.to - target).abs() > ANIM_EPSILON {
@@ -151,8 +151,8 @@ impl Slider {
         Self {
             value,
             anim,
-            hovered: cx.use_signal(false),
-            pressed: cx.use_signal(false),
+            hovered: cx.state(false),
+            pressed: cx.state(false),
             width: 200.0,
             height: theme.spacing.sm * 2.0,
             track_color: theme.colors.border,
@@ -265,8 +265,8 @@ impl Slider {
         let mut slider = View::new()
             .width(self.width)
             .height(self.height)
-            .radius(radius)
-            .background(track_color)
+            .rounding(radius)
+            .surface(track_color)
             .cursor(if disabled {
                 Cursor::NotAllowed
             } else {
@@ -276,8 +276,8 @@ impl Slider {
                 View::new()
                     .width(fill_width)
                     .height(self.height)
-                    .radius(radius)
-                    .background(fill_color),
+                    .rounding(radius)
+                    .surface(fill_color),
             );
         if !disabled {
             let hovered_enter = self.hovered.clone();
@@ -320,7 +320,7 @@ mod tests {
     use super::*;
     use crate::element::{style::Dimension, Element};
 
-    fn make_slider(value: Signal<f32>) -> (Element, Signal<AnimState>) {
+    fn make_slider(value: State<f32>) -> (Element, State<AnimState>) {
         let cx = crate::Cx::new();
         let slider = Slider::new(&cx, value);
         let anim = slider.anim.clone();
@@ -329,7 +329,7 @@ mod tests {
 
     #[test]
     fn slider_has_pointer_down_and_move_handlers() {
-        let value = Signal::new(0.0_f32);
+        let value = State::new(0.0_f32);
         let (el, _) = make_slider(value);
 
         let Element::View(track) = el else {
@@ -347,7 +347,7 @@ mod tests {
 
     #[test]
     fn slider_pointer_down_updates_value() {
-        let value = Signal::new(0.0_f32);
+        let value = State::new(0.0_f32);
         let (el, _) = make_slider(value.clone());
 
         let Element::View(track) = el else {
@@ -367,7 +367,7 @@ mod tests {
 
     #[test]
     fn slider_pointer_move_updates_value() {
-        let value = Signal::new(0.0_f32);
+        let value = State::new(0.0_f32);
         let (el, _) = make_slider(value.clone());
 
         let Element::View(track) = el else {
@@ -387,7 +387,7 @@ mod tests {
 
     #[test]
     fn slider_fill_child_width_reflects_initial_value() {
-        let value = Signal::new(0.25_f32);
+        let value = State::new(0.25_f32);
         let cx = crate::Cx::new();
         let el = Slider::new(&cx, value).width(200.0).into_element();
 
@@ -412,7 +412,7 @@ mod tests {
         custom.spacing.sm = 9.0;
         crate::set_active_theme(custom.clone());
 
-        let value = Signal::new(0.0_f32);
+        let value = State::new(0.0_f32);
         let (el, _) = make_slider(value);
 
         let Element::View(track) = el else {
@@ -435,7 +435,7 @@ mod tests {
         custom.colors.accent = Color::rgb8(44, 55, 66);
         crate::set_active_theme(custom);
 
-        let value = Signal::new(0.5_f32);
+        let value = State::new(0.5_f32);
         let override_track = Color::rgb8(99, 88, 77);
         let override_fill = Color::rgb8(66, 55, 44);
         let cx = crate::Cx::new();
@@ -466,7 +466,7 @@ mod tests {
         custom.colors.accent = Color::rgb8(44, 55, 66);
         crate::set_active_theme(custom.clone());
 
-        let value = Signal::new(0.5_f32);
+        let value = State::new(0.5_f32);
         let cx = crate::Cx::new();
         let el = Slider::new(&cx, value)
             .style(SliderStyle::default().track_color(Color::rgb8(99, 88, 77)))
@@ -485,7 +485,7 @@ mod tests {
 
     #[test]
     fn slider_pointer_coords_are_clamped_to_unit_range() {
-        let value = Signal::new(0.5_f32);
+        let value = State::new(0.5_f32);
         let (el, _) = make_slider(value.clone());
 
         let Element::View(track) = el else {
@@ -506,7 +506,7 @@ mod tests {
 
     #[test]
     fn slider_cursor_is_pointer() {
-        let value = Signal::new(0.0_f32);
+        let value = State::new(0.0_f32);
         let (el, _) = make_slider(value);
 
         let Element::View(track) = el else {
@@ -527,7 +527,7 @@ mod tests {
         custom.colors.accent = Color::rgb8(44, 55, 66);
         crate::set_active_theme(custom.clone());
 
-        let value = Signal::new(0.25_f32);
+        let value = State::new(0.25_f32);
         let (el, _) = make_slider(value);
 
         let Element::View(track) = el else {
@@ -554,7 +554,7 @@ mod tests {
         custom.colors.accent_pressed = Color::rgb8(16, 17, 18);
         crate::set_active_theme(custom.clone());
 
-        let value = Signal::new(0.25_f32);
+        let value = State::new(0.25_f32);
         let (el, _) = make_slider(value);
 
         let Element::View(track) = el else {
@@ -615,7 +615,7 @@ mod tests {
 
     #[test]
     fn disabled_slider_ignores_pointer_interactions() {
-        let value = Signal::new(0.25_f32);
+        let value = State::new(0.25_f32);
         let cx = crate::Cx::new();
         let el = Slider::new(&cx, value.clone())
             .disabled(true)
@@ -633,7 +633,7 @@ mod tests {
 
     #[test]
     fn drag_sets_anim_from_and_to_equal_no_animation() {
-        let value = Signal::new(0.0_f32);
+        let value = State::new(0.0_f32);
         let (el, anim) = make_slider(value.clone());
 
         let Element::View(track) = el else {

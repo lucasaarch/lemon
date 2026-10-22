@@ -6,11 +6,14 @@ use crate::retained::{RetainedKind, RetainedNode};
 /// Cursor position in logical points (pre-HiDPI layout space).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LogicalPoint {
+    /// Horizontal position in logical points.
     pub x: f32,
+    /// Vertical position in logical points.
     pub y: f32,
 }
 
 impl LogicalPoint {
+    /// Creates a logical position before native display scaling.
     pub fn new(x: f32, y: f32) -> Self {
         Self { x, y }
     }
@@ -140,6 +143,7 @@ pub fn hit_test_on_click<'a>(
     hit
 }
 
+/// Finds the node requesting hover handlers or a non-default cursor at `point`.
 pub fn hit_test_hover<'a>(
     node: &'a RetainedNode,
     layout: &LayoutMap,
@@ -207,6 +211,7 @@ pub fn hit_test_focusable<'a>(
     hit
 }
 
+/// Finds a retained node by its layout identity, traversing transparent components.
 pub fn find_node_by_taffy_id(node: &RetainedNode, id: taffy::NodeId) -> Option<&RetainedNode> {
     if node.taffy_id == Some(id) {
         return Some(node);
@@ -231,7 +236,7 @@ pub fn dispatch_click(node: &RetainedNode) -> bool {
     }
 }
 
-/// Returns the deepest node under `point` that has an [`on_scroll`](crate::element::builders::Column::on_scroll) handler.
+/// Returns the deepest node under `point` that has an [`on_scroll`](crate::element::builders::ColumnView::on_scroll) handler.
 ///
 /// Used by the platform layer to route `MouseWheel` events before paint.
 pub fn hit_test_scroll<'a>(
@@ -268,7 +273,7 @@ pub fn hit_test_scroll<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::element::builders::{Button, Column, Text, View};
+    use crate::element::builders::{Button, ColumnView, Text, View};
     use crate::layout::{LayoutMap, Viewport};
     use crate::retained::RetainedTree;
     use parley::FontContext;
@@ -294,14 +299,14 @@ mod tests {
         let clicked = Rc::new(Cell::new(false));
         let flag = clicked.clone();
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(200.0)
                 .height(200.0)
                 .child(
                     Button::new("Click")
                         .width(80.0)
                         .height(40.0)
-                        .on_click(move || flag.set(true)),
+                        .action(move || flag.set(true)),
                 )
                 .into_element(),
         )
@@ -330,15 +335,15 @@ mod tests {
         let button_clicked = Rc::new(Cell::new(false));
         let flag = button_clicked.clone();
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(200.0)
                 .height(120.0)
-                .child(Text::new("label").font_size(16.0))
+                .child(Text::new("label").size(16.0))
                 .child(
                     Button::new("OK")
                         .width(60.0)
                         .height(30.0)
-                        .on_click(move || flag.set(true)),
+                        .action(move || flag.set(true)),
                 )
                 .into_element(),
         )
@@ -378,7 +383,7 @@ mod tests {
         let e = entered.clone();
 
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(200.0)
                 .height(200.0)
                 .child(
@@ -417,7 +422,7 @@ mod tests {
     #[test]
     fn find_node_by_taffy_id_returns_correct_node() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .child(Text::new("a"))
                 .child(Text::new("b"))
                 .into_element(),
@@ -478,7 +483,7 @@ mod tests {
     #[test]
     fn hit_test_focusable_finds_node_with_focusable_flag() {
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(200.0)
                 .height(200.0)
                 .child(View::new().width(80.0).height(40.0).focusable())
@@ -519,7 +524,7 @@ mod tests {
         let pressed = Rc::new(Cell::new((0.0_f32, 0.0_f32)));
         let flag = pressed.clone();
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(200.0)
                 .height(200.0)
                 .child(
@@ -569,7 +574,7 @@ mod tests {
         let flag = outside_fired.clone();
 
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(200.0)
                 .height(200.0)
                 .child(
@@ -608,7 +613,7 @@ mod tests {
         let flag = outside_fired.clone();
 
         let mut tree = RetainedTree::mount(
-            Column::new()
+            ColumnView::new()
                 .width(200.0)
                 .height(200.0)
                 .child(

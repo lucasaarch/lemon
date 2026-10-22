@@ -21,10 +21,10 @@ fn gradient() -> ImageHandle {
 
 fn app(cx: &Cx) -> Element {
     // Keep the allocation stable across renders; cloned handles share the pixels.
-    let image = cx.use_memo(gradient).get();
-    Row::new()
-        .padding(24.0)
-        .gap(16.0)
+    let image = cx.derive(gradient).get();
+    RowView::new()
+        .inset(24.0)
+        .spacing(16.0)
         .child(Image::new(image.clone()).width(64.0).height(64.0))
         .child(Image::new(image).width(192.0).height(192.0))
         .into_element()

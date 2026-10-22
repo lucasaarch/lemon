@@ -10,44 +10,43 @@ const COLORS: [(&str, Color); 3] = [
 ];
 
 fn app(cx: &Cx) -> Element {
-    let selected = cx.use_signal(0_usize);
-    let open = cx.use_signal(false);
+    let selected = cx.state(0_usize);
+    let open = cx.state(false);
     let swatch = selected.clone();
     let label = selected.clone();
     let toggle = open.clone();
     let outside = open.clone();
 
-    let mut picker = Column::new()
-        .padding(24.0)
-        .gap(8.0)
+    let mut picker = ColumnView::new()
+        .inset(24.0)
+        .spacing(8.0)
         .on_click_outside(move || outside.set(false))
         .child(
             View::new()
                 .width(220.0)
                 .height(48.0)
-                .radius(8.0)
-                .align_items(Align::Center)
-                .justify_content(Justify::Center)
-                .background(move || COLORS[swatch.get()].1)
+                .rounding(8.0)
+                .center()
+                .surface(move || COLORS[swatch.get()].1)
                 .cursor(Cursor::Pointer)
-                .on_click(move || toggle.update(|value| *value = !*value))
+                .action(move || toggle.update(|value| *value = !*value))
                 .child(Text::new(move || {
                     format!("Accent: {}", COLORS[label.get()].0)
                 })),
         );
 
     if open.get() {
-        let mut options = Column::new().key(100).gap(4.0);
+        let mut options = ColumnView::new().key(100).spacing(4.0);
         for (id, (name, color)) in COLORS.into_iter().enumerate() {
             let select = selected.clone();
             let close = open.clone();
             options = options.child(
                 View::new()
                     .key(id as u64)
-                    .padding(8.0)
-                    .background(color)
+                    .inset(8.0)
+                    .surface(color)
                     .cursor(Cursor::Pointer)
-                    .on_click(move || {
+                    .action(move || {
                         select.set(id);
                         close.set(false);
                     })

@@ -1,7 +1,7 @@
 mod children;
 mod props;
 
-pub(crate) use children::{keyed_plan, ChildOp};
+pub(crate) use children::{child_plan, ChildOp};
 pub(crate) use props::{diff_container_chrome, diff_container_props};
 
 use crate::element::{
@@ -40,6 +40,13 @@ pub enum Patch {
     UpdateStyle {
         node: NodePath,
         style: StyleProps,
+    },
+    /// Replaces input callbacks without changing geometry or visible styling.
+    UpdateHandlers {
+        /// Path of the node whose callbacks changed.
+        node: NodePath,
+        /// Complete new set of callbacks, including removals.
+        handlers: crate::retained::EventHandlers,
     },
     UpdatePaint {
         node: NodePath,
@@ -81,13 +88,15 @@ pub enum Patch {
 }
 
 impl Patch {
-    /// Returns whether applying this patch invalidates layout geometry.
+    /// Returns a conservative layout requirement without access to the previous tree.
     ///
     /// Paint data, component metadata, and widget chrome only require repainting.
-    /// Hosts should normally read `RetainedTree::layout_dirty` after applying a batch.
+    /// Style and text-style updates are refined against the old geometry by the retained
+    /// tree. Hosts should read `RetainedTree::layout_dirty()` after applying a batch.
     pub fn invalidates_layout(&self) -> bool {
         match self {
-            Self::UpdatePaint { .. }
+            Self::UpdateHandlers { .. }
+            | Self::UpdatePaint { .. }
             | Self::UpdateWidgetChrome { .. }
             | Self::UpdateComponent { .. } => false,
             Self::MountComponent { .. }
@@ -124,9 +133,56 @@ pub(crate) fn flatten_children(elements: Vec<Element>) -> Vec<Element> {
 ///
 /// Panics if either fully keyed sibling list contains duplicate keys.
 pub fn diff(old: Element, new: Element, path: NodePath) -> Vec<Patch> {
+    reconcile(&mut PlainReconciler, old, new, path)
+}
+
+/// Lifecycle work is supplied by runtime; traversal and patch ordering live here.
+pub(crate) trait Reconciler {
+    fn insert(
+        &mut self,
+        element: Element,
+        parent: &NodePath,
+        index: usize,
+        patches: &mut Vec<Patch>,
+    ) {
+        push_insert_child(element, parent, index, patches);
+    }
+    fn remove(
+        &mut self,
+        element: &Element,
+        parent: &NodePath,
+        index: usize,
+        patches: &mut Vec<Patch>,
+    ) {
+        push_remove_child(element, parent, index, patches);
+    }
+    fn component_transition(
+        &mut self,
+        _old: &Element,
+        _new: &Element,
+        _path: &NodePath,
+        _patches: &mut Vec<Patch>,
+    ) -> bool {
+        false
+    }
+    fn replaced(&mut self, _element: &Element, _path: &NodePath, _patches: &mut Vec<Patch>) {}
+    fn relocate(&mut self, _parent: &NodePath, _op: &ChildOp) {}
+}
+struct PlainReconciler;
+impl Reconciler for PlainReconciler {}
+
+pub(crate) fn reconcile(
+    context: &mut impl Reconciler,
+    old: Element,
+    new: Element,
+    path: NodePath,
+) -> Vec<Patch> {
     use Element::*;
     let mut patches = Vec::new();
 
+    if context.component_transition(&old, &new, &path, &mut patches) {
+        return patches;
+    }
     match (old, new) {
         (Text(o), Text(n)) => {
             let os = o.content.resolve();
@@ -144,32 +200,39 @@ pub fn diff(old: Element, new: Element, path: NodePath) -> Vec<Patch> {
                 });
             }
         }
-        (Column(o), Column(n)) => diff_box(o, n, path, &mut patches),
-        (Row(o), Row(n)) => diff_box(o, n, path, &mut patches),
-        (View(o), View(n)) => diff_box(o, n, path, &mut patches),
+        (Column(o), Column(n)) | (Row(o), Row(n)) | (View(o), View(n)) => {
+            diff_box(context, o, n, path, &mut patches);
+            return patches;
+        }
         (Fragment(old_children), Fragment(new_children)) => {
-            diff_children(
+            reconcile_children(
+                context,
                 flatten_children(old_children),
                 flatten_children(new_children),
                 &path,
                 &mut patches,
             );
+            return patches;
         }
         (Fragment(old_children), new) => {
-            diff_children(
+            reconcile_children(
+                context,
                 flatten_children(old_children),
                 flatten_children(vec![new]),
                 &path,
                 &mut patches,
             );
+            return patches;
         }
         (old, Fragment(new_children)) => {
-            diff_children(
+            reconcile_children(
+                context,
                 flatten_children(vec![old]),
                 flatten_children(new_children),
                 &path,
                 &mut patches,
             );
+            return patches;
         }
         (Component(o), Component(n)) => {
             if o.identity() == n.identity() && o.key() == n.key() {
@@ -209,6 +272,20 @@ pub fn diff(old: Element, new: Element, path: NodePath) -> Vec<Patch> {
                     style: n.style,
                 });
             }
+            let old_handlers = crate::retained::EventHandlers {
+                on_click: o.on_click.clone(),
+                ..Default::default()
+            };
+            let new_handlers = crate::retained::EventHandlers {
+                on_click: n.on_click.clone(),
+                ..Default::default()
+            };
+            if old_handlers != new_handlers {
+                patches.push(Patch::UpdateHandlers {
+                    node: path.clone(),
+                    handlers: new_handlers,
+                });
+            }
             let ol = o.label.resolve();
             let nl = n.label.resolve();
             if ol != nl {
@@ -243,9 +320,10 @@ pub fn diff(old: Element, new: Element, path: NodePath) -> Vec<Patch> {
         // Different types — replace entirely
         (_, new) => {
             patches.push(Patch::ReplaceNode {
-                node: path,
-                new_element: new,
+                node: path.clone(),
+                new_element: new.clone(),
             });
+            context.replaced(&new, &path, &mut patches);
         }
     }
 
@@ -253,13 +331,15 @@ pub fn diff(old: Element, new: Element, path: NodePath) -> Vec<Patch> {
 }
 
 fn diff_box(
+    context: &mut impl Reconciler,
     mut o: crate::element::types::BoxElement,
     mut n: crate::element::types::BoxElement,
     path: NodePath,
     patches: &mut Vec<Patch>,
 ) {
     diff_container_props(&o, &n, &path, patches);
-    diff_children(
+    reconcile_children(
+        context,
         std::mem::take(&mut o.children),
         std::mem::take(&mut n.children),
         &path,
@@ -285,78 +365,63 @@ pub(crate) fn children_are_fully_keyed(children: &[Element]) -> bool {
     !children.is_empty() && children.iter().all(|child| element_key(child).is_some())
 }
 
-fn diff_children(
+pub(crate) fn reconcile_children(
+    context: &mut impl Reconciler,
     old: Vec<Element>,
     new: Vec<Element>,
     parent: &NodePath,
     patches: &mut Vec<Patch>,
+) {
+    reconcile_children_at(context, old, new, parent, patches, |_, index| {
+        parent.child(index)
+    });
+}
+
+/// Component output keeps a historical transparent path for a single root.
+/// Planning and traversal stay shared; only the output boundary maps update paths.
+pub(crate) fn reconcile_children_at(
+    context: &mut impl Reconciler,
+    old: Vec<Element>,
+    new: Vec<Element>,
+    parent: &NodePath,
+    patches: &mut Vec<Patch>,
+    update_path: impl Fn(usize, usize) -> NodePath,
 ) {
     let old = flatten_children(old);
     let new = flatten_children(new);
-    if children_are_fully_keyed(&old) && children_are_fully_keyed(&new) {
-        diff_children_keyed(old, new, parent, patches);
-    } else {
-        diff_children_by_index(old, new, parent, patches);
-    }
-}
-
-fn diff_children_by_index(
-    old: Vec<Element>,
-    new: Vec<Element>,
-    parent: &NodePath,
-    patches: &mut Vec<Patch>,
-) {
-    let min = old.len().min(new.len());
-    let mut old_iter = old.into_iter();
-    let mut new_iter = new.into_iter();
-
-    for i in 0..min {
-        let child_patches = diff(
-            old_iter.next().unwrap(),
-            new_iter.next().unwrap(),
-            parent.child(i),
-        );
-        patches.extend(child_patches);
-    }
-
-    for (i, el) in new_iter.enumerate() {
-        push_insert_child(el, parent, min + i, patches);
-    }
-
-    let old_remaining: Vec<_> = old_iter.collect();
-    for i in (0..old_remaining.len()).rev() {
-        push_remove_child(&old_remaining[i], parent, min + i, patches);
-    }
-}
-
-fn diff_children_keyed(
-    old: Vec<Element>,
-    new: Vec<Element>,
-    parent: &NodePath,
-    patches: &mut Vec<Patch>,
-) {
-    for op in keyed_plan(&old, &new) {
+    for op in child_plan(&old, &new) {
+        let mut emitted = Vec::new();
         match op {
-            ChildOp::Remove(index) => push_remove_child(&old[index], parent, index, patches),
-            ChildOp::Insert(index) => {
-                push_insert_child(new[index].clone(), parent, index, patches);
-            }
-            ChildOp::Move { from, to } => patches.push(Patch::MoveChild {
-                parent: parent.clone(),
-                from,
-                to,
-            }),
             ChildOp::Update {
                 old: previous,
                 new: index,
             } => {
-                patches.extend(diff(
+                patches.extend(reconcile(
+                    context,
                     old[previous].clone(),
                     new[index].clone(),
-                    parent.child(index),
+                    update_path(previous, index),
                 ));
+                continue;
+            }
+            ChildOp::Remove(index) => {
+                context.remove(&old[index], parent, index, &mut emitted);
+                context.relocate(parent, &op);
+            }
+            ChildOp::Insert(index) => {
+                context.relocate(parent, &op);
+                context.insert(new[index].clone(), parent, index, &mut emitted);
+            }
+            ChildOp::Move { from, to } => {
+                context.relocate(parent, &op);
+                emitted.push(Patch::MoveChild {
+                    parent: parent.clone(),
+                    from,
+                    to,
+                });
             }
         }
+        patches.extend(emitted);
     }
 }
 
@@ -403,7 +468,7 @@ fn push_remove_child(element: &Element, parent: &NodePath, index: usize, patches
 mod tests {
     use super::*;
     use crate::element::{
-        builders::{Button, Column, Component, Text},
+        builders::{Button, ColumnView, Component, Text},
         types::ImageElement,
     };
 
@@ -425,8 +490,8 @@ mod tests {
 
     #[test]
     fn changed_text_style_produces_patch() {
-        let old = Text::new("same").font_size(16.0).into_element();
-        let new = Text::new("same").font_size(24.0).into_element();
+        let old = Text::new("same").size(16.0).into_element();
+        let new = Text::new("same").size(24.0).into_element();
 
         let patches = diff(old, new, NodePath::root());
 
@@ -450,7 +515,7 @@ mod tests {
 
     #[test]
     fn text_input_typing_emits_text_patch_before_widget_chrome() {
-        use crate::element::builders::{Row, View};
+        use crate::element::builders::{RowView, View};
         use crate::element::types::TextInputMeta;
 
         let old = View::new()
@@ -458,14 +523,14 @@ mod tests {
                 cursor: 0,
                 value: String::new(),
             })
-            .child(Row::new().child(Text::new("")))
+            .child(RowView::new().child(Text::new("")))
             .into_element();
         let new = View::new()
             .text_input(TextInputMeta {
                 cursor: 1,
                 value: "a".into(),
             })
-            .child(Row::new().child(Text::new("a")))
+            .child(RowView::new().child(Text::new("a")))
             .into_element();
 
         let patches = diff(old, new, NodePath::root());
@@ -514,8 +579,8 @@ mod tests {
 
     #[test]
     fn style_change_produces_update_style() {
-        let old = Column::new().gap(4.0).into_element();
-        let new = Column::new().gap(8.0).into_element();
+        let old = ColumnView::new().spacing(4.0).into_element();
+        let new = ColumnView::new().spacing(8.0).into_element();
         let patches = diff(old, new, NodePath::root());
         assert_eq!(patches.len(), 1);
         assert!(matches!(patches[0], Patch::UpdateStyle { .. }));
@@ -523,8 +588,8 @@ mod tests {
 
     #[test]
     fn child_added_produces_insert() {
-        let old = Column::new().into_element();
-        let new = Column::new().child(txt("a")).into_element();
+        let old = ColumnView::new().into_element();
+        let new = ColumnView::new().child(txt("a")).into_element();
         let patches = diff(old, new, NodePath::root());
         assert_eq!(patches.len(), 1);
         assert!(matches!(patches[0], Patch::InsertChild { index: 0, .. }));
@@ -532,8 +597,8 @@ mod tests {
 
     #[test]
     fn child_removed_produces_remove() {
-        let old = Column::new().child(txt("a")).into_element();
-        let new = Column::new().into_element();
+        let old = ColumnView::new().child(txt("a")).into_element();
+        let new = ColumnView::new().into_element();
         let patches = diff(old, new, NodePath::root());
         assert_eq!(patches.len(), 1);
         assert!(matches!(patches[0], Patch::RemoveChild { index: 0, .. }));
@@ -607,8 +672,14 @@ mod tests {
 
     #[test]
     fn unchanged_children_produce_no_patches() {
-        let old = Column::new().child(txt("a")).child(txt("b")).into_element();
-        let new = Column::new().child(txt("a")).child(txt("b")).into_element();
+        let old = ColumnView::new()
+            .child(txt("a"))
+            .child(txt("b"))
+            .into_element();
+        let new = ColumnView::new()
+            .child(txt("a"))
+            .child(txt("b"))
+            .into_element();
         assert!(diff(old, new, NodePath::root()).is_empty());
     }
 
@@ -731,8 +802,8 @@ mod tests {
             Text::new("child").into_element()
         }
 
-        let old = Column::new().into_element();
-        let new = Column::new()
+        let old = ColumnView::new().into_element();
+        let new = ColumnView::new()
             .child(Component::new(child).key(2))
             .into_element();
 
@@ -753,11 +824,11 @@ mod tests {
 
     #[test]
     fn keyed_reorder_emits_move_child_without_remove_or_insert() {
-        let old = Column::new()
+        let old = ColumnView::new()
             .child(Text::new("a").key(1))
             .child(Text::new("b").key(2))
             .into_element();
-        let new = Column::new()
+        let new = ColumnView::new()
             .child(Text::new("b").key(2))
             .child(Text::new("a").key(1))
             .into_element();
@@ -774,8 +845,10 @@ mod tests {
 
     #[test]
     fn keyed_insert_emits_insert_child_at_target_index() {
-        let old = Column::new().child(Text::new("a").key(1)).into_element();
-        let new = Column::new()
+        let old = ColumnView::new()
+            .child(Text::new("a").key(1))
+            .into_element();
+        let new = ColumnView::new()
             .child(Text::new("a").key(1))
             .child(Text::new("b").key(2))
             .into_element();
@@ -790,11 +863,13 @@ mod tests {
 
     #[test]
     fn keyed_remove_emits_remove_child_in_reverse_index_order() {
-        let old = Column::new()
+        let old = ColumnView::new()
             .child(Text::new("a").key(1))
             .child(Text::new("b").key(2))
             .into_element();
-        let new = Column::new().child(Text::new("a").key(1)).into_element();
+        let new = ColumnView::new()
+            .child(Text::new("a").key(1))
+            .into_element();
 
         let patches = diff(old, new, NodePath::root());
 
@@ -806,10 +881,10 @@ mod tests {
 
     #[test]
     fn fragment_children_are_flattened_before_diffing() {
-        let old = Column::new()
+        let old = ColumnView::new()
             .child(Element::Fragment(vec![txt("a"), txt("b")]))
             .into_element();
-        let new = Column::new()
+        let new = ColumnView::new()
             .child(Element::Fragment(vec![txt("a"), txt("c"), txt("d")]))
             .into_element();
 
@@ -826,8 +901,12 @@ mod tests {
 
     #[test]
     fn keyed_key_change_removes_old_and_inserts_new() {
-        let old = Column::new().child(Text::new("a").key(1)).into_element();
-        let new = Column::new().child(Text::new("b").key(2)).into_element();
+        let old = ColumnView::new()
+            .child(Text::new("a").key(1))
+            .into_element();
+        let new = ColumnView::new()
+            .child(Text::new("b").key(2))
+            .into_element();
 
         let patches = diff(old, new, NodePath::root());
 
@@ -850,8 +929,10 @@ mod tests {
             Text::new("child").into_element()
         }
 
-        let old = Column::new().child(Text::new("a").key(1)).into_element();
-        let new = Column::new()
+        let old = ColumnView::new()
+            .child(Text::new("a").key(1))
+            .into_element();
+        let new = ColumnView::new()
             .child(Text::new("a").key(1))
             .child(Component::new(child).key(2))
             .into_element();
@@ -870,11 +951,13 @@ mod tests {
             Text::new("child").into_element()
         }
 
-        let old = Column::new()
+        let old = ColumnView::new()
             .child(Text::new("a").key(1))
             .child(Component::new(child).key(2))
             .into_element();
-        let new = Column::new().child(Text::new("a").key(1)).into_element();
+        let new = ColumnView::new()
+            .child(Text::new("a").key(1))
+            .into_element();
 
         let patches = diff(old, new, NodePath::root());
 
@@ -886,11 +969,11 @@ mod tests {
 
     #[test]
     fn mixed_keyed_and_unkeyed_children_fall_back_to_index_diff() {
-        let old = Column::new()
+        let old = ColumnView::new()
             .child(Text::new("a").key(1))
             .child(Text::new("b"))
             .into_element();
-        let new = Column::new()
+        let new = ColumnView::new()
             .child(Text::new("b"))
             .child(Text::new("a").key(1))
             .into_element();
@@ -911,10 +994,10 @@ mod tests {
             Text::new("child").into_element()
         }
 
-        let old = Column::new()
+        let old = ColumnView::new()
             .child(Component::new(child).key(2))
             .into_element();
-        let new = Column::new().into_element();
+        let new = ColumnView::new().into_element();
 
         let patches = diff(old, new, NodePath::root());
 
