@@ -2,7 +2,7 @@ use crate::{
     element::{
         builders::{ColumnView, Text, View},
         events::Cursor,
-        style::{Align, Color, ColorSource, Justify},
+        style::{Align, Color, ColorSource, Distribute},
         Element,
     },
     Cx, State,
@@ -313,7 +313,7 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
             .rounding(trigger_radius)
             .height(trigger_height)
             .align(Align::Center)
-            .distribute(Justify::Center)
+            .distribute(Distribute::Center)
             .cursor(if disabled {
                 Cursor::NotAllowed
             } else {
@@ -363,7 +363,7 @@ impl<T: Clone + PartialEq + 'static> Select<T> {
             // siblings, and z_index=10 so it paints above them.
             let mut dropdown = ColumnView::new()
                 .layer(10)
-                .floating()
+                .position(crate::Position::Absolute)
                 .top(trigger_height)
                 .left(0.0)
                 .surface(dropdown_background)
@@ -500,7 +500,7 @@ mod tests {
         assert_eq!(dropdown.children.len(), 3, "dropdown should have 3 options");
         assert_eq!(dropdown.style.z_index, 10);
         assert!(
-            dropdown.style.position_absolute,
+            dropdown.style.position == crate::Position::Absolute,
             "dropdown must be absolutely positioned to overlay content"
         );
     }

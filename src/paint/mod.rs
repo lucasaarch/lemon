@@ -77,8 +77,9 @@ pub fn paint_pass(
     }
 
     // Paint globally deferred high-z nodes on top of all normal content.
-    global_deferred.sort_by_key(|(z, _)| *z);
-    for (_, node) in global_deferred {
+    while !global_deferred.is_empty() {
+        global_deferred.sort_by_key(|(z, _)| *z);
+        let (_, node) = global_deferred.remove(0);
         paint_node(
             node,
             layout,
@@ -88,7 +89,7 @@ pub fn paint_pass(
             focused,
             caret_visible,
             &mut stats,
-            &mut Vec::new(),
+            &mut global_deferred,
         );
     }
 
@@ -218,7 +219,7 @@ fn paint_children<'a>(
     global_deferred: &mut Vec<(i32, &'a RetainedNode)>,
 ) {
     for child in children {
-        if child.style.z_index != 0 {
+        if child.style.z_index != 0 || child.style.position == crate::Position::Fixed {
             // Defer globally so high-z nodes paint on top of all siblings at every level.
             global_deferred.push((child.style.z_index, child));
         } else {
@@ -1251,6 +1252,40 @@ mod tests {
     }
 
     #[test]
+    fn nested_fixed_and_layered_children_are_all_painted() {
+        let mut tree = RetainedTree::mount(
+            View::new()
+                .width(100.0)
+                .height(100.0)
+                .clip()
+                .child(
+                    View::new()
+                        .position(crate::Position::Fixed)
+                        .width(40.0)
+                        .height(40.0)
+                        .surface(Color::rgb8(255, 0, 0))
+                        .child(
+                            View::new()
+                                .layer(2)
+                                .width(10.0)
+                                .height(10.0)
+                                .surface(Color::rgb8(0, 255, 0)),
+                        )
+                        .child(
+                            View::new()
+                                .position(crate::Position::Fixed)
+                                .width(10.0)
+                                .height(10.0)
+                                .surface(Color::rgb8(0, 0, 255)),
+                        ),
+                )
+                .into_element(),
+        )
+        .unwrap();
+        assert_eq!(layout_and_paint(&mut tree, 1.0).fills, 3);
+    }
+
+    #[test]
     fn partial_opacity_paints_without_panic() {
         let mut tree = RetainedTree::mount(
             ColumnView::new()
@@ -1362,7 +1397,7 @@ mod tests {
                         .child(
                             ColumnView::new()
                                 .layer(10)
-                                .floating()
+                                .position(crate::Position::Absolute)
                                 .top(40.0)
                                 .left(0.0)
                                 .width(100.0)

@@ -5,7 +5,7 @@ use crate::{
         builders::{Text, View},
         content::TextContent,
         events::Cursor,
-        style::{Align, Color, ColorSource, Justify},
+        style::{Align, Color, ColorSource, Distribute},
         Element,
     },
     Cx, State,
@@ -155,7 +155,7 @@ impl Button {
             .surface(background)
             .rounding(self.radius)
             .align(Align::Center)
-            .distribute(Justify::Center)
+            .distribute(Distribute::Center)
             .cursor(if disabled {
                 Cursor::NotAllowed
             } else {

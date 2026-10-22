@@ -298,8 +298,8 @@ mod tests {
             panic!()
         };
         let inset = el.style.inset.as_ref().expect("expected inset");
-        assert_eq!(inset.top, 12.0);
-        assert_eq!(inset.left, 8.0);
+        assert_eq!(inset.top, Some(12.0));
+        assert_eq!(inset.left, Some(8.0));
     }
 
     #[test]

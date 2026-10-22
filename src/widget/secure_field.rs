@@ -1,13 +1,13 @@
 use crate::{element::Element, Color, Cx, State};
 
-use super::{TextField, TextFieldState, TextFieldStyle};
+use super::{TextField, TextFieldStyle};
 
 /// Single-line field that displays one bullet per Unicode scalar value.
 ///
-/// Uses the same editing state, theme, focus, and style overrides as [`TextField`].
+/// Uses `State<String>` and the same theme, focus, and style overrides as [`TextField`].
 /// The element tree, retained metadata, and caret use masked text; `state` keeps
 /// the original value for application code. This masks the display; it does not
-/// encrypt or zeroize the value stored in [`TextFieldState`].
+/// encrypt or zeroize the string stored in the application state.
 ///
 /// Ctrl/Cmd+C and Ctrl/Cmd+X are ignored to avoid exporting the secret. Paste,
 /// select-all, navigation, and deletion use the regular text editing behavior.
@@ -18,7 +18,7 @@ use super::{TextField, TextFieldState, TextFieldStyle};
 /// use lemon::prelude::*;
 ///
 /// fn login(cx: &Cx) -> Element {
-///     let password = cx.state(TextFieldState::new(""));
+///     let password = cx.state("".to_owned());
 ///     SecureField::new(cx, password)
 ///         .placeholder("Password")
 ///         .style(TextFieldStyle::default().rounding(8.0))
@@ -34,7 +34,7 @@ impl SecureField {
     /// No placeholder or fixed width is set. Building the element subscribes the
     /// parent to state changes. This constructor consumes hook slots and must be
     /// called in a stable order on every render.
-    pub fn new(cx: &Cx, state: State<TextFieldState>) -> Self {
+    pub fn new(cx: &Cx, state: State<String>) -> Self {
         Self(TextField::new_secure(cx, state))
     }
 
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn unicode_secrets_only_reach_retained_layout_and_paint_as_bullets() {
-        let state = State::new(TextFieldState::new(""));
+        let state = State::new("".to_owned());
         let source = state.clone();
         let mut ui = UiState::default();
         ui.mount(move |cx| {
@@ -167,7 +167,7 @@ mod tests {
         initial.handlers.on_key_down.as_ref().unwrap()(key(LemonKey::Character("aé🔒".into())));
         ui.update(viewport, 1.0, focused, true).unwrap();
 
-        assert_eq!(state.get().value, "aé🔒");
+        assert_eq!(state.get(), "aé🔒");
         let root = ui.retained.as_ref().unwrap().root.as_ref().unwrap();
         let meta = root.text_input.as_ref().unwrap();
         assert_eq!(meta.value, "•••");
@@ -195,7 +195,7 @@ mod tests {
 
         current.handlers.on_key_down.as_ref().unwrap()(key(LemonKey::Named(NamedKey::Backspace)));
         ui.update(viewport, 1.0, focused, true).unwrap();
-        assert_eq!(state.get().value, "a🔒");
+        assert_eq!(state.get(), "a🔒");
         let root = ui.retained.as_ref().unwrap().root.as_ref().unwrap();
         assert_eq!(root.text_input.as_ref().unwrap().value, "••");
         assert_eq!(root.text_input.as_ref().unwrap().cursor, "•".len());
@@ -203,10 +203,17 @@ mod tests {
 
     #[test]
     fn mask_cursor_uses_display_byte_offsets_for_every_character_boundary() {
-        for (cursor, mask_cursor) in [(0, 0), (1, 3), (3, 6), (7, 9)] {
-            let mut field = TextFieldState::new("aé🔒");
-            field.cursor = cursor;
-            let field = view(SecureField::new(&Cx::new(), State::new(field)).into_element());
+        for (steps, mask_cursor) in [(0, 0), (1, 3), (2, 6), (3, 9)] {
+            let cx = Cx::new();
+            let state = State::new("aé🔒".to_owned());
+            let initial = view(SecureField::new(&cx, state.clone()).into_element());
+            for _ in 0..steps {
+                initial.handlers.on_key_down.as_ref().unwrap()(key(LemonKey::Named(
+                    NamedKey::ArrowRight,
+                )));
+            }
+            cx.reset_hooks();
+            let field = view(SecureField::new(&cx, state).into_element());
             assert_eq!(displayed(&field), "•••");
             assert_eq!(field.text_input.as_ref().unwrap().cursor, mask_cursor);
         }
@@ -222,14 +229,14 @@ mod tests {
             .inset(10.0)
             .rounding(8.0);
         let plain = view(
-            TextField::new(&cx, State::new(TextFieldState::new("")))
+            TextField::new(&cx, State::new("".to_owned()))
                 .placeholder("Password")
                 .style(style.clone())
                 .width(220.0)
                 .into_element(),
         );
         let secure = view(
-            SecureField::new(&cx, State::new(TextFieldState::new("")))
+            SecureField::new(&cx, State::new("".to_owned()))
                 .placeholder("Password")
                 .style(style)
                 .width(220.0)
@@ -242,7 +249,7 @@ mod tests {
         assert_eq!(secure.paint.resolve(), plain.paint.resolve());
 
         let disabled = view(
-            SecureField::new(&cx, State::new(TextFieldState::new("secret")))
+            SecureField::new(&cx, State::new("secret".to_owned()))
                 .disabled(true)
                 .into_element(),
         );
@@ -255,25 +262,26 @@ mod tests {
 
     #[test]
     fn select_all_deletion_and_typing_keep_secret_state_separate_from_display() {
-        let state = State::new(TextFieldState::new("old password"));
-        let field = view(SecureField::new(&Cx::new(), state.clone()).into_element());
+        let state = State::new("old password".to_owned());
+        let cx = Cx::new();
+        let field = view(SecureField::new(&cx, state.clone()).into_element());
         let handler = field.handlers.on_key_down.as_ref().unwrap();
         let mut select_all = key(LemonKey::Character("a".into()));
         select_all.modifiers.meta = true;
         handler(select_all);
         handler(key(LemonKey::Named(NamedKey::Backspace)));
-        assert_eq!(state.get().value, "");
-        assert_eq!(state.get().cursor, 0);
+        assert_eq!(state.get(), "");
         handler(key(LemonKey::Character("new🔑".into())));
-        assert_eq!(state.get().value, "new🔑");
-        let field = view(SecureField::new(&Cx::new(), state).into_element());
+        assert_eq!(state.get(), "new🔑");
+        cx.reset_hooks();
+        let field = view(SecureField::new(&cx, state).into_element());
         assert_eq!(displayed(&field), "••••");
         assert_eq!(field.text_input.as_ref().unwrap().cursor, "••••".len());
     }
 
     #[test]
     fn clipboard_export_shortcuts_never_enter_the_editor() {
-        let state = State::new(TextFieldState::new("secret"));
+        let state = State::new("secret".to_owned());
         let read = state.clone();
         let updates = Rc::new(Cell::new(0));
         let count = updates.clone();
@@ -303,9 +311,11 @@ mod tests {
             1,
             "blocked exports must bypass state/clipboard handling"
         );
-        assert_eq!(state.get().value, "secret");
-        // Normal editing still enters the editor.
+        assert_eq!(state.get(), "secret");
+        // Navigation updates only the internal caret, not the app's string.
         field.handlers.on_key_down.as_ref().unwrap()(key(LemonKey::Named(NamedKey::End)));
+        assert_eq!(updates.get(), 1);
+        field.handlers.on_key_down.as_ref().unwrap()(key(LemonKey::Character("!".into())));
         assert_eq!(updates.get(), 2);
     }
 }

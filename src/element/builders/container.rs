@@ -213,8 +213,8 @@ macro_rules! container_builder {
             }
 
             /// Distributes spare space along the stacking direction, preserving perpendicular alignment.
-            pub fn distribute(mut self, v: impl Into<crate::element::style::Distribution>) -> Self {
-                self.0.style.justify_content = Some(v.into().into());
+            pub fn distribute(mut self, v: crate::element::style::Distribute) -> Self {
+                self.0.style.justify_content = Some(v);
                 self
             }
 
@@ -589,23 +589,21 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Sets the top inset in logical points.
+            /// Sets the top edge offset in logical points; other edges stay unchanged.
             ///
-            /// Use with [`.floating()`](Self::floating) to position an overlay relative to its
-            /// containing flex ancestor without taking up normal flex space.
+            /// Its reference frame follows [`.position(...)`](Self::position).
             pub fn top(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.inset.take().unwrap_or_default();
-                edges.top = v;
+                edges.top = Some(v);
                 self.0.style.inset = Some(edges);
                 self
             }
-            /// Sets the left inset in logical points.
+            /// Sets the left edge offset in logical points; other edges stay unchanged.
             ///
-            /// Use with [`.floating()`](Self::floating) to pin an overlay's horizontal position
-            /// relative to its containing flex ancestor.
+            /// Its reference frame follows [`.position(...)`](Self::position).
             pub fn left(mut self, v: f32) -> Self {
                 let mut edges = self.0.style.inset.take().unwrap_or_default();
-                edges.left = v;
+                edges.left = Some(v);
                 self.0.style.inset = Some(edges);
                 self
             }
@@ -629,13 +627,34 @@ macro_rules! container_builder {
                 self.0.scroll_bar = true;
                 self
             }
-            /// Removes this node from normal flex flow.
+            /// Sets normal, absolute, fixed or sticky positioning (default: relative).
             ///
-            /// The node is positioned by Taffy's absolute-position algorithm relative to its
-            /// nearest flex ancestor. Pair this with inset builders such as [`.top()`](Self::top)
-            /// and [`.left()`](Self::left) when the absolute node must anchor to a specific edge.
-            pub fn floating(mut self) -> Self {
-                self.0.style.position_absolute = true;
+            /// Pair with edge offsets; unspecified edges remain automatic. Absolute and
+            /// fixed views reserve no sibling space. Fixed views use the window viewport;
+            /// sticky views remain in flow and stop at their parent boundary.
+            ///
+            /// ```
+            /// use lemon::{Position, View};
+            /// let header = View::new().position(Position::Sticky).top(0.0).height(48.0);
+            /// ```
+            pub fn position(mut self, position: crate::element::style::Position) -> Self {
+                self.0.style.position = position;
+                self
+            }
+
+            /// Sets the right edge offset in logical points; other edges stay unchanged.
+            pub fn right(mut self, value: f32) -> Self {
+                let mut edges = self.0.style.inset.take().unwrap_or_default();
+                edges.right = Some(value);
+                self.0.style.inset = Some(edges);
+                self
+            }
+
+            /// Sets the bottom edge offset in logical points; other edges stay unchanged.
+            pub fn bottom(mut self, value: f32) -> Self {
+                let mut edges = self.0.style.inset.take().unwrap_or_default();
+                edges.bottom = Some(value);
+                self.0.style.inset = Some(edges);
                 self
             }
 

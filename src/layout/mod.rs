@@ -8,7 +8,7 @@ use std::borrow::Cow;
 use taffy::geometry::{Point, Size};
 use taffy::{AvailableSpace, NodeId};
 
-use crate::element::style::{Overflow, TextStyle};
+use crate::element::style::{Dimension, Overflow, Position, TextStyle};
 use crate::retained::{RetainedError, RetainedKind, RetainedNode, RetainedTree};
 
 type ParleyBrush = [u8; 4];
@@ -26,6 +26,7 @@ pub struct LayoutRect {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct LayoutMap {
     rects: HashMap<NodeId, LayoutRect>,
+    flow_rects: HashMap<NodeId, LayoutRect>,
 }
 
 impl LayoutMap {
@@ -94,6 +95,7 @@ pub fn layout_pass(
             "root without layout node",
         ))?;
 
+    prepare_fixed_layout(root_node, &mut tree.taffy, viewport)?;
     let mut snapshots: HashMap<NodeId, TextSnapshot> = HashMap::new();
     collect_text_snapshots(root_node, &mut snapshots);
 
@@ -124,6 +126,29 @@ pub fn layout_pass(
         },
     )?;
 
+    // Fixed subtrees have their own containing block. Measuring them independently
+    // also prevents a narrow ancestor from wrapping an auto-sized fixed label.
+    let mut fixed = Vec::new();
+    collect_fixed_ids(root_node, &mut fixed);
+    for id in fixed {
+        tree.taffy.compute_layout_with_measure(
+            id,
+            Size {
+                width: AvailableSpace::MaxContent,
+                height: AvailableSpace::MaxContent,
+            },
+            |known, available, node_id, _, _| {
+                measure_text_node(
+                    snapshots.get(&node_id),
+                    known,
+                    available,
+                    &mut measure_ctx,
+                    node_id,
+                )
+            },
+        )?;
+    }
+
     {
         if let Some(root) = tree.root.as_mut() {
             apply_text_measurements(root, &measure_results);
@@ -137,6 +162,14 @@ pub fn layout_pass(
     let mut map = LayoutMap::default();
     collect_layouts(&tree.taffy, root_node, Point::ZERO, &mut map);
     fix_absolute_overlay_bounds(root_node, &mut map);
+    map.flow_rects = map.rects.clone();
+    let window = LayoutRect {
+        x: 0.0,
+        y: 0.0,
+        width: viewport.width,
+        height: viewport.height,
+    };
+    position_views(root_node, &mut map, window, window, window);
     tree.layout_dirty = false;
     Ok(map)
 }
@@ -167,7 +200,7 @@ pub fn scroll_content_extent(node: &RetainedNode, layout: &LayoutMap) -> Option<
         return None;
     }
     let inner = scroll_content_node(node)?;
-    Some(union_descendant_bounds(inner, layout)?.height)
+    Some(union_descendant_bounds(inner, &layout.flow_rects)?.height)
 }
 
 /// Maximum scroll offset for a clipped viewport with an inner content wrapper, from layout results.
@@ -415,6 +448,153 @@ fn apply_text_measurements(node: &mut RetainedNode, results: &HashMap<NodeId, Te
     }
 }
 
+fn collect_fixed_ids(node: &RetainedNode, ids: &mut Vec<NodeId>) {
+    if node.style.position == Position::Fixed {
+        if let Some(id) = node.taffy_id {
+            ids.push(id);
+        }
+    }
+    for child in &node.children {
+        collect_fixed_ids(child, ids);
+    }
+}
+
+// Fixed nodes remain out of flow in Taffy, but resolve dimensions against the window.
+fn prepare_fixed_layout(
+    node: &RetainedNode,
+    taffy: &mut taffy::TaffyTree<()>,
+    viewport: Viewport,
+) -> Result<(), RetainedError> {
+    if node.style.position == Position::Fixed {
+        if let Some(id) = node.taffy_id {
+            let mut style = taffy.style(id)?.clone();
+            let edges = node.style.inset.unwrap_or_default();
+            fn size(
+                value: &Option<Dimension>,
+                extent: f32,
+                start: Option<f32>,
+                end: Option<f32>,
+            ) -> taffy::Dimension {
+                match value {
+                    Some(Dimension::Percent(fraction)) => {
+                        taffy::Dimension::Length(extent * fraction)
+                    }
+                    Some(Dimension::Points(points)) => taffy::Dimension::Length(*points),
+                    _ => match (start, end) {
+                        (Some(a), Some(b)) => taffy::Dimension::Length((extent - a - b).max(0.0)),
+                        _ => taffy::Dimension::Auto,
+                    },
+                }
+            }
+            style.size.width = size(&node.style.width, viewport.width, edges.left, edges.right);
+            style.size.height = size(&node.style.height, viewport.height, edges.top, edges.bottom);
+            style.inset = taffy::Rect::auto();
+            style.max_size.width = if matches!(node.style.width, None | Some(Dimension::Auto)) {
+                taffy::Dimension::Length(
+                    (viewport.width - edges.left.unwrap_or(0.0) - edges.right.unwrap_or(0.0))
+                        .max(0.0),
+                )
+            } else {
+                taffy::Dimension::Auto
+            };
+            if taffy.style(id)? != &style {
+                taffy.set_style(id, style)?;
+            }
+        }
+    }
+    for child in &node.children {
+        prepare_fixed_layout(child, taffy, viewport)?;
+    }
+    Ok(())
+}
+
+fn translate_subtree(node: &RetainedNode, map: &mut LayoutMap, dx: f32, dy: f32) {
+    if let Some(rect) = node.taffy_id.and_then(|id| map.rects.get_mut(&id)) {
+        rect.x += dx;
+        rect.y += dy;
+    }
+    for child in &node.children {
+        translate_subtree(child, map, dx, dy);
+    }
+}
+
+fn position_views(
+    node: &RetainedNode,
+    map: &mut LayoutMap,
+    parent: LayoutRect,
+    scrollport: LayoutRect,
+    window: LayoutRect,
+) {
+    let mut port = scrollport;
+    if let Some(rect) = node.taffy_id.and_then(|id| map.get(id)).copied() {
+        let edges = node.style.inset.unwrap_or_default();
+        let mut target = rect;
+        if node.style.position == Position::Fixed {
+            target.x = edges
+                .left
+                .unwrap_or_else(|| edges.right.map_or(0.0, |r| window.width - r - rect.width));
+            target.y = edges.top.unwrap_or_else(|| {
+                edges
+                    .bottom
+                    .map_or(0.0, |b| window.height - b - rect.height)
+            });
+            port = window;
+        } else if node.style.position == Position::Sticky {
+            fn stick(
+                value: f32,
+                size: f32,
+                start: Option<f32>,
+                end: Option<f32>,
+                port: (f32, f32),
+                parent: (f32, f32),
+            ) -> f32 {
+                if start.is_none() && end.is_none() {
+                    return value;
+                }
+                let mut result = value;
+                if let Some(end) = end {
+                    result = result.min(port.0 + port.1 - end - size);
+                }
+                if let Some(start) = start {
+                    result = result.max(port.0 + start);
+                }
+                result
+                    .max(parent.0)
+                    .min((parent.0 + parent.1 - size).max(parent.0))
+            }
+            target.x = stick(
+                rect.x,
+                rect.width,
+                edges.left,
+                edges.right,
+                (port.x, port.width),
+                (parent.x, parent.width),
+            );
+            target.y = stick(
+                rect.y,
+                rect.height,
+                edges.top,
+                edges.bottom,
+                (port.y, port.height),
+                (parent.y, parent.height),
+            );
+        }
+        if target.x != rect.x || target.y != rect.y {
+            translate_subtree(node, map, target.x - rect.x, target.y - rect.y);
+        }
+        if node.style.overflow == Overflow::Hidden {
+            port = target;
+        }
+        for child in &node.children {
+            position_views(child, map, target, port, window);
+        }
+    } else {
+        for child in &node.children {
+            position_views(child, map, parent, port, window);
+        }
+    }
+}
+
 fn collect_layouts(
     taffy: &taffy::TaffyTree<()>,
     node: &RetainedNode,
@@ -464,9 +644,9 @@ fn fix_absolute_overlay_bounds(node: &RetainedNode, map: &mut LayoutMap) {
     }
 
     if let Some(taffy_id) = node.taffy_id {
-        if node.style.position_absolute {
+        if node.style.position == Position::Absolute {
             if let Some(rect) = map.rects.get(&taffy_id).copied() {
-                if let Some(content) = union_descendant_bounds(node, map) {
+                if let Some(content) = union_descendant_bounds(node, &map.rects) {
                     let height = (content.y + content.height) - rect.y;
                     let width = (content.x + content.width) - rect.x;
                     if height > rect.height || width > rect.width {
@@ -490,18 +670,24 @@ fn fix_absolute_overlay_bounds(node: &RetainedNode, map: &mut LayoutMap) {
     }
 }
 
-fn union_descendant_bounds(node: &RetainedNode, map: &LayoutMap) -> Option<LayoutRect> {
+fn union_descendant_bounds(
+    node: &RetainedNode,
+    rects: &HashMap<NodeId, LayoutRect>,
+) -> Option<LayoutRect> {
     let mut union: Option<LayoutRect> = None;
     for child in &node.children {
+        if child.style.position == Position::Fixed {
+            continue;
+        }
         if let Some(child_id) = child.taffy_id {
-            if let Some(rect) = map.get(child_id) {
+            if let Some(rect) = rects.get(&child_id) {
                 union = Some(match union {
                     None => *rect,
                     Some(u) => union_layout_rects(u, *rect),
                 });
             }
         }
-        if let Some(desc) = union_descendant_bounds(child, map) {
+        if let Some(desc) = union_descendant_bounds(child, rects) {
             union = Some(match union {
                 None => desc,
                 Some(u) => union_layout_rects(u, desc),
@@ -673,7 +859,7 @@ mod tests {
                 .child(View::new().width(100.0).height(40.0))
                 .child(
                     ColumnView::new()
-                        .floating()
+                        .position(crate::Position::Absolute)
                         .top(40.0)
                         .left(0.0)
                         .width(100.0)

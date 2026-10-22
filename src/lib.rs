@@ -79,12 +79,12 @@ pub use element::builders::{ColumnView, Component, RowView, Text, View};
 pub use font::{register_font_bytes, register_font_path, FontRegistrationError};
 pub use widget::{
     Button, Image, Scroll, ScrollStyle, SecureField, Select, SelectStyle, Slider, SliderStyle,
-    TextField, TextFieldState, TextFieldStyle,
+    TextField, TextFieldStyle,
 };
 
 pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 pub use element::style::{
-    BoxShadow, Color, Distribution, LinearGradient, Overflow, Placement, StyleProps,
+    BoxShadow, Color, Distribute, LinearGradient, Overflow, Placement, Position, StyleProps,
 };
 pub use host::OpenWindowParams;
 pub use layout::{

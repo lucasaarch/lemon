@@ -5,8 +5,8 @@ fn field(view: View) -> View {
 }
 
 fn app(cx: &Cx) -> Element {
-    let name = cx.state(TextFieldState::new(""));
-    let password = cx.state(TextFieldState::new(""));
+    let name = cx.state("".to_owned());
+    let password = cx.state("".to_owned());
 
     View::new()
         .fill()

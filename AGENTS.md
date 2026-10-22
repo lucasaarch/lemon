@@ -56,8 +56,10 @@ User views build an `Element` tree. `Runtime` renders components and freezes dyn
 Use only the canonical API in code, examples, and docs. Do not retain deprecated APIs, old aliases, compatibility crates or forwarding bridges.
 
 - State and behavior: `cx.state`, `cx.derive`, `cx.watch`, `cx.motion`, `cx.theme`; use `State<T>` for app-owned reactive values.
-- Size and placement: `.fill()`, `.fill_width()`, `.fill_height()`, `.center()`, `.place(Placement::...)`, `.distribute(Distribution::...)`.
+- Size and placement: `.fill()`, `.fill_width()`, `.fill_height()`, `.center()`, `.place(Placement::...)`, `.distribute(Distribute::...)`.
 - Spacing and decoration: `.spacing()`, `.inset()` (inside), `.outset()` (outside), `.surface()`, `.rounding()`, `.gradient()`, `.shadow()`, `.layer()`, `.clip()`.
+- Positioning: `.position(Position::Relative | Absolute | Fixed | Sticky)` with `.top()`, `.right()`, `.bottom()`, `.left()` offsets. Layout owns final coordinates shared by paint and hit testing.
+- Fields accept `State<String>`; keep cursor and selection internal to each field.
 - Text and activation: `.size()`, `.font()`, `.leading()`, `.action()`.
 - Placement is physical and must behave the same for `View`, `RowView`, and `ColumnView`. Keep engine flex terminology in the owning layout/data layer.
 

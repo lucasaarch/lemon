@@ -7,7 +7,7 @@ use taffy::{NodeId, Rect, Size, Style, TaffyTree};
 
 use crate::diff::{NodePath, Patch};
 use crate::element::style::{
-    Align, Color, CornerRadii, Dimension, Edges, Justify, PaintData, StyleProps, TextStyle,
+    Align, Color, CornerRadii, Dimension, Distribute, Edges, PaintData, StyleProps, TextStyle,
 };
 use crate::element::{
     types::{BoxElement, ButtonElement, ImageElement, TextElement},
@@ -502,7 +502,9 @@ impl RetainedTree {
         let invalidates_layout = match &patch {
             Patch::UpdateStyle { node, style } => {
                 let old = self.node_mut(node)?;
-                old.kind.layout_style(&old.style) != old.kind.layout_style(style)
+                old.style.position != style.position
+                    || old.style.inset != style.inset
+                    || old.kind.layout_style(&old.style) != old.kind.layout_style(style)
             }
             Patch::UpdateTextStyle { node, style } => {
                 let text = self
@@ -847,7 +849,11 @@ impl StyleProps {
                 .as_ref()
                 .map_or(Rect::zero(), into_taffy_padding),
             margin: self.margin.as_ref().map_or(Rect::zero(), into_taffy_margin),
-            inset: self.inset.as_ref().map_or(Rect::auto(), into_taffy_margin),
+            inset: if self.position == crate::Position::Sticky {
+                Rect::auto()
+            } else {
+                self.inset.as_ref().map_or(Rect::auto(), into_taffy_inset)
+            },
             gap: Size {
                 width: self
                     .column_gap
@@ -864,10 +870,13 @@ impl StyleProps {
             },
             align_items: self.align_items.clone().map(into_taffy_align_items),
             align_self: self.align_self.clone().map(into_taffy_align_self),
-            justify_content: self.justify_content.clone().map(into_taffy_justify_content),
+            justify_content: self.justify_content.map(into_taffy_justify_content),
             flex_grow: self.flex_grow.unwrap_or(0.0),
             flex_shrink: self.flex_shrink.unwrap_or(1.0),
-            position: if self.position_absolute {
+            position: if matches!(
+                self.position,
+                crate::Position::Absolute | crate::Position::Fixed
+            ) {
                 taffy::Position::Absolute
             } else {
                 taffy::Position::Relative
@@ -891,6 +900,21 @@ fn into_taffy_padding(edges: &Edges<f32>) -> Rect<taffy::LengthPercentage> {
         right: taffy::LengthPercentage::Length(edges.right),
         top: taffy::LengthPercentage::Length(edges.top),
         bottom: taffy::LengthPercentage::Length(edges.bottom),
+    }
+}
+
+fn into_taffy_inset(edges: &Edges<Option<f32>>) -> Rect<taffy::LengthPercentageAuto> {
+    let edge = |value: Option<f32>| {
+        value.map_or(
+            taffy::LengthPercentageAuto::Auto,
+            taffy::LengthPercentageAuto::Length,
+        )
+    };
+    Rect {
+        top: edge(edges.top),
+        right: edge(edges.right),
+        bottom: edge(edges.bottom),
+        left: edge(edges.left),
     }
 }
 
@@ -923,14 +947,14 @@ fn into_taffy_align_items(align: Align) -> taffy::AlignItems {
     }
 }
 
-fn into_taffy_justify_content(justify: Justify) -> taffy::JustifyContent {
+fn into_taffy_justify_content(justify: Distribute) -> taffy::JustifyContent {
     match justify {
-        Justify::Start => taffy::JustifyContent::Start,
-        Justify::End => taffy::JustifyContent::End,
-        Justify::Center => taffy::JustifyContent::Center,
-        Justify::SpaceBetween => taffy::JustifyContent::SpaceBetween,
-        Justify::SpaceAround => taffy::JustifyContent::SpaceAround,
-        Justify::SpaceEvenly => taffy::JustifyContent::SpaceEvenly,
+        Distribute::Start => taffy::JustifyContent::Start,
+        Distribute::End => taffy::JustifyContent::End,
+        Distribute::Center => taffy::JustifyContent::Center,
+        Distribute::Between => taffy::JustifyContent::SpaceBetween,
+        Distribute::Around => taffy::JustifyContent::SpaceAround,
+        Distribute::Evenly => taffy::JustifyContent::SpaceEvenly,
     }
 }
 
@@ -1051,7 +1075,7 @@ mod tests {
     use crate::diff::{NodePath, Patch};
     use crate::element::builders::{Button, ColumnView, RowView, Text, View};
     use crate::element::events::{KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
-    use crate::element::style::{Align, Color, Dimension, Edges, Justify, StyleProps};
+    use crate::element::style::{Align, Color, Dimension, Distribute, Edges, StyleProps};
     use crate::element::types::ComponentElement;
     use crate::layout::{LayoutMap, Viewport};
     use parley::FontContext;
@@ -1073,12 +1097,12 @@ mod tests {
             height: Some(Dimension::Percent(0.5)),
             padding: Some(Edges::all(8.0)),
             margin: Some(Edges::all(4.0)),
-            inset: Some(Edges::all(6.0)),
+            inset: Some(Edges::all(Some(6.0))),
             gap: Some(12.0),
             flex_grow: Some(1.0),
             flex_shrink: Some(0.0),
             align_items: Some(Align::Center),
-            justify_content: Some(Justify::SpaceBetween),
+            justify_content: Some(Distribute::Between),
             align_self: Some(Align::Start),
             ..Default::default()
         };

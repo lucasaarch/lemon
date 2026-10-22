@@ -5,13 +5,14 @@ use lemon::prelude::*;
 fn app(cx: &Cx) -> Element {
     let theme = cx.theme();
     ColumnView::new()
+        .fill()
         .inset(24.0)
         .spacing(16.0)
         .child(Text::new("Layout").size(24.0))
         .child(
             RowView::new()
                 .width(360.0)
-                .distribute(Distribution::Between)
+                .distribute(Distribute::Between)
                 .child(Text::new("Left"))
                 .child(Text::new("Right")),
         )
@@ -29,6 +30,14 @@ fn app(cx: &Cx) -> Element {
                         .child(Text::new("With vertically stacked children")),
                 ),
         )
+        .child(Text::new("Fixed to window").decorate(|view| {
+            view.position(Position::Fixed)
+                .right(16.0)
+                .bottom(16.0)
+                .inset(8.0)
+                .surface(theme.colors.surface)
+                .rounding(8.0)
+        }))
         .into_element()
 }
 

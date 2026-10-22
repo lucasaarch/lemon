@@ -5,8 +5,8 @@
 use lemon::prelude::*;
 
 fn app(cx: &Cx) -> Element {
-    let name = cx.state(TextFieldState::new(""));
-    let password = cx.state(TextFieldState::new(""));
+    let name = cx.state(String::new());
+    let password = cx.state(String::new());
     let role = cx.state(None::<String>);
     let volume = cx.state(0.5_f32);
     let history = cx.state(Vec::<String>::new());
@@ -43,7 +43,7 @@ fn app(cx: &Cx) -> Element {
             Text::new(move || format!("Volume: {:.0}%", volume_label.get() * 100.0)),
             Slider::new(cx, volume).width(300.0),
             Button::new(cx, "Submit").action(move || {
-                let name = name_submit.get().value.trim().to_owned();
+                let name = name_submit.get().trim().to_owned();
                 let Some(role) = role_submit.get() else {
                     return;
                 };

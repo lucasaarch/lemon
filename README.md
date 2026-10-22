@@ -125,8 +125,8 @@ fn field(view: View) -> View {
 }
 
 fn login(cx: &Cx) -> Element {
-    let name = cx.state(TextFieldState::new(""));
-    let password = cx.state(TextFieldState::new(""));
+    let name = cx.state("".to_owned());
+    let password = cx.state("".to_owned());
     ColumnView::new().spacing(12.0)
         .child(TextField::new(cx, name).placeholder("Name").decorate(field))
         .child(SecureField::new(cx, password).placeholder("Password").decorate(field))
@@ -269,8 +269,9 @@ application UI, and their defaults come from the active `Theme`. Start there whe
 matches your product. Use `run_with_theme` for app-wide tokens and widget style types such as
 `SelectStyle`, `SliderStyle`, and `TextFieldStyle` for local overrides.
 
-`SecureField` shares `TextFieldState` and `TextFieldStyle`, displays bullets, and
-blocks clipboard copy/cut shortcuts. Its state retains the original value for app code.
+`TextField` and `SecureField` accept `State<String>`; cursor and selection stay internal.
+`SecureField` shares `TextFieldStyle`, displays bullets, and
+blocks clipboard copy/cut shortcuts. Its string state retains the original value for app code.
 
 When a widget almost fits but the visual structure does not, rebuild the control from primitives:
 `View`, `ColumnView`, `RowView`, `Text`, `Button`, `Signal`, and event handlers. This keeps the app in the
@@ -406,3 +407,19 @@ The project is especially opinionated about keeping the pipeline legible. If the
 ## License
 
 MIT
+
+### Positioning
+
+Use `.position(Position::Relative | Absolute | Fixed | Sticky)` with `.top()`,
+`.right()`, `.bottom()` and `.left()` offsets in logical points. Relative is the
+default. Absolute uses the parent, fixed uses the window and escapes ancestor
+clipping, and sticky stays in flow within its parent and nearest clipped region.
+Unset edges remain automatic. Fixed percentage dimensions use the window size;
+opposing edges stretch an otherwise auto-sized fixed view.
+
+```rust
+use lemon::{Distribute, Position, RowView, View};
+let row = RowView::new().fill_width().distribute(Distribute::Between);
+let badge = View::new().position(Position::Fixed).top(16.0).right(16.0)
+    .width(80.0).height(32.0);
+```

@@ -49,7 +49,72 @@ pub fn normalize_coords(point: LogicalPoint, rect: &LayoutRect) -> (f32, f32) {
     (nx, ny)
 }
 
-/// Walk the retained tree in post-order and return the top-most node under `point` that has
+// Follow the same deferred overlay order as paint, applying ancestor clips only
+// to ordinary content. Fixed views and explicit layers escape those clips.
+fn hit_test<'a>(
+    node: &'a RetainedNode,
+    layout: &LayoutMap,
+    point: LogicalPoint,
+    accepts: impl Fn(&RetainedNode) -> bool,
+) -> Option<&'a RetainedNode> {
+    fn visit<'a>(
+        node: &'a RetainedNode,
+        layout: &LayoutMap,
+        point: LogicalPoint,
+        clips: &mut Vec<LayoutRect>,
+        accepts: &impl Fn(&RetainedNode) -> bool,
+        hit: &mut Option<&'a RetainedNode>,
+        deferred: &mut Vec<(i32, &'a RetainedNode)>,
+    ) {
+        let inside = clips.iter().all(|rect| point_in_rect(point, rect));
+        let rect = node.taffy_id.and_then(|id| layout.get(id));
+        if inside && accepts(node) && rect.is_some_and(|rect| point_in_rect(point, rect)) {
+            *hit = Some(node);
+        }
+        let clipped =
+            node.style.overflow == crate::element::style::Overflow::Hidden && rect.is_some();
+        if clipped {
+            clips.push(*rect.unwrap());
+        }
+        for child in &node.children {
+            if child.style.z_index != 0 || child.style.position == crate::Position::Fixed {
+                deferred.push((child.style.z_index, child));
+            } else {
+                visit(child, layout, point, clips, accepts, hit, deferred);
+            }
+        }
+        if clipped {
+            clips.pop();
+        }
+    }
+    let mut hit = None;
+    let mut deferred = Vec::new();
+    visit(
+        node,
+        layout,
+        point,
+        &mut Vec::new(),
+        &accepts,
+        &mut hit,
+        &mut deferred,
+    );
+    while !deferred.is_empty() {
+        deferred.sort_by_key(|(z, _)| *z);
+        let (_, node) = deferred.remove(0);
+        visit(
+            node,
+            layout,
+            point,
+            &mut Vec::new(),
+            &accepts,
+            &mut hit,
+            &mut deferred,
+        );
+    }
+    hit
+}
+
+/// Walk the retained tree in paint order and return the top-most node under `point` that has
 /// an [`on_pointer_down`](crate::retained::EventHandlers::on_pointer_down) handler,
 /// together with the hit coordinates normalized to `[0.0, 1.0]` within the node's bounds.
 pub fn hit_test_pointer_down<'a>(
@@ -57,30 +122,10 @@ pub fn hit_test_pointer_down<'a>(
     layout: &LayoutMap,
     point: LogicalPoint,
 ) -> Option<(&'a RetainedNode, (f32, f32))> {
-    if matches!(node.kind, RetainedKind::Component { .. }) {
-        let mut hit = None;
-        for child in &node.children {
-            hit = hit_test_pointer_down(child, layout, point).or(hit);
-        }
-        return hit;
-    }
-
-    let mut hit = None;
-    for child in &node.children {
-        hit = hit_test_pointer_down(child, layout, point).or(hit);
-    }
-
-    if node.handlers.on_pointer_down.is_some() {
-        if let Some(id) = node.taffy_id {
-            if let Some(rect) = layout.get(id) {
-                if point_in_rect(point, rect) {
-                    hit = Some((node, normalize_coords(point, rect)));
-                }
-            }
-        }
-    }
-
-    hit
+    let hit = hit_test(node, layout, point, |node| {
+        node.handlers.on_pointer_down.is_some()
+    });
+    hit.and_then(|node| Some((node, normalize_coords(point, layout.get(node.taffy_id?)?))))
 }
 
 /// Walk the entire retained tree and call [`on_click_outside`](crate::retained::EventHandlers::on_click_outside)
@@ -110,36 +155,14 @@ pub fn dispatch_outside_clicks(node: &RetainedNode, layout: &LayoutMap, point: L
     }
 }
 
-/// Walk the retained tree in post-order (children before parents) and return the top-most
+/// Walk the retained tree in paint order and return the top-most
 /// node under `point` that has an `on_click` handler.
 pub fn hit_test_on_click<'a>(
     node: &'a RetainedNode,
     layout: &LayoutMap,
     point: LogicalPoint,
 ) -> Option<&'a RetainedNode> {
-    if matches!(node.kind, RetainedKind::Component { .. }) {
-        let mut hit = None;
-        for child in &node.children {
-            hit = hit_test_on_click(child, layout, point).or(hit);
-        }
-        return hit;
-    }
-
-    let mut hit = None;
-    for child in &node.children {
-        hit = hit_test_on_click(child, layout, point).or(hit);
-    }
-
-    if node.handlers.on_click.is_some() {
-        if let Some(id) = node.taffy_id {
-            if let Some(rect) = layout.get(id) {
-                if point_in_rect(point, rect) {
-                    hit = Some(node);
-                }
-            }
-        }
-    }
-
+    let hit = hit_test(node, layout, point, |node| node.handlers.on_click.is_some());
     hit
 }
 
@@ -149,65 +172,21 @@ pub fn hit_test_hover<'a>(
     layout: &LayoutMap,
     point: LogicalPoint,
 ) -> Option<&'a RetainedNode> {
-    if matches!(node.kind, RetainedKind::Component { .. }) {
-        let mut hit = None;
-        for child in &node.children {
-            hit = hit_test_hover(child, layout, point).or(hit);
-        }
-        return hit;
-    }
-
-    let mut hit = None;
-    for child in &node.children {
-        hit = hit_test_hover(child, layout, point).or(hit);
-    }
-
-    let is_hoverable = node.handlers.on_hover_enter.is_some()
-        || node.handlers.on_hover_leave.is_some()
-        || node.style.cursor != crate::element::events::Cursor::Default;
-
-    if is_hoverable {
-        if let Some(id) = node.taffy_id {
-            if let Some(rect) = layout.get(id) {
-                if point_in_rect(point, rect) {
-                    hit = Some(node);
-                }
-            }
-        }
-    }
-
+    let hit = hit_test(node, layout, point, |node| {
+        node.handlers.on_hover_enter.is_some()
+            || node.handlers.on_hover_leave.is_some()
+            || node.style.cursor != crate::element::events::Cursor::Default
+    });
     hit
 }
 
-/// Walk the retained tree in post-order and return the top-most focusable node under `point`.
+/// Walk the retained tree in paint order and return the top-most focusable node under `point`.
 pub fn hit_test_focusable<'a>(
     node: &'a RetainedNode,
     layout: &LayoutMap,
     point: LogicalPoint,
 ) -> Option<&'a RetainedNode> {
-    if matches!(node.kind, RetainedKind::Component { .. }) {
-        let mut hit = None;
-        for child in &node.children {
-            hit = hit_test_focusable(child, layout, point).or(hit);
-        }
-        return hit;
-    }
-
-    let mut hit = None;
-    for child in &node.children {
-        hit = hit_test_focusable(child, layout, point).or(hit);
-    }
-
-    if node.style.focusable {
-        if let Some(id) = node.taffy_id {
-            if let Some(rect) = layout.get(id) {
-                if point_in_rect(point, rect) {
-                    hit = Some(node);
-                }
-            }
-        }
-    }
-
+    let hit = hit_test(node, layout, point, |node| node.style.focusable);
     hit
 }
 
@@ -244,29 +223,9 @@ pub fn hit_test_scroll<'a>(
     layout: &LayoutMap,
     point: LogicalPoint,
 ) -> Option<&'a RetainedNode> {
-    if matches!(node.kind, RetainedKind::Component { .. }) {
-        let mut hit = None;
-        for child in &node.children {
-            hit = hit_test_scroll(child, layout, point).or(hit);
-        }
-        return hit;
-    }
-
-    let mut hit = None;
-    for child in &node.children {
-        hit = hit_test_scroll(child, layout, point).or(hit);
-    }
-
-    if node.handlers.on_scroll.is_some() {
-        if let Some(id) = node.taffy_id {
-            if let Some(rect) = layout.get(id) {
-                if point_in_rect(point, rect) {
-                    hit = Some(node);
-                }
-            }
-        }
-    }
-
+    let hit = hit_test(node, layout, point, |node| {
+        node.handlers.on_scroll.is_some()
+    });
     hit
 }
 

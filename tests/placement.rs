@@ -1,5 +1,5 @@
 use lemon::{
-    element::Element, ui::UiState, ColumnView, Distribution, Placement, RowView, View, Viewport,
+    element::Element, ui::UiState, ColumnView, Distribute, Placement, RowView, View, Viewport,
 };
 
 #[test]
@@ -114,7 +114,7 @@ fn distribution_uses_stacking_direction_without_overwriting_other_axis() {
             .width(100.0)
             .height(100.0)
             .center()
-            .distribute(Distribution::Between)
+            .distribute(Distribute::Between)
             .child(View::new().width(10.0).height(10.0))
             .child(View::new().width(10.0).height(10.0))
             .into_element(),
@@ -122,7 +122,7 @@ fn distribution_uses_stacking_direction_without_overwriting_other_axis() {
             .width(100.0)
             .height(100.0)
             .center()
-            .distribute(Distribution::Between)
+            .distribute(Distribute::Between)
             .child(View::new().width(10.0).height(10.0))
             .child(View::new().width(10.0).height(10.0))
             .into_element(),

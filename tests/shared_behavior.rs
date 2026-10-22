@@ -56,8 +56,8 @@ fn one_decoration_styles_every_builder_without_replacing_widget_contracts() {
         Text::new("leaf").key(9).decorate(panel),
         Component::new(component).key(7).decorate(panel),
         Button::new(&cx, "Action").disabled(true).decorate(panel),
-        TextField::new(&cx, State::new(TextFieldState::new("text"))).decorate(panel),
-        SecureField::new(&cx, State::new(TextFieldState::new("secret"))).decorate(panel),
+        TextField::new(&cx, State::new("text".to_owned())).decorate(panel),
+        SecureField::new(&cx, State::new("secret".to_owned())).decorate(panel),
         Slider::new(&cx, State::new(0.5)).decorate(panel),
         Scroll::new(&cx, Text::new("content")).decorate(panel),
         Select::new(&cx, State::new(Some(1)), vec![(1, "One".into())]).decorate(panel),
@@ -121,7 +121,7 @@ fn decorations_preserve_axis_and_apply_explicit_overrides_in_order() {
 
 #[test]
 fn pointer_focus_keyboard_capture_hover_and_scroll_work_without_desktop() {
-    let value = State::new(TextFieldState::new(""));
+    let value = State::new("".to_owned());
     let source = value.clone();
     let volume = State::new(0.0);
     let source_volume = volume.clone();
@@ -154,7 +154,7 @@ fn pointer_focus_keyboard_capture_hover_and_scroll_work_without_desktop() {
     assert!(!ui.layout_dirty(), "hover paint must not force layout");
     ui.dispatch_input(key(LemonKey::Character("Olá".into()), Modifiers::default()))
         .unwrap();
-    assert_eq!(value.get().value, "Olá");
+    assert_eq!(value.get(), "Olá");
     finish(&mut ui);
     let root = ui.retained().unwrap().root().unwrap();
     let slider = *ui
@@ -225,7 +225,7 @@ fn clipboard_and_animation_requests_stay_with_originating_host() {
         move |text| *write.borrow_mut() = text.into(),
     );
     let second = HostContext::new(Theme::default_dark());
-    let value = State::new(TextFieldState::new(""));
+    let value = State::new("".to_owned());
     let source = value.clone();
     let mut ui = UiState::default();
     let animation = {
@@ -248,7 +248,7 @@ fn clipboard_and_animation_requests_stay_with_originating_host() {
         },
     ))
     .unwrap();
-    assert_eq!(value.get().value, "first host");
+    assert_eq!(value.get(), "first host");
     animation.play();
     animation.progress();
     assert!(first.animations().take_pending());

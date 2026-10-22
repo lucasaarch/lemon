@@ -49,15 +49,30 @@ pub enum Align {
     Baseline,
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
-pub enum Justify {
+/// How a view participates in layout and scrolling.
+///
+/// Edge offsets use logical points through `.top()`, `.right()`, `.bottom()` and
+/// `.left()`. Fixed views escape ancestor clipping; sticky views stay inside their
+/// parent and the nearest clipped scroll region (or window when none exists).
+///
+/// ```
+/// use lemon::{Position, View};
+/// let badge = View::new().position(Position::Fixed).top(16.0).right(16.0)
+///     .width(80.0).height(32.0);
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Position {
+    /// Normal flow; offsets move the view without changing sibling placement.
     #[default]
-    Start,
-    End,
-    Center,
-    SpaceBetween,
-    SpaceAround,
-    SpaceEvenly,
+    Relative,
+    /// Outside normal flow, positioned against the immediate layout parent.
+    Absolute,
+    /// Outside normal flow, positioned and sized against the window viewport.
+    /// Missing offsets anchor at the viewport's top-left corner.
+    Fixed,
+    /// In normal flow, clamped by edge offsets while its scroll region moves.
+    /// The view cannot leave its parent's bounds; unset edges do not constrain it.
+    Sticky,
 }
 
 /// Position of a container's children within its available space.
@@ -94,7 +109,7 @@ pub enum Placement {
 }
 
 impl Placement {
-    pub(crate) fn axes(self, vertical: bool) -> (Align, Justify) {
+    pub(crate) fn axes(self, vertical: bool) -> (Align, Distribute) {
         let (horizontal, vertical_alignment) = match self {
             Self::TopLeft => (0, 0),
             Self::Top => (1, 0),
@@ -117,9 +132,9 @@ impl Placement {
             _ => Align::End,
         };
         let justify = match main {
-            0 => Justify::Start,
-            1 => Justify::Center,
-            _ => Justify::End,
+            0 => Distribute::Start,
+            1 => Distribute::Center,
+            _ => Distribute::End,
         };
         (align, justify)
     }
@@ -131,12 +146,12 @@ impl Placement {
 /// perpendicular alignment unchanged. Use `.place(...)` for physical positioning.
 ///
 /// ```
-/// use lemon::{Distribution, RowView, Text};
-/// let header = RowView::new().fill_width().distribute(Distribution::Between)
+/// use lemon::{Distribute, RowView, Text};
+/// let header = RowView::new().fill_width().distribute(Distribute::Between)
 ///     .child(Text::new("Left")).child(Text::new("Right"));
 /// ```
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum Distribution {
+pub enum Distribute {
     /// Group children at the start of the stacking direction.
     #[default]
     Start,
@@ -150,32 +165,6 @@ pub enum Distribution {
     Around,
     /// Put equal gaps between children and at both outer edges.
     Evenly,
-}
-
-impl From<Justify> for Distribution {
-    fn from(value: Justify) -> Self {
-        match value {
-            Justify::Start => Self::Start,
-            Justify::Center => Self::Center,
-            Justify::End => Self::End,
-            Justify::SpaceBetween => Self::Between,
-            Justify::SpaceAround => Self::Around,
-            Justify::SpaceEvenly => Self::Evenly,
-        }
-    }
-}
-
-impl From<Distribution> for Justify {
-    fn from(value: Distribution) -> Self {
-        match value {
-            Distribution::Start => Self::Start,
-            Distribution::Center => Self::Center,
-            Distribution::End => Self::End,
-            Distribution::Between => Self::SpaceBetween,
-            Distribution::Around => Self::SpaceAround,
-            Distribution::Evenly => Self::SpaceEvenly,
-        }
-    }
 }
 
 /// How children are clipped when they exceed a container’s bounds.
@@ -217,13 +206,12 @@ pub struct StyleProps {
     pub height: Option<Dimension>,
     pub padding: Option<Edges<f32>>,
     pub margin: Option<Edges<f32>>,
-    /// Absolute or relative inset offsets in logical points.
+    /// Positioning edge offsets in logical points; unset edges are automatic.
     ///
-    /// For nodes created with [`.floating()`](crate::element::builders::View::floating), these
-    /// values position the node relative to its containing flex ancestor. Use builder methods such
+    /// Edge offsets follow [`position`](Self::position); unset edges remain automatic. Use builder methods such
     /// as [`.top()`](crate::element::builders::View::top) and
     /// [`.left()`](crate::element::builders::View::left) rather than setting this field directly.
-    pub inset: Option<Edges<f32>>,
+    pub inset: Option<Edges<Option<f32>>>,
     pub gap: Option<f32>,
     /// Per-axis gap overrides. When set, take precedence over [`gap`](Self::gap) for that axis.
     ///
@@ -241,7 +229,7 @@ pub struct StyleProps {
     pub flex_grow: Option<f32>,
     pub flex_shrink: Option<f32>,
     pub align_items: Option<Align>,
-    pub justify_content: Option<Justify>,
+    pub justify_content: Option<Distribute>,
     pub overflow: Overflow,
     /// Marks the offset wrapper of a scroll region; defaults to `false`.
     ///
@@ -257,12 +245,8 @@ pub struct StyleProps {
     pub align_self: Option<Align>,
     pub focusable: bool,
     pub cursor: crate::element::events::Cursor,
-    /// When `true` the node is removed from normal flow and positioned by Taffy's
-    /// absolute-position algorithm relative to its nearest flex ancestor.
-    ///
-    /// Use the builder method [`.floating()`](crate::element::builders::View::floating) rather
-    /// than setting this field directly.
-    pub position_absolute: bool,
+    /// Positioning mode; defaults to normal-flow [`Position::Relative`].
+    pub position: Position,
 }
 
 impl Default for StyleProps {
@@ -287,7 +271,7 @@ impl Default for StyleProps {
             align_self: None,
             focusable: false,
             cursor: crate::element::events::Cursor::default(),
-            position_absolute: false,
+            position: Position::Relative,
         }
     }
 }

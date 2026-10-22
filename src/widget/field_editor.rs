@@ -1,30 +1,8 @@
 use crate::host::HostContext;
 use crate::{KeyEvent, KeyState, LemonKey, NamedKey};
 
-/// Plain editing state for a text field.
-///
-/// The cursor is stored as a UTF-8 byte offset into [`Self::value`], and all
-/// movement/edit operations keep it on character boundaries.
-///
-/// # Examples
-///
-/// ```
-/// use lemon::{KeyEvent, KeyState, LemonKey, Modifiers};
-/// use lemon::widget::TextFieldState;
-///
-/// let mut state = TextFieldState::new("");
-/// state.handle_key(&KeyEvent {
-///     key: LemonKey::Character("h".into()),
-///     modifiers: Modifiers::default(),
-///     repeat: false,
-///     state: KeyState::Pressed,
-/// });
-///
-/// assert_eq!(state.value, "h");
-/// assert_eq!(state.cursor, 1);
-/// ```
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct TextFieldState {
+pub(super) struct FieldEditor {
     /// Current field text.
     pub value: String,
     /// Cursor position as a byte offset in [`Self::value`].
@@ -33,10 +11,7 @@ pub struct TextFieldState {
     selection_anchor: Option<usize>,
 }
 
-impl TextFieldState {
-    /// Creates a text field editing state with an initial value.
-    ///
-    /// The cursor starts at byte index `0`.
+impl FieldEditor {
     pub fn new(initial: impl Into<String>) -> Self {
         Self {
             value: initial.into(),
@@ -45,11 +20,13 @@ impl TextFieldState {
         }
     }
 
-    /// Clears the value and resets the cursor and selection.
-    pub fn clear(&mut self) {
-        self.value.clear();
-        self.cursor = 0;
-        self.selection_anchor = None;
+    /// Accepts app-owned changes, clearing stale selection and keeping a valid caret.
+    pub fn sync_value(&mut self, value: String) {
+        if self.value != value {
+            self.value = value;
+            self.clear_selection();
+            self.clamp_cursor_to_boundary();
+        }
     }
 
     /// Applies a keyboard event to the text state.
@@ -86,7 +63,7 @@ impl TextFieldState {
             LemonKey::Character(chars)
                 if !event.modifiers.ctrl && !event.modifiers.alt && !event.modifiers.meta =>
             {
-                self.clear_selection();
+                self.delete_selection();
                 for ch in chars.chars() {
                     self.value.insert(self.cursor, ch);
                     self.cursor += ch.len_utf8();
@@ -126,7 +103,7 @@ impl TextFieldState {
                 self.cursor = self.value.len();
             }
             LemonKey::Named(NamedKey::Space) => {
-                self.clear_selection();
+                self.delete_selection();
                 self.value.insert(self.cursor, ' ');
                 self.cursor += 1;
             }
@@ -251,7 +228,7 @@ mod tests {
 
     #[test]
     fn typing_ascii_inserts_and_advances_cursor() {
-        let mut state = TextFieldState::new("");
+        let mut state = FieldEditor::new("");
 
         state.handle_key(&key(LemonKey::Character("h".into())));
         state.handle_key(&key(LemonKey::Character("i".into())));
@@ -262,7 +239,7 @@ mod tests {
 
     #[test]
     fn backspace_removes_previous_character_and_moves_left() {
-        let mut state = TextFieldState {
+        let mut state = FieldEditor {
             value: "abc".into(),
             cursor: 2,
             selection_anchor: None,
@@ -276,7 +253,7 @@ mod tests {
 
     #[test]
     fn delete_removes_next_character_without_moving_cursor() {
-        let mut state = TextFieldState {
+        let mut state = FieldEditor {
             value: "abc".into(),
             cursor: 1,
             selection_anchor: None,
@@ -290,7 +267,7 @@ mod tests {
 
     #[test]
     fn backspace_and_delete_at_edges_do_nothing() {
-        let mut start = TextFieldState {
+        let mut start = FieldEditor {
             value: "abc".into(),
             cursor: 0,
             selection_anchor: None,
@@ -299,7 +276,7 @@ mod tests {
         assert_eq!(start.value, "abc");
         assert_eq!(start.cursor, 0);
 
-        let mut end = TextFieldState {
+        let mut end = FieldEditor {
             value: "abc".into(),
             cursor: 3,
             selection_anchor: None,
@@ -311,7 +288,7 @@ mod tests {
 
     #[test]
     fn arrow_home_end_navigation_moves_cursor() {
-        let mut state = TextFieldState {
+        let mut state = FieldEditor {
             value: "abc".into(),
             cursor: 1,
             selection_anchor: None,
@@ -332,7 +309,7 @@ mod tests {
 
     #[test]
     fn key_released_events_are_ignored() {
-        let mut state = TextFieldState::new("");
+        let mut state = FieldEditor::new("");
         state.handle_key(&KeyEvent {
             key: LemonKey::Character("x".into()),
             modifiers: Modifiers::default(),
@@ -346,7 +323,7 @@ mod tests {
 
     #[test]
     fn unicode_insertion_updates_cursor_as_byte_offset() {
-        let mut state = TextFieldState::new("");
+        let mut state = FieldEditor::new("");
 
         state.handle_key(&key(LemonKey::Character("€".into())));
 
@@ -356,7 +333,7 @@ mod tests {
 
     #[test]
     fn unicode_navigation_and_deletion_follow_char_boundaries() {
-        let mut state = TextFieldState {
+        let mut state = FieldEditor {
             value: "a€b".into(),
             cursor: "a€b".len(),
             selection_anchor: None,
@@ -379,7 +356,7 @@ mod tests {
 
     #[test]
     fn space_named_key_inserts_space_character() {
-        let mut state = TextFieldState {
+        let mut state = FieldEditor {
             value: "hi".into(),
             cursor: 2,
             selection_anchor: None,
@@ -393,7 +370,7 @@ mod tests {
 
     #[test]
     fn modified_character_shortcuts_are_not_inserted() {
-        let mut state = TextFieldState::new("");
+        let mut state = FieldEditor::new("");
         state.handle_key(&KeyEvent {
             key: LemonKey::Character("x".into()),
             modifiers: Modifiers {
@@ -428,7 +405,7 @@ mod tests {
 
     #[test]
     fn ctrl_a_selects_all_text() {
-        let mut state = TextFieldState {
+        let mut state = FieldEditor {
             value: "hello".into(),
             cursor: 2,
             selection_anchor: None,
@@ -448,7 +425,7 @@ mod tests {
 
     #[test]
     fn backspace_with_selection_deletes_range() {
-        let mut state = TextFieldState {
+        let mut state = FieldEditor {
             value: "hello".into(),
             cursor: 5,
             selection_anchor: Some(0),

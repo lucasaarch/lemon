@@ -9,7 +9,7 @@ use crate::{
     Cx, LemonKey, State,
 };
 
-use crate::TextFieldState;
+use super::field_editor::FieldEditor;
 
 /// Visual overrides shared by [`TextField`] and [`SecureField`](super::SecureField).
 ///
@@ -67,10 +67,10 @@ impl TextFieldStyle {
 ///
 /// ```no_run
 /// use lemon::{Color, Cx, element::Element};
-/// use lemon::widget::{TextField, TextFieldState, TextFieldStyle};
+/// use lemon::widget::{TextField, TextFieldStyle};
 ///
 /// fn my_view(cx: &Cx) -> Element {
-///     let state = cx.state(TextFieldState::new(""));
+///     let state = cx.state("".to_owned());
 ///     TextField::new(cx, state)
 ///         .style(TextFieldStyle::default().border_color(Color::rgb8(200, 80, 80)))
 ///         .placeholder("Type here…")
@@ -79,7 +79,8 @@ impl TextFieldStyle {
 /// }
 /// ```
 pub struct TextField {
-    state: State<TextFieldState>,
+    state: State<String>,
+    editor: State<FieldEditor>,
     hovered: State<bool>,
     pressed: State<bool>,
     placeholder: String,
@@ -104,11 +105,14 @@ impl TextField {
     /// Creates a new `TextField` backed by `state`.
     ///
     /// The returned builder uses theme defaults and is enabled with no placeholder.
-    /// Building its element reads `state`, subscribing the parent to value/cursor changes.
+    /// The app owns only the text. Cursor and selection persist internally across renders.
+    /// App writes clear selection and clamp the cursor to a valid UTF-8 boundary.
+    /// Cursor movement does not notify observers of the string.
     /// This constructor consumes hook slots; call it in a stable order on every render.
-    pub fn new(cx: &Cx, state: State<TextFieldState>) -> Self {
+    pub fn new(cx: &Cx, state: State<String>) -> Self {
         let theme = cx.theme();
         TextField {
+            editor: cx.state(FieldEditor::new(state.peek())),
             state,
             hovered: cx.state(false),
             pressed: cx.state(false),
@@ -131,7 +135,7 @@ impl TextField {
         }
     }
 
-    pub(super) fn new_secure(cx: &Cx, state: State<TextFieldState>) -> Self {
+    pub(super) fn new_secure(cx: &Cx, state: State<String>) -> Self {
         Self {
             secure: true,
             ..Self::new(cx, state)
@@ -196,7 +200,8 @@ impl TextField {
     ///
     /// Call this at the end of the builder chain to insert the widget into a parent container.
     pub fn into_element(self) -> Element {
-        let field = self.state.get();
+        let mut field = self.editor.get();
+        field.sync_value(self.state.get());
         let disabled = self.disabled;
         let secure = self.secure;
         // Paint and retained metadata only receive display text and display byte offsets.
@@ -285,6 +290,7 @@ impl TextField {
                 })
                 .on_key_down({
                     let state = self.state.clone();
+                    let editor = self.editor.clone();
                     move |ev| {
                         if secure
                             && (ev.modifiers.ctrl || ev.modifiers.meta)
@@ -293,7 +299,16 @@ impl TextField {
                         {
                             return;
                         }
-                        state.update(|s| s.handle_key(&ev));
+                        let value = state.peek();
+                        let mut next = editor.peek();
+                        next.sync_value(value.clone());
+                        next.handle_key(&ev);
+                        if next.value != value {
+                            state.set(next.value.clone());
+                        }
+                        if next != editor.peek() {
+                            editor.set(next);
+                        }
                     }
                 });
             let hovered_enter = self.hovered.clone();
@@ -349,7 +364,7 @@ mod tests {
         set_active_theme(custom.clone());
 
         let cx = Cx::new();
-        let state = State::new(TextFieldState::new(""));
+        let state = State::new("".to_owned());
         let Element::View(view) = TextField::new(&cx, state)
             .placeholder("Type here")
             .into_element()
@@ -376,9 +391,7 @@ mod tests {
         };
         assert_eq!(text.style.color, Some(custom.colors.foreground_secondary));
 
-        let mut field = TextFieldState::new("hello");
-        field.cursor = 5;
-        let state_with_text = State::new(field);
+        let state_with_text = State::new("hello".to_owned());
         let Element::View(filled) = TextField::new(&cx, state_with_text).into_element() else {
             panic!("expected View element");
         };
@@ -407,7 +420,7 @@ mod tests {
         set_active_theme(custom);
 
         let cx = Cx::new();
-        let state = State::new(TextFieldState::new(""));
+        let state = State::new("".to_owned());
         let Element::View(view) = TextField::new(&cx, state)
             .style(
                 TextFieldStyle::default()
@@ -457,7 +470,7 @@ mod tests {
         set_active_theme(custom.clone());
 
         let cx = Cx::new();
-        let state = State::new(TextFieldState::new(""));
+        let state = State::new("".to_owned());
         let Element::View(view) = TextField::new(&cx, state).into_element() else {
             panic!("expected View element");
         };
@@ -499,7 +512,7 @@ mod tests {
         set_active_theme(custom.clone());
 
         let cx = Cx::new();
-        let state = State::new(TextFieldState::new(""));
+        let state = State::new("".to_owned());
         let Element::View(view) = TextField::new(&cx, state.clone())
             .placeholder("Type here")
             .disabled(true)
@@ -520,7 +533,7 @@ mod tests {
             panic!("expected placeholder Text");
         };
         assert_eq!(text.style.color, Some(custom.colors.foreground_disabled));
-        assert_eq!(state.get().value, "");
+        assert_eq!(state.get(), "");
 
         set_active_theme(previous);
     }

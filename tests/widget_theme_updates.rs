@@ -12,8 +12,8 @@ fn container(element: &Element) -> &BoxElement {
 #[test]
 fn all_widget_defaults_follow_live_theme_without_losing_values_or_local_overrides() {
     let host = HostContext::new(Theme::default_dark());
-    let name = State::new(TextFieldState::new("Ada"));
-    let secret = State::new(TextFieldState::new("secret"));
+    let name = State::new("Ada".to_owned());
+    let secret = State::new("secret".to_owned());
     let selected = State::new(Some(1));
     let open = State::new(true);
     let volume = State::new(0.5);
@@ -109,8 +109,8 @@ fn all_widget_defaults_follow_live_theme_without_losing_values_or_local_override
             container(&root.children[6]).paint.resolve().background,
             Some(override_color)
         );
-        assert_eq!(name.get().value, "Ada");
-        assert_eq!(secret.get().value, "secret");
+        assert_eq!(name.get(), "Ada");
+        assert_eq!(secret.get(), "secret");
         assert_eq!(selected.get(), Some(1));
         assert_eq!(volume.get(), 0.5);
         assert!(open.get());

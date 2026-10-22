@@ -16,13 +16,13 @@ pub use crate::element::builders::{ColumnView, Component, RowView, Text, View};
 pub use crate::element::decoration::Decorate;
 
 pub mod button;
+mod field_editor;
 pub mod image;
 pub mod scroll;
 pub mod secure_field;
 pub mod select;
 pub mod slider;
 pub mod text_field;
-pub mod text_field_state;
 
 pub use button::Button;
 pub use image::Image;
@@ -31,7 +31,6 @@ pub use secure_field::SecureField;
 pub use select::{Select, SelectStyle};
 pub use slider::{Slider, SliderStyle};
 pub use text_field::{TextField, TextFieldStyle};
-pub use text_field_state::TextFieldState;
 
 #[cfg(test)]
 mod text_field_tests {
@@ -42,7 +41,7 @@ mod text_field_tests {
     #[test]
     fn text_field_renders_placeholder_when_value_is_empty() {
         fn root(cx: &Cx) -> Element {
-            let state = cx.state(TextFieldState::new(""));
+            let state = cx.state("".to_owned());
             TextField::new(cx, state)
                 .placeholder("Enter text...")
                 .into_element()
@@ -63,7 +62,7 @@ mod text_field_tests {
     #[test]
     fn text_field_is_focusable_and_has_text_cursor() {
         let cx = Cx::new();
-        let state = State::new(TextFieldState::new(""));
+        let state = State::new("".to_owned());
         let el = TextField::new(&cx, state).into_element();
 
         let Element::View(view) = el else {
@@ -81,7 +80,7 @@ mod text_field_tests {
     #[test]
     fn text_field_on_key_down_updates_state() {
         let cx = Cx::new();
-        let state = State::new(TextFieldState::new(""));
+        let state = State::new("".to_owned());
         let el = TextField::new(&cx, state.clone()).into_element();
 
         let Element::View(view) = el else {
@@ -99,15 +98,14 @@ mod text_field_tests {
             state: KeyState::Pressed,
         });
         let field = state.get();
-        assert_eq!(field.value, "a");
-        assert_eq!(field.cursor, 1);
+        assert_eq!(field, "a");
     }
 
     #[test]
     fn text_field_runtime_tree_carries_cursor_after_key() {
         use crate::runtime::Runtime;
 
-        let state = State::new(TextFieldState::new(""));
+        let state = State::new("".to_owned());
         let mut runtime = Runtime::new();
         let mount_state = state.clone();
         runtime.mount(move |cx| TextField::new(cx, mount_state.clone()).into_element());
@@ -140,17 +138,19 @@ mod text_field_tests {
     fn text_field_diff_emits_widget_chrome_when_value_and_cursor_change() {
         use crate::diff::{diff, NodePath, Patch};
 
-        let state = State::new(TextFieldState::new(""));
+        let state = State::new("".to_owned());
         let cx = Cx::new();
         let before = TextField::new(&cx, state.clone()).into_element();
-        state.update(|s| {
-            s.handle_key(&KeyEvent {
-                key: LemonKey::Character("hi".into()),
-                modifiers: Modifiers::default(),
-                repeat: false,
-                state: KeyState::Pressed,
-            });
+        let Element::View(field) = &before else {
+            panic!("field")
+        };
+        field.handlers.on_key_down.as_ref().unwrap()(KeyEvent {
+            key: LemonKey::Character("hi".into()),
+            modifiers: Modifiers::default(),
+            repeat: false,
+            state: KeyState::Pressed,
         });
+        cx.reset_hooks();
         let after = TextField::new(&cx, state).into_element();
         let patches = diff(before, after, NodePath::root());
         assert!(
@@ -166,7 +166,7 @@ mod text_field_tests {
         use crate::diff::{diff, NodePath, Patch};
         use crate::runtime::Runtime;
 
-        let state = State::new(TextFieldState::new(""));
+        let state = State::new("".to_owned());
         let mut runtime = Runtime::new();
         let mount_state = state.clone();
         runtime.mount(move |cx| TextField::new(cx, mount_state.clone()).into_element());
@@ -222,7 +222,7 @@ mod text_field_tests {
             None
         }
 
-        let state = State::new(TextFieldState::new(""));
+        let state = State::new("".to_owned());
         let mut runtime = Runtime::new();
         let mount_state = state.clone();
         runtime.mount(move |cx| TextField::new(cx, mount_state.clone()).into_element());
@@ -263,7 +263,7 @@ mod text_field_tests {
     #[test]
     fn text_field_has_border() {
         let cx = Cx::new();
-        let state = State::new(TextFieldState::new(""));
+        let state = State::new("".to_owned());
         let el = TextField::new(&cx, state).into_element();
 
         let Element::View(view) = el else {
