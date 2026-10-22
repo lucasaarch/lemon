@@ -290,3 +290,69 @@ fn removing_a_focused_control_clears_its_input_identity() {
     ui.apply_updates().unwrap();
     assert!(ui.focused().is_none());
 }
+
+#[test]
+fn clicking_non_focusable_content_or_empty_space_blurs_fields() {
+    let value = State::new("name".to_owned());
+    let source = value.clone();
+    let clicks = Rc::new(std::cell::Cell::new(0));
+    let count = clicks.clone();
+    let mut ui = UiState::default();
+    ui.mount(move |cx| {
+        ColumnView::new()
+            .fill()
+            .spacing(12.0)
+            .child(TextField::new(cx, source.clone()).width(200.0))
+            .child(SecureField::new(cx, State::new("secret".to_owned())).width(200.0))
+            .child(Button::new(cx, "Action").width(200.0).action({
+                let count = count.clone();
+                move || count.set(count.get() + 1)
+            }))
+            .child(Text::new("Label"))
+            .into_element()
+    })
+    .unwrap();
+    finish(&mut ui);
+    let root = ui.retained().unwrap().root().unwrap();
+    let ids: Vec<_> = root
+        .children
+        .iter()
+        .map(|node| node.taffy_id.unwrap())
+        .collect();
+    let points: Vec<_> = ids
+        .iter()
+        .map(|id| {
+            let rect = ui.layout_map().get(*id).unwrap();
+            LogicalPoint::new(rect.x + 2.0, rect.y + 2.0)
+        })
+        .collect();
+    for point in [points[2], points[3], LogicalPoint::new(550.0, 450.0)] {
+        ui.dispatch_input(InputEvent::Click(points[0])).unwrap();
+        assert_eq!(ui.focused(), Some(ids[0]));
+        ui.dispatch_input(InputEvent::Click(points[1])).unwrap();
+        assert_eq!(ui.focused(), Some(ids[1]), "focus transfers between fields");
+        finish(&mut ui);
+        assert!(!ui.paint_dirty());
+        let outcome = ui.dispatch_input(InputEvent::Click(point)).unwrap();
+        assert_eq!(ui.focused(), None, "outside click must clear focus");
+        assert!(outcome.handled, "blur counts as an input change");
+        assert!(
+            ui.paint_dirty(),
+            "the focus ring and caret must be repainted"
+        );
+        assert!(!ui.layout_dirty(), "blur does not change geometry");
+        assert!(!ui.focused_text_input());
+        ui.dispatch_input(key(LemonKey::Character("x".into()), Modifiers::default()))
+            .unwrap();
+        assert_eq!(
+            value.get(),
+            "name",
+            "typing after blur cannot edit the old field"
+        );
+        finish(&mut ui);
+    }
+    assert_eq!(clicks.get(), 1, "blur preserves the button action");
+    ui.dispatch_input(key(LemonKey::Named(NamedKey::Tab), Modifiers::default()))
+        .unwrap();
+    assert_eq!(ui.focused(), Some(ids[0]), "Tab can focus a field again");
+}

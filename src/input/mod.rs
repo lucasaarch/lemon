@@ -16,7 +16,7 @@ pub enum InputEvent {
     PointerMove(LogicalPoint),
     /// Left pointer release; always ends capture.
     PointerUp(LogicalPoint),
-    /// Activation at a point; focuses the nearest eligible control.
+    /// Activation at a point; focuses the hit control or clears focus when none is eligible.
     Click(LogicalPoint),
     /// Updates hover handlers and the requested cursor.
     Hover(LogicalPoint),
@@ -183,16 +183,19 @@ impl UiState {
             return false;
         };
 
-        if let Some(node) = hit_test_focusable(root, &self.layout_map, point) {
-            if let Some(id) = node.taffy_id {
-                self.input.focus_manager.focused = Some(id);
-                self.input.last_caret_activity = Instant::now();
-                self.paint_dirty = true;
-            }
+        let focused =
+            hit_test_focusable(root, &self.layout_map, point).and_then(|node| node.taffy_id);
+        let focus_changed = self.input.focus_manager.focused != focused;
+        self.input.focus_manager.focused = focused;
+        if focused.is_some() {
+            self.input.last_caret_activity = Instant::now();
+        }
+        if focus_changed || focused.is_some() {
+            self.paint_dirty = true;
         }
 
         let Some(node) = hit_test_on_click(root, &self.layout_map, point) else {
-            return false;
+            return focus_changed;
         };
         let handled = dispatch_click(node);
         crate::lemon_trace!(
@@ -202,7 +205,7 @@ impl UiState {
             point.y,
             node.taffy_id
         );
-        handled
+        handled || focus_changed
     }
 
     /// Dispatch `on_pointer_down` to the deepest node under `point` with that handler, set
