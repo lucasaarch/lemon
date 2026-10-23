@@ -39,22 +39,28 @@ def read_archive(path):
     roots = set()
     with tarfile.open(path, "r:gz") as archive:
         for member in archive:
-            parts = PurePosixPath(member.name)
-            if parts.is_absolute() or ".." in parts.parts:
+            member_path = PurePosixPath(member.name)
+            if member_path.is_absolute() or ".." in member_path.parts:
                 raise ValueError(f"Unsafe archive path: {member.name}")
             if not member.isfile():
                 continue
-            parts = parts.parts
-            if len(parts) == 2 and parts[1] == "LICENSE":
-                roots.add(parts[0])
-                with archive.extractfile(member) as source:
-                    license_text = source.read().decode("utf-8")
-            elif len(parts) == 3 and parts[1] == "icons" and parts[2].endswith(".svg"):
-                if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*\.svg", parts[2]):
-                    raise ValueError(f"Unsupported icon filename: {parts[2]}")
-                roots.add(parts[0])
-                with archive.extractfile(member) as source:
-                    icons.append((Path(parts[2]).stem, source.read()))
+            parts = member_path.parts
+            is_license = len(parts) == 2 and parts[1] == "LICENSE"
+            is_icon = len(parts) == 3 and parts[1] == "icons" and member_path.suffix == ".svg"
+            if not (is_license or is_icon):
+                continue
+            if is_icon and not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*\.svg", member_path.name):
+                raise ValueError(f"Unsupported icon filename: {member_path.name}")
+            source = archive.extractfile(member)
+            if source is None:
+                raise ValueError(f"Cannot read archive member: {member.name}")
+            with source:
+                content = source.read()
+            roots.add(parts[0])
+            if is_license:
+                license_text = content.decode("utf-8")
+            else:
+                icons.append((member_path.stem, content))
     if len(roots) != 1 or not icons or not license_text:
         raise ValueError("Release archive must contain one icon directory and a nonempty LICENSE")
     return sorted(icons, key=lambda item: item[0] + ".svg"), license_text

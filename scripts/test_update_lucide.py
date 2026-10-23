@@ -59,6 +59,14 @@ class ReleaseUpdaterTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     updater.read_archive(path)
 
+    def test_reports_unreadable_archive_members(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'release.tar.gz'
+            archive(path, {'root/icons/folder.svg': SVG, 'root/LICENSE': b'license'})
+            with patch.object(tarfile.TarFile, 'extractfile', return_value=None):
+                with self.assertRaisesRegex(ValueError, 'Cannot read archive member'):
+                    updater.read_archive(path)
+
     def test_conversion_or_formatting_failure_preserves_both_outputs(self):
         for unsupported in [True, False]:
             with self.subTest(unsupported=unsupported), tempfile.TemporaryDirectory() as directory:
