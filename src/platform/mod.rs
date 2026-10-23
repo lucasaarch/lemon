@@ -1,5 +1,8 @@
 //! Desktop host: native windows, GPU presentation, and frame scheduling.
 
+#[cfg(target_os = "macos")]
+mod macos;
+
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use std::sync::Arc;
@@ -50,6 +53,7 @@ pub struct WindowState {
     root_component: Option<RootComponent>,
     host: HostContext,
     last_cursor: Option<(f32, f32)>,
+    traffic_lights_position: Option<(f32, f32)>,
 }
 
 impl WindowState {
@@ -63,6 +67,7 @@ impl WindowState {
             host,
             root_component: Some(root_component),
             last_cursor: None,
+            traffic_lights_position: None,
         }
     }
 
@@ -70,7 +75,18 @@ impl WindowState {
         self.host.enter()
     }
 
-    fn attach_window(&mut self, render_cx: &mut RenderContext, window: Arc<Window>) {
+    fn attach_window(
+        &mut self,
+        render_cx: &mut RenderContext,
+        window: Arc<Window>,
+        config: &WindowConfig,
+    ) {
+        self.traffic_lights_position = if config.chrome == crate::WindowChrome::Overlay {
+            config.traffic_lights_position
+        } else {
+            None
+        };
+        apply_traffic_lights_position(&window, self.traffic_lights_position);
         let size = window.inner_size();
         let width = size.width.max(1);
         let height = size.height.max(1);
@@ -99,6 +115,12 @@ impl WindowState {
         self.surface = Some(surface);
         self.renderer = Some(renderer);
         self.ui.invalidate_layout();
+    }
+
+    fn update_native_chrome(&self) {
+        if let Some(window) = &self.window {
+            apply_traffic_lights_position(window, self.traffic_lights_position);
+        }
     }
 
     fn ensure_mounted(&mut self) {
@@ -281,6 +303,7 @@ impl WindowState {
     }
 
     fn render_frame(&mut self, render_cx: &mut RenderContext) {
+        self.update_native_chrome();
         self.update_frame();
         self.present(render_cx);
         self.ui.finish_frame();
@@ -458,7 +481,7 @@ impl AppState {
         let window_id = window.id();
         self.apply_system_theme(window.theme());
         let mut window_state = self.make_window_state_with_root(req.root);
-        window_state.attach_window(&mut self.render_cx, window);
+        window_state.attach_window(&mut self.render_cx, window, &req.config);
         window_state.request_redraw();
         self.windows.insert(window_id, window_state);
     }
@@ -487,7 +510,7 @@ impl ApplicationHandler for LemonApplication {
         let window_id = window.id();
         state.apply_system_theme(window.theme());
         let mut window_state = state.make_window_state();
-        window_state.attach_window(&mut state.render_cx, window);
+        window_state.attach_window(&mut state.render_cx, window, &config);
         window_state.request_redraw();
         state.windows.insert(window_id, window_state);
     }
@@ -642,6 +665,13 @@ impl ApplicationHandler for LemonApplication {
             }
         }
     }
+}
+
+fn apply_traffic_lights_position(window: &Window, position: Option<(f32, f32)>) {
+    #[cfg(target_os = "macos")]
+    macos::position_traffic_lights(window, position);
+    #[cfg(not(target_os = "macos"))]
+    let _ = (window, position);
 }
 
 fn native_window_attributes(config: &WindowConfig) -> winit::window::WindowAttributes {
@@ -931,10 +961,12 @@ mod tests {
             .title("Settings")
             .size(480.0, 360.0)
             .resizable(false)
-            .chrome(crate::WindowChrome::Borderless);
+            .chrome(crate::WindowChrome::Overlay)
+            .traffic_lights_position(18.0, 22.0);
         Cx::new().open_window(config.clone(), |_| Text::new("Settings").into_element());
         let request = host.take_window_requests().pop().unwrap();
         assert_eq!(request.config, config);
+        assert_eq!(request.config.traffic_lights_position, Some((18.0, 22.0)));
         let attributes = native_window_attributes(&request.config);
         assert_eq!(attributes.title, "Settings");
         assert!(!attributes.resizable);

@@ -56,6 +56,11 @@ pub struct WindowConfig {
     pub resizable: bool,
     /// Native title bar and border appearance (default: system decorations).
     pub chrome: WindowChrome,
+    /// Optional macOS traffic-light group position, in logical points from the
+    /// client area's top-left to the close button's top-left. Defaults to the OS position.
+    /// Only used with [`WindowChrome::Overlay`]; ignored on other platforms.
+    /// Coordinates must be finite and nonnegative; invalid direct field values are ignored.
+    pub traffic_lights_position: Option<(f32, f32)>,
 }
 
 impl Default for WindowConfig {
@@ -66,6 +71,7 @@ impl Default for WindowConfig {
             height: 600.0,
             resizable: true,
             chrome: WindowChrome::System,
+            traffic_lights_position: None,
         }
     }
 }
@@ -74,6 +80,33 @@ impl WindowConfig {
     /// Selects native chrome; applies to primary and subsequently opened windows.
     pub fn chrome(mut self, chrome: WindowChrome) -> Self {
         self.chrome = chrome;
+        self
+    }
+
+    /// Positions macOS traffic lights as a group, preserving their native spacing and actions.
+    ///
+    /// `x` and `y` are logical points from the client area's top-left to the close
+    /// button's top-left. Requires [`WindowChrome::Overlay`]; other chrome modes and
+    /// platforms ignore it. The host keeps the group inside the available window
+    /// space when resized and leaves native full-screen controls alone.
+    /// Reserve room for the native buttons in your content; no layout inset is added.
+    /// Without this setting the operating system chooses the position.
+    ///
+    /// # Panics
+    /// Panics if either coordinate is negative or non-finite.
+    ///
+    /// ```
+    /// use lemon::{WindowChrome, WindowConfig};
+    /// let window = WindowConfig::default()
+    ///     .chrome(WindowChrome::Overlay)
+    ///     .traffic_lights_position(20.0, 20.0);
+    /// ```
+    pub fn traffic_lights_position(mut self, x: f32, y: f32) -> Self {
+        assert!(
+            x.is_finite() && y.is_finite() && x >= 0.0 && y >= 0.0,
+            "traffic light coordinates must be finite and nonnegative"
+        );
+        self.traffic_lights_position = Some((x, y));
         self
     }
 
@@ -107,12 +140,34 @@ mod tests {
             .title("Counter")
             .size(640.0, 480.0)
             .resizable(false)
-            .chrome(WindowChrome::Overlay);
+            .chrome(WindowChrome::Overlay)
+            .traffic_lights_position(20.0, 24.0);
 
         assert_eq!(config.title, "Counter");
         assert_eq!(config.width, 640.0);
         assert_eq!(config.height, 480.0);
         assert!(!config.resizable);
         assert_eq!(config.chrome, WindowChrome::Overlay);
+        assert_eq!(config.traffic_lights_position, Some((20.0, 24.0)));
+    }
+    #[test]
+    fn traffic_light_position_defaults_to_native_and_rejects_invalid_coordinates() {
+        assert_eq!(WindowConfig::default().traffic_lights_position, None);
+        for value in [-1.0, f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {
+            assert!(std::panic::catch_unwind(
+                || WindowConfig::default().traffic_lights_position(value, 0.0)
+            )
+            .is_err());
+            assert!(std::panic::catch_unwind(
+                || WindowConfig::default().traffic_lights_position(0.0, value)
+            )
+            .is_err());
+        }
+        assert_eq!(
+            WindowConfig::default()
+                .traffic_lights_position(0.0, 0.0)
+                .traffic_lights_position,
+            Some((0.0, 0.0))
+        );
     }
 }

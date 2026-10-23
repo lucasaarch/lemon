@@ -263,6 +263,12 @@ to remove title bar and buttons. On Windows and Linux both custom modes remove
 native decorations and buttons; behavior of shadows and resizing depends on the
 window manager. The default is `WindowChrome::System`. Reserve space for macOS
 traffic lights in overlay layouts; Lemon does not insert an extra content inset.
+To position the native macOS group, add `.traffic_lights_position(20.0, 20.0)`
+to `WindowConfig` with `WindowChrome::Overlay`. Coordinates are logical points
+from the client area's top-left to the close button's top-left. Native spacing
+and actions stay intact; the group stays inside the available window space on
+resize. Other platforms and chrome modes ignore this macOS-only option.
+
 
 Detection and live change events use winit's macOS and Windows support. When the
 platform does not report an appearance (including the current X11/Wayland API),

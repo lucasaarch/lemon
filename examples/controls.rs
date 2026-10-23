@@ -59,7 +59,8 @@ fn main() {
         WindowConfig::default()
             .title("Lemon — controls")
             .size(560.0, 520.0)
-            .chrome(WindowChrome::Overlay),
+            .chrome(WindowChrome::Overlay)
+            .traffic_lights_position(20.0, 20.0),
         app,
     );
 }
