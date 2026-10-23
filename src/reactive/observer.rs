@@ -64,6 +64,7 @@ mod tests {
     use std::rc::Rc;
 
     struct MockSub(Cell<u32>);
+
     impl Subscriber for MockSub {
         fn mark_dirty(&self) {
             self.0.set(self.0.get() + 1);

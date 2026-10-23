@@ -40,6 +40,7 @@ pub struct IconPaint {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn entire_catalog_has_valid_paths_and_unique_names() {
         let mut names = std::collections::HashSet::new();

@@ -153,6 +153,7 @@ mod tests {
         assert_eq!(config.chrome, WindowChrome::Overlay);
         assert_eq!(config.traffic_lights_position, Some((20.0, 24.0)));
     }
+
     #[test]
     fn traffic_light_position_defaults_to_native_and_rejects_invalid_coordinates() {
         assert_eq!(WindowConfig::default().traffic_lights_position, None);
@@ -186,6 +187,7 @@ pub struct WindowEvents {
     pub(crate) resize: Option<std::rc::Rc<dyn Fn(f32, f32)>>,
     pub(crate) moved: Option<std::rc::Rc<dyn Fn(f32, f32)>>,
 }
+
 impl std::fmt::Debug for WindowEvents {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("WindowEvents")
@@ -198,6 +200,7 @@ impl std::fmt::Debug for WindowEvents {
             .finish()
     }
 }
+
 impl PartialEq for WindowEvents {
     fn eq(&self, other: &Self) -> bool {
         fn same<T: ?Sized>(a: &Option<std::rc::Rc<T>>, b: &Option<std::rc::Rc<T>>) -> bool {
@@ -215,6 +218,7 @@ impl PartialEq for WindowEvents {
             && same(&self.moved, &other.moved)
     }
 }
+
 impl WindowConfig {
     /// Called once after the native window and renderer are attached to the host.
     /// Applies independently to main and `Cx::open_window` windows. No callback by default.
@@ -227,6 +231,7 @@ impl WindowConfig {
         self.events.open = Some(std::rc::Rc::new(callback));
         self
     }
+
     /// Called once when the host removes the window after an accepted close.
     /// Runs before native resources are dropped; does not run when close is canceled.
     /// No callback by default.
@@ -239,6 +244,7 @@ impl WindowConfig {
         self.events.close = Some(std::rc::Rc::new(callback));
         self
     }
+
     /// Intercepts a user's close request. Return `true` to close or `false` to keep open.
     /// With no callback, close requests are accepted. Forced OS destruction cannot be vetoed.
     ///
@@ -251,6 +257,7 @@ impl WindowConfig {
         self.events.close_requested = Some(std::rc::Rc::new(callback));
         self
     }
+
     /// Observes native window activation (`true`) and deactivation (`false`).
     /// Independent of which Lemon element has keyboard focus. No callback by default.
     ///
@@ -262,6 +269,7 @@ impl WindowConfig {
         self.events.focus = Some(std::rc::Rc::new(callback));
         self
     }
+
     /// Observes client width/height changes in logical points, including DPI changes.
     /// No callback by default; initial dimensions are available in this configuration.
     ///
@@ -273,6 +281,7 @@ impl WindowConfig {
         self.events.resize = Some(std::rc::Rc::new(callback));
         self
     }
+
     /// Observes native outer-window `(x,y)` movement in logical screen coordinates.
     /// Not reported by platforms/window managers that do not expose window positions.
     /// No callback by default.

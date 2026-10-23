@@ -33,6 +33,7 @@ pub struct HostContext {
 }
 
 thread_local! {
+
     static ACTIVE: RefCell<Option<HostContext>> = const { RefCell::new(None) };
 }
 

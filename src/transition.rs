@@ -49,6 +49,7 @@ pub struct Transition {
     config: AnimationConfig,
     properties: u8,
 }
+
 impl Transition {
     /// Transitions all supported visual properties over `duration`, with linear easing.
     /// Zero duration applies changes immediately.
@@ -58,11 +59,13 @@ impl Transition {
             properties: u8::MAX,
         }
     }
+
     /// Sets the easing curve for all selected properties.
     pub fn easing(mut self, easing: Easing) -> Self {
         self.config = self.config.easing(easing);
         self
     }
+
     /// Replaces the property selection. An empty selection animates nothing.
     pub fn properties(mut self, properties: impl IntoIterator<Item = TransitionProperty>) -> Self {
         self.properties = properties
@@ -70,10 +73,12 @@ impl Transition {
             .fold(0, |mask, property| mask | (1 << property as u8));
         self
     }
+
     fn includes(self, property: TransitionProperty) -> bool {
         self.properties & (1 << property as u8) != 0
     }
 }
+
 impl Default for Transition {
     /// All visual properties, 150 milliseconds, linear easing.
     fn default() -> Self {
@@ -87,6 +92,7 @@ pub(crate) struct Visual {
     pub opacity: f32,
     pub text_color: Option<Color>,
 }
+
 impl Visual {
     fn target(node: &RetainedNode, focused: Option<NodeId>) -> Self {
         let mut paint = node.paint.clone();
@@ -108,6 +114,7 @@ impl Visual {
                 .map(|text| crate::element::style::resolved_text_color(&text.style)),
         }
     }
+
     fn interpolate(&self, target: &Self, t: f32, transition: Transition) -> Self {
         use TransitionProperty::*;
         let mut result = target.clone();
@@ -194,6 +201,7 @@ impl Visual {
         result
     }
 }
+
 fn mix(a: f32, b: f32, t: f32) -> f32 {
     if t >= 1.0 {
         b
@@ -201,6 +209,7 @@ fn mix(a: f32, b: f32, t: f32) -> f32 {
         a + (b - a) * t
     }
 }
+
 fn mix_optional(a: Option<Color>, b: Option<Color>, t: f32) -> Option<Color> {
     if a == b || t >= 1.0 {
         return b;
@@ -226,12 +235,14 @@ fn mix_optional(a: Option<Color>, b: Option<Color>, t: f32) -> Option<Color> {
         a: alpha,
     })
 }
+
 struct Entry {
     from: Visual,
     target: Visual,
     started: Instant,
     transition: Transition,
 }
+
 impl Entry {
     fn sample(&self, now: Instant) -> Visual {
         let progress = if self.transition.config.duration().is_zero() {
@@ -248,11 +259,13 @@ impl Entry {
         )
     }
 }
+
 #[derive(Default)]
 pub(crate) struct Transitions {
     entries: HashMap<NodeId, Entry>,
     pub visuals: HashMap<NodeId, Visual>,
 }
+
 impl Transitions {
     /// Reconciles targets without changing retained state or geometry.
     pub fn update(&mut self, root: &RetainedNode, focused: Option<NodeId>, now: Instant) -> bool {
@@ -263,6 +276,7 @@ impl Transitions {
         self.visuals.retain(|id, _| live.contains(id));
         active
     }
+
     fn visit(
         &mut self,
         node: &RetainedNode,
@@ -311,16 +325,19 @@ mod tests {
         ui::UiState,
         Theme, Viewport,
     };
+
     fn viewport() -> Viewport {
         Viewport {
             width: 400.0,
             height: 300.0,
         }
     }
+
     fn update(ui: &mut UiState, now: Instant) {
         ui.update_at(viewport(), 1.0, ui.focused(), true, now)
             .unwrap();
     }
+
     fn visual(ui: &UiState, index: usize) -> Visual {
         let root = ui.retained().unwrap().root().unwrap();
         let node = if index == usize::MAX {
@@ -330,6 +347,7 @@ mod tests {
         };
         ui.transitions.visuals[&node.taffy_id.unwrap()].clone()
     }
+
     #[test]
     fn reactive_colors_easing_interruption_and_completion_use_host_frames_without_layout() {
         let host = HostContext::new(Theme::default_dark());
@@ -380,6 +398,7 @@ mod tests {
             "completed transitions stop scheduling frames"
         );
     }
+
     #[test]
     fn focus_ring_transitions_in_and_out_while_keyboard_focus_changes_immediately() {
         let mut ui = UiState::default();
@@ -434,6 +453,7 @@ mod tests {
         );
         assert!(!ui.transitions_active);
     }
+
     #[test]
     fn property_selection_and_zero_duration_apply_other_properties_immediately() {
         let a = Visual {
@@ -466,6 +486,7 @@ mod tests {
         };
         assert_eq!(entry.sample(entry.started), b);
     }
+
     #[test]
     fn transparency_preserves_hue_and_removal_finishes_as_none() {
         let blue = Color::rgb8(0, 0, 255);
@@ -479,6 +500,7 @@ mod tests {
         );
         assert_eq!(mix_optional(Some(blue), None, 1.0), None);
     }
+
     #[test]
     fn inherited_text_opacity_rounding_and_border_width_interpolate_without_moving_content() {
         let changed = State::new(false);
@@ -551,6 +573,7 @@ mod tests {
         assert!(ui.transitions.visuals.is_empty());
         assert!(!ui.transitions_active);
     }
+
     #[test]
     fn keyed_reordering_preserves_in_flight_presentation_and_removed_nodes_are_pruned() {
         let rows = State::new(vec![1, 2]);
@@ -597,6 +620,7 @@ mod tests {
         assert!(!ui.transitions.visuals.contains_key(&id));
         assert_eq!(ui.transitions.entries.len(), 2);
     }
+
     #[test]
     fn select_overlay_fades_both_ways_and_disables_input_before_exit_completes() {
         use crate::input::hit_test::hit_test_on_click;

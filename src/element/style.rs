@@ -279,6 +279,7 @@ impl StyleProps {
         (self.blur.is_finite() && self.blur > 0.0)
             || (self.brightness.is_finite() && self.brightness >= 0.0 && self.brightness != 1.0)
     }
+
     pub(crate) fn isolates(&self) -> bool {
         self.has_filter() || self.opacity_group || self.opacity != 1.0
     }
@@ -341,6 +342,7 @@ impl Color {
             a: 1.0,
         }
     }
+
     /// Sets alpha (`0.0` = transparent, `1.0` = opaque).
     pub fn with_alpha(mut self, a: f32) -> Self {
         self.a = a;
@@ -393,6 +395,7 @@ pub struct GradientStop {
     /// Color at this position.
     pub color: Color,
 }
+
 impl GradientStop {
     /// Creates a stop; panics for non-finite or out-of-range positions.
     pub fn new(position: f32, color: Color) -> Self {
@@ -403,6 +406,7 @@ impl GradientStop {
         Self { position, color }
     }
 }
+
 fn gradient_stops(stops: impl IntoIterator<Item = GradientStop>) -> Vec<GradientStop> {
     let mut stops: Vec<_> = stops.into_iter().collect();
     assert!(stops.len() >= 2, "gradients require at least two stops");
@@ -412,6 +416,7 @@ fn gradient_stops(stops: impl IntoIterator<Item = GradientStop>) -> Vec<Gradient
     stops.sort_by(|a, b| a.position.total_cmp(&b.position));
     stops
 }
+
 /// Linear fill using normalized start/end coordinates within a container.
 ///
 /// ```
@@ -428,6 +433,7 @@ pub struct LinearGradient {
     /// Ordered color stops; at least two.
     pub stops: Vec<GradientStop>,
 }
+
 impl LinearGradient {
     /// Creates a two-color gradient. Panics for non-finite coordinates.
     pub fn new(start: (f32, f32), end: (f32, f32), start_color: Color, end_color: Color) -> Self {
@@ -446,6 +452,7 @@ impl LinearGradient {
             ],
         }
     }
+
     /// Replaces color stops, sorting by position. Panics for fewer than two or invalid stops.
     ///
     /// ```
@@ -459,6 +466,7 @@ impl LinearGradient {
         self
     }
 }
+
 /// Circular radial fill with a normalized center and radius relative to the shorter side.
 ///
 /// ```
@@ -475,6 +483,7 @@ pub struct RadialGradient {
     /// Ordered color stops from center to outer radius.
     pub stops: Vec<GradientStop>,
 }
+
 impl RadialGradient {
     /// Creates a two-color radial fill. Panics for non-finite coordinates or a nonpositive radius.
     pub fn new(center: (f32, f32), radius: f32, inner: Color, outer: Color) -> Self {
@@ -488,12 +497,14 @@ impl RadialGradient {
             stops: vec![GradientStop::new(0.0, inner), GradientStop::new(1.0, outer)],
         }
     }
+
     /// Replaces color stops, sorting by position. Panics for fewer than two or invalid stops.
     pub fn stops(mut self, stops: impl IntoIterator<Item = GradientStop>) -> Self {
         self.stops = gradient_stops(stops);
         self
     }
 }
+
 /// A container's linear or radial background fill; supplied through `.gradient(...)`.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Gradient {
@@ -502,11 +513,13 @@ pub enum Gradient {
     /// A fill radiating from a center point.
     Radial(RadialGradient),
 }
+
 impl From<LinearGradient> for Gradient {
     fn from(value: LinearGradient) -> Self {
         Self::Linear(value)
     }
 }
+
 impl From<RadialGradient> for Gradient {
     fn from(value: RadialGradient) -> Self {
         Self::Radial(value)

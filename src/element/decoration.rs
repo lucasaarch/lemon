@@ -46,4 +46,5 @@ pub trait Decorate: Into<Element> + Sized {
         }
     }
 }
+
 impl<T: Into<Element>> Decorate for T {}

@@ -133,6 +133,7 @@ impl WindowState {
             }
         }
     }
+
     fn notify_window_focus(&mut self, focused: bool) {
         let _scope = self.host.enter();
         if self.last_window_focus.replace(focused) != Some(focused) {
@@ -141,6 +142,7 @@ impl WindowState {
             }
         }
     }
+
     fn allows_close(&self) -> bool {
         let _scope = self.host.enter();
         self.events
@@ -228,21 +230,27 @@ impl WindowState {
     fn event_pass_click(&mut self, point: LogicalPoint) -> bool {
         self.dispatch_input(crate::input::InputEvent::Click(point))
     }
+
     fn event_pass_pointer_down(&mut self, point: LogicalPoint) -> bool {
         self.dispatch_input(crate::input::InputEvent::PointerDown(point))
     }
+
     fn event_pass_pointer_move(&mut self, point: LogicalPoint) -> bool {
         self.dispatch_input(crate::input::InputEvent::PointerMove(point))
     }
+
     fn event_pass_pointer_up(&mut self, point: LogicalPoint) -> bool {
         self.dispatch_input(crate::input::InputEvent::PointerUp(point))
     }
+
     fn event_pass_hover(&mut self, point: LogicalPoint) {
         self.dispatch_input(crate::input::InputEvent::Hover(point));
     }
+
     fn event_pass_scroll(&mut self, point: LogicalPoint, delta: crate::ScrollDelta) -> bool {
         self.dispatch_input(crate::input::InputEvent::Scroll { point, delta })
     }
+
     fn event_pass_keyboard(&mut self, event: WinitKeyEvent) {
         self.dispatch_input(crate::input::InputEvent::Key(KeyEvent {
             key: winit_key_to_lemon(&event.logical_key),
@@ -383,11 +391,13 @@ pub struct ThemeNotFound {
     /// The unknown theme name. Selection is unchanged when this error is returned.
     pub name: String,
 }
+
 impl std::fmt::Display for ThemeNotFound {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "theme {:?} has not been loaded", self.name)
     }
 }
+
 impl std::error::Error for ThemeNotFound {}
 
 #[derive(Clone)]
@@ -401,6 +411,7 @@ impl Default for AppCx {
         Self::new()
     }
 }
+
 impl AppCx {
     /// Creates an application context with no windows and Lemon's adaptive theme.
     /// [`run`] creates this context automatically. Custom hosts can create one for
@@ -959,6 +970,7 @@ mod tests {
         cx.open_window(config, root);
         cx
     }
+
     fn themed_setup(
         config: WindowConfig,
         theme: impl Into<ThemePair>,
@@ -969,6 +981,7 @@ mod tests {
         cx.set_theme("test").unwrap();
         cx
     }
+
     fn queued_window(cx: &AppCx) -> WindowState {
         let root = cx.host.take_window_requests().remove(0).root;
         cx.make_window_state(root)
@@ -1335,6 +1348,7 @@ mod tests {
     #[test]
     fn system_theme_change_preserves_mounted_component_state_and_updates_background() {
         use crate::element::builders::ColumnView;
+
         fn app(cx: &Cx) -> Element {
             let count = cx.state(0);
             let label = count.clone();
@@ -1389,6 +1403,7 @@ mod tests {
 #[cfg(test)]
 mod scroll_delta_tests {
     use super::*;
+
     #[test]
     fn native_wheel_preserves_axes_scales_pixels_and_maps_shift_once() {
         assert_eq!(

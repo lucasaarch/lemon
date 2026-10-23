@@ -1,7 +1,10 @@
 use super::*;
 use std::sync::atomic::{AtomicU64, Ordering};
+
 static NEXT: AtomicU64 = AtomicU64::new(0);
+
 struct Directory(PathBuf);
+
 impl Directory {
     fn new() -> Self {
         let path = std::env::temp_dir().join(format!(
@@ -13,11 +16,13 @@ impl Directory {
         Self(path)
     }
 }
+
 impl Drop for Directory {
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.0);
     }
 }
+
 #[test]
 fn open_save_and_external_conflicts_preserve_unsaved_content() {
     let directory = Directory::new();
@@ -42,6 +47,7 @@ fn open_save_and_external_conflicts_preserve_unsaved_content() {
     document.save();
     assert_eq!(fs::read_to_string(copy).unwrap(), "Keep my edits");
 }
+
 #[test]
 fn invalid_opens_and_dirty_navigation_do_not_discard_the_current_document() {
     let directory = Directory::new();
@@ -62,6 +68,7 @@ fn invalid_opens_and_dirty_navigation_do_not_discard_the_current_document() {
     fs::write(&large, vec![b'x'; MAX_BYTES as usize + 1]).unwrap();
     assert!(read_document(&large).is_err());
 }
+
 #[test]
 fn editor_mounts_and_lays_out_at_useful_window_sizes() {
     let document = Document::new();

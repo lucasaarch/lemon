@@ -11,9 +11,11 @@ const SIZE: Viewport = Viewport {
     width: 640.0,
     height: 480.0,
 };
+
 fn update(ui: &mut UiState) {
     ui.update(SIZE, 1.0, ui.focused(), true).unwrap();
 }
+
 fn key(ui: &mut UiState, named: NamedKey) {
     ui.dispatch_input(InputEvent::Key(KeyEvent {
         key: LemonKey::Named(named),
@@ -24,6 +26,7 @@ fn key(ui: &mut UiState, named: NamedKey) {
     .unwrap();
     update(ui);
 }
+
 fn click(ui: &mut UiState, x: f32, y: f32) {
     for event in [
         InputEvent::PointerDown(LogicalPoint::new(x, y)),
@@ -34,6 +37,7 @@ fn click(ui: &mut UiState, x: f32, y: f32) {
     }
     update(ui);
 }
+
 fn find_key(node: &RetainedNode, key: u64) -> Option<&RetainedNode> {
     let matches = if key == 2 {
         node.text_input.is_some()
@@ -54,11 +58,13 @@ fn find_key(node: &RetainedNode, key: u64) -> Option<&RetainedNode> {
     }
     node.children.iter().find_map(|child| find_key(child, key))
 }
+
 fn point(ui: &UiState, key: u64) -> (f32, f32) {
     let node = find_key(ui.retained().unwrap().root().unwrap(), key).unwrap();
     let rect = ui.layout_map().get(node.taffy_id.unwrap()).unwrap();
     (rect.x + rect.width / 2.0, rect.y + rect.height / 2.0)
 }
+
 #[test]
 fn dialog_traps_input_restores_focus_and_escape_works_from_a_field() {
     for theme in [Theme::default_light(), Theme::default_dark()] {
@@ -119,6 +125,7 @@ fn dialog_traps_input_restores_focus_and_escape_works_from_a_field() {
         assert_eq!(clicks.get(), 1);
     }
 }
+
 #[test]
 fn nested_dialogs_restore_the_previous_scope_and_disabled_backdrop_stays_open() {
     let first = State::new(true);
@@ -149,6 +156,7 @@ fn nested_dialogs_restore_the_previous_scope_and_disabled_backdrop_stays_open() 
     key(&mut ui, NamedKey::Escape);
     assert!(!first.get());
 }
+
 #[test]
 fn popover_is_anchored_dismisses_outside_and_escape_bubbles_from_child() {
     let open = State::new(true);
@@ -181,6 +189,7 @@ fn popover_is_anchored_dismisses_outside_and_escape_bubbles_from_child() {
     click(&mut ui, 600.0, 440.0);
     assert!(!open.get());
 }
+
 #[test]
 fn toast_queue_updates_after_mount_expires_and_belongs_to_its_host() {
     let host = HostContext::new(Theme::default_light());
@@ -211,6 +220,7 @@ fn toast_queue_updates_after_mount_expires_and_belongs_to_its_host() {
     toaster.show("One");
     toaster.show("Two");
     update(&mut ui);
+
     fn text_rect(ui: &UiState, content: &str) -> lemon::layout::LayoutRect {
         fn find<'a>(node: &'a RetainedNode, content: &str) -> Option<&'a RetainedNode> {
             if node

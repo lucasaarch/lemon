@@ -1,5 +1,8 @@
 use super::*;
+use lemon::{retained::RetainedNode, ui::UiState};
+
 mod support;
+
 #[test]
 fn task_rows_keep_identity_through_removal_and_completion() {
     let mut runtime = support::mount(app);
@@ -24,6 +27,7 @@ fn adding_and_filtering_use_the_bound_field_and_select() {
         input::{hit_test::LogicalPoint, InputEvent},
         retained::RetainedNode,
     };
+
     fn field(node: &RetainedNode) -> Option<&RetainedNode> {
         if node.text_input.is_some() {
             return Some(node);
@@ -54,4 +58,41 @@ fn adding_and_filtering_use_the_bound_field_and_select() {
     let text = support::text(ui.retained().unwrap().root().unwrap()).join("\n");
     assert!(text.contains("Share a working prototype"));
     assert!(!text.contains("Write release notes"));
+}
+
+#[test]
+fn checking_a_task_keeps_the_checkmark_inside_its_indicator() {
+    fn assert_icons_are_inside_indicators(
+        node: &RetainedNode,
+        parent: Option<&RetainedNode>,
+        ui: &UiState,
+        checked: &mut usize,
+    ) {
+        if node.paint.icon.is_some() {
+            let parent = parent.expect("checkbox icon has an indicator parent");
+            assert!(parent.paint.background.is_some());
+            let rect = |node: &RetainedNode| *ui.layout_map().get(node.taffy_id.unwrap()).unwrap();
+            let icon = rect(node);
+            let indicator = rect(parent);
+            assert!(icon.x >= indicator.x);
+            assert!(icon.y >= indicator.y);
+            assert!(icon.x + icon.width <= indicator.x + indicator.width);
+            assert!(icon.y + icon.height <= indicator.y + indicator.height);
+            *checked += 1;
+        }
+        for child in &node.children {
+            assert_icons_are_inside_indicators(child, Some(node), ui, checked);
+        }
+    }
+
+    let mut ui = support::mount(app);
+    support::click(&mut ui, "Review the documentation");
+    let mut checked = 0;
+    assert_icons_are_inside_indicators(
+        ui.retained().unwrap().root().unwrap(),
+        None,
+        &ui,
+        &mut checked,
+    );
+    assert_eq!(checked, 2);
 }

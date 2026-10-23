@@ -36,11 +36,13 @@ impl Text {
             key: None,
         }
     }
+
     /// Stable key when this text node is a keyed sibling (see [`crate::ColumnView::key`]).
     pub fn key(mut self, key: u64) -> Self {
         self.key = Some(Key(key));
         self
     }
+
     /// Font size in logical points.
     pub fn size(mut self, size: f32) -> Self {
         self.style.font_size = size;
@@ -63,10 +65,12 @@ impl Text {
         self.style.font_weight = w;
         self
     }
+
     pub fn color(mut self, c: Color) -> Self {
         self.style.color = Some(c);
         self
     }
+
     /// Finishes the builder and returns an [`Element`].
     pub fn into_element(self) -> Element {
         Element::Text(TextElement {

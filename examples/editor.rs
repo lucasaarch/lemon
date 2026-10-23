@@ -9,6 +9,7 @@ use std::{
     rc::Rc,
 };
 const MAX_BYTES: u64 = 1024 * 1024;
+
 fn read_document(path: &Path) -> io::Result<String> {
     let mut bytes = Vec::new();
     fs::File::open(path)?
@@ -23,6 +24,7 @@ fn read_document(path: &Path) -> io::Result<String> {
     String::from_utf8(bytes)
         .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "This file is not UTF-8 text"))
 }
+
 fn write_document(path: &Path, text: &str) -> io::Result<()> {
     if text.len() as u64 > MAX_BYTES {
         return Err(io::Error::new(
@@ -56,6 +58,7 @@ fn write_document(path: &Path, text: &str) -> io::Result<()> {
     }
     result
 }
+
 #[derive(Clone)]
 struct Document {
     path: State<String>,
@@ -66,6 +69,7 @@ struct Document {
     pending: State<Option<PathBuf>>,
     confirm: State<bool>,
 }
+
 impl Document {
     fn new() -> Self {
         Self {
@@ -78,6 +82,7 @@ impl Document {
             confirm: State::new(false),
         }
     }
+
     fn dirty(&self) -> bool {
         self.text.get() != self.saved.get()
             || self
@@ -85,6 +90,7 @@ impl Document {
                 .get()
                 .is_some_and(|path| path.as_path() != Path::new(&self.path.get()))
     }
+
     fn open(&self, path: &Path) {
         match read_document(path) {
             Ok(text) => {
@@ -97,6 +103,7 @@ impl Document {
             Err(error) => self.message.set(format!("Cannot open: {error}")),
         }
     }
+
     fn request_open(&self, path: PathBuf) {
         if self.dirty() {
             self.pending.set(Some(path));
@@ -105,6 +112,7 @@ impl Document {
             self.open(&path);
         }
     }
+
     fn discard(&self) {
         self.text.set(self.saved.get());
         self.path.set(
@@ -115,6 +123,7 @@ impl Document {
         );
         self.message.set("Unsaved changes discarded".into());
     }
+
     fn save(&self) {
         let path = PathBuf::from(self.path.get());
         let result = (|| {
@@ -140,6 +149,7 @@ impl Document {
         }
     }
 }
+
 fn workspace(path: &Path) -> Vec<PathBuf> {
     let mut paths: Vec<_> = fs::read_dir(path)
         .into_iter()
@@ -158,6 +168,7 @@ fn workspace(path: &Path) -> Vec<PathBuf> {
     paths.truncate(200);
     paths
 }
+
 fn app(cx: &Cx, document: &Document, files: Rc<Vec<PathBuf>>) -> Element {
     let theme = cx.theme();
     let dirty = document.dirty();
@@ -287,6 +298,7 @@ fn app(cx: &Cx, document: &Document, files: Rc<Vec<PathBuf>>) -> Element {
         .child(dialog)
         .into_element()
 }
+
 fn main() {
     let document = Document::new();
     let root = std::env::args_os().nth(1).map(PathBuf::from);
@@ -326,6 +338,7 @@ fn main() {
         )
     });
 }
+
 #[cfg(test)]
 #[path = "../tests/examples/editor.rs"]
 mod tests;

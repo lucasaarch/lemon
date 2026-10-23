@@ -20,6 +20,7 @@ fn path_to(
     path.truncate(length);
     false
 }
+
 fn leave(handlers: &EventHandlers) {
     if let Some(callback) = &handlers.on_hover_leave {
         callback();
@@ -28,6 +29,7 @@ fn leave(handlers: &EventHandlers) {
         callback(false);
     }
 }
+
 impl UiState {
     pub(super) fn notify_focus(&mut self) {
         let next = self.input.focus_manager.focused.and_then(|id| {
@@ -51,6 +53,7 @@ impl UiState {
         }
         self.paint_dirty = true;
     }
+
     pub(super) fn reconcile_hover_observers(&mut self) {
         let root = self.retained.as_ref().and_then(|tree| tree.root.as_ref());
         self.input.hovered_nodes.retain_mut(|(id, handlers)| {
@@ -63,6 +66,7 @@ impl UiState {
             }
         });
     }
+
     pub(super) fn clear_hover(&mut self) {
         for (_, handlers) in self.input.hovered_nodes.drain(..).rev() {
             leave(&handlers);
@@ -71,6 +75,7 @@ impl UiState {
         self.input.cursor = Cursor::Default;
         self.paint_dirty = true;
     }
+
     pub(super) fn event_pass_hover(&mut self, point: LogicalPoint) {
         let root = self.retained.as_ref().and_then(|tree| tree.root.as_ref());
         let root = root.map(|root| crate::retained::focus::active_modal(root).unwrap_or(root));

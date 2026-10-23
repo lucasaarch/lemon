@@ -31,6 +31,7 @@ impl Icon {
             size: 24.0,
         }
     }
+
     /// Sets the square size in logical points. Must be finite and nonnegative.
     ///
     /// # Panics
@@ -43,11 +44,13 @@ impl Icon {
         self.size = size;
         self
     }
+
     /// Overrides the theme foreground for both strokes and filled details.
     pub fn color(mut self, color: Color) -> Self {
         self.paint.color = color;
         self
     }
+
     /// Sets stroke width in the 24-unit grid, scaling with the icon's size.
     ///
     /// # Panics
@@ -60,6 +63,7 @@ impl Icon {
         self.paint.stroke_width = width;
         self
     }
+
     /// Builds an ordinary view with vector paint and a fixed square size.
     pub fn into_element(self) -> Element {
         let mut element = View::new()
@@ -73,6 +77,7 @@ impl Icon {
         element
     }
 }
+
 impl From<Icon> for Element {
     fn from(icon: Icon) -> Self {
         icon.into_element()

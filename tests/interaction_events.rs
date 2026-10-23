@@ -9,15 +9,19 @@ const SIZE: Viewport = Viewport {
     width: 300.0,
     height: 200.0,
 };
+
 fn update(ui: &mut UiState) {
     ui.update(SIZE, 1.0, ui.focused(), true).unwrap();
 }
+
 fn event(ui: &mut UiState, event: InputEvent) {
     ui.dispatch_input(event).unwrap();
 }
+
 fn point(x: f32, y: f32) -> LogicalPoint {
     LogicalPoint::new(x, y)
 }
+
 #[test]
 fn focus_notifies_once_on_click_tab_blur_and_unmount_and_flushes_callback_updates() {
     let log = Rc::new(RefCell::new(Vec::new()));
@@ -62,6 +66,7 @@ fn focus_notifies_once_on_click_tab_blur_and_unmount_and_flushes_callback_update
     update(&mut ui);
     event(&mut ui, InputEvent::Click(point(10.0, 10.0)));
     assert!(focused.get());
+
     // Callback mutations are rendered within the same dispatch, without a second event.
     fn has_text(node: &lemon::retained::RetainedNode) -> bool {
         node.text
@@ -97,6 +102,7 @@ fn focus_notifies_once_on_click_tab_blur_and_unmount_and_flushes_callback_update
     );
     assert!(!focused.get());
 }
+
 #[test]
 fn hover_includes_descendants_and_exits_on_window_leave_hide_or_removal() {
     let log = Rc::new(RefCell::new(Vec::new()));
@@ -154,6 +160,7 @@ fn hover_includes_descendants_and_exits_on_window_leave_hide_or_removal() {
         vec![(1, true), (1, false), (1, true), (1, false)]
     );
 }
+
 #[test]
 fn filtered_and_opacity_groups_keep_local_layers_under_later_siblings() {
     for filter in [false, true] {

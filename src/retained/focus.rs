@@ -12,6 +12,7 @@ impl FocusManager {
     pub fn focused(&self) -> Option<NodeId> {
         self.focused
     }
+
     pub fn new() -> Self {
         Self {
             focused: None,

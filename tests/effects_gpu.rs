@@ -1,10 +1,12 @@
 //! Actual GPU pixel tests. Run explicitly: cargo test --test effects_gpu -- --ignored.
 use lemon::{prelude::*, ui::UiState, Renderer, Viewport};
+
 struct Gpu {
     context: vello::util::RenderContext,
     id: usize,
     renderer: Renderer,
 }
+
 impl Gpu {
     fn new() -> Self {
         let mut context = vello::util::RenderContext::new();
@@ -16,6 +18,7 @@ impl Gpu {
             renderer,
         }
     }
+
     fn render(&mut self, ui: &UiState, size: u32) -> Vec<u8> {
         let handle = &self.context.devices[self.id];
         let device = &handle.device;
@@ -86,11 +89,13 @@ impl Gpu {
             .collect()
     }
 }
+
 fn pixel(data: &[u8], size: usize, x: usize, y: usize) -> [u8; 4] {
     data[(y * size + x) * 4..(y * size + x) * 4 + 4]
         .try_into()
         .unwrap()
 }
+
 fn ui(root: impl Fn(&Cx) -> Element + 'static, scale: f32) -> UiState {
     let mut ui = UiState::default();
     ui.mount(root).unwrap();
@@ -106,6 +111,7 @@ fn ui(root: impl Fn(&Cx) -> Element + 'static, scale: f32) -> UiState {
     .unwrap();
     ui
 }
+
 #[test]
 #[ignore = "requires a GPU; run with --ignored"]
 fn filters_and_gradients_produce_real_pixels_including_nested_alpha_and_dpi() {

@@ -155,6 +155,10 @@ fn render_slot(slot: &mut ComponentSlot, patches: &mut Vec<Patch>) {
     if let Some(new_tree) = slot.pending.borrow_mut().take() {
         let next_previous = new_tree.clone();
         if let Some(old_tree) = slot.previous.take() {
+            let single_root = slot.component.is_some()
+                && has_single_component_root(&old_tree)
+                && has_single_component_root(&new_tree);
+            let patch_start = patches.len();
             crate::lemon_trace!(
                 Runtime,
                 "render_slot path={} old={} new={}",
@@ -171,6 +175,9 @@ fn render_slot(slot: &mut ComponentSlot, patches: &mut Vec<Patch>) {
                 patches,
                 deferred,
             );
+            if single_root {
+                make_component_paths_explicit(&mut patches[patch_start..], &slot.path);
+            }
         }
         slot.previous = Some(next_previous);
     }
@@ -368,6 +375,50 @@ fn component_output_children(element: Element) -> Vec<Element> {
     crate::diff::flatten_children(vec![element])
 }
 
+fn has_single_component_root(element: &Element) -> bool {
+    match element {
+        Element::Fragment(children) => {
+            children
+                .iter()
+                .map(component_output_root_count)
+                .sum::<usize>()
+                == 1
+        }
+        Element::None => false,
+        _ => true,
+    }
+}
+
+fn component_output_root_count(element: &Element) -> usize {
+    match element {
+        Element::Fragment(children) => children.iter().map(component_output_root_count).sum(),
+        Element::None => 0,
+        _ => 1,
+    }
+}
+
+/// Structural patches use exact retained paths, which include a component's root wrapper.
+/// Property updates use the historical transparent path and already resolve that wrapper.
+fn make_component_paths_explicit(patches: &mut [Patch], component: &NodePath) {
+    for patch in patches {
+        let path = match patch {
+            Patch::UpdateComponent { node, .. }
+            | Patch::MountComponent { node, .. }
+            | Patch::UnmountComponent { node }
+            | Patch::ReplaceNode { node, .. } => Some(node),
+            Patch::InsertChild { parent, .. }
+            | Patch::RemoveChild { parent, .. }
+            | Patch::MoveChild { parent, .. } => Some(parent),
+            _ => None,
+        };
+        if let Some(path) = path {
+            if path.0.starts_with(&component.0) {
+                path.0.insert(component.0.len(), 0);
+            }
+        }
+    }
+}
+
 fn handle_component_pair(
     parent_slots: &mut Vec<ComponentSlot>,
     old: &ComponentElement,
@@ -491,6 +542,7 @@ struct SlotReconciler<'a> {
     slots: &'a mut Vec<ComponentSlot>,
     effects: Rc<RefCell<Vec<Effect>>>,
 }
+
 impl crate::diff::Reconciler for SlotReconciler<'_> {
     fn insert(
         &mut self,
@@ -512,6 +564,7 @@ impl crate::diff::Reconciler for SlotReconciler<'_> {
             self.effects.clone(),
         );
     }
+
     fn remove(
         &mut self,
         _element: &Element,
@@ -525,6 +578,7 @@ impl crate::diff::Reconciler for SlotReconciler<'_> {
             index,
         });
     }
+
     fn component_transition(
         &mut self,
         old: &Element,
@@ -577,6 +631,7 @@ impl crate::diff::Reconciler for SlotReconciler<'_> {
             _ => false,
         }
     }
+
     fn replaced(&mut self, element: &Element, path: &NodePath, patches: &mut Vec<Patch>) {
         unmount_subtree_slots(self.slots, path);
         bootstrap_initial_components(
@@ -587,6 +642,7 @@ impl crate::diff::Reconciler for SlotReconciler<'_> {
             self.effects.clone(),
         );
     }
+
     fn relocate(&mut self, parent: &NodePath, op: &crate::diff::ChildOp) {
         reindex_slots(self.slots, parent, &|index| op.relocated_index(index));
     }
@@ -879,6 +935,7 @@ mod tests {
         use crate::element::builders::{ColumnView, Component};
 
         thread_local! {
+
             static SIGNAL: RefCell<Option<State<i32>>> = const { RefCell::new(None) };
         }
 
@@ -989,6 +1046,7 @@ mod tests {
         }
 
         thread_local! {
+
             static RENDERS: Cell<u32> = const { Cell::new(0) };
         }
 
@@ -1175,6 +1233,7 @@ mod tests {
         use crate::retained::RetainedTree;
 
         thread_local! {
+
             static LABELS: RefCell<Option<State<Vec<String>>>> = const { RefCell::new(None) };
         }
 
@@ -1228,7 +1287,9 @@ mod tests {
         use crate::retained::RetainedTree;
 
         thread_local! {
+
             static FIRST: RefCell<Option<State<i32>>> = const { RefCell::new(None) };
+
             static SECOND: RefCell<Option<State<i32>>> = const { RefCell::new(None) };
         }
 

@@ -1,10 +1,15 @@
 //! Base builders for composition, presentation and scrolling.
 //! Semantic controls live in [`crate::widget`].
 mod component;
+
 mod container;
+
 pub mod icon;
+
 pub mod image;
+
 pub mod scroll;
+
 mod text;
 pub use component::Component;
 pub use container::{ColumnView, RowView, View};
@@ -12,6 +17,7 @@ pub use icon::Icon;
 pub use image::Image;
 pub use scroll::{ScrollView, ScrollViewStyle};
 pub use text::Text;
+
 #[cfg(test)]
 mod tests {
     use super::*;

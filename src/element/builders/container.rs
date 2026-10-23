@@ -56,6 +56,7 @@ macro_rules! container_builder {
                 };
                 self
             }
+
             /// Blurs this view and its children with a Gaussian standard deviation in logical points.
             /// Defaults to zero. Layout and hit testing do not move; this is content blur,
             /// not backdrop blur. Filtered subtrees form their own visual stacking context.
@@ -74,6 +75,7 @@ macro_rules! container_builder {
                 self.0.style.blur = radius.min(1024.0);
                 self
             }
+
             /// Multiplies this subtree's RGB brightness while preserving alpha.
             /// Defaults to `1`; `0` produces black, values above `1` brighten.
             /// Applied after blur. Panics for negative or non-finite values.
@@ -152,11 +154,13 @@ macro_rules! container_builder {
                 self.0.style.width = Some(crate::element::style::Dimension::Points(v));
                 self
             }
+
             /// Fixed height in logical points.
             pub fn height(mut self, v: f32) -> Self {
                 self.0.style.height = Some(crate::element::style::Dimension::Points(v));
                 self
             }
+
             /// Places children at a visible position within this container.
             ///
             /// Unlike axis-specific alignment, placement has the same meaning for rows,
@@ -299,30 +303,35 @@ macro_rules! container_builder {
                 self.0.paint.border_width = Edges::all(width);
                 self
             }
+
             /// Border on the top side only (sets color and width for that side).
             pub fn border_top(mut self, color: Color, width: f32) -> Self {
                 self.0.paint.border_color.top = Some(ColorSource::Static(color));
                 self.0.paint.border_width.top = width;
                 self
             }
+
             /// Border on the right side only.
             pub fn border_right(mut self, color: Color, width: f32) -> Self {
                 self.0.paint.border_color.right = Some(ColorSource::Static(color));
                 self.0.paint.border_width.right = width;
                 self
             }
+
             /// Border on the bottom side only.
             pub fn border_bottom(mut self, color: Color, width: f32) -> Self {
                 self.0.paint.border_color.bottom = Some(ColorSource::Static(color));
                 self.0.paint.border_width.bottom = width;
                 self
             }
+
             /// Border on the left side only.
             pub fn border_left(mut self, color: Color, width: f32) -> Self {
                 self.0.paint.border_color.left = Some(ColorSource::Static(color));
                 self.0.paint.border_width.left = width;
                 self
             }
+
             /// Border on the left and right sides.
             pub fn border_horizontal(mut self, color: Color, width: f32) -> Self {
                 self.0.paint.border_color.left = Some(ColorSource::Static(color));
@@ -346,46 +355,55 @@ macro_rules! container_builder {
                 self.0.paint.border_color = Edges::all(Some(ColorSource::Static(color)));
                 self
             }
+
             /// Top border color only.
             pub fn border_color_top(mut self, color: Color) -> Self {
                 self.0.paint.border_color.top = Some(ColorSource::Static(color));
                 self
             }
+
             /// Right border color only.
             pub fn border_color_right(mut self, color: Color) -> Self {
                 self.0.paint.border_color.right = Some(ColorSource::Static(color));
                 self
             }
+
             /// Bottom border color only.
             pub fn border_color_bottom(mut self, color: Color) -> Self {
                 self.0.paint.border_color.bottom = Some(ColorSource::Static(color));
                 self
             }
+
             /// Left border color only.
             pub fn border_color_left(mut self, color: Color) -> Self {
                 self.0.paint.border_color.left = Some(ColorSource::Static(color));
                 self
             }
+
             /// Top border width only (other sides unchanged; set [`border`](Self::border) color first).
             pub fn border_width_top(mut self, width: f32) -> Self {
                 self.0.paint.border_width.top = width;
                 self
             }
+
             /// Right border width only.
             pub fn border_width_right(mut self, width: f32) -> Self {
                 self.0.paint.border_width.right = width;
                 self
             }
+
             /// Bottom border width only.
             pub fn border_width_bottom(mut self, width: f32) -> Self {
                 self.0.paint.border_width.bottom = width;
                 self
             }
+
             /// Left border width only.
             pub fn border_width_left(mut self, width: f32) -> Self {
                 self.0.paint.border_width.left = width;
                 self
             }
+
             /// Uniform corner radius on all four corners, in logical points.
             pub fn rounding(mut self, r: f32) -> Self {
                 self.0.paint.radius = CornerRadii::all(r);
@@ -501,11 +519,13 @@ macro_rules! container_builder {
                 self.0.paint.image = Some(handle);
                 self
             }
+
             /// Appends a child widget; call repeatedly to build a list of children.
             pub fn child(mut self, el: impl Into<Element>) -> Self {
                 self.0.children.push(el.into());
                 self
             }
+
             /// Appends multiple children in order.
             ///
             /// For a list of mixed widget types, use the [`children!`](crate::children) macro:
@@ -514,6 +534,7 @@ macro_rules! container_builder {
                 self.0.children.extend(items.into_iter().map(Into::into));
                 self
             }
+
             /// Stable identity for diffing when this child is inserted, removed, or reordered.
             ///
             /// All siblings under the same parent must use keys if any sibling uses one.
@@ -523,6 +544,7 @@ macro_rules! container_builder {
                 self.0.key = Some(Key(key));
                 self
             }
+
             /// Mouse click handler (logical coordinates, hit-tested against this node’s bounds).
             pub fn action(mut self, f: impl Fn() + 'static) -> Self {
                 self.0.handlers.on_click = Some(Rc::new(f));
@@ -536,6 +558,7 @@ macro_rules! container_builder {
                 self.0.handlers.on_key_down = Some(Rc::new(f));
                 self
             }
+
             pub fn on_key_up(
                 mut self,
                 f: impl Fn(crate::element::events::KeyEvent) + 'static,
@@ -543,6 +566,7 @@ macro_rules! container_builder {
                 self.0.handlers.on_key_up = Some(Rc::new(f));
                 self
             }
+
             /// Observes pointer entry/exit for this view, including its descendants.
             /// Receives `true` on entry and `false` on exit, hide, removal or window leave.
             /// Does not add a Tab stop. Existing enter/leave callbacks also remain active.
@@ -555,6 +579,7 @@ macro_rules! container_builder {
                 self.0.handlers.on_hover = Some(Rc::new(f));
                 self
             }
+
             /// Observes this view's direct focus, including loss on hide or removal.
             /// Add `.focusable()` for a plain container; controls already opt in.
             /// This observes element focus, independently of native window activation.
@@ -567,14 +592,17 @@ macro_rules! container_builder {
                 self.0.handlers.on_focus = Some(Rc::new(f));
                 self
             }
+
             pub fn on_hover_enter(mut self, f: impl Fn() + 'static) -> Self {
                 self.0.handlers.on_hover_enter = Some(Rc::new(f));
                 self
             }
+
             pub fn on_hover_leave(mut self, f: impl Fn() + 'static) -> Self {
                 self.0.handlers.on_hover_leave = Some(Rc::new(f));
                 self
             }
+
             /// Mouse wheel handler; `delta` preserves both axes in logical points.
             ///
             /// Used by scrollable regions such as [`ScrollView`](crate::ScrollView). Input
@@ -597,11 +625,13 @@ macro_rules! container_builder {
                 self.0.style.scroll_content = true;
                 self
             }
+
             /// Called when a click lands outside this node's layout bounds while it is mounted.
             pub fn on_click_outside(mut self, f: impl Fn() + 'static) -> Self {
                 self.0.handlers.on_click_outside = Some(Rc::new(f));
                 self
             }
+
             /// Pointer press handler with normalized coordinates in this node's bounds (`0.0..=1.0`).
             ///
             /// ```no_run
@@ -620,11 +650,13 @@ macro_rules! container_builder {
                 self.0.handlers.on_pointer_down = Some(Rc::new(f));
                 self
             }
+
             /// Pointer move handler with normalized coordinates in this node's bounds (`0.0..=1.0`).
             pub fn on_pointer_move(mut self, f: impl Fn(f32, f32) + 'static) -> Self {
                 self.0.handlers.on_pointer_move = Some(Rc::new(f));
                 self
             }
+
             /// Drags with logical-point `(dx, dy)` deltas while the pointer is captured.
             ///
             /// A press on this view starts capture; movement continues outside its bounds
@@ -641,11 +673,13 @@ macro_rules! container_builder {
                 self.0.handlers.on_drag = Some(Rc::new(action));
                 self
             }
+
             /// Pointer release handler with normalized coordinates in this node's bounds (`0.0..=1.0`).
             pub fn on_pointer_up(mut self, f: impl Fn(f32, f32) + 'static) -> Self {
                 self.0.handlers.on_pointer_up = Some(Rc::new(f));
                 self
             }
+
             /// Binds measured horizontal/vertical maximum offsets, in logical points.
             /// Updated after layout for scroll clamping; disabled axes receive zero.
             /// Used by [`ScrollView`](crate::ScrollView) and custom marked scroll regions.
@@ -662,6 +696,7 @@ macro_rules! container_builder {
                 self.0.handlers.scroll_layout_max = Some(cell);
                 self
             }
+
             /// Uniform margin on all sides, in logical points.
             pub fn outset(mut self, v: f32) -> Self {
                 self.0.style.margin = Some(Edges::all(v));
@@ -730,6 +765,7 @@ macro_rules! container_builder {
                 self.0.style.inset = Some(edges);
                 self
             }
+
             /// Sets the left edge offset in logical points; other edges stay unchanged.
             ///
             /// Its reference frame follows [`.position(...)`](Self::position).
@@ -739,6 +775,7 @@ macro_rules! container_builder {
                 self.0.style.inset = Some(edges);
                 self
             }
+
             /// Enables or disables input for this entire subtree (default: enabled).
             ///
             /// Layout and painting are preserved. Use `false` while a closing overlay
@@ -759,16 +796,19 @@ macro_rules! container_builder {
                 self.0.style.focusable = true;
                 self
             }
+
             /// Attaches text-field metadata used by the paint pass (caret, focus ring).
             pub fn text_input(mut self, meta: crate::element::types::TextInputMeta) -> Self {
                 self.0.text_input = Some(meta);
                 self
             }
+
             /// Marks this node as a scroll viewport on `axis`, drawing a scrollbar on overflow.
             pub fn scroll_viewport(mut self, axis: crate::ScrollAxis) -> Self {
                 self.0.scroll_viewport = Some(axis);
                 self
             }
+
             /// Animates visual changes in this view and its descendants.
             ///
             /// Initial mounting is immediate. Layout changes are not animated.
@@ -819,6 +859,7 @@ macro_rules! container_builder {
                 self.0.style.cursor = c;
                 self
             }
+
             /// Finishes the builder and returns an [`Element`] for use in [`.child`](Self::child) or the root view.
             pub fn into_element(self) -> Element {
                 Element::$variant(self.0)
@@ -830,6 +871,7 @@ macro_rules! container_builder {
                 $name::new()
             }
         }
+
         impl From<$name> for Element {
             fn from(b: $name) -> Self {
                 b.into_element()
@@ -861,6 +903,7 @@ impl View {
     pub(crate) fn from_box(element: BoxElement, vertical: bool) -> Self {
         Self(element, vertical)
     }
+
     pub(crate) fn into_box(self) -> BoxElement {
         self.0
     }

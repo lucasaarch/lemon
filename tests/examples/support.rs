@@ -5,12 +5,14 @@ use lemon::{
     ui::UiState,
     Cx, Viewport,
 };
+
 pub fn mount(root: impl Fn(&Cx) -> Element + 'static) -> UiState {
     let mut ui = UiState::default();
     ui.mount(root).unwrap();
     update(&mut ui);
     ui
 }
+
 pub fn update(ui: &mut UiState) {
     ui.update(
         Viewport {
@@ -23,6 +25,7 @@ pub fn update(ui: &mut UiState) {
     )
     .unwrap();
 }
+
 pub fn text(node: &RetainedNode) -> Vec<String> {
     node.text
         .iter()
@@ -30,6 +33,7 @@ pub fn text(node: &RetainedNode) -> Vec<String> {
         .chain(node.children.iter().flat_map(text))
         .collect()
 }
+
 pub fn click(ui: &mut UiState, label: &str) {
     fn find<'a>(node: &'a RetainedNode, label: &str) -> Option<&'a RetainedNode> {
         if !node.style.interactive {

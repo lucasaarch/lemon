@@ -12,6 +12,7 @@ const VIEWPORT: Viewport = Viewport {
     width: 320.0,
     height: 500.0,
 };
+
 fn nodes() -> Vec<FileTreeNode> {
     vec![
         FileTreeNode::folder(
@@ -25,6 +26,7 @@ fn nodes() -> Vec<FileTreeNode> {
         FileTreeNode::folder(5, "empty", vec![]),
     ]
 }
+
 fn labels(node: &RetainedNode) -> Vec<&str> {
     let mut result = Vec::new();
     if let Some(text) = node.text_content() {
@@ -35,6 +37,7 @@ fn labels(node: &RetainedNode) -> Vec<&str> {
     }
     result
 }
+
 fn press(key: NamedKey) -> InputEvent {
     InputEvent::Key(KeyEvent {
         key: LemonKey::Named(key),
@@ -43,9 +46,11 @@ fn press(key: NamedKey) -> InputEvent {
         state: KeyState::Pressed,
     })
 }
+
 fn update(ui: &mut UiState) {
     ui.update(VIEWPORT, 1.0, ui.focused(), true).unwrap();
 }
+
 fn click_row(ui: &mut UiState, index: usize) {
     let root = ui.retained().unwrap().root().unwrap();
     let rect = ui
@@ -56,6 +61,7 @@ fn click_row(ui: &mut UiState, index: usize) {
     ui.dispatch_input(InputEvent::Click(point)).unwrap();
     update(ui);
 }
+
 #[test]
 fn folders_expand_select_and_preserve_disclosure_with_stable_rows_in_both_themes() {
     for theme in [Theme::default_light(), Theme::default_dark()] {
@@ -113,6 +119,7 @@ fn folders_expand_select_and_preserve_disclosure_with_stable_rows_in_both_themes
         assert!(expanded.peek().contains(&5));
     }
 }
+
 #[test]
 fn keyboard_navigates_visible_rows_and_parent_child_relationships() {
     let selected = State::new(None);
@@ -160,6 +167,7 @@ fn keyboard_navigates_visible_rows_and_parent_child_relationships() {
         "Tab wraps to the single tree stop"
     );
 }
+
 #[test]
 fn row_geometry_icons_and_theme_changes_flow_through_the_pipeline() {
     let host = HostContext::new(Theme::default_light());
@@ -195,6 +203,7 @@ fn row_geometry_icons_and_theme_changes_flow_through_the_pipeline() {
     assert_eq!(icon.taffy_id, Some(id));
     assert_ne!(icon.paint.icon.as_ref().unwrap().color, before);
 }
+
 #[test]
 #[should_panic(expected = "FileTree node IDs must be unique")]
 fn duplicate_ids_are_rejected_even_in_closed_folders() {

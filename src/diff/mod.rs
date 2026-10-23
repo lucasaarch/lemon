@@ -1,4 +1,5 @@
 mod children;
+
 mod props;
 
 pub(crate) use children::{child_plan, ChildOp};
@@ -146,6 +147,7 @@ pub(crate) trait Reconciler {
     ) {
         push_insert_child(element, parent, index, patches);
     }
+
     fn remove(
         &mut self,
         element: &Element,
@@ -155,6 +157,7 @@ pub(crate) trait Reconciler {
     ) {
         push_remove_child(element, parent, index, patches);
     }
+
     fn component_transition(
         &mut self,
         _old: &Element,
@@ -164,10 +167,14 @@ pub(crate) trait Reconciler {
     ) -> bool {
         false
     }
+
     fn replaced(&mut self, _element: &Element, _path: &NodePath, _patches: &mut Vec<Patch>) {}
+
     fn relocate(&mut self, _parent: &NodePath, _op: &ChildOp) {}
 }
+
 struct PlainReconciler;
+
 impl Reconciler for PlainReconciler {}
 
 pub(crate) fn reconcile(

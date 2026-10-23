@@ -111,6 +111,7 @@ fn group_position(requested: (f32, f32), window: NSSize, group: NSSize) -> NSPoi
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn positions_use_logical_points_and_clamp_to_available_window_space() {
         let group = NSSize::new(60.0, 14.0);

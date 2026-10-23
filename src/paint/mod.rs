@@ -6,6 +6,7 @@ use vello::peniko::{
     ImageBrush, ImageData as PenikoImageData, ImageFormat,
 };
 use vello::{Glyph, Scene as RawScene};
+
 mod scene;
 pub use scene::{Renderer, Scene};
 
@@ -35,6 +36,7 @@ impl PaintContext<'_> {
         self.visuals
             .and_then(|visuals| visuals.get(&node.taffy_id?))
     }
+
     fn paint<'a>(&'a self, node: &'a RetainedNode) -> &'a crate::element::style::PaintData {
         self.visual(node)
             .map_or(&node.paint, |visual| &visual.paint)

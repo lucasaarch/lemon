@@ -17,6 +17,7 @@ fn layout(element: Element, width: f32, height: f32) -> (RetainedTree, LayoutMap
     .unwrap();
     (tree, map)
 }
+
 fn rect(node: &RetainedNode, map: &LayoutMap) -> LayoutRect {
     *map.get(node.taffy_id.unwrap()).unwrap()
 }

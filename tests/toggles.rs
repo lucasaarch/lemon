@@ -4,6 +4,7 @@ use lemon::{
     ui::UiState,
     Viewport,
 };
+
 #[test]
 fn checkbox_and_switch_share_boolean_keyboard_and_disabled_behavior() {
     let a = State::new(false);

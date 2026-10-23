@@ -203,9 +203,11 @@ const VIEWPORT: Viewport = Viewport {
     width: 400.0,
     height: 300.0,
 };
+
 fn update(ui: &mut UiState) {
     ui.update(VIEWPORT, 1.0, ui.focused(), false).unwrap();
 }
+
 fn wheel(ui: &mut UiState, point: (f32, f32), x: f64, y: f64) {
     ui.dispatch_input(InputEvent::Scroll {
         point: LogicalPoint::new(point.0, point.1),
@@ -214,6 +216,7 @@ fn wheel(ui: &mut UiState, point: (f32, f32), x: f64, y: f64) {
     .unwrap();
     update(ui);
 }
+
 #[test]
 fn both_axes_accept_diagonal_and_independent_movement_including_opposite_signs() {
     let offset = State::new(ScrollOffset::new(100.0, 100.0));
@@ -237,6 +240,7 @@ fn both_axes_accept_diagonal_and_independent_movement_including_opposite_signs()
     wheel(&mut ui, (20.0, 20.0), 9999.0, -9999.0);
     assert_eq!(offset.get(), ScrollOffset::new(0.0, 300.0));
 }
+
 #[test]
 fn both_limits_reclamp_after_content_viewport_and_external_offset_changes() {
     let offset = State::new(ScrollOffset::new(9999.0, 9999.0));
@@ -271,6 +275,7 @@ fn both_limits_reclamp_after_content_viewport_and_external_offset_changes() {
     update(&mut ui);
     assert_eq!(offset.get(), ScrollOffset::default());
 }
+
 #[test]
 fn nested_both_viewports_keep_their_clips_and_scroll_ranges_separate() {
     let outer = State::new(ScrollOffset::default());
@@ -311,6 +316,7 @@ fn nested_both_viewports_keep_their_clips_and_scroll_ranges_separate() {
     assert_eq!(outer.get(), ScrollOffset::new(100.0, 120.0));
     assert_eq!(inner.get(), ScrollOffset::new(30.0, 40.0));
 }
+
 #[test]
 fn both_paints_only_overflowing_axes_and_refreshes_limits_after_paint_only_renders() {
     for (w, h, fills) in [

@@ -1,6 +1,8 @@
 //! Backend-independent focus, pointer capture, keyboard, hover and scrolling.
 use crate::retained::TextCursorHandler;
+
 pub mod hit_test;
+
 mod observers;
 use crate::{
     retained::focus::FocusManager, retained::RetainedError, ui::UiState, Cursor, KeyEvent,
@@ -62,6 +64,7 @@ pub(crate) struct InputState {
     last_caret_activity: Instant,
     cursor: Cursor,
 }
+
 impl Default for InputState {
     fn default() -> Self {
         Self {

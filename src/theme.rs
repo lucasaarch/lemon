@@ -100,6 +100,7 @@ impl Theme {
             },
         )
     }
+
     fn with_palette(colors: ColorTokens, chrome: WidgetChromeTokens) -> Self {
         Self {
             colors,
@@ -259,6 +260,7 @@ pub struct RadiusTokens {
 }
 
 thread_local! {
+
     static ACTIVE_THEME: RefCell<Rc<Theme>> = RefCell::new(Rc::new(Theme::default_dark()));
 }
 

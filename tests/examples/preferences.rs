@@ -1,5 +1,7 @@
 use super::*;
+
 mod support;
+
 #[test]
 fn apply_and_revert_keep_the_preview_on_the_last_valid_preferences() {
     let form = Form::new();
@@ -19,6 +21,7 @@ fn apply_and_revert_keep_the_preview_on_the_last_valid_preferences() {
     support::click(&mut runtime, "Revert");
     assert_eq!(form.name.get(), "Sam");
 }
+
 #[test]
 fn previews_share_applied_state_and_uses_the_originating_window_queue() {
     let host = lemon::host::HostContext::new(lemon::Theme::default());

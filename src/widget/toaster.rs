@@ -8,6 +8,7 @@ use std::time::Duration;
 /// Identity returned by [`Toaster::show`], scoped to its originating toaster.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ToastId(u64);
+
 #[derive(Clone)]
 struct Toast {
     id: ToastId,
@@ -15,6 +16,7 @@ struct Toast {
     timer: AnimationHandle,
     duration: Duration,
 }
+
 #[derive(Clone, Default)]
 struct Queue {
     next: u64,
@@ -42,6 +44,7 @@ pub struct Toaster {
     animations: AnimRegistry,
     theme: crate::Theme,
 }
+
 impl Toaster {
     /// Declares one persistent queue (one hook slot); queues are independent per instance.
     pub fn new(cx: &Cx) -> Self {
@@ -51,10 +54,12 @@ impl Toaster {
             theme: cx.theme(),
         }
     }
+
     /// Shows a four-second notification and returns its identity for explicit dismissal.
     pub fn show(&self, message: impl Into<String>) -> ToastId {
         self.show_for(message, Duration::from_secs(4))
     }
+
     /// Shows a notification for `duration`, including its fades. Zero expires immediately.
     /// Expired entries are reclaimed on the next enqueue; hidden stacks do not render them.
     pub fn show_for(&self, message: impl Into<String>, duration: Duration) -> ToastId {
@@ -75,15 +80,18 @@ impl Toaster {
         self.queue.set(queue);
         id
     }
+
     /// Removes one notification immediately. Unknown or already removed identities are ignored.
     pub fn dismiss(&self, id: ToastId) {
         self.queue
             .update(|q| q.entries.retain(|toast| toast.id != id));
     }
+
     /// Removes all notifications immediately.
     pub fn clear(&self) {
         self.queue.update(|q| q.entries.clear());
     }
+
     /// Builds the notification stack. Empty areas pass input through to the application.
     /// Mount one stack for each controller; it stays below modal dialogs.
     pub fn into_element(self) -> Element {
@@ -156,6 +164,7 @@ impl Toaster {
         stack.into_element()
     }
 }
+
 impl From<Toaster> for Element {
     fn from(value: Toaster) -> Element {
         value.into_element()

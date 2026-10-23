@@ -101,6 +101,13 @@ System appearance selects the default palette; it does not provide the widget
 rendering. Screen-reader integration and IME composition are not implemented yet.
 Web and mobile targets are outside the current desktop API.
 
+## Packaging
+
+Lemon recommends [`cargo-packager`](docs/packaging.md) for creating installable
+macOS, Linux and Windows builds. The guide includes an app configuration and an
+optional CI workflow; applications can use another packager when their
+distribution needs require it.
+
 The rendering stack uses [winit](https://github.com/rust-windowing/winit),
 [wgpu](https://github.com/gfx-rs/wgpu), [Vello](https://github.com/linebender/vello),
 [Taffy](https://github.com/DioxusLabs/taffy) and [Parley](https://github.com/linebender/parley).
@@ -108,6 +115,7 @@ The rendering stack uses [winit](https://github.com/rust-windowing/winit),
 ## Documentation and development
 
 - [Application guide](docs/guide.md): layout, state, themes, styling, events and windows.
+- [Packaging guide](docs/packaging.md): build installable apps for macOS, Linux and Windows.
 - [API reference](https://docs.rs/lemon): source-level documentation and examples.
 - [Contributing](CONTRIBUTING.md): setup, tests and the release process.
 - [Changelog](CHANGELOG.md): release notes and alpha migration.

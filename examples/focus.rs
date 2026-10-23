@@ -2,12 +2,14 @@
 //! Time is measured by Instant; motion only schedules UI frames while the timer runs.
 use lemon::prelude::*;
 use std::time::{Duration, Instant};
+
 #[derive(Clone, Debug, Default)]
 struct Session {
     elapsed: Duration,
     started: Option<Instant>,
     finished: bool,
 }
+
 impl Session {
     fn elapsed_at(&self, now: Instant) -> Duration {
         self.elapsed
@@ -16,25 +18,30 @@ impl Session {
                 .map(|start| now.saturating_duration_since(start))
                 .unwrap_or_default()
     }
+
     fn start(&mut self, now: Instant) {
         if self.started.is_none() && !self.finished {
             self.started = Some(now);
         }
     }
+
     fn pause(&mut self, now: Instant) {
         self.elapsed = self.elapsed_at(now);
         self.started = None;
     }
+
     fn finish(&mut self, total: Duration) {
         self.elapsed = total;
         self.started = None;
         self.finished = true;
     }
 }
+
 #[derive(Clone, PartialEq)]
 struct TimerProps {
     seconds: u64,
 }
+
 fn timer(cx: &Cx, props: &TimerProps) -> Element {
     let theme = cx.theme();
     let total = Duration::from_secs(props.seconds);
@@ -164,6 +171,7 @@ fn timer(cx: &Cx, props: &TimerProps) -> Element {
         .child(toaster)
         .into_element()
 }
+
 fn app(cx: &Cx) -> Element {
     let theme = cx.theme();
     let duration = cx.state(Some(1500_u64));
@@ -199,6 +207,7 @@ fn app(cx: &Cx) -> Element {
         )
         .into_element()
 }
+
 fn main() {
     run(|cx| {
         cx.open_window(
@@ -207,6 +216,7 @@ fn main() {
         )
     });
 }
+
 #[cfg(test)]
 #[path = "../tests/examples/focus.rs"]
 mod tests;

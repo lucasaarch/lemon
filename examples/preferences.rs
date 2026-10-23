@@ -1,6 +1,7 @@
 //! A reader's preferences form with validation, apply/revert and a shared preview window.
 //! Changes are session-local. The preview changes only when Apply is pressed.
 use lemon::prelude::*;
+
 #[derive(Clone, Debug, PartialEq)]
 struct Preferences {
     name: String,
@@ -9,6 +10,7 @@ struct Preferences {
     comfortable: bool,
     guide: bool,
 }
+
 impl Default for Preferences {
     fn default() -> Self {
         Self {
@@ -20,6 +22,7 @@ impl Default for Preferences {
         }
     }
 }
+
 #[derive(Clone)]
 struct Form {
     name: State<String>,
@@ -29,6 +32,7 @@ struct Form {
     guide: State<bool>,
     applied: State<Preferences>,
 }
+
 impl Form {
     fn new() -> Self {
         let value = Preferences::default();
@@ -41,6 +45,7 @@ impl Form {
             applied: State::new(value),
         }
     }
+
     fn draft(&self) -> Preferences {
         Preferences {
             name: self.name.get().trim().into(),
@@ -50,6 +55,7 @@ impl Form {
             guide: self.guide.get(),
         }
     }
+
     fn restore(&self, value: Preferences) {
         self.name.set(value.name);
         self.font.set(Some(value.font));
@@ -57,6 +63,7 @@ impl Form {
         self.comfortable.set(value.comfortable);
         self.guide.set(value.guide);
     }
+
     fn apply(&self) -> bool {
         let value = self.draft();
         if value.name.is_empty() {
@@ -66,6 +73,7 @@ impl Form {
         true
     }
 }
+
 fn preview(cx: &Cx, preferences: &State<Preferences>) -> Element {
     let theme = cx.theme();
     let value = preferences.get();
@@ -89,6 +97,7 @@ fn preview(cx: &Cx, preferences: &State<Preferences>) -> Element {
         .child(ScrollView::new(cx, article).decorate(|view| view.fill().height(0.0).grow(1.0)))
         .into_element()
 }
+
 fn app(cx: &Cx, form: &Form) -> Element {
     let theme = cx.theme();
     let draft = form.draft();
@@ -211,6 +220,7 @@ fn app(cx: &Cx, form: &Form) -> Element {
         .child(toaster)
         .into_element()
 }
+
 fn main() {
     let form = Form::new();
     run(move |cx| {
@@ -222,6 +232,7 @@ fn main() {
         )
     });
 }
+
 #[cfg(test)]
 #[path = "../tests/examples/preferences.rs"]
 mod tests;

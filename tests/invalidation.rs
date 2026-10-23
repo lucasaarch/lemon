@@ -149,6 +149,7 @@ fn viewport_changes_invalidate_geometry_without_manual_flags() {
 #[test]
 fn invalid_structural_patches_return_errors_without_losing_nodes() {
     use lemon::{Component, Cx, View};
+
     fn component(_: &Cx) -> lemon::element::Element {
         Text::new("child").into_element()
     }

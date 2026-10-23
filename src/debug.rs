@@ -134,6 +134,7 @@ fn category_bit(cat: Category) -> u32 {
 }
 
 static CONFIG: OnceLock<DebugConfig> = OnceLock::new();
+
 static FRAME: AtomicU64 = AtomicU64::new(0);
 
 fn config() -> &'static DebugConfig {
@@ -238,6 +239,7 @@ impl ProgrammaticFlags {
 }
 
 thread_local! {
+
     static PROGRAMMATIC: ProgrammaticFlags = const { ProgrammaticFlags::new() };
 }
 

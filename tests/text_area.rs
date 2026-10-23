@@ -10,9 +10,11 @@ const VIEWPORT: Viewport = Viewport {
     width: 400.0,
     height: 500.0,
 };
+
 fn update(ui: &mut UiState) {
     ui.update(VIEWPORT, 1.0, ui.focused(), true).unwrap();
 }
+
 fn key(ui: &mut UiState, key: LemonKey, shift: bool, meta: bool) {
     ui.dispatch_input(InputEvent::Key(KeyEvent {
         key,
@@ -27,15 +29,18 @@ fn key(ui: &mut UiState, key: LemonKey, shift: bool, meta: bool) {
     .unwrap();
     update(ui);
 }
+
 fn named(ui: &mut UiState, key_name: NamedKey) {
     key(ui, LemonKey::Named(key_name), false, false);
 }
+
 fn find(node: &RetainedNode, predicate: fn(&RetainedNode) -> bool) -> Option<&RetainedNode> {
     if predicate(node) {
         return Some(node);
     }
     node.children.iter().find_map(|node| find(node, predicate))
 }
+
 fn root(ui: &UiState) -> &RetainedNode {
     ui.retained().unwrap().root().unwrap()
 }

@@ -9,12 +9,14 @@ use lemon::{
     Theme, Viewport,
 };
 use std::{cell::Cell, rc::Rc};
+
 fn root(element: Element) -> lemon::element::types::BoxElement {
     let Element::View(view) = element else {
         panic!("view")
     };
     view
 }
+
 fn key(key: NamedKey) -> InputEvent {
     InputEvent::Key(KeyEvent {
         key: LemonKey::Named(key),

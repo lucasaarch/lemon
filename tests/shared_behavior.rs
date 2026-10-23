@@ -13,9 +13,11 @@ fn viewport() -> Viewport {
         height: 500.0,
     }
 }
+
 fn finish(ui: &mut UiState) {
     ui.update(viewport(), 1.0, ui.focused(), true).unwrap();
 }
+
 fn key(key: LemonKey, modifiers: Modifiers) -> InputEvent {
     InputEvent::Key(KeyEvent {
         key,
@@ -24,12 +26,14 @@ fn key(key: LemonKey, modifiers: Modifiers) -> InputEvent {
         state: KeyState::Pressed,
     })
 }
+
 fn box_node(element: &Element) -> &lemon::element::types::BoxElement {
     match element {
         Element::View(node) | Element::Column(node) | Element::Row(node) => node,
         _ => panic!("expected container"),
     }
 }
+
 fn panel(view: View) -> View {
     view.width(240.0)
         .height(48.0)

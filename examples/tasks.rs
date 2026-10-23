@@ -8,17 +8,20 @@ struct Task {
     title: String,
     done: State<bool>,
 }
+
 #[derive(Clone)]
 struct TaskProps {
     task: Task,
     tasks: State<Vec<Task>>,
 }
+
 // IDs are never reused; each ID keeps the same state cells for this session.
 impl PartialEq for TaskProps {
     fn eq(&self, other: &Self) -> bool {
         self.task.id == other.task.id && self.task.title == other.task.title
     }
 }
+
 fn task_row(cx: &Cx, props: &TaskProps) -> Element {
     let theme = cx.theme();
     let task = &props.task;
@@ -29,15 +32,13 @@ fn task_row(cx: &Cx, props: &TaskProps) -> Element {
         .spacing(12.0)
         .inset(12.0)
         .align(Align::Center)
+        .distribute(Distribute::Between)
         .surface(theme.colors.surface)
         .rounding(theme.radius.md)
         .child(
             Checkbox::new(cx, task.done.clone())
                 .label(&task.title)
-                .decorate(|view| {
-                    view.grow(1.0)
-                        .opacity(if task.done.get() { 0.6 } else { 1.0 })
-                }),
+                .decorate(|view| view.opacity(if task.done.get() { 0.6 } else { 1.0 })),
         )
         .child(
             Button::new(cx, "Remove")
@@ -46,6 +47,7 @@ fn task_row(cx: &Cx, props: &TaskProps) -> Element {
         )
         .into_element()
 }
+
 fn app(cx: &Cx) -> Element {
     let theme = cx.theme();
     let tasks = cx.state(vec![
@@ -203,6 +205,7 @@ fn app(cx: &Cx) -> Element {
         .child(dialog)
         .into_element()
 }
+
 fn main() {
     run(|cx| {
         cx.open_window(
@@ -211,6 +214,7 @@ fn main() {
         )
     });
 }
+
 #[cfg(test)]
 #[path = "../tests/examples/tasks.rs"]
 mod tests;

@@ -119,13 +119,16 @@ pub enum ScrollAxis {
     /// Scroll independently in both directions, including diagonal trackpad gestures.
     Both,
 }
+
 impl ScrollAxis {
     pub(crate) fn horizontal(self) -> bool {
         matches!(self, Self::Horizontal | Self::Both)
     }
+
     pub(crate) fn vertical(self) -> bool {
         matches!(self, Self::Vertical | Self::Both)
     }
+
     pub(crate) fn accepts(self, delta: ScrollDelta) -> bool {
         (self.horizontal() && delta.x != 0.0) || (self.vertical() && delta.y != 0.0)
     }
@@ -142,6 +145,7 @@ pub struct ScrollDelta {
     /// Vertical movement.
     pub y: f64,
 }
+
 impl ScrollDelta {
     /// Creates a delta in logical points; use zero for an unchanged axis.
     pub const fn new(x: f64, y: f64) -> Self {
@@ -168,11 +172,13 @@ pub struct ScrollOffset {
     /// Vertical distance from the top edge, in logical points.
     pub y: f64,
 }
+
 impl ScrollOffset {
     /// Creates independent horizontal and vertical offsets, in logical points.
     pub const fn new(x: f64, y: f64) -> Self {
         Self { x, y }
     }
+
     pub(crate) fn clamped(self, maximum: Self) -> Self {
         fn clamp(value: f64, maximum: f64) -> f64 {
             if value.is_finite() {

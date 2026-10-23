@@ -117,6 +117,7 @@ fn keyed_component_state_follows_identity_on_reorder() {
 #[test]
 fn inserted_component_subtrees_mount_and_keep_state_after_reorders() {
     use lemon::{ui::UiState, Decorate};
+
     fn child(cx: &Cx, key: &u64) -> Element {
         let identity = cx.state(*key);
         Text::new(move || identity.get().to_string()).into_element()
@@ -143,6 +144,7 @@ fn inserted_component_subtrees_mount_and_keep_state_after_reorders() {
     ] {
         order.set(next.clone());
         ui.apply_updates().unwrap();
+
         fn content(node: &lemon::retained::RetainedNode) -> Option<&str> {
             node.text_content()
                 .or_else(|| node.children.iter().find_map(content))
@@ -163,9 +165,11 @@ fn inserted_component_subtrees_mount_and_keep_state_after_reorders() {
 #[test]
 fn replacing_component_types_or_container_subtrees_mounts_the_new_output() {
     use lemon::{ui::UiState, RowView};
+
     fn first(_: &Cx) -> Element {
         Text::new("first").into_element()
     }
+
     fn second(_: &Cx) -> Element {
         Text::new("second").into_element()
     }
@@ -183,6 +187,7 @@ fn replacing_component_types_or_container_subtrees_mounts_the_new_output() {
             .into_element()
     })
     .unwrap();
+
     fn content(node: &lemon::retained::RetainedNode) -> Option<&str> {
         node.text_content()
             .or_else(|| node.children.iter().find_map(content))
@@ -206,12 +211,15 @@ fn replacing_component_types_or_container_subtrees_mounts_the_new_output() {
 #[test]
 fn component_fragment_outputs_use_keyed_reconciliation_and_preserve_hook_state() {
     use lemon::ui::UiState;
+
     fn child(cx: &Cx, id: &u64) -> Element {
         let original = cx.state(*id);
         Text::new(move || original.get().to_string()).into_element()
     }
+
     #[derive(Clone, PartialEq)]
     struct Keys(Vec<u64>);
+
     fn fragment(_: &Cx, keys: &Keys) -> Element {
         Element::Fragment(
             keys.0

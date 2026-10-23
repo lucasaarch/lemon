@@ -500,6 +500,7 @@ pub struct TextArea {
     resized: State<Option<f32>>,
     offset: State<crate::ScrollOffset>,
 }
+
 impl TextArea {
     /// Creates an enabled multiline field with theme defaults and app-owned text.
     pub fn new(cx: &Cx, value: State<String>) -> Self {
@@ -512,16 +513,19 @@ impl TextArea {
             offset: cx.state(crate::ScrollOffset::default()),
         }
     }
+
     /// Sets the placeholder shown only when the value is empty.
     pub fn placeholder(mut self, text: impl Into<String>) -> Self {
         self.field = self.field.placeholder(text);
         self
     }
+
     /// Sets a fixed width in logical points; otherwise width is automatic.
     pub fn width(mut self, width: f32) -> Self {
         self.field = self.field.width(width);
         self
     }
+
     /// Sets initial height in logical points; user resizing takes precedence afterward.
     ///
     /// The minimum height is always enforced. Panics unless finite and positive.
@@ -533,6 +537,7 @@ impl TextArea {
         self.height = height;
         self
     }
+
     /// Sets the minimum height in logical points (default: 60), including padding and handle.
     ///
     /// Applies immediately, including after a user resize. Panics unless finite and positive.
@@ -544,47 +549,56 @@ impl TextArea {
         self.minimum = minimum;
         self
     }
+
     /// Enables or hides the vertical resize handle (default: true). Width never changes.
     /// Disabling resizing preserves the current user-chosen height.
     pub fn resizable(mut self, resizable: bool) -> Self {
         self.resizable = resizable;
         self
     }
+
     /// Chooses the shared field preset, preserving explicit overrides.
     pub fn style(mut self, style: TextFieldStyle) -> Self {
         self.field = self.field.style(style);
         self
     }
+
     /// Overrides the placeholder color.
     pub fn placeholder_color(mut self, color: Color) -> Self {
         self.field = self.field.placeholder_color(color);
         self
     }
+
     /// Overrides the border color, including opting into a border with the clean preset.
     pub fn border_color(mut self, color: Color) -> Self {
         self.field = self.field.border_color(color);
         self
     }
+
     /// Overrides padding in logical points.
     pub fn inset(mut self, padding: f32) -> Self {
         self.field = self.field.inset(padding);
         self
     }
+
     /// Overrides corner radius in logical points.
     pub fn rounding(mut self, radius: f32) -> Self {
         self.field = self.field.rounding(radius);
         self
     }
+
     /// Overrides focus ring color, including opting into a ring with the clean preset.
     pub fn focus_ring_color(mut self, color: Color) -> Self {
         self.field = self.field.focus_ring_color(color);
         self
     }
+
     /// Prevents text input, focus and user resizing when `disabled` is true.
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.field = self.field.disabled(disabled);
         self
     }
+
     /// Builds the control, keeping all edits on the runtime/diff/retained pipeline.
     pub fn into_element(self) -> Element {
         let height = self.resized.get().unwrap_or(self.height).max(self.minimum);
@@ -597,6 +611,7 @@ impl TextArea {
         }))
     }
 }
+
 impl From<TextArea> for Element {
     fn from(area: TextArea) -> Self {
         area.into_element()

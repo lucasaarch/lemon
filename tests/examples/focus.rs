@@ -1,5 +1,7 @@
 use super::*;
+
 mod support;
+
 #[test]
 fn pause_resume_and_finish_use_monotonic_elapsed_time() {
     let start = Instant::now();
@@ -22,6 +24,7 @@ fn pause_resume_and_finish_use_monotonic_elapsed_time() {
     session.start(start + Duration::from_secs(200));
     assert!(session.started.is_none());
 }
+
 #[test]
 fn timer_actions_start_pause_and_reset_the_same_session() {
     let mut runtime = support::mount(app);

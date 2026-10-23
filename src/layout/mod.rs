@@ -540,6 +540,7 @@ fn prepare_fixed_layout(
         if let Some(id) = node.taffy_id {
             let mut style = taffy.style(id)?.clone();
             let edges = node.style.inset.unwrap_or_default();
+
             fn size(
                 value: &Option<Dimension>,
                 extent: f32,

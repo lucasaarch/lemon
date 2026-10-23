@@ -32,6 +32,7 @@ impl FileTreeNode {
             color: None,
         }
     }
+
     /// Creates a directory with ordered children, initially collapsed unless its ID
     /// is present in the tree's expanded state.
     pub fn folder(id: u64, label: impl Into<String>, children: Vec<Self>) -> Self {
@@ -40,24 +41,29 @@ impl FileTreeNode {
             ..Self::file(id, label)
         }
     }
+
     /// Overrides the automatic file icon or the folder's open/closed icons.
     pub fn icon(mut self, icon: IconData) -> Self {
         self.icon = Some(icon);
         self
     }
+
     /// Overrides this node's label and icon color (for example a modified file).
     pub fn color(mut self, color: Color) -> Self {
         self.color = Some(color);
         self
     }
+
     /// Returns the stable node identifier.
     pub fn id(&self) -> u64 {
         self.id
     }
+
     /// Returns the display label.
     pub fn label(&self) -> &str {
         &self.label
     }
+
     /// Returns directory children; `None` identifies a file, `Some(&[])` an empty folder.
     pub fn children(&self) -> Option<&[Self]> {
         self.children.as_deref()
@@ -82,6 +88,7 @@ pub struct FileTreeStyle {
     selection_color: Option<Color>,
     hover_color: Option<Color>,
 }
+
 impl Default for FileTreeStyle {
     fn default() -> Self {
         Self {
@@ -94,6 +101,7 @@ impl Default for FileTreeStyle {
         }
     }
 }
+
 impl FileTreeStyle {
     /// Sets row height in logical points. Panics unless finite and positive.
     pub fn row_height(mut self, height: f32) -> Self {
@@ -104,6 +112,7 @@ impl FileTreeStyle {
         self.row_height = height;
         self
     }
+
     /// Sets indentation per level in logical points. Panics unless finite and nonnegative.
     pub fn indent(mut self, indent: f32) -> Self {
         assert!(
@@ -113,6 +122,7 @@ impl FileTreeStyle {
         self.indent = indent;
         self
     }
+
     /// Sets square icon size in logical points. Panics unless finite and nonnegative.
     pub fn icon_size(mut self, size: f32) -> Self {
         assert!(
@@ -122,16 +132,19 @@ impl FileTreeStyle {
         self.icon_size = size;
         self
     }
+
     /// Overrides hierarchy guide color. Use a transparent color to hide guides.
     pub fn guide_color(mut self, color: Color) -> Self {
         self.guide_color = Some(color);
         self
     }
+
     /// Overrides the selected row's fill, which remains visible when the tree loses focus.
     pub fn selection_color(mut self, color: Color) -> Self {
         self.selection_color = Some(color);
         self
     }
+
     /// Overrides the hovered row's fill; selection takes precedence.
     pub fn hover_color(mut self, color: Color) -> Self {
         self.hover_color = Some(color);
@@ -184,12 +197,14 @@ impl FileTree {
             style: FileTreeStyle::default(),
         }
     }
+
     /// Uses app-owned selection, allowing the selected node to be observed or changed.
     /// A missing or hidden ID is preserved but does not highlight a visible row.
     pub fn selection(mut self, selected: State<Option<u64>>) -> Self {
         self.selected = selected;
         self
     }
+
     /// Uses app-owned expanded directory IDs. IDs absent from the data are ignored.
     ///
     /// ```
@@ -204,17 +219,20 @@ impl FileTree {
         self.expanded = expanded;
         self
     }
+
     /// Calls `action` with the chosen ID on clicks, keyboard navigation and Enter/Space.
     /// Repeated activation of the same row also calls it. Files and folders both report IDs.
     pub fn on_select(mut self, action: impl Fn(u64) + 'static) -> Self {
         self.on_select = Some(Rc::new(action));
         self
     }
+
     /// Configures row geometry and colors; root decoration applies afterward.
     pub fn style(mut self, style: FileTreeStyle) -> Self {
         self.style = style;
         self
     }
+
     /// Builds keyed rows. Panics if any IDs are duplicated, including in closed folders.
     pub fn into_element(self) -> Element {
         validate_ids(&self.nodes, &mut BTreeSet::new());
@@ -327,6 +345,7 @@ impl FileTree {
             .into_element()
     }
 }
+
 impl From<FileTree> for Element {
     fn from(tree: FileTree) -> Self {
         tree.into_element()
@@ -339,6 +358,7 @@ struct VisibleRow {
     depth: usize,
     parent: Option<u64>,
 }
+
 fn validate_ids(nodes: &[FileTreeNode], ids: &mut BTreeSet<u64>) {
     for node in nodes {
         assert!(
@@ -351,6 +371,7 @@ fn validate_ids(nodes: &[FileTreeNode], ids: &mut BTreeSet<u64>) {
         }
     }
 }
+
 fn visible_rows(nodes: &[FileTreeNode], expanded: &BTreeSet<u64>) -> Vec<VisibleRow> {
     fn collect(
         nodes: &[FileTreeNode],
@@ -376,12 +397,14 @@ fn visible_rows(nodes: &[FileTreeNode], expanded: &BTreeSet<u64>) -> Vec<Visible
     collect(nodes, expanded, 0, None, &mut rows);
     rows
 }
+
 fn choose(id: u64, selected: &State<Option<u64>>, callback: &Option<Rc<dyn Fn(u64)>>) {
     selected.set(Some(id));
     if let Some(callback) = callback {
         callback(id);
     }
 }
+
 fn toggle(id: u64, expanded: &State<BTreeSet<u64>>) {
     expanded.update(|open| {
         if !open.remove(&id) {
@@ -389,6 +412,7 @@ fn toggle(id: u64, expanded: &State<BTreeSet<u64>>) {
         }
     });
 }
+
 fn navigate(
     event: KeyEvent,
     rows: &[VisibleRow],
@@ -457,6 +481,7 @@ fn navigate(
         _ => {}
     }
 }
+
 fn file_icon(label: &str) -> IconData {
     let label = label.to_ascii_lowercase();
     if label.ends_with(".lock") {

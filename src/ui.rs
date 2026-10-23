@@ -77,32 +77,39 @@ impl UiState {
     pub fn runtime(&self) -> &Runtime {
         &self.runtime
     }
+
     /// Returns retained state after mounting; mutations belong to this pipeline.
     pub fn retained(&self) -> Option<&RetainedTree> {
         self.retained.as_ref()
     }
+
     /// Returns the latest computed layout rectangles.
     pub fn layout_map(&self) -> &LayoutMap {
         &self.layout_map
     }
+
     /// Returns the scene most recently built by `update`; render with [`crate::Renderer`]
     /// so subtree blur and brightness layers are processed.
     pub fn scene(&self) -> &Scene {
         &self.scene
     }
+
     /// Returns whether geometry needs recomputing.
     pub fn layout_dirty(&self) -> bool {
         self.layout_dirty
     }
+
     /// Returns whether the scene needs rebuilding.
     pub fn paint_dirty(&self) -> bool {
         self.paint_dirty
     }
+
     /// Invalidates geometry and paint after viewport or external layout changes.
     pub fn invalidate_layout(&mut self) {
         self.layout_dirty = true;
         self.paint_dirty = true;
     }
+
     /// Invalidates paint after scale, focus chrome, or host appearance changes.
     pub fn invalidate_paint(&mut self) {
         self.paint_dirty = true;

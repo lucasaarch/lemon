@@ -6,15 +6,18 @@ struct ThumbMotion {
     from: f32,
     to: f32,
 }
+
 impl ThumbMotion {
     fn sample(self, progress: f32) -> f32 {
         self.from + (self.to - self.from) * progress
     }
+
     fn retarget(&mut self, target: f32, progress: f32) {
         self.from = self.sample(progress);
         self.to = target;
     }
 }
+
 fn thumb_offset(cx: &Cx, checked: bool) -> f32 {
     let target = if checked { 19.0 } else { 3.0 };
     let animation =
@@ -89,21 +92,25 @@ macro_rules! toggle_builder {
                     thumb_offset,
                 })
             }
+
             /// Sets a label; clicking it also toggles the control. Empty by default.
             pub fn label(mut self, label: impl Into<String>) -> Self {
                 self.0.label = label.into();
                 self
             }
+
             /// Disables pointer and keyboard interaction and removes the Tab stop.
             pub fn disabled(mut self, disabled: bool) -> Self {
                 self.0.disabled = disabled;
                 self
             }
+
             /// Builds a themed element. Use [`Decorate`] for custom root styling.
             pub fn into_element(self) -> Element {
                 self.0.build($switch)
             }
         }
+
         impl From<$name> for Element {
             fn from(control: $name) -> Element {
                 control.into_element()
@@ -126,6 +133,7 @@ impl Toggle {
         let mut indicator = View::new()
             .width(if switch { 38.0 } else { 20.0 })
             .height(if switch { 22.0 } else { 20.0 })
+            .min_width(if switch { 38.0 } else { 20.0 })
             .rounding(if switch { 11.0 } else { 4.0 })
             .surface(if checked {
                 accent
@@ -200,6 +208,7 @@ mod tests {
     use crate::{
         host::HostContext,
         input::{hit_test::LogicalPoint, InputEvent},
+        retained::RetainedNode,
         ui::UiState,
         Viewport,
     };
@@ -208,9 +217,11 @@ mod tests {
         width: 300.0,
         height: 120.0,
     };
+
     fn update(ui: &mut UiState, now: Instant) {
         ui.update_at(SIZE, 1.0, ui.focused(), true, now).unwrap();
     }
+
     fn thumb(ui: &UiState) -> f32 {
         ui.retained().unwrap().root().unwrap().children[0].children[0]
             .style
@@ -220,6 +231,7 @@ mod tests {
             .left
             .unwrap()
     }
+
     #[test]
     fn switch_animates_both_directions_for_external_updates_without_animating_mount() {
         let host = HostContext::new(crate::Theme::default_dark());
@@ -254,6 +266,7 @@ mod tests {
         assert_eq!(thumb(&ui), 19.0);
         assert_eq!(host.animations().active_slots(), 0);
     }
+
     #[test]
     fn interrupted_thumb_movement_continues_without_a_jump() {
         let mut motion = ThumbMotion {
@@ -266,6 +279,33 @@ mod tests {
         assert_eq!(motion.sample(0.5), 7.0);
         assert_eq!(motion.sample(1.0), 3.0);
     }
+
+    #[test]
+    fn checkbox_indicator_keeps_its_icon_inside_when_the_row_is_too_narrow() {
+        let mut ui = UiState::default();
+        ui.mount(|cx| {
+            View::new()
+                .width(16.0)
+                .child(Checkbox::new(cx, cx.state(true)))
+                .into_element()
+        })
+        .unwrap();
+        update(&mut ui, Instant::now());
+
+        let root = ui.retained().unwrap().root().unwrap();
+        let indicator = &root.children[0].children[0];
+        let icon = &indicator.children[0];
+        let rect = |node: &RetainedNode| *ui.layout_map().get(node.taffy_id.unwrap()).unwrap();
+        let indicator_rect = rect(indicator);
+        let icon_rect = rect(icon);
+
+        assert_eq!(indicator_rect.width, 20.0);
+        assert!(icon_rect.x >= indicator_rect.x);
+        assert!(icon_rect.y >= indicator_rect.y);
+        assert!(icon_rect.x + icon_rect.width <= indicator_rect.x + indicator_rect.width);
+        assert!(icon_rect.y + icon_rect.height <= indicator_rect.y + indicator_rect.height);
+    }
+
     #[test]
     fn pointer_focus_hides_toggle_outlines_but_tab_restores_keyboard_chrome() {
         for switch in [false, true] {

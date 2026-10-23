@@ -17,8 +17,10 @@ fn component_identity(view: ComponentFn) -> usize {
 pub trait AnyProps: 'static {
     /// Clones this props value into a boxed trait object.
     fn clone_box(&self) -> Box<dyn AnyProps>;
+
     /// Compares this props value against another type-erased props value.
     fn eq_box(&self, other: &dyn AnyProps) -> bool;
+
     /// Returns this props value as [`Any`] for downcasting.
     fn as_any(&self) -> &dyn Any;
 }
@@ -313,6 +315,7 @@ mod tests {
         fn child(_cx: &crate::runtime::cx::Cx, props: &MyProps) -> Element {
             Text::new(props.value.to_string()).into_element()
         }
+
         fn child_no_props(_cx: &crate::runtime::cx::Cx) -> Element {
             Text::new("no props").into_element()
         }

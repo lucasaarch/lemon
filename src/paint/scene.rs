@@ -14,28 +14,33 @@ pub struct Scene {
     pub(super) layers: RefCell<Vec<FilterLayer>>,
     pub(super) identity: Arc<()>,
 }
+
 impl Scene {
     /// Creates an empty scene.
     pub fn new() -> Self {
         Self::default()
     }
+
     /// Clears draw commands and filter layers, invalidating cached GPU results.
     pub fn reset(&mut self) {
         self.raw.reset();
         self.layers.get_mut().clear();
         self.identity = Arc::new(());
     }
+
     /// Returns the number of isolated filter layers, including nested layers.
     pub fn effect_layer_count(&self) -> usize {
         self.layers.borrow().len()
     }
 }
+
 pub(super) struct FilterLayer {
     scene: vello::Scene,
     image: ImageData,
     sigma: f32,
     brightness: f32,
 }
+
 pub(super) fn filter_layer(
     layers: &RefCell<Vec<FilterLayer>>,
     scene: &mut vello::Scene,
@@ -102,6 +107,7 @@ pub struct Renderer {
     images: Vec<ImageData>,
     antialiasing: Option<vello::AaConfig>,
 }
+
 impl Renderer {
     /// Creates a renderer for `device`, using Vello's antialiasing and resource options.
     /// Returns Vello's initialization error when the device/options are unsupported.
@@ -117,6 +123,7 @@ impl Renderer {
             antialiasing: None,
         })
     }
+
     /// Renders a scene, processing nested filters before their enclosing layers.
     /// The device and queue must match those used at construction; output dimensions
     /// and texture requirements follow Vello's `RenderParams`. Returns rendering errors.
@@ -176,6 +183,7 @@ impl Renderer {
             .render_to_texture(device, queue, &scene.raw, target, params)
     }
 }
+
 fn texture(
     device: &wgpu::Device,
     width: u32,
@@ -198,10 +206,12 @@ fn texture(
         view_formats: &[],
     })
 }
+
 struct FilterPipeline {
     horizontal: wgpu::ComputePipeline,
     vertical: wgpu::ComputePipeline,
 }
+
 impl FilterPipeline {
     fn new(device: &wgpu::Device) -> Self {
         fn pipeline(device: &wgpu::Device, vertical: bool) -> wgpu::ComputePipeline {
@@ -233,6 +243,7 @@ impl FilterPipeline {
             vertical: pipeline(device, true),
         }
     }
+
     fn apply(
         &self,
         device: &wgpu::Device,

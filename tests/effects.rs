@@ -3,6 +3,7 @@ const SIZE: Viewport = Viewport {
     width: 100.0,
     height: 100.0,
 };
+
 #[test]
 fn reactive_filters_and_gradients_invalidate_paint_without_relayout() {
     let amount = State::new(0.0);
@@ -50,6 +51,7 @@ fn reactive_filters_and_gradients_invalidate_paint_without_relayout() {
         "repaint must discard old intermediate layers"
     );
 }
+
 #[test]
 fn effect_builders_reject_invalid_values_and_stops_are_validated_and_sorted() {
     for invalid in [-1.0, f32::NAN, f32::INFINITY] {

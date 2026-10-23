@@ -102,6 +102,7 @@ mod tests {
     use std::rc::Rc;
 
     struct Counter(Cell<u32>);
+
     impl Subscriber for Counter {
         fn mark_dirty(&self) {
             self.0.set(self.0.get() + 1);

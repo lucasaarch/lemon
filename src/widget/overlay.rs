@@ -38,11 +38,13 @@ impl Popover {
             theme: cx.theme(),
         }
     }
+
     /// Sets panel width in logical points (default: 240). The anchor keeps its own size.
     pub fn width(mut self, width: f32) -> Self {
         self.width = width;
         self
     }
+
     /// Builds the anchor and panel. Decorate the content for custom interior styling.
     pub fn into_element(self) -> Element {
         let visible = self.open.get();
@@ -82,6 +84,7 @@ impl Popover {
         root.into_element()
     }
 }
+
 impl From<Popover> for Element {
     fn from(value: Popover) -> Element {
         value.into_element()
@@ -109,6 +112,7 @@ pub struct Dialog {
     dismiss_on_backdrop: bool,
     theme: crate::Theme,
 }
+
 impl Dialog {
     /// Creates a centered modal with app-owned visibility. No hook slots consumed.
     pub fn new(cx: &Cx, open: State<bool>, content: impl Into<Element>) -> Self {
@@ -120,18 +124,21 @@ impl Dialog {
             theme: cx.theme(),
         }
     }
+
     /// Sets the preferred panel width in logical points (default: 400).
     /// The panel shrinks to fit the viewport's 24-point outer inset.
     pub fn width(mut self, width: f32) -> Self {
         self.width = width;
         self
     }
+
     /// Whether clicking the backdrop closes the dialog (default: true).
     /// Escape always closes it; action buttons can also set visibility to false.
     pub fn dismiss_on_backdrop(mut self, enabled: bool) -> Self {
         self.dismiss_on_backdrop = enabled;
         self
     }
+
     /// Builds the modal. Keep this element mounted even when its state is false.
     pub fn into_element(self) -> Element {
         let visible = self.open.get();
@@ -175,6 +182,7 @@ impl Dialog {
         element
     }
 }
+
 impl From<Dialog> for Element {
     fn from(value: Dialog) -> Element {
         value.into_element()
