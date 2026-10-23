@@ -22,6 +22,11 @@ def archive(path, files):
 
 
 class ReleaseUpdaterTests(unittest.TestCase):
+    def test_relative_paths_keep_their_own_origin_when_shapes_are_combined(self):
+        source = b'<svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d=" m6 6 12 12"/></svg>'
+        catalog = updater.generate_catalog([('x', source)], 'test')
+        self.assertIn('M18 6 6 18 M0 0 m6 6 12 12', catalog)
+
     def test_fetches_latest_stable_release_from_official_endpoint(self):
         with patch.object(updater, 'urlopen', return_value=io.BytesIO(json.dumps({
             'tag_name': '1.61.0', 'prerelease': False, 'draft': False,

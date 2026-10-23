@@ -70,7 +70,9 @@ def shape_path(element):
     a = element.attrib
     tag = element.tag.split('}')[-1]
     if tag == 'path':
-        return a['d']
+        data = a['d'].strip()
+        # Each SVG shape starts at the origin; concatenation must preserve that.
+        return 'M0 0 ' + data if data.startswith('m') else data
     if tag in ('polyline', 'polygon'):
         points = re.findall(r'-?(?:\d*\.)?\d+', a['points'])
         return 'M' + ' '.join(points) + ('Z' if tag == 'polygon' else '')

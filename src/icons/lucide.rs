@@ -7,28 +7,30 @@ use super::IconData;
 /// Lucide `a-arrow-down` icon (24 × 24 stroke grid).
 pub const A_ARROW_DOWN: IconData = IconData {
     name: "a-arrow-down",
-    stroke: "m14 12 4 4 4-4 M18 16V7 m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16 M3.304 13h6.392",
+    stroke:
+        "M0 0 m14 12 4 4 4-4 M18 16V7 M0 0 m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16 M3.304 13h6.392",
     fill: "",
 };
 
 /// Lucide `a-arrow-up` icon (24 × 24 stroke grid).
 pub const A_ARROW_UP: IconData = IconData {
     name: "a-arrow-up",
-    stroke: "m14 11 4-4 4 4 M18 16V7 m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16 M3.304 13h6.392",
+    stroke:
+        "M0 0 m14 11 4-4 4 4 M18 16V7 M0 0 m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16 M3.304 13h6.392",
     fill: "",
 };
 
 /// Lucide `a-large-small` icon (24 × 24 stroke grid).
 pub const A_LARGE_SMALL: IconData = IconData {
     name: "a-large-small",
-    stroke: "m15 16 2.536-7.328a1.02 1.02 1 0 1 1.928 0L22 16 M15.697 14h5.606 m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16 M3.304 13h6.392",
+    stroke: "M0 0 m15 16 2.536-7.328a1.02 1.02 1 0 1 1.928 0L22 16 M15.697 14h5.606 M0 0 m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16 M3.304 13h6.392",
     fill: "",
 };
 
 /// Lucide `accessibility` icon (24 × 24 stroke grid).
 pub const ACCESSIBILITY: IconData = IconData {
     name: "accessibility",
-    stroke: "M15 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z m18 19 1-7-6 1 m5 8 3-3 5.5 3-2.36 3.5 M4.24 14.5a5 5 0 0 0 6.88 6 M13.76 17.5a5 5 0 0 0-6.88-6",
+    stroke: "M15 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z M0 0 m18 19 1-7-6 1 M0 0 m5 8 3-3 5.5 3-2.36 3.5 M4.24 14.5a5 5 0 0 0 6.88 6 M13.76 17.5a5 5 0 0 0-6.88-6",
     fill: "",
 };
 
@@ -56,50 +58,49 @@ pub const AIR_VENT: IconData = IconData {
 /// Lucide `airplay` icon (24 × 24 stroke grid).
 pub const AIRPLAY: IconData = IconData {
     name: "airplay",
-    stroke:
-        "M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1 m12 15 5 6H7Z",
+    stroke: "M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1 M0 0 m12 15 5 6H7Z",
     fill: "",
 };
 
 /// Lucide `alarm-clock-check` icon (24 × 24 stroke grid).
 pub const ALARM_CLOCK_CHECK: IconData = IconData {
     name: "alarm-clock-check",
-    stroke: "M4 13a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M5 3 2 6 m22 6-3-3 M6.38 18.7 4 21 M17.64 18.67 20 21 m9 13 2 2 4-4",
+    stroke: "M4 13a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M5 3 2 6 M0 0 m22 6-3-3 M6.38 18.7 4 21 M17.64 18.67 20 21 M0 0 m9 13 2 2 4-4",
     fill: "",
 };
 
 /// Lucide `alarm-clock-minus` icon (24 × 24 stroke grid).
 pub const ALARM_CLOCK_MINUS: IconData = IconData {
     name: "alarm-clock-minus",
-    stroke: "M4 13a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M5 3 2 6 m22 6-3-3 M6.38 18.7 4 21 M17.64 18.67 20 21 M9 13h6",
+    stroke: "M4 13a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M5 3 2 6 M0 0 m22 6-3-3 M6.38 18.7 4 21 M17.64 18.67 20 21 M9 13h6",
     fill: "",
 };
 
 /// Lucide `alarm-clock-off` icon (24 × 24 stroke grid).
 pub const ALARM_CLOCK_OFF: IconData = IconData {
     name: "alarm-clock-off",
-    stroke: "M6.87 6.87a8 8 0 1 0 11.26 11.26 M19.9 14.25a8 8 0 0 0-9.15-9.15 m22 6-3-3 M6.26 18.67 4 21 m2 2 20 20 M4 4 2 6",
+    stroke: "M6.87 6.87a8 8 0 1 0 11.26 11.26 M19.9 14.25a8 8 0 0 0-9.15-9.15 M0 0 m22 6-3-3 M6.26 18.67 4 21 M0 0 m2 2 20 20 M4 4 2 6",
     fill: "",
 };
 
 /// Lucide `alarm-clock-plus` icon (24 × 24 stroke grid).
 pub const ALARM_CLOCK_PLUS: IconData = IconData {
     name: "alarm-clock-plus",
-    stroke: "M4 13a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M5 3 2 6 m22 6-3-3 M6.38 18.7 4 21 M17.64 18.67 20 21 M12 10v6 M9 13h6",
+    stroke: "M4 13a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M5 3 2 6 M0 0 m22 6-3-3 M6.38 18.7 4 21 M17.64 18.67 20 21 M12 10v6 M9 13h6",
     fill: "",
 };
 
 /// Lucide `alarm-clock` icon (24 × 24 stroke grid).
 pub const ALARM_CLOCK: IconData = IconData {
     name: "alarm-clock",
-    stroke: "M4 13a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M12 9v4l2 2 M5 3 2 6 m22 6-3-3 M6.38 18.7 4 21 M17.64 18.67 20 21",
+    stroke: "M4 13a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M12 9v4l2 2 M5 3 2 6 M0 0 m22 6-3-3 M6.38 18.7 4 21 M17.64 18.67 20 21",
     fill: "",
 };
 
 /// Lucide `alarm-smoke` icon (24 × 24 stroke grid).
 pub const ALARM_SMOKE: IconData = IconData {
     name: "alarm-smoke",
-    stroke: "M11 21c0-2.5 2-2.5 2-5 M16 21c0-2.5 2-2.5 2-5 m19 8-.8 3a1.25 1.25 0 0 1-1.2 1H7a1.25 1.25 0 0 1-1.2-1L5 8 M21 3a1 1 0 0 1 1 1v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a1 1 0 0 1 1-1z M6 21c0-2.5 2-2.5 2-5",
+    stroke: "M11 21c0-2.5 2-2.5 2-5 M16 21c0-2.5 2-2.5 2-5 M0 0 m19 8-.8 3a1.25 1.25 0 0 1-1.2 1H7a1.25 1.25 0 0 1-1.2-1L5 8 M21 3a1 1 0 0 1 1 1v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a1 1 0 0 1 1-1z M6 21c0-2.5 2-2.5 2-5",
     fill: "",
 };
 
@@ -288,7 +289,8 @@ pub const AMPHORA: IconData = IconData {
 /// Lucide `anchor` icon (24 × 24 stroke grid).
 pub const ANCHOR: IconData = IconData {
     name: "anchor",
-    stroke: "M12 6v16 m19 13 2-1a9 9 0 0 1-18 0l2 1 M9 11h6 M10 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke:
+        "M12 6v16 M0 0 m19 13 2-1a9 9 0 0 1-18 0l2 1 M9 11h6 M10 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -302,7 +304,7 @@ pub const ANGLE: IconData = IconData {
 /// Lucide `antenna` icon (24 × 24 stroke grid).
 pub const ANTENNA: IconData = IconData {
     name: "antenna",
-    stroke: "M2 12 7 2 m7 12 5-10 m12 12 5-10 m17 12 5-10 M4.5 7h15 M12 16v6",
+    stroke: "M2 12 7 2 M0 0 m7 12 5-10 M0 0 m12 12 5-10 M0 0 m17 12 5-10 M4.5 7h15 M12 16v6",
     fill: "",
 };
 
@@ -316,7 +318,7 @@ pub const ANVIL: IconData = IconData {
 /// Lucide `aperture` icon (24 × 24 stroke grid).
 pub const APERTURE: IconData = IconData {
     name: "aperture",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z m14.31 8 5.74 9.94 M9.69 8h11.48 m7.38 12 5.74-9.94 M9.69 16 3.95 6.06 M14.31 16H2.83 m16.62 12-5.74 9.94",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M0 0 m14.31 8 5.74 9.94 M9.69 8h11.48 M0 0 m7.38 12 5.74-9.94 M9.69 16 3.95 6.06 M14.31 16H2.83 M0 0 m16.62 12-5.74 9.94",
     fill: "",
 };
 
@@ -344,14 +346,14 @@ pub const APPLE: IconData = IconData {
 /// Lucide `archive-restore` icon (24 × 24 stroke grid).
 pub const ARCHIVE_RESTORE: IconData = IconData {
     name: "archive-restore",
-    stroke: "M3 3H21a1 1 0 0 1 1 1V7a1 1 0 0 1 -1 1H3a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M4 8v11a2 2 0 0 0 2 2h2 M20 8v11a2 2 0 0 1-2 2h-2 m9 15 3-3 3 3 M12 12v9",
+    stroke: "M3 3H21a1 1 0 0 1 1 1V7a1 1 0 0 1 -1 1H3a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M4 8v11a2 2 0 0 0 2 2h2 M20 8v11a2 2 0 0 1-2 2h-2 M0 0 m9 15 3-3 3 3 M12 12v9",
     fill: "",
 };
 
 /// Lucide `archive-x` icon (24 × 24 stroke grid).
 pub const ARCHIVE_X: IconData = IconData {
     name: "archive-x",
-    stroke: "M3 3H21a1 1 0 0 1 1 1V7a1 1 0 0 1 -1 1H3a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8 m9.5 17 5-5 m9.5 12 5 5",
+    stroke: "M3 3H21a1 1 0 0 1 1 1V7a1 1 0 0 1 -1 1H3a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8 M0 0 m9.5 17 5-5 M0 0 m9.5 12 5 5",
     fill: "",
 };
 
@@ -435,28 +437,28 @@ pub const ARROW_BIG_UP: IconData = IconData {
 /// Lucide `arrow-down-0-1` icon (24 × 24 stroke grid).
 pub const ARROW_DOWN_0_1: IconData = IconData {
     name: "arrow-down-0-1",
-    stroke: "m3 16 4 4 4-4 M7 20V4 M17 4H17a2 2 0 0 1 2 2V8a2 2 0 0 1 -2 2H17a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2Z M17 20v-6h-2 M15 20h4",
+    stroke: "M0 0 m3 16 4 4 4-4 M7 20V4 M17 4H17a2 2 0 0 1 2 2V8a2 2 0 0 1 -2 2H17a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2Z M17 20v-6h-2 M15 20h4",
     fill: "",
 };
 
 /// Lucide `arrow-down-1-0` icon (24 × 24 stroke grid).
 pub const ARROW_DOWN_1_0: IconData = IconData {
     name: "arrow-down-1-0",
-    stroke: "m3 16 4 4 4-4 M7 20V4 M17 10V4h-2 M15 10h4 M17 14H17a2 2 0 0 1 2 2V18a2 2 0 0 1 -2 2H17a2 2 0 0 1 -2 -2V16a2 2 0 0 1 2 -2Z",
+    stroke: "M0 0 m3 16 4 4 4-4 M7 20V4 M17 10V4h-2 M15 10h4 M17 14H17a2 2 0 0 1 2 2V18a2 2 0 0 1 -2 2H17a2 2 0 0 1 -2 -2V16a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
 /// Lucide `arrow-down-a-z` icon (24 × 24 stroke grid).
 pub const ARROW_DOWN_A_Z: IconData = IconData {
     name: "arrow-down-a-z",
-    stroke: "m3 16 4 4 4-4 M7 20V4 M20 8h-5 M15 10V6.5a2.5 2.5 0 0 1 5 0V10 M15 14h5l-5 6h5",
+    stroke: "M0 0 m3 16 4 4 4-4 M7 20V4 M20 8h-5 M15 10V6.5a2.5 2.5 0 0 1 5 0V10 M15 14h5l-5 6h5",
     fill: "",
 };
 
 /// Lucide `arrow-down-from-line` icon (24 × 24 stroke grid).
 pub const ARROW_DOWN_FROM_LINE: IconData = IconData {
     name: "arrow-down-from-line",
-    stroke: "M19 3H5 M12 21V7 m6 15 6 6 6-6",
+    stroke: "M19 3H5 M12 21V7 M0 0 m6 15 6 6 6-6",
     fill: "",
 };
 
@@ -470,154 +472,154 @@ pub const ARROW_DOWN_LEFT: IconData = IconData {
 /// Lucide `arrow-down-narrow-wide` icon (24 × 24 stroke grid).
 pub const ARROW_DOWN_NARROW_WIDE: IconData = IconData {
     name: "arrow-down-narrow-wide",
-    stroke: "m3 16 4 4 4-4 M7 20V4 M11 4h4 M11 8h7 M11 12h10",
+    stroke: "M0 0 m3 16 4 4 4-4 M7 20V4 M11 4h4 M11 8h7 M11 12h10",
     fill: "",
 };
 
 /// Lucide `arrow-down-right` icon (24 × 24 stroke grid).
 pub const ARROW_DOWN_RIGHT: IconData = IconData {
     name: "arrow-down-right",
-    stroke: "m7 7 10 10 M17 7v10H7",
+    stroke: "M0 0 m7 7 10 10 M17 7v10H7",
     fill: "",
 };
 
 /// Lucide `arrow-down-to-dot` icon (24 × 24 stroke grid).
 pub const ARROW_DOWN_TO_DOT: IconData = IconData {
     name: "arrow-down-to-dot",
-    stroke: "M12 2v14 m19 9-7 7-7-7 M11 21a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z",
+    stroke: "M12 2v14 M0 0 m19 9-7 7-7-7 M11 21a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z",
     fill: "",
 };
 
 /// Lucide `arrow-down-to-line` icon (24 × 24 stroke grid).
 pub const ARROW_DOWN_TO_LINE: IconData = IconData {
     name: "arrow-down-to-line",
-    stroke: "M12 17V3 m6 11 6 6 6-6 M19 21H5",
+    stroke: "M12 17V3 M0 0 m6 11 6 6 6-6 M19 21H5",
     fill: "",
 };
 
 /// Lucide `arrow-down-up` icon (24 × 24 stroke grid).
 pub const ARROW_DOWN_UP: IconData = IconData {
     name: "arrow-down-up",
-    stroke: "m3 16 4 4 4-4 M7 20V4 m21 8-4-4-4 4 M17 4v16",
+    stroke: "M0 0 m3 16 4 4 4-4 M7 20V4 M0 0 m21 8-4-4-4 4 M17 4v16",
     fill: "",
 };
 
 /// Lucide `arrow-down-wide-narrow` icon (24 × 24 stroke grid).
 pub const ARROW_DOWN_WIDE_NARROW: IconData = IconData {
     name: "arrow-down-wide-narrow",
-    stroke: "m3 16 4 4 4-4 M7 20V4 M11 4h10 M11 8h7 M11 12h4",
+    stroke: "M0 0 m3 16 4 4 4-4 M7 20V4 M11 4h10 M11 8h7 M11 12h4",
     fill: "",
 };
 
 /// Lucide `arrow-down-z-a` icon (24 × 24 stroke grid).
 pub const ARROW_DOWN_Z_A: IconData = IconData {
     name: "arrow-down-z-a",
-    stroke: "m3 16 4 4 4-4 M7 4v16 M15 4h5l-5 6h5 M15 20v-3.5a2.5 2.5 0 0 1 5 0V20 M20 18h-5",
+    stroke: "M0 0 m3 16 4 4 4-4 M7 4v16 M15 4h5l-5 6h5 M15 20v-3.5a2.5 2.5 0 0 1 5 0V20 M20 18h-5",
     fill: "",
 };
 
 /// Lucide `arrow-down` icon (24 × 24 stroke grid).
 pub const ARROW_DOWN: IconData = IconData {
     name: "arrow-down",
-    stroke: "M12 5v14 m19 12-7 7-7-7",
+    stroke: "M12 5v14 M0 0 m19 12-7 7-7-7",
     fill: "",
 };
 
 /// Lucide `arrow-left-from-line` icon (24 × 24 stroke grid).
 pub const ARROW_LEFT_FROM_LINE: IconData = IconData {
     name: "arrow-left-from-line",
-    stroke: "m9 6-6 6 6 6 M3 12h14 M21 19V5",
+    stroke: "M0 0 m9 6-6 6 6 6 M3 12h14 M21 19V5",
     fill: "",
 };
 
 /// Lucide `arrow-left-right` icon (24 × 24 stroke grid).
 pub const ARROW_LEFT_RIGHT: IconData = IconData {
     name: "arrow-left-right",
-    stroke: "M8 3 4 7l4 4 M4 7h16 m16 21 4-4-4-4 M20 17H4",
+    stroke: "M8 3 4 7l4 4 M4 7h16 M0 0 m16 21 4-4-4-4 M20 17H4",
     fill: "",
 };
 
 /// Lucide `arrow-left-to-line` icon (24 × 24 stroke grid).
 pub const ARROW_LEFT_TO_LINE: IconData = IconData {
     name: "arrow-left-to-line",
-    stroke: "M3 19V5 m13 6-6 6 6 6 M7 12h14",
+    stroke: "M3 19V5 M0 0 m13 6-6 6 6 6 M7 12h14",
     fill: "",
 };
 
 /// Lucide `arrow-left` icon (24 × 24 stroke grid).
 pub const ARROW_LEFT: IconData = IconData {
     name: "arrow-left",
-    stroke: "m12 19-7-7 7-7 M19 12H5",
+    stroke: "M0 0 m12 19-7-7 7-7 M19 12H5",
     fill: "",
 };
 
 /// Lucide `arrow-right-from-line` icon (24 × 24 stroke grid).
 pub const ARROW_RIGHT_FROM_LINE: IconData = IconData {
     name: "arrow-right-from-line",
-    stroke: "M3 5v14 M21 12H7 m15 18 6-6-6-6",
+    stroke: "M3 5v14 M21 12H7 M0 0 m15 18 6-6-6-6",
     fill: "",
 };
 
 /// Lucide `arrow-right-left` icon (24 × 24 stroke grid).
 pub const ARROW_RIGHT_LEFT: IconData = IconData {
     name: "arrow-right-left",
-    stroke: "m16 3 4 4-4 4 M20 7H4 m8 21-4-4 4-4 M4 17h16",
+    stroke: "M0 0 m16 3 4 4-4 4 M20 7H4 M0 0 m8 21-4-4 4-4 M4 17h16",
     fill: "",
 };
 
 /// Lucide `arrow-right-to-line` icon (24 × 24 stroke grid).
 pub const ARROW_RIGHT_TO_LINE: IconData = IconData {
     name: "arrow-right-to-line",
-    stroke: "M17 12H3 m11 18 6-6-6-6 M21 5v14",
+    stroke: "M17 12H3 M0 0 m11 18 6-6-6-6 M21 5v14",
     fill: "",
 };
 
 /// Lucide `arrow-right` icon (24 × 24 stroke grid).
 pub const ARROW_RIGHT: IconData = IconData {
     name: "arrow-right",
-    stroke: "M5 12h14 m12 5 7 7-7 7",
+    stroke: "M5 12h14 M0 0 m12 5 7 7-7 7",
     fill: "",
 };
 
 /// Lucide `arrow-up-0-1` icon (24 × 24 stroke grid).
 pub const ARROW_UP_0_1: IconData = IconData {
     name: "arrow-up-0-1",
-    stroke: "m3 8 4-4 4 4 M7 4v16 M17 4H17a2 2 0 0 1 2 2V8a2 2 0 0 1 -2 2H17a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2Z M17 20v-6h-2 M15 20h4",
+    stroke: "M0 0 m3 8 4-4 4 4 M7 4v16 M17 4H17a2 2 0 0 1 2 2V8a2 2 0 0 1 -2 2H17a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2Z M17 20v-6h-2 M15 20h4",
     fill: "",
 };
 
 /// Lucide `arrow-up-1-0` icon (24 × 24 stroke grid).
 pub const ARROW_UP_1_0: IconData = IconData {
     name: "arrow-up-1-0",
-    stroke: "m3 8 4-4 4 4 M7 4v16 M17 10V4h-2 M15 10h4 M17 14H17a2 2 0 0 1 2 2V18a2 2 0 0 1 -2 2H17a2 2 0 0 1 -2 -2V16a2 2 0 0 1 2 -2Z",
+    stroke: "M0 0 m3 8 4-4 4 4 M7 4v16 M17 10V4h-2 M15 10h4 M17 14H17a2 2 0 0 1 2 2V18a2 2 0 0 1 -2 2H17a2 2 0 0 1 -2 -2V16a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
 /// Lucide `arrow-up-a-z` icon (24 × 24 stroke grid).
 pub const ARROW_UP_A_Z: IconData = IconData {
     name: "arrow-up-a-z",
-    stroke: "m3 8 4-4 4 4 M7 4v16 M20 8h-5 M15 10V6.5a2.5 2.5 0 0 1 5 0V10 M15 14h5l-5 6h5",
+    stroke: "M0 0 m3 8 4-4 4 4 M7 4v16 M20 8h-5 M15 10V6.5a2.5 2.5 0 0 1 5 0V10 M15 14h5l-5 6h5",
     fill: "",
 };
 
 /// Lucide `arrow-up-down` icon (24 × 24 stroke grid).
 pub const ARROW_UP_DOWN: IconData = IconData {
     name: "arrow-up-down",
-    stroke: "m21 16-4 4-4-4 M17 20V4 m3 8 4-4 4 4 M7 4v16",
+    stroke: "M0 0 m21 16-4 4-4-4 M17 20V4 M0 0 m3 8 4-4 4 4 M7 4v16",
     fill: "",
 };
 
 /// Lucide `arrow-up-from-dot` icon (24 × 24 stroke grid).
 pub const ARROW_UP_FROM_DOT: IconData = IconData {
     name: "arrow-up-from-dot",
-    stroke: "m5 9 7-7 7 7 M12 16V2 M11 21a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z",
+    stroke: "M0 0 m5 9 7-7 7 7 M12 16V2 M11 21a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z",
     fill: "",
 };
 
 /// Lucide `arrow-up-from-line` icon (24 × 24 stroke grid).
 pub const ARROW_UP_FROM_LINE: IconData = IconData {
     name: "arrow-up-from-line",
-    stroke: "m18 9-6-6-6 6 M12 3v14 M5 21h14",
+    stroke: "M0 0 m18 9-6-6-6 6 M12 3v14 M5 21h14",
     fill: "",
 };
 
@@ -631,7 +633,7 @@ pub const ARROW_UP_LEFT: IconData = IconData {
 /// Lucide `arrow-up-narrow-wide` icon (24 × 24 stroke grid).
 pub const ARROW_UP_NARROW_WIDE: IconData = IconData {
     name: "arrow-up-narrow-wide",
-    stroke: "m3 8 4-4 4 4 M7 4v16 M11 12h4 M11 16h7 M11 20h10",
+    stroke: "M0 0 m3 8 4-4 4 4 M7 4v16 M11 12h4 M11 16h7 M11 20h10",
     fill: "",
 };
 
@@ -645,42 +647,42 @@ pub const ARROW_UP_RIGHT: IconData = IconData {
 /// Lucide `arrow-up-to-line` icon (24 × 24 stroke grid).
 pub const ARROW_UP_TO_LINE: IconData = IconData {
     name: "arrow-up-to-line",
-    stroke: "M5 3h14 m18 13-6-6-6 6 M12 7v14",
+    stroke: "M5 3h14 M0 0 m18 13-6-6-6 6 M12 7v14",
     fill: "",
 };
 
 /// Lucide `arrow-up-wide-narrow` icon (24 × 24 stroke grid).
 pub const ARROW_UP_WIDE_NARROW: IconData = IconData {
     name: "arrow-up-wide-narrow",
-    stroke: "m3 8 4-4 4 4 M7 4v16 M11 12h10 M11 16h7 M11 20h4",
+    stroke: "M0 0 m3 8 4-4 4 4 M7 4v16 M11 12h10 M11 16h7 M11 20h4",
     fill: "",
 };
 
 /// Lucide `arrow-up-z-a` icon (24 × 24 stroke grid).
 pub const ARROW_UP_Z_A: IconData = IconData {
     name: "arrow-up-z-a",
-    stroke: "m3 8 4-4 4 4 M7 4v16 M15 4h5l-5 6h5 M15 20v-3.5a2.5 2.5 0 0 1 5 0V20 M20 18h-5",
+    stroke: "M0 0 m3 8 4-4 4 4 M7 4v16 M15 4h5l-5 6h5 M15 20v-3.5a2.5 2.5 0 0 1 5 0V20 M20 18h-5",
     fill: "",
 };
 
 /// Lucide `arrow-up` icon (24 × 24 stroke grid).
 pub const ARROW_UP: IconData = IconData {
     name: "arrow-up",
-    stroke: "m5 12 7-7 7 7 M12 19V5",
+    stroke: "M0 0 m5 12 7-7 7 7 M12 19V5",
     fill: "",
 };
 
 /// Lucide `arrows-up-from-line` icon (24 × 24 stroke grid).
 pub const ARROWS_UP_FROM_LINE: IconData = IconData {
     name: "arrows-up-from-line",
-    stroke: "m4 6 3-3 3 3 M7 17V3 m14 6 3-3 3 3 M17 17V3 M4 21h16",
+    stroke: "M0 0 m4 6 3-3 3 3 M7 17V3 M0 0 m14 6 3-3 3 3 M17 17V3 M4 21h16",
     fill: "",
 };
 
 /// Lucide `asterisk` icon (24 × 24 stroke grid).
 pub const ASTERISK: IconData = IconData {
     name: "asterisk",
-    stroke: "M12 5v14 m18.065 8.496-12.125 7 m5.94 8.504 12.125 7",
+    stroke: "M12 5v14 M0 0 m18.065 8.496-12.125 7 M0 0 m5.94 8.504 12.125 7",
     fill: "",
 };
 
@@ -708,15 +710,15 @@ pub const ATOM: IconData = IconData {
 /// Lucide `audio-lines-off` icon (24 × 24 stroke grid).
 pub const AUDIO_LINES_OFF: IconData = IconData {
     name: "audio-lines-off",
-    stroke:
-        "M10 10v11 M10 3v1.35 M14 14v1 M14 8v.35 M18 5v7.35 M2 10v3 m2 2 20 20 M22 10v3 M6 6v11",
+    stroke: "M10 10v11 M10 3v1.35 M14 14v1 M14 8v.35 M18 5v7.35 M2 10v3 M0 0 m2 2 20 20 M22 10v3 M6 6v11",
     fill: "",
 };
 
 /// Lucide `audio-lines-x` icon (24 × 24 stroke grid).
 pub const AUDIO_LINES_X: IconData = IconData {
     name: "audio-lines-x",
-    stroke: "M10 3v18 M14 8v6.35 m17 17 5 5 M18 5v8.1 M2 10v3 M22 10v3 m22 17-5 5 M6 6v11",
+    stroke:
+        "M10 3v18 M14 8v6.35 M0 0 m17 17 5 5 M18 5v8.1 M2 10v3 M22 10v3 M0 0 m22 17-5 5 M6 6v11",
     fill: "",
 };
 
@@ -744,21 +746,21 @@ pub const AVOCADO: IconData = IconData {
 /// Lucide `award` icon (24 × 24 stroke grid).
 pub const AWARD: IconData = IconData {
     name: "award",
-    stroke: "m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526 M6 8a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
+    stroke: "M0 0 m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526 M6 8a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
     fill: "",
 };
 
 /// Lucide `axe` icon (24 × 24 stroke grid).
 pub const AXE: IconData = IconData {
     name: "axe",
-    stroke: "m14 12-8.381 8.38a1 1 0 0 1-3.001-3L11 9 M15 15.5a.5.5 0 0 0 .5.5A6.5 6.5 0 0 0 22 9.5a.5.5 0 0 0-.5-.5h-1.672a2 2 0 0 1-1.414-.586l-5.062-5.062a1.205 1.205 0 0 0-1.704 0L9.352 5.648a1.205 1.205 0 0 0 0 1.704l5.062 5.062A2 2 0 0 1 15 13.828z",
+    stroke: "M0 0 m14 12-8.381 8.38a1 1 0 0 1-3.001-3L11 9 M15 15.5a.5.5 0 0 0 .5.5A6.5 6.5 0 0 0 22 9.5a.5.5 0 0 0-.5-.5h-1.672a2 2 0 0 1-1.414-.586l-5.062-5.062a1.205 1.205 0 0 0-1.704 0L9.352 5.648a1.205 1.205 0 0 0 0 1.704l5.062 5.062A2 2 0 0 1 15 13.828z",
     fill: "",
 };
 
 /// Lucide `axis-3d` icon (24 × 24 stroke grid).
 pub const AXIS_3D: IconData = IconData {
     name: "axis-3d",
-    stroke: "M13.5 10.5 15 9 M4 4v15a1 1 0 0 0 1 1h15 M4.293 19.707 6 18 m9 15 1.5-1.5",
+    stroke: "M13.5 10.5 15 9 M4 4v15a1 1 0 0 0 1 1h15 M4.293 19.707 6 18 M0 0 m9 15 1.5-1.5",
     fill: "",
 };
 
@@ -800,7 +802,7 @@ pub const BADGE_CENT: IconData = IconData {
 /// Lucide `badge-check` icon (24 × 24 stroke grid).
 pub const BADGE_CHECK: IconData = IconData {
     name: "badge-check",
-    stroke: "M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z m16 9-5.5 5.5L8 12",
+    stroke: "M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z M0 0 m16 9-5.5 5.5L8 12",
     fill: "",
 };
 
@@ -821,7 +823,7 @@ pub const BADGE_EURO: IconData = IconData {
 /// Lucide `badge-indian-rupee` icon (24 × 24 stroke grid).
 pub const BADGE_INDIAN_RUPEE: IconData = IconData {
     name: "badge-indian-rupee",
-    stroke: "M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z M8 8h8 M8 12h8 m13 17-5-1h1a4 4 0 0 0 0-8",
+    stroke: "M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z M8 8h8 M8 12h8 M0 0 m13 17-5-1h1a4 4 0 0 0 0-8",
     fill: "",
 };
 
@@ -835,7 +837,7 @@ pub const BADGE_INFO: IconData = IconData {
 /// Lucide `badge-japanese-yen` icon (24 × 24 stroke grid).
 pub const BADGE_JAPANESE_YEN: IconData = IconData {
     name: "badge-japanese-yen",
-    stroke: "M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z m9 8 3 3v7 m12 11 3-3 M9 12h6 M9 16h6",
+    stroke: "M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z M0 0 m9 8 3 3v7 M0 0 m12 11 3-3 M9 12h6 M9 16h6",
     fill: "",
 };
 
@@ -849,7 +851,7 @@ pub const BADGE_MINUS: IconData = IconData {
 /// Lucide `badge-percent` icon (24 × 24 stroke grid).
 pub const BADGE_PERCENT: IconData = IconData {
     name: "badge-percent",
-    stroke: "M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z m15 9-6 6 M9 9h.01 M15 15h.01",
+    stroke: "M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z M0 0 m15 9-6 6 M9 9h.01 M15 15h.01",
     fill: "",
 };
 
@@ -891,7 +893,7 @@ pub const BADGE_SWISS_FRANC: IconData = IconData {
 /// Lucide `badge-turkish-lira` icon (24 × 24 stroke grid).
 pub const BADGE_TURKISH_LIRA: IconData = IconData {
     name: "badge-turkish-lira",
-    stroke: "M11 7v10a5 5 0 0 0 5-5 m15 8-6 3 M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76",
+    stroke: "M11 7v10a5 5 0 0 0 5-5 M0 0 m15 8-6 3 M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76",
     fill: "",
 };
 
@@ -954,28 +956,28 @@ pub const BANGLADESHI_TAKA: IconData = IconData {
 /// Lucide `banknote-arrow-down` icon (24 × 24 stroke grid).
 pub const BANKNOTE_ARROW_DOWN: IconData = IconData {
     name: "banknote-arrow-down",
-    stroke: "M12 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5 m16 19 3 3 3-3 M18 12h.01 M19 16v6 M6 12h.01 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M12 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5 M0 0 m16 19 3 3 3-3 M18 12h.01 M19 16v6 M6 12h.01 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `banknote-arrow-up` icon (24 × 24 stroke grid).
 pub const BANKNOTE_ARROW_UP: IconData = IconData {
     name: "banknote-arrow-up",
-    stroke: "M12 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5 M18 12h.01 M19 22v-6 m22 19-3-3-3 3 M6 12h.01 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M12 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5 M18 12h.01 M19 22v-6 M0 0 m22 19-3-3-3 3 M6 12h.01 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `banknote-check` icon (24 × 24 stroke grid).
 pub const BANKNOTE_CHECK: IconData = IconData {
     name: "banknote-check",
-    stroke: "M11.748 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4.875 m16 19 2 2 4-4 M18 12h.01 M6 12h.01 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M11.748 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4.875 M0 0 m16 19 2 2 4-4 M18 12h.01 M6 12h.01 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `banknote-x` icon (24 × 24 stroke grid).
 pub const BANKNOTE_X: IconData = IconData {
     name: "banknote-x",
-    stroke: "M13 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5 m17 17 5 5 M18 12h.01 m22 17-5 5 M6 12h.01 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M13 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5 M0 0 m17 17 5 5 M18 12h.01 M0 0 m22 17-5 5 M6 12h.01 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -1003,7 +1005,7 @@ pub const BARREL: IconData = IconData {
 /// Lucide `baseline` icon (24 × 24 stroke grid).
 pub const BASELINE: IconData = IconData {
     name: "baseline",
-    stroke: "M4 20h16 m6 16 6-12 6 12 M8 12h8",
+    stroke: "M4 20h16 M0 0 m6 16 6-12 6 12 M8 12h8",
     fill: "",
 };
 
@@ -1017,7 +1019,7 @@ pub const BATH: IconData = IconData {
 /// Lucide `battery-charging` icon (24 × 24 stroke grid).
 pub const BATTERY_CHARGING: IconData = IconData {
     name: "battery-charging",
-    stroke: "m11 7-3 5h4l-3 5 M14.856 6H16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.935 M22 14v-4 M5.14 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2.936",
+    stroke: "M0 0 m11 7-3 5h4l-3 5 M14.856 6H16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.935 M22 14v-4 M5.14 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2.936",
     fill: "",
 };
 
@@ -1108,21 +1110,21 @@ pub const BED: IconData = IconData {
 /// Lucide `beef-off` icon (24 × 24 stroke grid).
 pub const BEEF_OFF: IconData = IconData {
     name: "beef-off",
-    stroke: "M11.771 6.109a2.5 2.5 0 0 1 3.12 3.12 M17.852 12.185a6.5 6.5 0 0 0-9.035-9.04 M18.013 18.013C15.029 20.349 10.831 22 7 22a3 3 0 0 1-2.68-1.66L2.4 16.5 m18.5 6 2.19 4.5a6.48 6.48 0 0 1-.139 4.393 m2 2 20 20 M6.355 6.37a7 7 0 0 0-.075.23c-1.1 3.13-.78 3.9-3.18 6.08A3 3 0 0 0 5 18c3.356 0 6.993-1.267 9.85-3.151",
+    stroke: "M11.771 6.109a2.5 2.5 0 0 1 3.12 3.12 M17.852 12.185a6.5 6.5 0 0 0-9.035-9.04 M18.013 18.013C15.029 20.349 10.831 22 7 22a3 3 0 0 1-2.68-1.66L2.4 16.5 M0 0 m18.5 6 2.19 4.5a6.48 6.48 0 0 1-.139 4.393 M0 0 m2 2 20 20 M6.355 6.37a7 7 0 0 0-.075.23c-1.1 3.13-.78 3.9-3.18 6.08A3 3 0 0 0 5 18c3.356 0 6.993-1.267 9.85-3.151",
     fill: "",
 };
 
 /// Lucide `beef` icon (24 × 24 stroke grid).
 pub const BEEF: IconData = IconData {
     name: "beef",
-    stroke: "M16.4 13.7A6.5 6.5 0 1 0 6.28 6.6c-1.1 3.13-.78 3.9-3.18 6.08A3 3 0 0 0 5 18c4 0 8.4-1.8 11.4-4.3 m18.5 6 1.754 3.5a6.48 6.48 0 0 1-1.854 8.2C15.4 20.2 11 22 7 22a3 3 0 0 1-2.68-1.66L2.4 16.5 M10 8.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0Z",
+    stroke: "M16.4 13.7A6.5 6.5 0 1 0 6.28 6.6c-1.1 3.13-.78 3.9-3.18 6.08A3 3 0 0 0 5 18c4 0 8.4-1.8 11.4-4.3 M0 0 m18.5 6 1.754 3.5a6.48 6.48 0 0 1-1.854 8.2C15.4 20.2 11 22 7 22a3 3 0 0 1-2.68-1.66L2.4 16.5 M10 8.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0Z",
     fill: "",
 };
 
 /// Lucide `beer-off` icon (24 × 24 stroke grid).
 pub const BEER_OFF: IconData = IconData {
     name: "beer-off",
-    stroke: "M13 13v5 M17 11.47V8 M17 11h1a3 3 0 0 1 2.745 4.211 m2 2 20 20 M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3 M7.536 7.535C6.766 7.649 6.154 8 5.5 8a2.5 2.5 0 0 1-1.768-4.268 M8.727 3.204C9.306 2.767 9.885 2 11 2c1.56 0 2 1.5 3 1.5s1.72-.5 2.5-.5a1 1 0 1 1 0 5c-.78 0-1.5-.5-2.5-.5a3.149 3.149 0 0 0-.842.12 M9 14.6V18",
+    stroke: "M13 13v5 M17 11.47V8 M17 11h1a3 3 0 0 1 2.745 4.211 M0 0 m2 2 20 20 M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3 M7.536 7.535C6.766 7.649 6.154 8 5.5 8a2.5 2.5 0 0 1-1.768-4.268 M8.727 3.204C9.306 2.767 9.885 2 11 2c1.56 0 2 1.5 3 1.5s1.72-.5 2.5-.5a1 1 0 1 1 0 5c-.78 0-1.5-.5-2.5-.5a3.149 3.149 0 0 0-.842.12 M9 14.6V18",
     fill: "",
 };
 
@@ -1143,7 +1145,7 @@ pub const BELARUSIAN_RUBLE: IconData = IconData {
 /// Lucide `bell-check` icon (24 × 24 stroke grid).
 pub const BELL_CHECK: IconData = IconData {
     name: "bell-check",
-    stroke: "M10.268 21a2 2 0 0 0 3.464 0 m15 8 2 2 4-4 M16.8607 4.4824A6 6 0 0 0 6 8C6 12.499 4.589 13.956 3.262 15.326 M3.262 15.326A1 1 0 0 0 4 17H20A1 1 0 0 0 20.74 15.327C20.209 14.779 19.665 14.218 19.203 13.454",
+    stroke: "M10.268 21a2 2 0 0 0 3.464 0 M0 0 m15 8 2 2 4-4 M16.8607 4.4824A6 6 0 0 0 6 8C6 12.499 4.589 13.956 3.262 15.326 M3.262 15.326A1 1 0 0 0 4 17H20A1 1 0 0 0 20.74 15.327C20.209 14.779 19.665 14.218 19.203 13.454",
     fill: "",
 };
 
@@ -1171,7 +1173,7 @@ pub const BELL_MINUS: IconData = IconData {
 /// Lucide `bell-off` icon (24 × 24 stroke grid).
 pub const BELL_OFF: IconData = IconData {
     name: "bell-off",
-    stroke: "M10.268 21a2 2 0 0 0 3.464 0 M17 17H4a1 1 0 0 1-.74-1.673C4.59 13.956 6 12.499 6 8a6 6 0 0 1 .258-1.742 m2 2 20 20 M8.668 3.01A6 6 0 0 1 18 8c0 2.687.77 4.653 1.707 6.05",
+    stroke: "M10.268 21a2 2 0 0 0 3.464 0 M17 17H4a1 1 0 0 1-.74-1.673C4.59 13.956 6 12.499 6 8a6 6 0 0 1 .258-1.742 M0 0 m2 2 20 20 M8.668 3.01A6 6 0 0 1 18 8c0 2.687.77 4.653 1.707 6.05",
     fill: "",
 };
 
@@ -1199,28 +1201,28 @@ pub const BELL: IconData = IconData {
 /// Lucide `between-horizontal-end` icon (24 × 24 stroke grid).
 pub const BETWEEN_HORIZONTAL_END: IconData = IconData {
     name: "between-horizontal-end",
-    stroke: "M4 3H15a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z m22 15-3-3 3-3 M4 14H15a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z",
+    stroke: "M4 3H15a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M0 0 m22 15-3-3 3-3 M4 14H15a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
 /// Lucide `between-horizontal-start` icon (24 × 24 stroke grid).
 pub const BETWEEN_HORIZONTAL_START: IconData = IconData {
     name: "between-horizontal-start",
-    stroke: "M9 3H20a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z m2 9 3 3-3 3 M9 14H20a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z",
+    stroke: "M9 3H20a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M0 0 m2 9 3 3-3 3 M9 14H20a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
 /// Lucide `between-vertical-end` icon (24 × 24 stroke grid).
 pub const BETWEEN_VERTICAL_END: IconData = IconData {
     name: "between-vertical-end",
-    stroke: "M4 3H9a1 1 0 0 1 1 1V15a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z m9 22 3-3 3 3 M15 3H20a1 1 0 0 1 1 1V15a1 1 0 0 1 -1 1H15a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z",
+    stroke: "M4 3H9a1 1 0 0 1 1 1V15a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M0 0 m9 22 3-3 3 3 M15 3H20a1 1 0 0 1 1 1V15a1 1 0 0 1 -1 1H15a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
 /// Lucide `between-vertical-start` icon (24 × 24 stroke grid).
 pub const BETWEEN_VERTICAL_START: IconData = IconData {
     name: "between-vertical-start",
-    stroke: "M4 8H9a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V9a1 1 0 0 1 1 -1Z m15 2-3 3-3-3 M15 8H20a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H15a1 1 0 0 1 -1 -1V9a1 1 0 0 1 1 -1Z",
+    stroke: "M4 8H9a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V9a1 1 0 0 1 1 -1Z M0 0 m15 2-3 3-3-3 M15 8H20a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H15a1 1 0 0 1 -1 -1V9a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
@@ -1255,21 +1257,21 @@ pub const BINOCULARS: IconData = IconData {
 /// Lucide `biohazard` icon (24 × 24 stroke grid).
 pub const BIOHAZARD: IconData = IconData {
     name: "biohazard",
-    stroke: "M10 11.9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M6.7 3.4c-.9 2.5 0 5.2 2.2 6.7C6.5 9 3.7 9.6 2 11.6 m8.9 10.1 1.4.8 M17.3 3.4c.9 2.5 0 5.2-2.2 6.7 2.4-1.2 5.2-.6 6.9 1.5 m15.1 10.1-1.4.8 M16.7 20.8c-2.6-.4-4.6-2.6-4.7-5.3-.2 2.6-2.1 4.8-4.7 5.2 M12 13.9v1.6 M13.5 5.4c-1-.2-2-.2-3 0 M17 16.4c.7-.7 1.2-1.6 1.5-2.5 M5.5 13.9c.3.9.8 1.8 1.5 2.5",
+    stroke: "M10 11.9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M6.7 3.4c-.9 2.5 0 5.2 2.2 6.7C6.5 9 3.7 9.6 2 11.6 M0 0 m8.9 10.1 1.4.8 M17.3 3.4c.9 2.5 0 5.2-2.2 6.7 2.4-1.2 5.2-.6 6.9 1.5 M0 0 m15.1 10.1-1.4.8 M16.7 20.8c-2.6-.4-4.6-2.6-4.7-5.3-.2 2.6-2.1 4.8-4.7 5.2 M12 13.9v1.6 M13.5 5.4c-1-.2-2-.2-3 0 M17 16.4c.7-.7 1.2-1.6 1.5-2.5 M5.5 13.9c.3.9.8 1.8 1.5 2.5",
     fill: "",
 };
 
 /// Lucide `bird` icon (24 × 24 stroke grid).
 pub const BIRD: IconData = IconData {
     name: "bird",
-    stroke: "M16 7h.01 M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20 m20 7 2 .5-2 .5 M10 18v3 M14 17.75V21 M7 18a6 6 0 0 0 3.84-10.61",
+    stroke: "M16 7h.01 M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20 M0 0 m20 7 2 .5-2 .5 M10 18v3 M14 17.75V21 M7 18a6 6 0 0 0 3.84-10.61",
     fill: "",
 };
 
 /// Lucide `birdhouse` icon (24 × 24 stroke grid).
 pub const BIRDHOUSE: IconData = IconData {
     name: "birdhouse",
-    stroke: "M12 18v4 m17 18 1.956-11.468 m3 8 7.82-5.615a2 2 0 0 1 2.36 0L21 8 M4 18h16 M7 18 5.044 6.532 M10 10a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M12 18v4 M0 0 m17 18 1.956-11.468 M0 0 m3 8 7.82-5.615a2 2 0 0 1 2.36 0L21 8 M4 18h16 M7 18 5.044 6.532 M10 10a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -1290,7 +1292,7 @@ pub const BLEND: IconData = IconData {
 /// Lucide `blender` icon (24 × 24 stroke grid).
 pub const BLENDER: IconData = IconData {
     name: "blender",
-    stroke: "M8 14a2 2 0 0 0-1.963 1.615l-1.018 5.193A1 1 0 0 0 6 22h12a1 1 0 0 0 .981-1.192l-1.018-5.193A2 2 0 0 0 16 14z m17 2-1 12 M8.006 14 7 2 M7.565 8.787A5 5 0 0 0 12 8a5 5 0 0 1 4.56-.75 M19 2H5a2 2 0 0 0-2 2v5a2 2 0 0 0 .688 1.5 M12 18h.01",
+    stroke: "M8 14a2 2 0 0 0-1.963 1.615l-1.018 5.193A1 1 0 0 0 6 22h12a1 1 0 0 0 .981-1.192l-1.018-5.193A2 2 0 0 0 16 14z M0 0 m17 2-1 12 M8.006 14 7 2 M7.565 8.787A5 5 0 0 0 12 8a5 5 0 0 1 4.56-.75 M19 2H5a2 2 0 0 0-2 2v5a2 2 0 0 0 .688 1.5 M12 18h.01",
     fill: "",
 };
 
@@ -1312,28 +1314,28 @@ pub const BLOCKS: IconData = IconData {
 /// Lucide `bluetooth-connected` icon (24 × 24 stroke grid).
 pub const BLUETOOTH_CONNECTED: IconData = IconData {
     name: "bluetooth-connected",
-    stroke: "m7 7 10 10-5 5V2l5 5L7 17 M18 12L21 12 M3 12L6 12",
+    stroke: "M0 0 m7 7 10 10-5 5V2l5 5L7 17 M18 12L21 12 M3 12L6 12",
     fill: "",
 };
 
 /// Lucide `bluetooth-off` icon (24 × 24 stroke grid).
 pub const BLUETOOTH_OFF: IconData = IconData {
     name: "bluetooth-off",
-    stroke: "m17 17-5 5V12l-5 5 m2 2 20 20 M14.5 9.5 17 7l-5-5v4.5",
+    stroke: "M0 0 m17 17-5 5V12l-5 5 M0 0 m2 2 20 20 M14.5 9.5 17 7l-5-5v4.5",
     fill: "",
 };
 
 /// Lucide `bluetooth-searching` icon (24 × 24 stroke grid).
 pub const BLUETOOTH_SEARCHING: IconData = IconData {
     name: "bluetooth-searching",
-    stroke: "m7 7 10 10-5 5V2l5 5L7 17 M20.83 14.83a4 4 0 0 0 0-5.66 M18 12h.01",
+    stroke: "M0 0 m7 7 10 10-5 5V2l5 5L7 17 M20.83 14.83a4 4 0 0 0 0-5.66 M18 12h.01",
     fill: "",
 };
 
 /// Lucide `bluetooth` icon (24 × 24 stroke grid).
 pub const BLUETOOTH: IconData = IconData {
     name: "bluetooth",
-    stroke: "m7 7 10 10-5 5V2l5 5L7 17",
+    stroke: "M0 0 m7 7 10 10-5 5V2l5 5L7 17",
     fill: "",
 };
 
@@ -1354,14 +1356,14 @@ pub const BOLT: IconData = IconData {
 /// Lucide `bomb` icon (24 × 24 stroke grid).
 pub const BOMB: IconData = IconData {
     name: "bomb",
-    stroke: "M2 13a9 9 0 1 0 18 0a9 9 0 1 0 -18 0Z M14.35 4.65 16.3 2.7a2.41 2.41 0 0 1 3.4 0l1.6 1.6a2.4 2.4 0 0 1 0 3.4l-1.95 1.95 m22 2-1.5 1.5",
+    stroke: "M2 13a9 9 0 1 0 18 0a9 9 0 1 0 -18 0Z M14.35 4.65 16.3 2.7a2.41 2.41 0 0 1 3.4 0l1.6 1.6a2.4 2.4 0 0 1 0 3.4l-1.95 1.95 M0 0 m22 2-1.5 1.5",
     fill: "",
 };
 
 /// Lucide `bone-fracture` icon (24 × 24 stroke grid).
 pub const BONE_FRACTURE: IconData = IconData {
     name: "bone-fracture",
-    stroke: "M14 4.5a1 1 0 0 1 5 0 .5.5 0 0 0 .5.5 1 1 0 0 1 0 5c-.81 0-1.8-.7-2.5 0l-1.958 1.957a.15.15 0 0 1-.252-.072l-.493-2.07a.15.15 0 0 0-.111-.112l-2.072-.494a.15.15 0 0 1-.072-.252L14 7c.7-.7 0-1.69 0-2.5 m16 20-1-2 m20 16-2-1 m4 8 2 1 m8 4 1 2 M9.698 14.19a.15.15 0 0 0 .112.112l2.074.489a.15.15 0 0 1 .072.252L10 17c-.7.7 0 1.69 0 2.5a1 1 0 0 1-5 0 .495.495 0 0 0-.5-.5 1 1 0 0 1 0-5c.81 0 1.8.7 2.5 0l1.956-1.957a.15.15 0 0 1 .252.072z",
+    stroke: "M14 4.5a1 1 0 0 1 5 0 .5.5 0 0 0 .5.5 1 1 0 0 1 0 5c-.81 0-1.8-.7-2.5 0l-1.958 1.957a.15.15 0 0 1-.252-.072l-.493-2.07a.15.15 0 0 0-.111-.112l-2.072-.494a.15.15 0 0 1-.072-.252L14 7c.7-.7 0-1.69 0-2.5 M0 0 m16 20-1-2 M0 0 m20 16-2-1 M0 0 m4 8 2 1 M0 0 m8 4 1 2 M9.698 14.19a.15.15 0 0 0 .112.112l2.074.489a.15.15 0 0 1 .072.252L10 17c-.7.7 0 1.69 0 2.5a1 1 0 0 1-5 0 .495.495 0 0 0-.5-.5 1 1 0 0 1 0-5c.81 0 1.8.7 2.5 0l1.956-1.957a.15.15 0 0 1 .252.072z",
     fill: "",
 };
 
@@ -1375,7 +1377,7 @@ pub const BONE: IconData = IconData {
 /// Lucide `book-a` icon (24 × 24 stroke grid).
 pub const BOOK_A: IconData = IconData {
     name: "book-a",
-    stroke: "M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 m8 13 4-7 4 7 M9.1 11h5.7",
+    stroke: "M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 M0 0 m8 13 4-7 4 7 M9.1 11h5.7",
     fill: "",
 };
 
@@ -1403,7 +1405,7 @@ pub const BOOK_BOOKMARK: IconData = IconData {
 /// Lucide `book-check` icon (24 × 24 stroke grid).
 pub const BOOK_CHECK: IconData = IconData {
     name: "book-check",
-    stroke: "M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 m9 9.5 2 2 4-4",
+    stroke: "M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 M0 0 m9 9.5 2 2 4-4",
     fill: "",
 };
 
@@ -1424,7 +1426,7 @@ pub const BOOK_DASHED: IconData = IconData {
 /// Lucide `book-down` icon (24 × 24 stroke grid).
 pub const BOOK_DOWN: IconData = IconData {
     name: "book-down",
-    stroke: "M12 13V7 M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 m9 10 3 3 3-3",
+    stroke: "M12 13V7 M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 M0 0 m9 10 3 3 3-3",
     fill: "",
 };
 
@@ -1445,7 +1447,7 @@ pub const BOOK_HEART: IconData = IconData {
 /// Lucide `book-image` icon (24 × 24 stroke grid).
 pub const BOOK_IMAGE: IconData = IconData {
     name: "book-image",
-    stroke: "m20 13.7-2.1-2.1a2 2 0 0 0-2.8 0L9.7 17 M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 M8 8a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M0 0 m20 13.7-2.1-2.1a2 2 0 0 0-2.8 0L9.7 17 M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 M8 8a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -1473,7 +1475,7 @@ pub const BOOK_MINUS: IconData = IconData {
 /// Lucide `book-open-check` icon (24 × 24 stroke grid).
 pub const BOOK_OPEN_CHECK: IconData = IconData {
     name: "book-open-check",
-    stroke: "M12 5v16 m16 12 2 2 4-4 M22 6V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2h4.001A2 2 0 0022 17v-1.344",
+    stroke: "M12 5v16 M0 0 m16 12 2 2 4-4 M22 6V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2h4.001A2 2 0 0022 17v-1.344",
     fill: "",
 };
 
@@ -1501,7 +1503,7 @@ pub const BOOK_PLUS: IconData = IconData {
 /// Lucide `book-search` icon (24 × 24 stroke grid).
 pub const BOOK_SEARCH: IconData = IconData {
     name: "book-search",
-    stroke: "M11 22H5.5a1 1 0 0 1 0-5h4.501 m21 22-1.879-1.878 M3 19.5v-15A2.5 2.5 0 0 1 5.5 2H18a1 1 0 0 1 1 1v8 M14 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M11 22H5.5a1 1 0 0 1 0-5h4.501 M0 0 m21 22-1.879-1.878 M3 19.5v-15A2.5 2.5 0 0 1 5.5 2H18a1 1 0 0 1 1 1v8 M14 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -1522,14 +1524,14 @@ pub const BOOK_TYPE: IconData = IconData {
 /// Lucide `book-up-2` icon (24 × 24 stroke grid).
 pub const BOOK_UP_2: IconData = IconData {
     name: "book-up-2",
-    stroke: "M12 13V7 M18 2h1a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 M4 19.5v-15A2.5 2.5 0 0 1 6.5 2 m9 10 3-3 3 3 m9 5 3-3 3 3",
+    stroke: "M12 13V7 M18 2h1a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 M4 19.5v-15A2.5 2.5 0 0 1 6.5 2 M0 0 m9 10 3-3 3 3 M0 0 m9 5 3-3 3 3",
     fill: "",
 };
 
 /// Lucide `book-up` icon (24 × 24 stroke grid).
 pub const BOOK_UP: IconData = IconData {
     name: "book-up",
-    stroke: "M12 13V7 M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 m9 10 3-3 3 3",
+    stroke: "M12 13V7 M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 M0 0 m9 10 3-3 3 3",
     fill: "",
 };
 
@@ -1543,7 +1545,7 @@ pub const BOOK_USER: IconData = IconData {
 /// Lucide `book-x` icon (24 × 24 stroke grid).
 pub const BOOK_X: IconData = IconData {
     name: "book-x",
-    stroke: "m14.5 7.5-5 5 M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 m9.5 7.5 5 5",
+    stroke: "M0 0 m14.5 7.5-5 5 M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20 M0 0 m9.5 7.5 5 5",
     fill: "",
 };
 
@@ -1558,7 +1560,7 @@ pub const BOOK: IconData = IconData {
 /// Lucide `bookmark-check` icon (24 × 24 stroke grid).
 pub const BOOKMARK_CHECK: IconData = IconData {
     name: "bookmark-check",
-    stroke: "M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z m9 10 2 2 4-4",
+    stroke: "M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z M0 0 m9 10 2 2 4-4",
     fill: "",
 };
 
@@ -1572,7 +1574,7 @@ pub const BOOKMARK_MINUS: IconData = IconData {
 /// Lucide `bookmark-off` icon (24 × 24 stroke grid).
 pub const BOOKMARK_OFF: IconData = IconData {
     name: "bookmark-off",
-    stroke: "M19 19v1a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5 m2 2 20 20 M8.656 3H17a2 2 0 0 1 2 2v8.344",
+    stroke: "M19 19v1a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5 M0 0 m2 2 20 20 M8.656 3H17a2 2 0 0 1 2 2v8.344",
     fill: "",
 };
 
@@ -1586,7 +1588,7 @@ pub const BOOKMARK_PLUS: IconData = IconData {
 /// Lucide `bookmark-x` icon (24 × 24 stroke grid).
 pub const BOOKMARK_X: IconData = IconData {
     name: "bookmark-x",
-    stroke: "m14.5 7.5-5 5 M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z m9.5 7.5 5 5",
+    stroke: "M0 0 m14.5 7.5-5 5 M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z M0 0 m9.5 7.5 5 5",
     fill: "",
 };
 
@@ -1642,14 +1644,14 @@ pub const BOW_ARROW: IconData = IconData {
 /// Lucide `box` icon (24 × 24 stroke grid).
 pub const BOX: IconData = IconData {
     name: "box",
-    stroke: "M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z m3.3 7 8.7 5 8.7-5 M12 22V12",
+    stroke: "M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z M0 0 m3.3 7 8.7 5 8.7-5 M12 22V12",
     fill: "",
 };
 
 /// Lucide `boxes` icon (24 × 24 stroke grid).
 pub const BOXES: IconData = IconData {
     name: "boxes",
-    stroke: "M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z m7 16.5-4.74-2.85 m7 16.5 5-3 M7 16.5v5.17 M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z m17 16.5-5-3 m17 16.5 4.74-2.85 M17 16.5v5.17 M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z M12 8 7.26 5.15 m12 8 4.74-2.85 M12 13.5V8",
+    stroke: "M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z M0 0 m7 16.5-4.74-2.85 M0 0 m7 16.5 5-3 M7 16.5v5.17 M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z M0 0 m17 16.5-5-3 M0 0 m17 16.5 4.74-2.85 M17 16.5v5.17 M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z M12 8 7.26 5.15 M0 0 m12 8 4.74-2.85 M12 13.5V8",
     fill: "",
 };
 
@@ -1677,14 +1679,14 @@ pub const BRAIN_CIRCUIT: IconData = IconData {
 /// Lucide `brain-cog` icon (24 × 24 stroke grid).
 pub const BRAIN_COG: IconData = IconData {
     name: "brain-cog",
-    stroke: "m10.852 14.772-.383.923 m10.852 9.228-.383-.923 m13.148 14.772.382.924 m13.53 8.305-.382.923 m14.772 10.852.923-.383 m14.772 13.148.923.383 M17.997 5.125a4 4 0 012.526 5.77 M18 18a4 4 0 002-7.464 M4.033 17.483A4 4 0 0011.46 20c.184-.31.896-.31 1.076 0a4 4 0 007.43-2.517 M6 18a4 4 0 01-2-7.464 M6.002 5.125a4 4 0 00-2.525 5.77 M6.293 6.294a3 3 0 01-.287-1.098l-.004-.07a3 3 0 015.968-.543c.05.02.057.01.059 0a3 3 0 015.968.542l-.004.071a3 3 0 01-.287 1.098 m9.228 10.852-.923-.383 m9.228 13.148-.923.383 M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M0 0 m10.852 14.772-.383.923 M0 0 m10.852 9.228-.383-.923 M0 0 m13.148 14.772.382.924 M0 0 m13.53 8.305-.382.923 M0 0 m14.772 10.852.923-.383 M0 0 m14.772 13.148.923.383 M17.997 5.125a4 4 0 012.526 5.77 M18 18a4 4 0 002-7.464 M4.033 17.483A4 4 0 0011.46 20c.184-.31.896-.31 1.076 0a4 4 0 007.43-2.517 M6 18a4 4 0 01-2-7.464 M6.002 5.125a4 4 0 00-2.525 5.77 M6.293 6.294a3 3 0 01-.287-1.098l-.004-.07a3 3 0 015.968-.543c.05.02.057.01.059 0a3 3 0 015.968.542l-.004.071a3 3 0 01-.287 1.098 M0 0 m9.228 10.852-.923-.383 M0 0 m9.228 13.148-.923.383 M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
 /// Lucide `brain-off` icon (24 × 24 stroke grid).
 pub const BRAIN_OFF: IconData = IconData {
     name: "brain-off",
-    stroke: "M12 18v-6 M12 5v1.344 M17.707 6.293A3 3 0 1012 5a3 3 0 00-4.124-2.781 M17.997 5.125a4 4 0 012.526 5.77 M19.644 19.644A4 4 0 0112 18a4 4 0 11-7.967-.517 m2 2 20 20 M20 10.536a4 4 0 011.533 5.34 M3.477 10.895a4 4 0 011.876-5.542 M6 18a4 4 0 01-2-7.464 M9 13a4.17 4.17 0 002.166-1.5 4 4 0 00.138-.196",
+    stroke: "M12 18v-6 M12 5v1.344 M17.707 6.293A3 3 0 1012 5a3 3 0 00-4.124-2.781 M17.997 5.125a4 4 0 012.526 5.77 M19.644 19.644A4 4 0 0112 18a4 4 0 11-7.967-.517 M0 0 m2 2 20 20 M20 10.536a4 4 0 011.533 5.34 M3.477 10.895a4 4 0 011.876-5.542 M6 18a4 4 0 01-2-7.464 M9 13a4.17 4.17 0 002.166-1.5 4 4 0 00.138-.196",
     fill: "",
 };
 
@@ -1719,7 +1721,8 @@ pub const BRICK_WALL: IconData = IconData {
 /// Lucide `bridge` icon (24 × 24 stroke grid).
 pub const BRIDGE: IconData = IconData {
     name: "bridge",
-    stroke: "M10 9.728V16 M14 9.728V16 M18 20V4 m22 11-4-4A7.5 7.5 0 0 1 6 7l-4 4 M22 16H2 M6 20V4",
+    stroke:
+        "M10 9.728V16 M14 9.728V16 M18 20V4 M0 0 m22 11-4-4A7.5 7.5 0 0 1 6 7l-4 4 M22 16H2 M6 20V4",
     fill: "",
 };
 
@@ -1775,28 +1778,28 @@ pub const BROCCOLI: IconData = IconData {
 /// Lucide `broom-sparkles` icon (24 × 24 stroke grid).
 pub const BROOM_SPARKLES: IconData = IconData {
     name: "broom-sparkles",
-    stroke: "M11 2v2 M12 3h-2 M13.5 10.5 22 2 M14.734 13.841a2 2 0 00-.314-2.42L12.58 9.58a2 2 0 00-2.421-.314l-7.657 4.461A1 1 0 002.3 15.3l6.403 6.403a1 1 0 001.571-.204z M20 15v4 M22 17h-4 M4 4v4 m5 18 2-2 M6 6H2 m7.699 10.7 5.602 5.601",
+    stroke: "M11 2v2 M12 3h-2 M13.5 10.5 22 2 M14.734 13.841a2 2 0 00-.314-2.42L12.58 9.58a2 2 0 00-2.421-.314l-7.657 4.461A1 1 0 002.3 15.3l6.403 6.403a1 1 0 001.571-.204z M20 15v4 M22 17h-4 M4 4v4 M0 0 m5 18 2-2 M6 6H2 M0 0 m7.699 10.7 5.602 5.601",
     fill: "",
 };
 
 /// Lucide `broom` icon (24 × 24 stroke grid).
 pub const BROOM: IconData = IconData {
     name: "broom",
-    stroke: "M13.5 10.5 22 2 M14.734 13.841a2 2 0 00-.314-2.42L12.58 9.58a2 2 0 00-2.421-.314l-7.657 4.461A1 1 0 002.3 15.3l6.403 6.403a1 1 0 001.571-.204z m5 18 2-2 m7.699 10.7 5.602 5.601",
+    stroke: "M13.5 10.5 22 2 M14.734 13.841a2 2 0 00-.314-2.42L12.58 9.58a2 2 0 00-2.421-.314l-7.657 4.461A1 1 0 002.3 15.3l6.403 6.403a1 1 0 001.571-.204z M0 0 m5 18 2-2 M0 0 m7.699 10.7 5.602 5.601",
     fill: "",
 };
 
 /// Lucide `brush-cleaning` icon (24 × 24 stroke grid).
 pub const BRUSH_CLEANING: IconData = IconData {
     name: "brush-cleaning",
-    stroke: "m16 22-1-4 M19 14a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v1a1 1 0 0 0 1 1 M19 14H5l-1.973 6.767A1 1 0 0 0 4 22h16a1 1 0 0 0 .973-1.233z m8 22 1-4",
+    stroke: "M0 0 m16 22-1-4 M19 14a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v1a1 1 0 0 0 1 1 M19 14H5l-1.973 6.767A1 1 0 0 0 4 22h16a1 1 0 0 0 .973-1.233z M0 0 m8 22 1-4",
     fill: "",
 };
 
 /// Lucide `brush` icon (24 × 24 stroke grid).
 pub const BRUSH: IconData = IconData {
     name: "brush",
-    stroke: "m11 10 3 3 M6.5 21A3.5 3.5 0 1 0 3 17.5a2.62 2.62 0 0 1-.708 1.792A1 1 0 0 0 3 21z M9.969 17.031 21.378 5.624a1 1 0 0 0-3.002-3.002L6.967 14.031",
+    stroke: "M0 0 m11 10 3 3 M6.5 21A3.5 3.5 0 1 0 3 17.5a2.62 2.62 0 0 1-.708 1.792A1 1 0 0 0 3 21z M9.969 17.031 21.378 5.624a1 1 0 0 0-3.002-3.002L6.967 14.031",
     fill: "",
 };
 
@@ -1810,21 +1813,21 @@ pub const BUBBLES: IconData = IconData {
 /// Lucide `bug-off` icon (24 × 24 stroke grid).
 pub const BUG_OFF: IconData = IconData {
     name: "bug-off",
-    stroke: "M12 20v-8 M12.656 7H14a4 4 0 0 1 4 4v1.344 M14.12 3.88 16 2 M17.123 17.123A6 6 0 0 1 6 14v-3a4 4 0 0 1 1.72-3.287 m2 2 20 20 M21 5a4 4 0 0 1-3.55 3.97 M22 13h-3.344 M3 21a4 4 0 0 1 3.81-4 M3 5a4 4 0 0 0 3.55 3.97 M6 13H2 m8 2 1.88 1.88 M9.712 4.06A3 3 0 0 1 15 6v1.13",
+    stroke: "M12 20v-8 M12.656 7H14a4 4 0 0 1 4 4v1.344 M14.12 3.88 16 2 M17.123 17.123A6 6 0 0 1 6 14v-3a4 4 0 0 1 1.72-3.287 M0 0 m2 2 20 20 M21 5a4 4 0 0 1-3.55 3.97 M22 13h-3.344 M3 21a4 4 0 0 1 3.81-4 M3 5a4 4 0 0 0 3.55 3.97 M6 13H2 M0 0 m8 2 1.88 1.88 M9.712 4.06A3 3 0 0 1 15 6v1.13",
     fill: "",
 };
 
 /// Lucide `bug-play` icon (24 × 24 stroke grid).
 pub const BUG_PLAY: IconData = IconData {
     name: "bug-play",
-    stroke: "M10 19.655A6 6 0 0 1 6 14v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 3.97 M14 15.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997a1 1 0 0 1-1.517-.86z M14.12 3.88 16 2 M21 5a4 4 0 0 1-3.55 3.97 M3 21a4 4 0 0 1 3.81-4 M3 5a4 4 0 0 0 3.55 3.97 M6 13H2 m8 2 1.88 1.88 M9 7.13V6a3 3 0 1 1 6 0v1.13",
+    stroke: "M10 19.655A6 6 0 0 1 6 14v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 3.97 M14 15.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997a1 1 0 0 1-1.517-.86z M14.12 3.88 16 2 M21 5a4 4 0 0 1-3.55 3.97 M3 21a4 4 0 0 1 3.81-4 M3 5a4 4 0 0 0 3.55 3.97 M6 13H2 M0 0 m8 2 1.88 1.88 M9 7.13V6a3 3 0 1 1 6 0v1.13",
     fill: "",
 };
 
 /// Lucide `bug` icon (24 × 24 stroke grid).
 pub const BUG: IconData = IconData {
     name: "bug",
-    stroke: "M12 20v-9 M14 7a4 4 0 0 1 4 4v3a6 6 0 0 1-12 0v-3a4 4 0 0 1 4-4z M14.12 3.88 16 2 M21 21a4 4 0 0 0-3.81-4 M21 5a4 4 0 0 1-3.55 3.97 M22 13h-4 M3 21a4 4 0 0 1 3.81-4 M3 5a4 4 0 0 0 3.55 3.97 M6 13H2 m8 2 1.88 1.88 M9 7.13V6a3 3 0 1 1 6 0v1.13",
+    stroke: "M12 20v-9 M14 7a4 4 0 0 1 4 4v3a6 6 0 0 1-12 0v-3a4 4 0 0 1 4-4z M14.12 3.88 16 2 M21 21a4 4 0 0 0-3.81-4 M21 5a4 4 0 0 1-3.55 3.97 M22 13h-4 M3 21a4 4 0 0 1 3.81-4 M3 5a4 4 0 0 0 3.55 3.97 M6 13H2 M0 0 m8 2 1.88 1.88 M9 7.13V6a3 3 0 1 1 6 0v1.13",
     fill: "",
 };
 
@@ -1852,7 +1855,7 @@ pub const BUILDING: IconData = IconData {
 /// Lucide `bus-front` icon (24 × 24 stroke grid).
 pub const BUS_FRONT: IconData = IconData {
     name: "bus-front",
-    stroke: "M4 6 2 7 M10 6h4 m22 7-2-1 M6 3H18a2 2 0 0 1 2 2V17a2 2 0 0 1 -2 2H6a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M4 11h16 M8 15h.01 M16 15h.01 M6 19v2 M18 21v-2",
+    stroke: "M4 6 2 7 M10 6h4 M0 0 m22 7-2-1 M6 3H18a2 2 0 0 1 2 2V17a2 2 0 0 1 -2 2H6a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M4 11h16 M8 15h.01 M16 15h.01 M6 19v2 M18 21v-2",
     fill: "",
 };
 
@@ -1866,7 +1869,7 @@ pub const BUS: IconData = IconData {
 /// Lucide `cable-car` icon (24 × 24 stroke grid).
 pub const CABLE_CAR: IconData = IconData {
     name: "cable-car",
-    stroke: "M10 3h.01 M14 2h.01 m2 9 20-5 M12 12V6.5 M7 12H17a3 3 0 0 1 3 3V19a3 3 0 0 1 -3 3H7a3 3 0 0 1 -3 -3V15a3 3 0 0 1 3 -3Z M9 12v5 M15 12v5 M4 17h16",
+    stroke: "M10 3h.01 M14 2h.01 M0 0 m2 9 20-5 M12 12V6.5 M7 12H17a3 3 0 0 1 3 3V19a3 3 0 0 1 -3 3H7a3 3 0 0 1 -3 -3V15a3 3 0 0 1 3 -3Z M9 12v5 M15 12v5 M4 17h16",
     fill: "",
 };
 
@@ -1880,7 +1883,7 @@ pub const CABLE: IconData = IconData {
 /// Lucide `cake-slice` icon (24 × 24 stroke grid).
 pub const CAKE_SLICE: IconData = IconData {
     name: "cake-slice",
-    stroke: "M16 13H3 M16 17H3 m7.2 7.9-3.388 2.5A2 2 0 0 0 3 12.01V20a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-8.654c0-2-2.44-6.026-6.44-8.026a1 1 0 0 0-1.082.057L10.4 5.6 M7 7a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M16 13H3 M16 17H3 M0 0 m7.2 7.9-3.388 2.5A2 2 0 0 0 3 12.01V20a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-8.654c0-2-2.44-6.026-6.44-8.026a1 1 0 0 0-1.082.057L10.4 5.6 M7 7a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -1908,42 +1911,42 @@ pub const CALENDAR_1: IconData = IconData {
 /// Lucide `calendar-arrow-down` icon (24 × 24 stroke grid).
 pub const CALENDAR_ARROW_DOWN: IconData = IconData {
     name: "calendar-arrow-down",
-    stroke: "m14 17 4 4 4-4 M16 2v3 M18 13v8 M21 10.354V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h7.343 M3 9h18 M8 2v3",
+    stroke: "M0 0 m14 17 4 4 4-4 M16 2v3 M18 13v8 M21 10.354V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h7.343 M3 9h18 M8 2v3",
     fill: "",
 };
 
 /// Lucide `calendar-arrow-up` icon (24 × 24 stroke grid).
 pub const CALENDAR_ARROW_UP: IconData = IconData {
     name: "calendar-arrow-up",
-    stroke: "m14 17 4-4 4 4 M16 2v3 M18 21v-8 M21 10.343V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h9 M3 9h18 M8 2v3",
+    stroke: "M0 0 m14 17 4-4 4 4 M16 2v3 M18 21v-8 M21 10.343V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h9 M3 9h18 M8 2v3",
     fill: "",
 };
 
 /// Lucide `calendar-check-2` icon (24 × 24 stroke grid).
 pub const CALENDAR_CHECK_2: IconData = IconData {
     name: "calendar-check-2",
-    stroke: "M 19 3 L 5 3 M 21 13 L 21 5 M 21 5 A2 2 0 0 0 19 3 M 3 19 A2 2 0 0 0 5 21 M 3 5 L 3 19 M 5 3 A2 2 0 0 0 3 5 m16 19 2 2 4-4 M16 2v3 M3 9h18 M5 21 L12.5 21 M8 2v3",
+    stroke: "M 19 3 L 5 3 M 21 13 L 21 5 M 21 5 A2 2 0 0 0 19 3 M 3 19 A2 2 0 0 0 5 21 M 3 5 L 3 19 M 5 3 A2 2 0 0 0 3 5 M0 0 m16 19 2 2 4-4 M16 2v3 M3 9h18 M5 21 L12.5 21 M8 2v3",
     fill: "",
 };
 
 /// Lucide `calendar-check` icon (24 × 24 stroke grid).
 pub const CALENDAR_CHECK: IconData = IconData {
     name: "calendar-check",
-    stroke: "M8 2v3 M16 2v3 M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M3 9h18 m9 15 2 2 4-4",
+    stroke: "M8 2v3 M16 2v3 M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M3 9h18 M0 0 m9 15 2 2 4-4",
     fill: "",
 };
 
 /// Lucide `calendar-chevrons-left` icon (24 × 24 stroke grid).
 pub const CALENDAR_CHEVRONS_LEFT: IconData = IconData {
     name: "calendar-chevrons-left",
-    stroke: "m11 21-3-3 3-3 M16 2v3 M21 9H3 M3 11.5V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2h-4 m5 21-3-3 3-3 M8 2v3",
+    stroke: "M0 0 m11 21-3-3 3-3 M16 2v3 M21 9H3 M3 11.5V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2h-4 M0 0 m5 21-3-3 3-3 M8 2v3",
     fill: "",
 };
 
 /// Lucide `calendar-chevrons-right` icon (24 × 24 stroke grid).
 pub const CALENDAR_CHEVRONS_RIGHT: IconData = IconData {
     name: "calendar-chevrons-right",
-    stroke: "m13 21 3-3-3-3 M16 2v3 m19 21 3-3-3-3 M21 11.5V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h4 M3 9h18 M8 2v3",
+    stroke: "M0 0 m13 21 3-3-3-3 M16 2v3 M0 0 m19 21 3-3-3-3 M21 11.5V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h4 M3 9h18 M8 2v3",
     fill: "",
 };
 
@@ -1957,7 +1960,7 @@ pub const CALENDAR_CLOCK: IconData = IconData {
 /// Lucide `calendar-cog` icon (24 × 24 stroke grid).
 pub const CALENDAR_COG: IconData = IconData {
     name: "calendar-cog",
-    stroke: "m15.228 16.852-.923-.383 m15.228 19.148-.923.383 M16 2v3 m16.47 14.305.382.923 m16.852 20.772-.383.924 m19.148 15.228.383-.923 m19.53 21.696-.382-.924 m20.773 16.852.924-.383 m20.773 19.148.924.383 M21 10.5V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h5.5 M3 9h18 M8 2v3 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M0 0 m15.228 16.852-.923-.383 M0 0 m15.228 19.148-.923.383 M16 2v3 M0 0 m16.47 14.305.382.923 M0 0 m16.852 20.772-.383.924 M0 0 m19.148 15.228.383-.923 M0 0 m19.53 21.696-.382-.924 M0 0 m20.773 16.852.924-.383 M0 0 m20.773 19.148.924.383 M21 10.5V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h5.5 M3 9h18 M8 2v3 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -2000,7 +2003,7 @@ pub const CALENDAR_MINUS: IconData = IconData {
 /// Lucide `calendar-off` icon (24 × 24 stroke grid).
 pub const CALENDAR_OFF: IconData = IconData {
     name: "calendar-off",
-    stroke: "M16 2v3 m2 2 20 20 M21 9h-5.5 M3 9h6 M3.586 3.586A2 2 0 003 5v14a2 2 0 002 2h14a2 2 0 001.414-.586 M8.656 3H19a2 2 0 012 2v10.344",
+    stroke: "M16 2v3 M0 0 m2 2 20 20 M21 9h-5.5 M3 9h6 M3.586 3.586A2 2 0 003 5v14a2 2 0 002 2h14a2 2 0 001.414-.586 M8.656 3H19a2 2 0 012 2v10.344",
     fill: "",
 };
 
@@ -2028,28 +2031,28 @@ pub const CALENDAR_RANGE: IconData = IconData {
 /// Lucide `calendar-search` icon (24 × 24 stroke grid).
 pub const CALENDAR_SEARCH: IconData = IconData {
     name: "calendar-search",
-    stroke: "M16 2v3 M21 10.69V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h7.25 m22 21-1.875-1.875 M3 9h18 M8 2v3 M15 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M16 2v3 M21 10.69V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h7.25 M0 0 m22 21-1.875-1.875 M3 9h18 M8 2v3 M15 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
 /// Lucide `calendar-sync` icon (24 × 24 stroke grid).
 pub const CALENDAR_SYNC: IconData = IconData {
     name: "calendar-sync",
-    stroke: "M11 10v4h4 m11 14 1.535-1.605a5 5 0 018 1.5 M16 2v3 m21 18-1.535 1.605a5 5 0 01-8-1.5 M21 22v-4h-4 M21 8.517V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h3.517 M3 9h4 M8 2v3",
+    stroke: "M11 10v4h4 M0 0 m11 14 1.535-1.605a5 5 0 018 1.5 M16 2v3 M0 0 m21 18-1.535 1.605a5 5 0 01-8-1.5 M21 22v-4h-4 M21 8.517V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h3.517 M3 9h4 M8 2v3",
     fill: "",
 };
 
 /// Lucide `calendar-x-2` icon (24 × 24 stroke grid).
 pub const CALENDAR_X_2: IconData = IconData {
     name: "calendar-x-2",
-    stroke: "M16 2v3 m17 16 5 5 m17 21 5-5 M21 12V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h8 M3 9h18 M8 2v3",
+    stroke: "M16 2v3 M0 0 m17 16 5 5 M0 0 m17 21 5-5 M21 12V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h8 M3 9h18 M8 2v3",
     fill: "",
 };
 
 /// Lucide `calendar-x` icon (24 × 24 stroke grid).
 pub const CALENDAR_X: IconData = IconData {
     name: "calendar-x",
-    stroke: "M8 2v3 M16 2v3 M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M3 9h18 m14 13-4 4 m10 13 4 4",
+    stroke: "M8 2v3 M16 2v3 M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M3 9h18 M0 0 m14 13-4 4 M0 0 m10 13 4 4",
     fill: "",
 };
 
@@ -2070,7 +2073,7 @@ pub const CALENDARS: IconData = IconData {
 /// Lucide `camera-off` icon (24 × 24 stroke grid).
 pub const CAMERA_OFF: IconData = IconData {
     name: "camera-off",
-    stroke: "M14.564 14.558a3 3 0 1 1-4.122-4.121 m2 2 20 20 M20 20H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 .819-.175 M9.695 4.024A2 2 0 0 1 10.004 4h3.993a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v7.344",
+    stroke: "M14.564 14.558a3 3 0 1 1-4.122-4.121 M0 0 m2 2 20 20 M20 20H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 .819-.175 M9.695 4.024A2 2 0 0 1 10.004 4h3.993a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v7.344",
     fill: "",
 };
 
@@ -2084,7 +2087,7 @@ pub const CAMERA: IconData = IconData {
 /// Lucide `can-soda` icon (24 × 24 stroke grid).
 pub const CAN_SODA: IconData = IconData {
     name: "can-soda",
-    stroke: "m17 22 1.664-2.496a2 2 0 00.336-1.11V5.606a2 2 0 00-.336-1.11L17 2 M18 22H6 M18 2H6 M5 17h14 M5 7h14 m7 22-1.664-2.496A2 2 0 015 18.394V5.606a2 2 0 01.336-1.11L7 2",
+    stroke: "M0 0 m17 22 1.664-2.496a2 2 0 00.336-1.11V5.606a2 2 0 00-.336-1.11L17 2 M18 22H6 M18 2H6 M5 17h14 M5 7h14 M0 0 m7 22-1.664-2.496A2 2 0 015 18.394V5.606a2 2 0 01.336-1.11L7 2",
     fill: "",
 };
 
@@ -2098,14 +2101,14 @@ pub const CAN: IconData = IconData {
 /// Lucide `candy-cane` icon (24 × 24 stroke grid).
 pub const CANDY_CANE: IconData = IconData {
     name: "candy-cane",
-    stroke: "m10.8 5 2.111 4.223 M17.75 7 15 2.1 m4.874 14.647 2.12 4.24 M5.7 21a2 2 0 0 1-3.5-2l8.6-14a6 6 0 0 1 10.4 6 2 2 0 1 1-3.464-2 2 2 0 1 0-3.464-2z m7.906 9.712 2.005 4.411",
+    stroke: "M0 0 m10.8 5 2.111 4.223 M17.75 7 15 2.1 M0 0 m4.874 14.647 2.12 4.24 M5.7 21a2 2 0 0 1-3.5-2l8.6-14a6 6 0 0 1 10.4 6 2 2 0 1 1-3.464-2 2 2 0 1 0-3.464-2z M0 0 m7.906 9.712 2.005 4.411",
     fill: "",
 };
 
 /// Lucide `candy-off` icon (24 × 24 stroke grid).
 pub const CANDY_OFF: IconData = IconData {
     name: "candy-off",
-    stroke: "M10 10v7.9 M11.802 6.145a5 5 0 0 1 6.053 6.053 M14 6.1v2.243 m15.5 15.571-.964.964a5 5 0 0 1-7.071 0 5 5 0 0 1 0-7.07l.964-.965 M16 7V3a1 1 0 0 1 1.707-.707 2.5 2.5 0 0 0 2.152.717 1 1 0 0 1 1.131 1.131 2.5 2.5 0 0 0 .717 2.152A1 1 0 0 1 21 8h-4 m2 2 20 20 M8 17v4a1 1 0 0 1-1.707.707 2.5 2.5 0 0 0-2.152-.717 1 1 0 0 1-1.131-1.131 2.5 2.5 0 0 0-.717-2.152A1 1 0 0 1 3 16h4",
+    stroke: "M10 10v7.9 M11.802 6.145a5 5 0 0 1 6.053 6.053 M14 6.1v2.243 M0 0 m15.5 15.571-.964.964a5 5 0 0 1-7.071 0 5 5 0 0 1 0-7.07l.964-.965 M16 7V3a1 1 0 0 1 1.707-.707 2.5 2.5 0 0 0 2.152.717 1 1 0 0 1 1.131 1.131 2.5 2.5 0 0 0 .717 2.152A1 1 0 0 1 21 8h-4 M0 0 m2 2 20 20 M8 17v4a1 1 0 0 1-1.707.707 2.5 2.5 0 0 0-2.152-.717 1 1 0 0 1-1.131-1.131 2.5 2.5 0 0 0-.717-2.152A1 1 0 0 1 3 16h4",
     fill: "",
 };
 
@@ -2119,7 +2122,7 @@ pub const CANDY: IconData = IconData {
 /// Lucide `cannabis-off` icon (24 × 24 stroke grid).
 pub const CANNABIS_OFF: IconData = IconData {
     name: "cannabis-off",
-    stroke: "M12 22v-4c1.5 1.5 3.5 3 6 3 0-1.5-.5-3.5-2-5 M13.988 8.327C13.902 6.054 13.365 3.82 12 2a9.3 9.3 0 0 0-1.445 2.9 M17.375 11.725C18.882 10.53 21 7.841 21 6c-2.324 0-5.08 1.296-6.662 2.684 m2 2 20 20 M21.024 15.378A15 15 0 0 0 22 15c-.426-1.279-2.67-2.557-4.25-2.907 M6.995 6.992C5.714 6.4 4.29 6 3 6c0 2 2.5 5 4 6-1.5 0-4.5 1.5-5 3 3.5 1.5 6 1 6 1-1.5 1.5-2 3.5-2 5 2.5 0 4.5-1.5 6-3",
+    stroke: "M12 22v-4c1.5 1.5 3.5 3 6 3 0-1.5-.5-3.5-2-5 M13.988 8.327C13.902 6.054 13.365 3.82 12 2a9.3 9.3 0 0 0-1.445 2.9 M17.375 11.725C18.882 10.53 21 7.841 21 6c-2.324 0-5.08 1.296-6.662 2.684 M0 0 m2 2 20 20 M21.024 15.378A15 15 0 0 0 22 15c-.426-1.279-2.67-2.557-4.25-2.907 M6.995 6.992C5.714 6.4 4.29 6 3 6c0 2 2.5 5 4 6-1.5 0-4.5 1.5-5 3 3.5 1.5 6 1 6 1-1.5 1.5-2 3.5-2 5 2.5 0 4.5-1.5 6-3",
     fill: "",
 };
 
@@ -2133,7 +2136,7 @@ pub const CANNABIS: IconData = IconData {
 /// Lucide `captions-off` icon (24 × 24 stroke grid).
 pub const CAPTIONS_OFF: IconData = IconData {
     name: "captions-off",
-    stroke: "M10.5 5H19a2 2 0 0 1 2 2v8.5 M17 11h-.5 M19 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2 m2 2 20 20 M7 11h4 M7 15h2.5",
+    stroke: "M10.5 5H19a2 2 0 0 1 2 2v8.5 M17 11h-.5 M19 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2 M0 0 m2 2 20 20 M7 11h4 M7 15h2.5",
     fill: "",
 };
 
@@ -2154,14 +2157,14 @@ pub const CAR_BATTERY: IconData = IconData {
 /// Lucide `car-front` icon (24 × 24 stroke grid).
 pub const CAR_FRONT: IconData = IconData {
     name: "car-front",
-    stroke: "m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8 M7 14h.01 M17 14h.01 M5 10H19a2 2 0 0 1 2 2V16a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V12a2 2 0 0 1 2 -2Z M5 18v2 M19 18v2",
+    stroke: "M0 0 m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8 M7 14h.01 M17 14h.01 M5 10H19a2 2 0 0 1 2 2V16a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V12a2 2 0 0 1 2 -2Z M5 18v2 M19 18v2",
     fill: "",
 };
 
 /// Lucide `car-taxi-front` icon (24 × 24 stroke grid).
 pub const CAR_TAXI_FRONT: IconData = IconData {
     name: "car-taxi-front",
-    stroke: "M10 2h4 m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8 M7 14h.01 M17 14h.01 M5 10H19a2 2 0 0 1 2 2V16a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V12a2 2 0 0 1 2 -2Z M5 18v2 M19 18v2",
+    stroke: "M10 2h4 M0 0 m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8 M7 14h.01 M17 14h.01 M5 10H19a2 2 0 0 1 2 2V16a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V12a2 2 0 0 1 2 -2Z M5 18v2 M19 18v2",
     fill: "",
 };
 
@@ -2189,14 +2192,14 @@ pub const CARD_SIM: IconData = IconData {
 /// Lucide `carrot` icon (24 × 24 stroke grid).
 pub const CARROT: IconData = IconData {
     name: "carrot",
-    stroke: "M15 16a1 1 0 0 0-7-7q-4 4-5.987 12.385a.5.5 0 0 0 .602.602Q11 20 15 16l-3-3 M15 9q4 4 7 0-3-4-7 0 4-4 0-7-4 3 0 7 m8 15-2.58-2.58",
+    stroke: "M15 16a1 1 0 0 0-7-7q-4 4-5.987 12.385a.5.5 0 0 0 .602.602Q11 20 15 16l-3-3 M15 9q4 4 7 0-3-4-7 0 4-4 0-7-4 3 0 7 M0 0 m8 15-2.58-2.58",
     fill: "",
 };
 
 /// Lucide `carton-off` icon (24 × 24 stroke grid).
 pub const CARTON_OFF: IconData = IconData {
     name: "carton-off",
-    stroke: "M10 10H5v10a2 2 0 002 2h10a2 2 0 002-2v-1 M13 22v-9 M13.902 8.245 16 6h-4.343 M19 13.343V10a2 2 0 00-.539-1.367L16 6V3a1 1 0 00-1-1H9a1 1 0 00-.857.486 m2 2 20 20 M7.034 7.034 5.539 8.633A2 2 0 005 10",
+    stroke: "M10 10H5v10a2 2 0 002 2h10a2 2 0 002-2v-1 M13 22v-9 M13.902 8.245 16 6h-4.343 M19 13.343V10a2 2 0 00-.539-1.367L16 6V3a1 1 0 00-1-1H9a1 1 0 00-.857.486 M0 0 m2 2 20 20 M7.034 7.034 5.539 8.633A2 2 0 005 10",
     fill: "",
 };
 
@@ -2217,21 +2220,21 @@ pub const CASE_LOWER: IconData = IconData {
 /// Lucide `case-sensitive` icon (24 × 24 stroke grid).
 pub const CASE_SENSITIVE: IconData = IconData {
     name: "case-sensitive",
-    stroke: "m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16 M22 9v7 M3.304 13h6.392 M15 12.5a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0Z",
+    stroke: "M0 0 m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16 M22 9v7 M3.304 13h6.392 M15 12.5a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0Z",
     fill: "",
 };
 
 /// Lucide `case-upper` icon (24 × 24 stroke grid).
 pub const CASE_UPPER: IconData = IconData {
     name: "case-upper",
-    stroke: "M15 11h4.5a1 1 0 0 1 0 5h-4a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h3a1 1 0 0 1 0 5 m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16 M3.304 13h6.392",
+    stroke: "M15 11h4.5a1 1 0 0 1 0 5h-4a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h3a1 1 0 0 1 0 5 M0 0 m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16 M3.304 13h6.392",
     fill: "",
 };
 
 /// Lucide `cassette-tape` icon (24 × 24 stroke grid).
 pub const CASSETTE_TAPE: IconData = IconData {
     name: "cassette-tape",
-    stroke: "M4 4H20a2 2 0 0 1 2 2V18a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2Z M6 10a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M8 12h8 M14 10a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z m6 20 .7-2.9A1.4 1.4 0 0 1 8.1 16h7.8a1.4 1.4 0 0 1 1.4 1l.7 3",
+    stroke: "M4 4H20a2 2 0 0 1 2 2V18a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2Z M6 10a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M8 12h8 M14 10a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M0 0 m6 20 .7-2.9A1.4 1.4 0 0 1 8.1 16h7.8a1.4 1.4 0 0 1 1.4 1l.7 3",
     fill: "",
 };
 
@@ -2259,7 +2262,7 @@ pub const CAT: IconData = IconData {
 /// Lucide `cctv-off` icon (24 × 24 stroke grid).
 pub const CCTV_OFF: IconData = IconData {
     name: "cctv-off",
-    stroke: "m12.309 6.652 4.797 2.401a1 1 0 0 1 .447 1.341l-.501 1.001.605.605h2.725a1 1 0 0 1 .894 1.447l-.724 1.448 m15.166 15.166-.719 1.439a1 1 0 0 1-1.342.447L3.61 12.3a2.92 2.92 0 0 1-1.3-3.91L3.69 5.6a2.9 2.9 0 0 1 .873-1.037 M2 19h3.76a2 2 0 0 0 1.8-1.1l1.441-2.902 m2 2 20 20 M2 21v-4 M7 9h.01",
+    stroke: "M0 0 m12.309 6.652 4.797 2.401a1 1 0 0 1 .447 1.341l-.501 1.001.605.605h2.725a1 1 0 0 1 .894 1.447l-.724 1.448 M0 0 m15.166 15.166-.719 1.439a1 1 0 0 1-1.342.447L3.61 12.3a2.92 2.92 0 0 1-1.3-3.91L3.69 5.6a2.9 2.9 0 0 1 .873-1.037 M2 19h3.76a2 2 0 0 0 1.8-1.1l1.441-2.902 M0 0 m2 2 20 20 M2 21v-4 M7 9h.01",
     fill: "",
 };
 
@@ -2273,7 +2276,7 @@ pub const CCTV: IconData = IconData {
 /// Lucide `certificate` icon (24 × 24 stroke grid).
 pub const CERTIFICATE: IconData = IconData {
     name: "certificate",
-    stroke: "M12 10H6 m20.69 15.479 1.29 4.88a.5.5 0 01-.698.591l-1.843-.849a1 1 0 00-.879.001l-1.846.85a.5.5 0 01-.692-.593l1.29-4.88 M22 6.675V6a2 2 0 00-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h8 M6 14h4 M16 13a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M12 10H6 M0 0 m20.69 15.479 1.29 4.88a.5.5 0 01-.698.591l-1.843-.849a1 1 0 00-.879.001l-1.846.85a.5.5 0 01-.692-.593l1.29-4.88 M22 6.675V6a2 2 0 00-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h8 M6 14h4 M16 13a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -2371,14 +2374,14 @@ pub const CHART_GANTT: IconData = IconData {
 /// Lucide `chart-line` icon (24 × 24 stroke grid).
 pub const CHART_LINE: IconData = IconData {
     name: "chart-line",
-    stroke: "M3 3v16a2 2 0 0 0 2 2h16 m19 9-5 5-4-4-3 3",
+    stroke: "M3 3v16a2 2 0 0 0 2 2h16 M0 0 m19 9-5 5-4-4-3 3",
     fill: "",
 };
 
 /// Lucide `chart-network` icon (24 × 24 stroke grid).
 pub const CHART_NETWORK: IconData = IconData {
     name: "chart-network",
-    stroke: "m13.11 7.664 1.78 2.672 m14.162 12.788-3.324 1.424 m20 4-6.06 1.515 M3 3v16a2 2 0 0 0 2 2h16 M10 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M14 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M7 15a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M0 0 m13.11 7.664 1.78 2.672 M0 0 m14.162 12.788-3.324 1.424 M0 0 m20 4-6.06 1.515 M3 3v16a2 2 0 0 0 2 2h16 M10 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M14 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M7 15a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -2406,7 +2409,7 @@ pub const CHART_NO_AXES_COLUMN: IconData = IconData {
 /// Lucide `chart-no-axes-combined` icon (24 × 24 stroke grid).
 pub const CHART_NO_AXES_COMBINED: IconData = IconData {
     name: "chart-no-axes-combined",
-    stroke: "M12 16v5 M16 14.639V21 M20 10.656V21 m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15 M4 18.463V21 M8 14.656V21",
+    stroke: "M12 16v5 M16 14.639V21 M20 10.656V21 M0 0 m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15 M4 18.463V21 M8 14.656V21",
     fill: "",
 };
 
@@ -2441,7 +2444,7 @@ pub const CHART_SPLINE: IconData = IconData {
 /// Lucide `check-check` icon (24 × 24 stroke grid).
 pub const CHECK_CHECK: IconData = IconData {
     name: "check-check",
-    stroke: "M18 6 7 17l-5-5 m22 10-7.5 7.5L13 16",
+    stroke: "M18 6 7 17l-5-5 M0 0 m22 10-7.5 7.5L13 16",
     fill: "",
 };
 
@@ -2476,161 +2479,161 @@ pub const CHERRY: IconData = IconData {
 /// Lucide `chess-bishop` icon (24 × 24 stroke grid).
 pub const CHESS_BISHOP: IconData = IconData {
     name: "chess-bishop",
-    stroke: "M5 20a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z M15 18c1.5-.615 3-2.461 3-4.923C18 8.769 14.5 4.462 12 2 9.5 4.462 6 8.77 6 13.077 6 15.539 7.5 17.385 9 18 m16 7-2.5 2.5 M9 2h6",
+    stroke: "M5 20a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z M15 18c1.5-.615 3-2.461 3-4.923C18 8.769 14.5 4.462 12 2 9.5 4.462 6 8.77 6 13.077 6 15.539 7.5 17.385 9 18 M0 0 m16 7-2.5 2.5 M9 2h6",
     fill: "",
 };
 
 /// Lucide `chess-king` icon (24 × 24 stroke grid).
 pub const CHESS_KING: IconData = IconData {
     name: "chess-king",
-    stroke: "M4 20a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z m6.7 18-1-1C4.35 15.682 3 14.09 3 12a5 5 0 0 1 4.95-5c1.584 0 2.7.455 4.05 1.818C13.35 7.455 14.466 7 16.05 7A5 5 0 0 1 21 12c0 2.082-1.359 3.673-2.7 5l-1 1 M10 4h4 M12 2v6.818",
+    stroke: "M4 20a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z M0 0 m6.7 18-1-1C4.35 15.682 3 14.09 3 12a5 5 0 0 1 4.95-5c1.584 0 2.7.455 4.05 1.818C13.35 7.455 14.466 7 16.05 7A5 5 0 0 1 21 12c0 2.082-1.359 3.673-2.7 5l-1 1 M10 4h4 M12 2v6.818",
     fill: "",
 };
 
 /// Lucide `chess-knight` icon (24 × 24 stroke grid).
 pub const CHESS_KNIGHT: IconData = IconData {
     name: "chess-knight",
-    stroke: "M5 20a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z M16.5 18c1-2 2.5-5 2.5-9a7 7 0 0 0-7-7H6.635a1 1 0 0 0-.768 1.64L7 5l-2.32 5.802a2 2 0 0 0 .95 2.526l2.87 1.456 m15 5 1.425-1.425 m17 8 1.53-1.53 M9.713 12.185 7 18",
+    stroke: "M5 20a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z M16.5 18c1-2 2.5-5 2.5-9a7 7 0 0 0-7-7H6.635a1 1 0 0 0-.768 1.64L7 5l-2.32 5.802a2 2 0 0 0 .95 2.526l2.87 1.456 M0 0 m15 5 1.425-1.425 M0 0 m17 8 1.53-1.53 M9.713 12.185 7 18",
     fill: "",
 };
 
 /// Lucide `chess-pawn` icon (24 × 24 stroke grid).
 pub const CHESS_PAWN: IconData = IconData {
     name: "chess-pawn",
-    stroke: "M5 20a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z m14.5 10 1.5 8 M7 10h10 m8 18 1.5-8 M8 6a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z",
+    stroke: "M5 20a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z M0 0 m14.5 10 1.5 8 M7 10h10 M0 0 m8 18 1.5-8 M8 6a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z",
     fill: "",
 };
 
 /// Lucide `chess-queen` icon (24 × 24 stroke grid).
 pub const CHESS_QUEEN: IconData = IconData {
     name: "chess-queen",
-    stroke: "m10.68 5.499-.996 4.982a.65.65 0 01-1.131.295L5.885 7.663 m13.32 5.5.995 4.98a.65.65 0 001.131.296l2.668-3.113 M20.428 8.952 17.5 18 M4 20a2 2 0 012-2h12a2 2 0 012 2v1a1 1 0 01-1 1H5a1 1 0 01-1-1z M6.5 18 3.571 8.952 M10 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M18 7a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M2 7a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M0 0 m10.68 5.499-.996 4.982a.65.65 0 01-1.131.295L5.885 7.663 M0 0 m13.32 5.5.995 4.98a.65.65 0 001.131.296l2.668-3.113 M20.428 8.952 17.5 18 M4 20a2 2 0 012-2h12a2 2 0 012 2v1a1 1 0 01-1 1H5a1 1 0 01-1-1z M6.5 18 3.571 8.952 M10 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M18 7a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M2 7a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `chess-rook` icon (24 × 24 stroke grid).
 pub const CHESS_ROOK: IconData = IconData {
     name: "chess-rook",
-    stroke: "M5 20a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z M10 2v2 M14 2v2 m17 18-1-9 M6 2v5a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2 M6 4h12 m7 18 1-9",
+    stroke: "M5 20a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z M10 2v2 M14 2v2 M0 0 m17 18-1-9 M6 2v5a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2 M6 4h12 M0 0 m7 18 1-9",
     fill: "",
 };
 
 /// Lucide `chevron-down` icon (24 × 24 stroke grid).
 pub const CHEVRON_DOWN: IconData = IconData {
     name: "chevron-down",
-    stroke: "m6 9 6 6 6-6",
+    stroke: "M0 0 m6 9 6 6 6-6",
     fill: "",
 };
 
 /// Lucide `chevron-first` icon (24 × 24 stroke grid).
 pub const CHEVRON_FIRST: IconData = IconData {
     name: "chevron-first",
-    stroke: "m17 18-6-6 6-6 M7 6v12",
+    stroke: "M0 0 m17 18-6-6 6-6 M7 6v12",
     fill: "",
 };
 
 /// Lucide `chevron-last` icon (24 × 24 stroke grid).
 pub const CHEVRON_LAST: IconData = IconData {
     name: "chevron-last",
-    stroke: "m7 18 6-6-6-6 M17 6v12",
+    stroke: "M0 0 m7 18 6-6-6-6 M17 6v12",
     fill: "",
 };
 
 /// Lucide `chevron-left` icon (24 × 24 stroke grid).
 pub const CHEVRON_LEFT: IconData = IconData {
     name: "chevron-left",
-    stroke: "m15 18-6-6 6-6",
+    stroke: "M0 0 m15 18-6-6 6-6",
     fill: "",
 };
 
 /// Lucide `chevron-right` icon (24 × 24 stroke grid).
 pub const CHEVRON_RIGHT: IconData = IconData {
     name: "chevron-right",
-    stroke: "m9 18 6-6-6-6",
+    stroke: "M0 0 m9 18 6-6-6-6",
     fill: "",
 };
 
 /// Lucide `chevron-up` icon (24 × 24 stroke grid).
 pub const CHEVRON_UP: IconData = IconData {
     name: "chevron-up",
-    stroke: "m18 15-6-6-6 6",
+    stroke: "M0 0 m18 15-6-6-6 6",
     fill: "",
 };
 
 /// Lucide `chevrons-down-up` icon (24 × 24 stroke grid).
 pub const CHEVRONS_DOWN_UP: IconData = IconData {
     name: "chevrons-down-up",
-    stroke: "m7 20 5-5 5 5 m7 4 5 5 5-5",
+    stroke: "M0 0 m7 20 5-5 5 5 M0 0 m7 4 5 5 5-5",
     fill: "",
 };
 
 /// Lucide `chevrons-down` icon (24 × 24 stroke grid).
 pub const CHEVRONS_DOWN: IconData = IconData {
     name: "chevrons-down",
-    stroke: "m7 6 5 5 5-5 m7 13 5 5 5-5",
+    stroke: "M0 0 m7 6 5 5 5-5 M0 0 m7 13 5 5 5-5",
     fill: "",
 };
 
 /// Lucide `chevrons-left-right-ellipsis` icon (24 × 24 stroke grid).
 pub const CHEVRONS_LEFT_RIGHT_ELLIPSIS: IconData = IconData {
     name: "chevrons-left-right-ellipsis",
-    stroke: "M12 12h.01 M16 12h.01 m17 7 5 5-5 5 m7 7-5 5 5 5 M8 12h.01",
+    stroke: "M12 12h.01 M16 12h.01 M0 0 m17 7 5 5-5 5 M0 0 m7 7-5 5 5 5 M8 12h.01",
     fill: "",
 };
 
 /// Lucide `chevrons-left-right` icon (24 × 24 stroke grid).
 pub const CHEVRONS_LEFT_RIGHT: IconData = IconData {
     name: "chevrons-left-right",
-    stroke: "m9 7-5 5 5 5 m15 7 5 5-5 5",
+    stroke: "M0 0 m9 7-5 5 5 5 M0 0 m15 7 5 5-5 5",
     fill: "",
 };
 
 /// Lucide `chevrons-left` icon (24 × 24 stroke grid).
 pub const CHEVRONS_LEFT: IconData = IconData {
     name: "chevrons-left",
-    stroke: "m11 17-5-5 5-5 m18 17-5-5 5-5",
+    stroke: "M0 0 m11 17-5-5 5-5 M0 0 m18 17-5-5 5-5",
     fill: "",
 };
 
 /// Lucide `chevrons-right-left` icon (24 × 24 stroke grid).
 pub const CHEVRONS_RIGHT_LEFT: IconData = IconData {
     name: "chevrons-right-left",
-    stroke: "m20 17-5-5 5-5 m4 17 5-5-5-5",
+    stroke: "M0 0 m20 17-5-5 5-5 M0 0 m4 17 5-5-5-5",
     fill: "",
 };
 
 /// Lucide `chevrons-right` icon (24 × 24 stroke grid).
 pub const CHEVRONS_RIGHT: IconData = IconData {
     name: "chevrons-right",
-    stroke: "m6 17 5-5-5-5 m13 17 5-5-5-5",
+    stroke: "M0 0 m6 17 5-5-5-5 M0 0 m13 17 5-5-5-5",
     fill: "",
 };
 
 /// Lucide `chevrons-up-down` icon (24 × 24 stroke grid).
 pub const CHEVRONS_UP_DOWN: IconData = IconData {
     name: "chevrons-up-down",
-    stroke: "m7 15 5 5 5-5 m7 9 5-5 5 5",
+    stroke: "M0 0 m7 15 5 5 5-5 M0 0 m7 9 5-5 5 5",
     fill: "",
 };
 
 /// Lucide `chevrons-up` icon (24 × 24 stroke grid).
 pub const CHEVRONS_UP: IconData = IconData {
     name: "chevrons-up",
-    stroke: "m17 11-5-5-5 5 m17 18-5-5-5 5",
+    stroke: "M0 0 m17 11-5-5-5 5 M0 0 m17 18-5-5-5 5",
     fill: "",
 };
 
 /// Lucide `church` icon (24 × 24 stroke grid).
 pub const CHURCH: IconData = IconData {
     name: "church",
-    stroke: "M10 9h4 M12 7v5 M14 21v-3a2 2 0 0 0-4 0v3 m18 9 3.52 2.147a1 1 0 0 1 .48.854V19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6.999a1 1 0 0 1 .48-.854L6 9 M6 21V7a1 1 0 0 1 .376-.782l5-3.999a1 1 0 0 1 1.249.001l5 4A1 1 0 0 1 18 7v14",
+    stroke: "M10 9h4 M12 7v5 M14 21v-3a2 2 0 0 0-4 0v3 M0 0 m18 9 3.52 2.147a1 1 0 0 1 .48.854V19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6.999a1 1 0 0 1 .48-.854L6 9 M6 21V7a1 1 0 0 1 .376-.782l5-3.999a1 1 0 0 1 1.249.001l5 4A1 1 0 0 1 18 7v14",
     fill: "",
 };
 
 /// Lucide `cigarette-off` icon (24 × 24 stroke grid).
 pub const CIGARETTE_OFF: IconData = IconData {
     name: "cigarette-off",
-    stroke: "M12 12H3a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h13 M18 8c0-2.5-2-2.5-2-5 m2 2 20 20 M21 12a1 1 0 0 1 1 1v2a1 1 0 0 1-.5.866 M22 8c0-2.5-2-2.5-2-5 M7 12v4",
+    stroke: "M12 12H3a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h13 M18 8c0-2.5-2-2.5-2-5 M0 0 m2 2 20 20 M21 12a1 1 0 0 1 1 1v2a1 1 0 0 1-.5.866 M22 8c0-2.5-2-2.5-2-5 M7 12v4",
     fill: "",
 };
 
@@ -2651,21 +2654,21 @@ pub const CIRCLE_ALERT: IconData = IconData {
 /// Lucide `circle-arrow-down` icon (24 × 24 stroke grid).
 pub const CIRCLE_ARROW_DOWN: IconData = IconData {
     name: "circle-arrow-down",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M12 8v8 m8 12 4 4 4-4",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M12 8v8 M0 0 m8 12 4 4 4-4",
     fill: "",
 };
 
 /// Lucide `circle-arrow-left` icon (24 × 24 stroke grid).
 pub const CIRCLE_ARROW_LEFT: IconData = IconData {
     name: "circle-arrow-left",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z m12 8-4 4 4 4 M16 12H8",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M0 0 m12 8-4 4 4 4 M16 12H8",
     fill: "",
 };
 
 /// Lucide `circle-arrow-out-down-left` icon (24 × 24 stroke grid).
 pub const CIRCLE_ARROW_OUT_DOWN_LEFT: IconData = IconData {
     name: "circle-arrow-out-down-left",
-    stroke: "M2 12a10 10 0 1 1 10 10 m2 22 10-10 M8 22H2v-6",
+    stroke: "M2 12a10 10 0 1 1 10 10 M0 0 m2 22 10-10 M8 22H2v-6",
     fill: "",
 };
 
@@ -2679,7 +2682,7 @@ pub const CIRCLE_ARROW_OUT_DOWN_RIGHT: IconData = IconData {
 /// Lucide `circle-arrow-out-up-left` icon (24 × 24 stroke grid).
 pub const CIRCLE_ARROW_OUT_UP_LEFT: IconData = IconData {
     name: "circle-arrow-out-up-left",
-    stroke: "M2 8V2h6 m2 2 10 10 M12 2A10 10 0 1 1 2 12",
+    stroke: "M2 8V2h6 M0 0 m2 2 10 10 M12 2A10 10 0 1 1 2 12",
     fill: "",
 };
 
@@ -2693,56 +2696,56 @@ pub const CIRCLE_ARROW_OUT_UP_RIGHT: IconData = IconData {
 /// Lucide `circle-arrow-right` icon (24 × 24 stroke grid).
 pub const CIRCLE_ARROW_RIGHT: IconData = IconData {
     name: "circle-arrow-right",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z m12 16 4-4-4-4 M8 12h8",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M0 0 m12 16 4-4-4-4 M8 12h8",
     fill: "",
 };
 
 /// Lucide `circle-arrow-up` icon (24 × 24 stroke grid).
 pub const CIRCLE_ARROW_UP: IconData = IconData {
     name: "circle-arrow-up",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z m16 12-4-4-4 4 M12 16V8",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M0 0 m16 12-4-4-4 4 M12 16V8",
     fill: "",
 };
 
 /// Lucide `circle-check-big` icon (24 × 24 stroke grid).
 pub const CIRCLE_CHECK_BIG: IconData = IconData {
     name: "circle-check-big",
-    stroke: "M21.801 10A10 10 0 1 1 17 3.335 m9 11 3 3L22 4",
+    stroke: "M21.801 10A10 10 0 1 1 17 3.335 M0 0 m9 11 3 3L22 4",
     fill: "",
 };
 
 /// Lucide `circle-check` icon (24 × 24 stroke grid).
 pub const CIRCLE_CHECK: IconData = IconData {
     name: "circle-check",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z m16 9-5.5 5.5L8 12",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M0 0 m16 9-5.5 5.5L8 12",
     fill: "",
 };
 
 /// Lucide `circle-chevron-down` icon (24 × 24 stroke grid).
 pub const CIRCLE_CHEVRON_DOWN: IconData = IconData {
     name: "circle-chevron-down",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z m16 10-4 4-4-4",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M0 0 m16 10-4 4-4-4",
     fill: "",
 };
 
 /// Lucide `circle-chevron-left` icon (24 × 24 stroke grid).
 pub const CIRCLE_CHEVRON_LEFT: IconData = IconData {
     name: "circle-chevron-left",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z m14 16-4-4 4-4",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M0 0 m14 16-4-4 4-4",
     fill: "",
 };
 
 /// Lucide `circle-chevron-right` icon (24 × 24 stroke grid).
 pub const CIRCLE_CHEVRON_RIGHT: IconData = IconData {
     name: "circle-chevron-right",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z m10 8 4 4-4 4",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M0 0 m10 8 4 4-4 4",
     fill: "",
 };
 
 /// Lucide `circle-chevron-up` icon (24 × 24 stroke grid).
 pub const CIRCLE_CHEVRON_UP: IconData = IconData {
     name: "circle-chevron-up",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z m8 14 4-4 4 4",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M0 0 m8 14 4-4 4 4",
     fill: "",
 };
 
@@ -2777,7 +2780,7 @@ pub const CIRCLE_CHEVRONS_UP: IconData = IconData {
 /// Lucide `circle-dashed-check` icon (24 × 24 stroke grid).
 pub const CIRCLE_DASHED_CHECK: IconData = IconData {
     name: "circle-dashed-check",
-    stroke: "M10.1 2.182a10 10 0 013.8 0 M13.9 21.818a10 10 0 01-3.8 0 m16 9-5.5 5.5L8 12 M17.609 3.721a10 10 0 012.69 2.7 M2.182 13.9a10 10 0 010-3.8 M20.279 17.609a10 10 0 01-2.7 2.69 M21.818 10.1a10 10 0 010 3.8 M3.721 6.391a10 10 0 012.7-2.69 M6.391 20.279a10 10 0 01-2.69-2.7",
+    stroke: "M10.1 2.182a10 10 0 013.8 0 M13.9 21.818a10 10 0 01-3.8 0 M0 0 m16 9-5.5 5.5L8 12 M17.609 3.721a10 10 0 012.69 2.7 M2.182 13.9a10 10 0 010-3.8 M20.279 17.609a10 10 0 01-2.7 2.69 M21.818 10.1a10 10 0 010 3.8 M3.721 6.391a10 10 0 012.7-2.69 M6.391 20.279a10 10 0 01-2.69-2.7",
     fill: "",
 };
 
@@ -2840,7 +2843,7 @@ pub const CIRCLE_EURO: IconData = IconData {
 /// Lucide `circle-fading-arrow-up` icon (24 × 24 stroke grid).
 pub const CIRCLE_FADING_ARROW_UP: IconData = IconData {
     name: "circle-fading-arrow-up",
-    stroke: "M12 2a10 10 0 0 1 7.38 16.75 m16 12-4-4-4 4 M12 16V8 M2.5 8.875a10 10 0 0 0-.5 3 M2.83 16a10 10 0 0 0 2.43 3.4 M4.636 5.235a10 10 0 0 1 .891-.857 M8.644 21.42a10 10 0 0 0 7.631-.38",
+    stroke: "M12 2a10 10 0 0 1 7.38 16.75 M0 0 m16 12-4-4-4 4 M12 16V8 M2.5 8.875a10 10 0 0 0-.5 3 M2.83 16a10 10 0 0 0 2.43 3.4 M4.636 5.235a10 10 0 0 1 .891-.857 M8.644 21.42a10 10 0 0 0 7.631-.38",
     fill: "",
 };
 
@@ -2875,14 +2878,14 @@ pub const CIRCLE_MINUS: IconData = IconData {
 /// Lucide `circle-off` icon (24 × 24 stroke grid).
 pub const CIRCLE_OFF: IconData = IconData {
     name: "circle-off",
-    stroke: "m2 2 20 20 M8.35 2.69A10 10 0 0 1 21.3 15.65 M19.08 19.08A10 10 0 1 1 4.92 4.92",
+    stroke: "M0 0 m2 2 20 20 M8.35 2.69A10 10 0 0 1 21.3 15.65 M19.08 19.08A10 10 0 1 1 4.92 4.92",
     fill: "",
 };
 
 /// Lucide `circle-parking-off` icon (24 × 24 stroke grid).
 pub const CIRCLE_PARKING_OFF: IconData = IconData {
     name: "circle-parking-off",
-    stroke: "M12.656 7H13a3 3 0 0 1 2.984 3.307 M13 13H9 M19.071 19.071A1 1 0 0 1 4.93 4.93 m2 2 20 20 M8.357 2.687a10 10 0 0 1 12.956 12.956 M9 17V9",
+    stroke: "M12.656 7H13a3 3 0 0 1 2.984 3.307 M13 13H9 M19.071 19.071A1 1 0 0 1 4.93 4.93 M0 0 m2 2 20 20 M8.357 2.687a10 10 0 0 1 12.956 12.956 M9 17V9",
     fill: "",
 };
 
@@ -2903,7 +2906,7 @@ pub const CIRCLE_PAUSE: IconData = IconData {
 /// Lucide `circle-percent` icon (24 × 24 stroke grid).
 pub const CIRCLE_PERCENT: IconData = IconData {
     name: "circle-percent",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z m15 9-6 6 M9 9h.01 M15 15h.01",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M0 0 m15 9-6 6 M9 9h.01 M15 15h.01",
     fill: "",
 };
 
@@ -3002,7 +3005,7 @@ pub const CIRCLE_USER: IconData = IconData {
 /// Lucide `circle-x` icon (24 × 24 stroke grid).
 pub const CIRCLE_X: IconData = IconData {
     name: "circle-x",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z m15 9-6 6 m9 9 6 6",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M0 0 m15 9-6 6 M0 0 m9 9 6 6",
     fill: "",
 };
 
@@ -3023,14 +3026,14 @@ pub const CIRCUIT_BOARD: IconData = IconData {
 /// Lucide `citrus` icon (24 × 24 stroke grid).
 pub const CITRUS: IconData = IconData {
     name: "citrus",
-    stroke: "M21.66 17.67a1.08 1.08 0 0 1-.04 1.6A12 12 0 0 1 4.73 2.38a1.1 1.1 0 0 1 1.61-.04z M19.65 15.66A8 8 0 0 1 8.35 4.34 m14 10-5.5 5.5 M14 17.85V10H6.15",
+    stroke: "M21.66 17.67a1.08 1.08 0 0 1-.04 1.6A12 12 0 0 1 4.73 2.38a1.1 1.1 0 0 1 1.61-.04z M19.65 15.66A8 8 0 0 1 8.35 4.34 M0 0 m14 10-5.5 5.5 M14 17.85V10H6.15",
     fill: "",
 };
 
 /// Lucide `clapperboard` icon (24 × 24 stroke grid).
 pub const CLAPPERBOARD: IconData = IconData {
     name: "clapperboard",
-    stroke: "m12.296 3.464 3.02 3.956 M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3z M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z m6.18 5.276 3.1 3.899",
+    stroke: "M0 0 m12.296 3.464 3.02 3.956 M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3z M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M0 0 m6.18 5.276 3.1 3.899",
     fill: "",
 };
 
@@ -3058,7 +3061,7 @@ pub const CLEF_TREBLE: IconData = IconData {
 /// Lucide `clipboard-check` icon (24 × 24 stroke grid).
 pub const CLIPBOARD_CHECK: IconData = IconData {
     name: "clipboard-check",
-    stroke: "M9 2H15a1 1 0 0 1 1 1V5a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V3a1 1 0 0 1 1 -1Z M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2 m9 14 2 2 4-4",
+    stroke: "M9 2H15a1 1 0 0 1 1 1V5a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V3a1 1 0 0 1 1 -1Z M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2 M0 0 m9 14 2 2 4-4",
     fill: "",
 };
 
@@ -3072,7 +3075,7 @@ pub const CLIPBOARD_CLOCK: IconData = IconData {
 /// Lucide `clipboard-copy` icon (24 × 24 stroke grid).
 pub const CLIPBOARD_COPY: IconData = IconData {
     name: "clipboard-copy",
-    stroke: "M9 2H15a1 1 0 0 1 1 1V5a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V3a1 1 0 0 1 1 -1Z M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2 M16 4h2a2 2 0 0 1 2 2v4 M21 14H11 m15 10-4 4 4 4",
+    stroke: "M9 2H15a1 1 0 0 1 1 1V5a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V3a1 1 0 0 1 1 -1Z M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2 M16 4h2a2 2 0 0 1 2 2v4 M21 14H11 M0 0 m15 10-4 4 4 4",
     fill: "",
 };
 
@@ -3093,7 +3096,7 @@ pub const CLIPBOARD_MINUS: IconData = IconData {
 /// Lucide `clipboard-paste` icon (24 × 24 stroke grid).
 pub const CLIPBOARD_PASTE: IconData = IconData {
     name: "clipboard-paste",
-    stroke: "M11 14h10 M16 4h2a2 2 0 0 1 2 2v1.344 m17 18 4-4-4-4 M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113 M9 2H15a1 1 0 0 1 1 1V5a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V3a1 1 0 0 1 1 -1Z",
+    stroke: "M11 14h10 M16 4h2a2 2 0 0 1 2 2v1.344 M0 0 m17 18 4-4-4-4 M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113 M9 2H15a1 1 0 0 1 1 1V5a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V3a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
@@ -3128,7 +3131,7 @@ pub const CLIPBOARD_TYPE: IconData = IconData {
 /// Lucide `clipboard-x` icon (24 × 24 stroke grid).
 pub const CLIPBOARD_X: IconData = IconData {
     name: "clipboard-x",
-    stroke: "M9 2H15a1 1 0 0 1 1 1V5a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V3a1 1 0 0 1 1 -1Z M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2 m14.5 11.5-5 5 m9.5 11.5 5 5",
+    stroke: "M9 2H15a1 1 0 0 1 1 1V5a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V3a1 1 0 0 1 1 -1Z M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2 M0 0 m14.5 11.5-5 5 M0 0 m9.5 11.5 5 5",
     fill: "",
 };
 
@@ -3233,35 +3236,35 @@ pub const CLOCK_ALERT: IconData = IconData {
 /// Lucide `clock-arrow-down` icon (24 × 24 stroke grid).
 pub const CLOCK_ARROW_DOWN: IconData = IconData {
     name: "clock-arrow-down",
-    stroke: "M12 6v6l2 1 M12.337 21.994a10 10 0 1 1 9.588-8.767 m14 18 4 4 4-4 M18 14v8",
+    stroke: "M12 6v6l2 1 M12.337 21.994a10 10 0 1 1 9.588-8.767 M0 0 m14 18 4 4 4-4 M18 14v8",
     fill: "",
 };
 
 /// Lucide `clock-arrow-left` icon (24 × 24 stroke grid).
 pub const CLOCK_ARROW_LEFT: IconData = IconData {
     name: "clock-arrow-left",
-    stroke: "M12 6v6l1.5.8 M12.338 21.994a10 10 0 1 1 9.587-8.767 M14 18h8 m18 22-4-4 4-4",
+    stroke: "M12 6v6l1.5.8 M12.338 21.994a10 10 0 1 1 9.587-8.767 M14 18h8 M0 0 m18 22-4-4 4-4",
     fill: "",
 };
 
 /// Lucide `clock-arrow-right` icon (24 × 24 stroke grid).
 pub const CLOCK_ARROW_RIGHT: IconData = IconData {
     name: "clock-arrow-right",
-    stroke: "M12 6v6l2 1 M13.5 21.885A10 10 0 1 1 22 12 M14 18h8 m18 22 4-4-4-4",
+    stroke: "M12 6v6l2 1 M13.5 21.885A10 10 0 1 1 22 12 M14 18h8 M0 0 m18 22 4-4-4-4",
     fill: "",
 };
 
 /// Lucide `clock-arrow-up` icon (24 × 24 stroke grid).
 pub const CLOCK_ARROW_UP: IconData = IconData {
     name: "clock-arrow-up",
-    stroke: "M12 6v6l1.56.78 M13.227 21.925a10 10 0 1 1 8.767-9.588 m14 18 4-4 4 4 M18 22v-8",
+    stroke: "M12 6v6l1.56.78 M13.227 21.925a10 10 0 1 1 8.767-9.588 M0 0 m14 18 4-4 4 4 M18 22v-8",
     fill: "",
 };
 
 /// Lucide `clock-check` icon (24 × 24 stroke grid).
 pub const CLOCK_CHECK: IconData = IconData {
     name: "clock-check",
-    stroke: "M21.95 13a10 10 0 1 0-8.685 8.92 M12 6v6l4 2 m16 19 2 2 4-4",
+    stroke: "M21.95 13a10 10 0 1 0-8.685 8.92 M12 6v6l4 2 M0 0 m16 19 2 2 4-4",
     fill: "",
 };
 
@@ -3310,22 +3313,22 @@ pub const CLOUD_BACKUP: IconData = IconData {
 /// Lucide `cloud-check` icon (24 × 24 stroke grid).
 pub const CLOUD_CHECK: IconData = IconData {
     name: "cloud-check",
-    stroke: "m17 15-5.5 5.5L9 18 M5.516 16.07A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 3.501 7.327",
+    stroke:
+        "M0 0 m17 15-5.5 5.5L9 18 M5.516 16.07A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 3.501 7.327",
     fill: "",
 };
 
 /// Lucide `cloud-cog` icon (24 × 24 stroke grid).
 pub const CLOUD_COG: IconData = IconData {
     name: "cloud-cog",
-    stroke: "m10.852 19.772-.383.924 m13.148 14.228.383-.923 M13.148 19.772a3 3 0 1 0-2.296-5.544l-.383-.923 m13.53 20.696-.382-.924a3 3 0 1 1-2.296-5.544 m14.772 15.852.923-.383 m14.772 18.148.923.383 M4.2 15.1a7 7 0 1 1 9.93-9.858A7 7 0 0 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.2 m9.228 15.852-.923-.383 m9.228 18.148-.923.383",
+    stroke: "M0 0 m10.852 19.772-.383.924 M0 0 m13.148 14.228.383-.923 M13.148 19.772a3 3 0 1 0-2.296-5.544l-.383-.923 M0 0 m13.53 20.696-.382-.924a3 3 0 1 1-2.296-5.544 M0 0 m14.772 15.852.923-.383 M0 0 m14.772 18.148.923.383 M4.2 15.1a7 7 0 1 1 9.93-9.858A7 7 0 0 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.2 M0 0 m9.228 15.852-.923-.383 M0 0 m9.228 18.148-.923.383",
     fill: "",
 };
 
 /// Lucide `cloud-download` icon (24 × 24 stroke grid).
 pub const CLOUD_DOWNLOAD: IconData = IconData {
     name: "cloud-download",
-    stroke:
-        "M12 13v8l-4-4 m12 21 4-4 M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284",
+    stroke: "M12 13v8l-4-4 M0 0 m12 21 4-4 M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284",
     fill: "",
 };
 
@@ -3353,7 +3356,7 @@ pub const CLOUD_HAIL: IconData = IconData {
 /// Lucide `cloud-lightning` icon (24 × 24 stroke grid).
 pub const CLOUD_LIGHTNING: IconData = IconData {
     name: "cloud-lightning",
-    stroke: "M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973 m13 12-3 5h4l-3 5",
+    stroke: "M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973 M0 0 m13 12-3 5h4l-3 5",
     fill: "",
 };
 
@@ -3374,15 +3377,14 @@ pub const CLOUD_MOON: IconData = IconData {
 /// Lucide `cloud-off` icon (24 × 24 stroke grid).
 pub const CLOUD_OFF: IconData = IconData {
     name: "cloud-off",
-    stroke: "M10.94 5.274A7 7 0 0 1 15.71 10h1.79a4.5 4.5 0 0 1 4.222 6.057 M18.796 18.81A4.5 4.5 0 0 1 17.5 19H9A7 7 0 0 1 5.79 5.78 m2 2 20 20",
+    stroke: "M10.94 5.274A7 7 0 0 1 15.71 10h1.79a4.5 4.5 0 0 1 4.222 6.057 M18.796 18.81A4.5 4.5 0 0 1 17.5 19H9A7 7 0 0 1 5.79 5.78 M0 0 m2 2 20 20",
     fill: "",
 };
 
 /// Lucide `cloud-rain-wind` icon (24 × 24 stroke grid).
 pub const CLOUD_RAIN_WIND: IconData = IconData {
     name: "cloud-rain-wind",
-    stroke:
-        "M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242 m9.2 22 3-7 m9 13-3 7 m17 13-3 7",
+    stroke: "M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242 M0 0 m9.2 22 3-7 M0 0 m9 13-3 7 M0 0 m17 13-3 7",
     fill: "",
 };
 
@@ -3403,28 +3405,28 @@ pub const CLOUD_SNOW: IconData = IconData {
 /// Lucide `cloud-sun-rain` icon (24 × 24 stroke grid).
 pub const CLOUD_SUN_RAIN: IconData = IconData {
     name: "cloud-sun-rain",
-    stroke: "M12 2v2 m4.93 4.93 1.41 1.41 M20 12h2 m19.07 4.93-1.41 1.41 M15.947 12.65a4 4 0 0 0-5.925-4.128 M3 20a5 5 0 1 1 8.9-4H13a3 3 0 0 1 2 5.24 M11 20v2 M7 19v2",
+    stroke: "M12 2v2 M0 0 m4.93 4.93 1.41 1.41 M20 12h2 M0 0 m19.07 4.93-1.41 1.41 M15.947 12.65a4 4 0 0 0-5.925-4.128 M3 20a5 5 0 1 1 8.9-4H13a3 3 0 0 1 2 5.24 M11 20v2 M7 19v2",
     fill: "",
 };
 
 /// Lucide `cloud-sun` icon (24 × 24 stroke grid).
 pub const CLOUD_SUN: IconData = IconData {
     name: "cloud-sun",
-    stroke: "M12 2v2 m4.93 4.93 1.41 1.41 M20 12h2 m19.07 4.93-1.41 1.41 M15.947 12.65a4 4 0 0 0-5.925-4.128 M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z",
+    stroke: "M12 2v2 M0 0 m4.93 4.93 1.41 1.41 M20 12h2 M0 0 m19.07 4.93-1.41 1.41 M15.947 12.65a4 4 0 0 0-5.925-4.128 M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z",
     fill: "",
 };
 
 /// Lucide `cloud-sync` icon (24 × 24 stroke grid).
 pub const CLOUD_SYNC: IconData = IconData {
     name: "cloud-sync",
-    stroke: "m17 18-1.535 1.605a5 5 0 0 1-8-1.5 M17 22v-4h-4 M20.996 15.251A4.5 4.5 0 0 0 17.495 8h-1.79a7 7 0 1 0-12.709 5.607 M7 10v4h4 m7 14 1.535-1.605a5 5 0 0 1 8 1.5",
+    stroke: "M0 0 m17 18-1.535 1.605a5 5 0 0 1-8-1.5 M17 22v-4h-4 M20.996 15.251A4.5 4.5 0 0 0 17.495 8h-1.79a7 7 0 1 0-12.709 5.607 M7 10v4h4 M0 0 m7 14 1.535-1.605a5 5 0 0 1 8 1.5",
     fill: "",
 };
 
 /// Lucide `cloud-upload` icon (24 × 24 stroke grid).
 pub const CLOUD_UPLOAD: IconData = IconData {
     name: "cloud-upload",
-    stroke: "M12 13v8 M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242 m8 17 4-4 4 4",
+    stroke: "M12 13v8 M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242 M0 0 m8 17 4-4 4 4",
     fill: "",
 };
 
@@ -3445,7 +3447,7 @@ pub const CLOUDY: IconData = IconData {
 /// Lucide `clover` icon (24 × 24 stroke grid).
 pub const CLOVER: IconData = IconData {
     name: "clover",
-    stroke: "M16.17 7.83 2 22 M4.02 12a2.827 2.827 0 1 1 3.81-4.17A2.827 2.827 0 1 1 12 4.02a2.827 2.827 0 1 1 4.17 3.81A2.827 2.827 0 1 1 19.98 12a2.827 2.827 0 1 1-3.81 4.17A2.827 2.827 0 1 1 12 19.98a2.827 2.827 0 1 1-4.17-3.81A1 1 0 1 1 4 12 m7.83 7.83 8.34 8.34",
+    stroke: "M16.17 7.83 2 22 M4.02 12a2.827 2.827 0 1 1 3.81-4.17A2.827 2.827 0 1 1 12 4.02a2.827 2.827 0 1 1 4.17 3.81A2.827 2.827 0 1 1 19.98 12a2.827 2.827 0 1 1-3.81 4.17A2.827 2.827 0 1 1 12 19.98a2.827 2.827 0 1 1-4.17-3.81A1 1 0 1 1 4 12 M0 0 m7.83 7.83 8.34 8.34",
     fill: "",
 };
 
@@ -3459,14 +3461,14 @@ pub const CLUB: IconData = IconData {
 /// Lucide `code-xml` icon (24 × 24 stroke grid).
 pub const CODE_XML: IconData = IconData {
     name: "code-xml",
-    stroke: "m18 16 4-4-4-4 m6 8-4 4 4 4 m14.5 4-5 16",
+    stroke: "M0 0 m18 16 4-4-4-4 M0 0 m6 8-4 4 4 4 M0 0 m14.5 4-5 16",
     fill: "",
 };
 
 /// Lucide `code` icon (24 × 24 stroke grid).
 pub const CODE: IconData = IconData {
     name: "code",
-    stroke: "m16 18 6-6-6-6 m8 6-6 6 6 6",
+    stroke: "M0 0 m16 18 6-6-6-6 M0 0 m8 6-6 6 6 6",
     fill: "",
 };
 
@@ -3480,14 +3482,14 @@ pub const COFFEE: IconData = IconData {
 /// Lucide `cog` icon (24 × 24 stroke grid).
 pub const COG: IconData = IconData {
     name: "cog",
-    stroke: "M11 10.27 7 3.34 m11 13.73-4 6.93 M12 22v-2 M12 2v2 M14 12h8 m17 20.66-1-1.73 m17 3.34-1 1.73 M2 12h2 m20.66 17-1.73-1 m20.66 7-1.73 1 m3.34 17 1.73-1 m3.34 7 1.73 1 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M4 12a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z",
+    stroke: "M11 10.27 7 3.34 M0 0 m11 13.73-4 6.93 M12 22v-2 M12 2v2 M14 12h8 M0 0 m17 20.66-1-1.73 M0 0 m17 3.34-1 1.73 M2 12h2 M0 0 m20.66 17-1.73-1 M0 0 m20.66 7-1.73 1 M0 0 m3.34 17 1.73-1 M0 0 m3.34 7 1.73 1 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M4 12a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z",
     fill: "",
 };
 
 /// Lucide `coins` icon (24 × 24 stroke grid).
 pub const COINS: IconData = IconData {
     name: "coins",
-    stroke: "M13.744 17.736a6 6 0 1 1-7.48-7.48 M15 6h1v4 m6.134 14.768.866-.5 2 3.464 M10 8a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
+    stroke: "M13.744 17.736a6 6 0 1 1-7.48-7.48 M15 6h1v4 M0 0 m6.134 14.768.866-.5 2 3.464 M10 8a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
     fill: "",
 };
 
@@ -3501,7 +3503,7 @@ pub const COLUMNS_2: IconData = IconData {
 /// Lucide `columns-3-cog` icon (24 × 24 stroke grid).
 pub const COLUMNS_3_COG: IconData = IconData {
     name: "columns-3-cog",
-    stroke: "M10.6 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v5.6 m14.305 19.53.923-.382 M15 3v7.6 m15.229 16.852-.924-.383 m16.852 15.228-.383-.923 m16.852 20.772-.383.924 m19.148 15.228.383-.923 m19.53 21.696-.382-.924 m20.773 16.852.922-.383 m20.773 19.148.922.383 M9 3v18 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M10.6 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v5.6 M0 0 m14.305 19.53.923-.382 M15 3v7.6 M0 0 m15.229 16.852-.924-.383 M0 0 m16.852 15.228-.383-.923 M0 0 m16.852 20.772-.383.924 M0 0 m19.148 15.228.383-.923 M0 0 m19.53 21.696-.382-.924 M0 0 m20.773 16.852.922-.383 M0 0 m20.773 19.148.922.383 M9 3v18 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -3522,7 +3524,7 @@ pub const COLUMNS_4: IconData = IconData {
 /// Lucide `combine` icon (24 × 24 stroke grid).
 pub const COMBINE: IconData = IconData {
     name: "combine",
-    stroke: "M14 3a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 M19 3a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 m7 15 3 3 m7 21 3-3H5a2 2 0 0 1-2-2v-2 M15 14H20a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H15a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z M4 3H9a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z",
+    stroke: "M14 3a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 M19 3a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 M0 0 m7 15 3 3 M0 0 m7 21 3-3H5a2 2 0 0 1-2-2v-2 M15 14H20a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H15a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z M4 3H9a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
@@ -3536,7 +3538,7 @@ pub const COMMAND: IconData = IconData {
 /// Lucide `compass` icon (24 × 24 stroke grid).
 pub const COMPASS: IconData = IconData {
     name: "compass",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M0 0 m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z",
     fill: "",
 };
 
@@ -3564,14 +3566,15 @@ pub const CONCIERGE_BELL: IconData = IconData {
 /// Lucide `cone` icon (24 × 24 stroke grid).
 pub const CONE: IconData = IconData {
     name: "cone",
-    stroke: "m20.9 18.55-8-15.98a1 1 0 0 0-1.8 0l-8 15.98 M3 19a9 3 0 1 0 18 0a9 3 0 1 0 -18 0Z",
+    stroke:
+        "M0 0 m20.9 18.55-8-15.98a1 1 0 0 0-1.8 0l-8 15.98 M3 19a9 3 0 1 0 18 0a9 3 0 1 0 -18 0Z",
     fill: "",
 };
 
 /// Lucide `construction` icon (24 × 24 stroke grid).
 pub const CONSTRUCTION: IconData = IconData {
     name: "construction",
-    stroke: "M3 6H21a1 1 0 0 1 1 1V13a1 1 0 0 1 -1 1H3a1 1 0 0 1 -1 -1V7a1 1 0 0 1 1 -1Z M17 14v7 M7 14v7 M17 3v3 M7 3v3 M10 14 2.3 6.3 m14 6 7.7 7.7 m8 6 8 8",
+    stroke: "M3 6H21a1 1 0 0 1 1 1V13a1 1 0 0 1 -1 1H3a1 1 0 0 1 -1 -1V7a1 1 0 0 1 1 -1Z M17 14v7 M7 14v7 M17 3v3 M7 3v3 M10 14 2.3 6.3 M0 0 m14 6 7.7 7.7 M0 0 m8 6 8 8",
     fill: "",
 };
 
@@ -3592,7 +3595,7 @@ pub const CONTACT: IconData = IconData {
 /// Lucide `container` icon (24 × 24 stroke grid).
 pub const CONTAINER: IconData = IconData {
     name: "container",
-    stroke: "M22 7.7c0-.6-.4-1.2-.8-1.5l-6.3-3.9a1.72 1.72 0 0 0-1.7 0l-10.3 6c-.5.2-.9.8-.9 1.4v6.6c0 .5.4 1.2.8 1.5l6.3 3.9a1.72 1.72 0 0 0 1.7 0l10.3-6c.5-.3.9-1 .9-1.5Z M10 21.9V14L2.1 9.1 m10 14 11.9-6.9 M14 19.8v-8.1 M18 17.5V9.4",
+    stroke: "M22 7.7c0-.6-.4-1.2-.8-1.5l-6.3-3.9a1.72 1.72 0 0 0-1.7 0l-10.3 6c-.5.2-.9.8-.9 1.4v6.6c0 .5.4 1.2.8 1.5l6.3 3.9a1.72 1.72 0 0 0 1.7 0l10.3-6c.5-.3.9-1 .9-1.5Z M10 21.9V14L2.1 9.1 M0 0 m10 14 11.9-6.9 M14 19.8v-8.1 M18 17.5V9.4",
     fill: "",
 };
 
@@ -3613,14 +3616,14 @@ pub const COOKIE: IconData = IconData {
 /// Lucide `cooking-pot` icon (24 × 24 stroke grid).
 pub const COOKING_POT: IconData = IconData {
     name: "cooking-pot",
-    stroke: "M2 12h20 M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8 m4 8 16-4 m8.86 6.78-.45-1.81a2 2 0 0 1 1.45-2.43l1.94-.48a2 2 0 0 1 2.43 1.46l.45 1.8",
+    stroke: "M2 12h20 M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8 M0 0 m4 8 16-4 M0 0 m8.86 6.78-.45-1.81a2 2 0 0 1 1.45-2.43l1.94-.48a2 2 0 0 1 2.43 1.46l.45 1.8",
     fill: "",
 };
 
 /// Lucide `copy-check` icon (24 × 24 stroke grid).
 pub const COPY_CHECK: IconData = IconData {
     name: "copy-check",
-    stroke: "m12 15 2 2 4-4 M10 8H20a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H10a2 2 0 0 1 -2 -2V10a2 2 0 0 1 2 -2Z M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2",
+    stroke: "M0 0 m12 15 2 2 4-4 M10 8H20a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H10a2 2 0 0 1 -2 -2V10a2 2 0 0 1 2 -2Z M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2",
     fill: "",
 };
 
@@ -3648,7 +3651,7 @@ pub const COPY_SLASH: IconData = IconData {
 /// Lucide `copy-x` icon (24 × 24 stroke grid).
 pub const COPY_X: IconData = IconData {
     name: "copy-x",
-    stroke: "M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2 M10 8H20a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H10a2 2 0 0 1 -2 -2V10a2 2 0 0 1 2 -2Z m12.5 12.5 5 5 m12.5 17.5 5-5",
+    stroke: "M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2 M10 8H20a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H10a2 2 0 0 1 -2 -2V10a2 2 0 0 1 2 -2Z M0 0 m12.5 12.5 5 5 M0 0 m12.5 17.5 5-5",
     fill: "",
 };
 
@@ -3676,21 +3679,21 @@ pub const COPYRIGHT: IconData = IconData {
 /// Lucide `corner-down-left` icon (24 × 24 stroke grid).
 pub const CORNER_DOWN_LEFT: IconData = IconData {
     name: "corner-down-left",
-    stroke: "M20 4v7a4 4 0 0 1-4 4H4 m9 10-5 5 5 5",
+    stroke: "M20 4v7a4 4 0 0 1-4 4H4 M0 0 m9 10-5 5 5 5",
     fill: "",
 };
 
 /// Lucide `corner-down-right` icon (24 × 24 stroke grid).
 pub const CORNER_DOWN_RIGHT: IconData = IconData {
     name: "corner-down-right",
-    stroke: "m15 10 5 5-5 5 M4 4v7a4 4 0 0 0 4 4h12",
+    stroke: "M0 0 m15 10 5 5-5 5 M4 4v7a4 4 0 0 0 4 4h12",
     fill: "",
 };
 
 /// Lucide `corner-left-down` icon (24 × 24 stroke grid).
 pub const CORNER_LEFT_DOWN: IconData = IconData {
     name: "corner-left-down",
-    stroke: "m14 15-5 5-5-5 M20 4h-7a4 4 0 0 0-4 4v12",
+    stroke: "M0 0 m14 15-5 5-5-5 M20 4h-7a4 4 0 0 0-4 4v12",
     fill: "",
 };
 
@@ -3704,14 +3707,14 @@ pub const CORNER_LEFT_UP: IconData = IconData {
 /// Lucide `corner-right-down` icon (24 × 24 stroke grid).
 pub const CORNER_RIGHT_DOWN: IconData = IconData {
     name: "corner-right-down",
-    stroke: "m10 15 5 5 5-5 M4 4h7a4 4 0 0 1 4 4v12",
+    stroke: "M0 0 m10 15 5 5 5-5 M4 4h7a4 4 0 0 1 4 4v12",
     fill: "",
 };
 
 /// Lucide `corner-right-up` icon (24 × 24 stroke grid).
 pub const CORNER_RIGHT_UP: IconData = IconData {
     name: "corner-right-up",
-    stroke: "m10 9 5-5 5 5 M4 20h7a4 4 0 0 0 4-4V4",
+    stroke: "M0 0 m10 9 5-5 5 5 M4 20h7a4 4 0 0 0 4-4V4",
     fill: "",
 };
 
@@ -3725,7 +3728,7 @@ pub const CORNER_UP_LEFT: IconData = IconData {
 /// Lucide `corner-up-right` icon (24 × 24 stroke grid).
 pub const CORNER_UP_RIGHT: IconData = IconData {
     name: "corner-up-right",
-    stroke: "m15 14 5-5-5-5 M4 20v-7a4 4 0 0 1 4-4h12",
+    stroke: "M0 0 m15 14 5-5-5-5 M4 20v-7a4 4 0 0 1 4-4h12",
     fill: "",
 };
 
@@ -3753,8 +3756,7 @@ pub const CREATIVE_COMMONS: IconData = IconData {
 /// Lucide `credit-card-check` icon (24 × 24 stroke grid).
 pub const CREDIT_CARD_CHECK: IconData = IconData {
     name: "credit-card-check",
-    stroke:
-        "M12.5 19H4a2 2 0 01-2-2V7a2 2 0 012-2h16a2 2 0 012 2v4 M2 10h20 M6 14h2 m16 17 2 2 4-4",
+    stroke: "M12.5 19H4a2 2 0 01-2-2V7a2 2 0 012-2h16a2 2 0 012 2v4 M2 10h20 M6 14h2 M0 0 m16 17 2 2 4-4",
     fill: "",
 };
 
@@ -3775,14 +3777,14 @@ pub const CREDIT_CARD_PLUS: IconData = IconData {
 /// Lucide `credit-card-reader` icon (24 × 24 stroke grid).
 pub const CREDIT_CARD_READER: IconData = IconData {
     name: "credit-card-reader",
-    stroke: "M15 16v1 M16.963 7.734A1 1 0 0015.999 7H8.003a1 1 0 00-.964.734L4.073 18.467A2 2 0 006 21h12a2 2 0 001.927-2.532z M2.678 8.5A2 2 0 012 7V5a2 2 0 012-2h16a2 2 0 012 2v2a2 2 0 01-.676 1.499 m9 21 2-14",
+    stroke: "M15 16v1 M16.963 7.734A1 1 0 0015.999 7H8.003a1 1 0 00-.964.734L4.073 18.467A2 2 0 006 21h12a2 2 0 001.927-2.532z M2.678 8.5A2 2 0 012 7V5a2 2 0 012-2h16a2 2 0 012 2v2a2 2 0 01-.676 1.499 M0 0 m9 21 2-14",
     fill: "",
 };
 
 /// Lucide `credit-card-x` icon (24 × 24 stroke grid).
 pub const CREDIT_CARD_X: IconData = IconData {
     name: "credit-card-x",
-    stroke: "M12.5 19H4a2 2 0 01-2-2V7a2 2 0 012-2h16a2 2 0 012 2v3.5 M2 10h20 M6 14h2 m16.5 14.5 5 5 m21.5 14.5-5 5",
+    stroke: "M12.5 19H4a2 2 0 01-2-2V7a2 2 0 012-2h16a2 2 0 012 2v3.5 M2 10h20 M6 14h2 M0 0 m16.5 14.5 5 5 M0 0 m21.5 14.5-5 5",
     fill: "",
 };
 
@@ -3839,14 +3841,14 @@ pub const CUBOID: IconData = IconData {
 /// Lucide `cup-soda` icon (24 × 24 stroke grid).
 pub const CUP_SODA: IconData = IconData {
     name: "cup-soda",
-    stroke: "m6 8 1.75 12.28a2 2 0 0 0 2 1.72h4.54a2 2 0 0 0 2-1.72L18 8 M5 8h14 M7 15a6.47 6.47 0 0 1 5 0 6.47 6.47 0 0 0 5 0 m12 8 1-6h2",
+    stroke: "M0 0 m6 8 1.75 12.28a2 2 0 0 0 2 1.72h4.54a2 2 0 0 0 2-1.72L18 8 M5 8h14 M7 15a6.47 6.47 0 0 1 5 0 6.47 6.47 0 0 0 5 0 M0 0 m12 8 1-6h2",
     fill: "",
 };
 
 /// Lucide `cupcake` icon (24 × 24 stroke grid).
 pub const CUPCAKE: IconData = IconData {
     name: "cupcake",
-    stroke: "M12 22v-9 M14 4h1a3 3 0 013 3l-.004.125A4 4 0 0121 11v2 m15.5 22 1.5-9 M21 13a1 1 0 01.919 1.394l-2.74 6.394A2 2 0 0117.34 22H6.659a2 2 0 01-1.838-1.212l-2.74-6.394A1 1 0 013 13z M3 13v-2a4 4 0 013.003-3.875L6 7a3 3 0 013-3h1 M8.5 22 7 13 M10 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M12 22v-9 M14 4h1a3 3 0 013 3l-.004.125A4 4 0 0121 11v2 M0 0 m15.5 22 1.5-9 M21 13a1 1 0 01.919 1.394l-2.74 6.394A2 2 0 0117.34 22H6.659a2 2 0 01-1.838-1.212l-2.74-6.394A1 1 0 013 13z M3 13v-2a4 4 0 013.003-3.875L6 7a3 3 0 013-3h1 M8.5 22 7 13 M10 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -3874,14 +3876,14 @@ pub const DAM: IconData = IconData {
 /// Lucide `database-arrow-down` icon (24 × 24 stroke grid).
 pub const DATABASE_ARROW_DOWN: IconData = IconData {
     name: "database-arrow-down",
-    stroke: "m16 19 3 3 3-3 M19 16v6 M21 12.536V5 M3 12A9 3 0 0 0 15.182 14.806 M3 5V19A9 3 0 0 0 13.318 21.968 M3 5a9 3 0 1 0 18 0a9 3 0 1 0 -18 0Z",
+    stroke: "M0 0 m16 19 3 3 3-3 M19 16v6 M21 12.536V5 M3 12A9 3 0 0 0 15.182 14.806 M3 5V19A9 3 0 0 0 13.318 21.968 M3 5a9 3 0 1 0 18 0a9 3 0 1 0 -18 0Z",
     fill: "",
 };
 
 /// Lucide `database-arrow-up` icon (24 × 24 stroke grid).
 pub const DATABASE_ARROW_UP: IconData = IconData {
     name: "database-arrow-up",
-    stroke: "M19 22v-6 M21 12.536V5 m22 19-3-3-3 3 M3 12A9 3 0 0 0 14.457 14.886 M3 5V19A9 3 0 0 0 13.318 21.968 M3 5a9 3 0 1 0 18 0a9 3 0 1 0 -18 0Z",
+    stroke: "M19 22v-6 M21 12.536V5 M0 0 m22 19-3-3-3 3 M3 12A9 3 0 0 0 14.457 14.886 M3 5V19A9 3 0 0 0 13.318 21.968 M3 5a9 3 0 1 0 18 0a9 3 0 1 0 -18 0Z",
     fill: "",
 };
 
@@ -3895,7 +3897,7 @@ pub const DATABASE_BACKUP: IconData = IconData {
 /// Lucide `database-check` icon (24 × 24 stroke grid).
 pub const DATABASE_CHECK: IconData = IconData {
     name: "database-check",
-    stroke: "m16 19 2 2 4-4 M21 13.127V5 M3 12A9 3 0 0 0 21 12 M3 5V19A9 3 0 0 0 13.318 21.968 M3 5a9 3 0 1 0 18 0a9 3 0 1 0 -18 0Z",
+    stroke: "M0 0 m16 19 2 2 4-4 M21 13.127V5 M3 12A9 3 0 0 0 21 12 M3 5V19A9 3 0 0 0 13.318 21.968 M3 5a9 3 0 1 0 18 0a9 3 0 1 0 -18 0Z",
     fill: "",
 };
 
@@ -3916,14 +3918,14 @@ pub const DATABASE_PLUS: IconData = IconData {
 /// Lucide `database-search` icon (24 × 24 stroke grid).
 pub const DATABASE_SEARCH: IconData = IconData {
     name: "database-search",
-    stroke: "M21 11.693V5 m22 22-1.875-1.875 M3 12a9 3 0 0 0 8.697 2.998 M3 5v14a9 3 0 0 0 9.28 2.999 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M3 5a9 3 0 1 0 18 0a9 3 0 1 0 -18 0Z",
+    stroke: "M21 11.693V5 M0 0 m22 22-1.875-1.875 M3 12a9 3 0 0 0 8.697 2.998 M3 5v14a9 3 0 0 0 9.28 2.999 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M3 5a9 3 0 1 0 18 0a9 3 0 1 0 -18 0Z",
     fill: "",
 };
 
 /// Lucide `database-x` icon (24 × 24 stroke grid).
 pub const DATABASE_X: IconData = IconData {
     name: "database-x",
-    stroke: "m17 17 5 5 M19.323 13.744A9 3 0 0 0 21 12 M21 13.127V5 m22 17-5 5 M3 12A9 3 0 0 0 13.563 14.954 M3 5V19A9 3 0 0 0 13 21.981 M3 5a9 3 0 1 0 18 0a9 3 0 1 0 -18 0Z",
+    stroke: "M0 0 m17 17 5 5 M19.323 13.744A9 3 0 0 0 21 12 M21 13.127V5 M0 0 m22 17-5 5 M3 12A9 3 0 0 0 13.563 14.954 M3 5V19A9 3 0 0 0 13 21.981 M3 5a9 3 0 1 0 18 0a9 3 0 1 0 -18 0Z",
     fill: "",
 };
 
@@ -3944,21 +3946,21 @@ pub const DATABASE: IconData = IconData {
 /// Lucide `decimals-arrow-left` icon (24 × 24 stroke grid).
 pub const DECIMALS_ARROW_LEFT: IconData = IconData {
     name: "decimals-arrow-left",
-    stroke: "m13 21-3-3 3-3 M20 18H10 M3 11h.01 M8.5 3H8.5a2.5 2.5 0 0 1 2.5 2.5V8.5a2.5 2.5 0 0 1 -2.5 2.5H8.5a2.5 2.5 0 0 1 -2.5 -2.5V5.5a2.5 2.5 0 0 1 2.5 -2.5Z",
+    stroke: "M0 0 m13 21-3-3 3-3 M20 18H10 M3 11h.01 M8.5 3H8.5a2.5 2.5 0 0 1 2.5 2.5V8.5a2.5 2.5 0 0 1 -2.5 2.5H8.5a2.5 2.5 0 0 1 -2.5 -2.5V5.5a2.5 2.5 0 0 1 2.5 -2.5Z",
     fill: "",
 };
 
 /// Lucide `decimals-arrow-right` icon (24 × 24 stroke grid).
 pub const DECIMALS_ARROW_RIGHT: IconData = IconData {
     name: "decimals-arrow-right",
-    stroke: "M10 18h10 m17 21 3-3-3-3 M3 11h.01 M17.5 3H17.5a2.5 2.5 0 0 1 2.5 2.5V8.5a2.5 2.5 0 0 1 -2.5 2.5H17.5a2.5 2.5 0 0 1 -2.5 -2.5V5.5a2.5 2.5 0 0 1 2.5 -2.5Z M8.5 3H8.5a2.5 2.5 0 0 1 2.5 2.5V8.5a2.5 2.5 0 0 1 -2.5 2.5H8.5a2.5 2.5 0 0 1 -2.5 -2.5V5.5a2.5 2.5 0 0 1 2.5 -2.5Z",
+    stroke: "M10 18h10 M0 0 m17 21 3-3-3-3 M3 11h.01 M17.5 3H17.5a2.5 2.5 0 0 1 2.5 2.5V8.5a2.5 2.5 0 0 1 -2.5 2.5H17.5a2.5 2.5 0 0 1 -2.5 -2.5V5.5a2.5 2.5 0 0 1 2.5 -2.5Z M8.5 3H8.5a2.5 2.5 0 0 1 2.5 2.5V8.5a2.5 2.5 0 0 1 -2.5 2.5H8.5a2.5 2.5 0 0 1 -2.5 -2.5V5.5a2.5 2.5 0 0 1 2.5 -2.5Z",
     fill: "",
 };
 
 /// Lucide `delete` icon (24 × 24 stroke grid).
 pub const DELETE: IconData = IconData {
     name: "delete",
-    stroke: "M10 5a2 2 0 0 0-1.344.519l-6.328 5.74a1 1 0 0 0 0 1.481l6.328 5.741A2 2 0 0 0 10 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z m12 9 6 6 m18 9-6 6",
+    stroke: "M10 5a2 2 0 0 0-1.344.519l-6.328 5.74a1 1 0 0 0 0 1.481l6.328 5.741A2 2 0 0 0 10 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z M0 0 m12 9 6 6 M0 0 m18 9-6 6",
     fill: "",
 };
 
@@ -3972,7 +3974,7 @@ pub const DESSERT: IconData = IconData {
 /// Lucide `diameter` icon (24 × 24 stroke grid).
 pub const DIAMETER: IconData = IconData {
     name: "diameter",
-    stroke: "M17 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M3 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M6.48 3.66a10 10 0 0 1 13.86 13.86 m6.41 6.41 11.18 11.18 M3.66 6.48a10 10 0 0 0 13.86 13.86",
+    stroke: "M17 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M3 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M6.48 3.66a10 10 0 0 1 13.86 13.86 M0 0 m6.41 6.41 11.18 11.18 M3.66 6.48a10 10 0 0 0 13.86 13.86",
     fill: "",
 };
 
@@ -3986,7 +3988,7 @@ pub const DIAMOND_MINUS: IconData = IconData {
 /// Lucide `diamond-percent` icon (24 × 24 stroke grid).
 pub const DIAMOND_PERCENT: IconData = IconData {
     name: "diamond-percent",
-    stroke: "M2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41L13.7 2.71a2.41 2.41 0 0 0-3.41 0Z M9.2 9.2h.01 m14.5 9.5-5 5 M14.7 14.8h.01",
+    stroke: "M2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41L13.7 2.71a2.41 2.41 0 0 0-3.41 0Z M9.2 9.2h.01 M0 0 m14.5 9.5-5 5 M14.7 14.8h.01",
     fill: "",
 };
 
@@ -4050,7 +4052,7 @@ pub const DICE_6: IconData = IconData {
 /// Lucide `dices` icon (24 × 24 stroke grid).
 pub const DICES: IconData = IconData {
     name: "dices",
-    stroke: "M4 10H12a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V12a2 2 0 0 1 2 -2Z m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6 M6 18h.01 M10 14h.01 M15 6h.01 M18 9h.01",
+    stroke: "M4 10H12a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V12a2 2 0 0 1 2 -2Z M0 0 m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6 M6 18h.01 M10 14h.01 M15 6h.01 M18 9h.01",
     fill: "",
 };
 
@@ -4100,14 +4102,14 @@ pub const DIVIDE: IconData = IconData {
 /// Lucide `dna-off` icon (24 × 24 stroke grid).
 pub const DNA_OFF: IconData = IconData {
     name: "dna-off",
-    stroke: "M15 2c-1.35 1.5-2.092 3-2.5 4.5L14 8 m17 6-2.891-2.891 M2 15c3.333-3 6.667-3 10-3 m2 2 20 20 m20 9 .891.891 M22 9c-1.5 1.35-3 2.092-4.5 2.5l-1-1 M3.109 14.109 4 15 m6.5 12.5 1 1 m7 18 2.891 2.891 M9 22c1.35-1.5 2.092-3 2.5-4.5L10 16",
+    stroke: "M15 2c-1.35 1.5-2.092 3-2.5 4.5L14 8 M0 0 m17 6-2.891-2.891 M2 15c3.333-3 6.667-3 10-3 M0 0 m2 2 20 20 M0 0 m20 9 .891.891 M22 9c-1.5 1.35-3 2.092-4.5 2.5l-1-1 M3.109 14.109 4 15 M0 0 m6.5 12.5 1 1 M0 0 m7 18 2.891 2.891 M9 22c1.35-1.5 2.092-3 2.5-4.5L10 16",
     fill: "",
 };
 
 /// Lucide `dna` icon (24 × 24 stroke grid).
 pub const DNA: IconData = IconData {
     name: "dna",
-    stroke: "m10 16 1.5 1.5 m14 8-1.5-1.5 M15 2c-1.798 1.998-2.518 3.995-2.807 5.993 m16.5 10.5 1 1 m17 6-2.891-2.891 M2 15c6.667-6 13.333 0 20-6 m20 9 .891.891 M3.109 14.109 4 15 m6.5 12.5 1 1 m7 18 2.891 2.891 M9 22c1.798-1.998 2.518-3.995 2.807-5.993",
+    stroke: "M0 0 m10 16 1.5 1.5 M0 0 m14 8-1.5-1.5 M15 2c-1.798 1.998-2.518 3.995-2.807 5.993 M0 0 m16.5 10.5 1 1 M0 0 m17 6-2.891-2.891 M2 15c6.667-6 13.333 0 20-6 M0 0 m20 9 .891.891 M3.109 14.109 4 15 M0 0 m6.5 12.5 1 1 M0 0 m7 18 2.891 2.891 M9 22c1.798-1.998 2.518-3.995 2.807-5.993",
     fill: "",
 };
 
@@ -4149,7 +4151,7 @@ pub const DONUT: IconData = IconData {
 /// Lucide `door-closed-cog` icon (24 × 24 stroke grid).
 pub const DOOR_CLOSED_COG: IconData = IconData {
     name: "door-closed-cog",
-    stroke: "m14.305 19.53.923-.382 m15.229 16.852-.924-.383 m16.852 15.228-.383-.923 m16.852 20.773-.383.924 M19 10.35V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16 m19.148 15.228.383-.923 m19.53 21.697-.382-.924 M2 21h8.58 m20.773 16.852.922-.383 m20.773 19.148.922.383 M9 12h.01 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M0 0 m14.305 19.53.923-.382 M0 0 m15.229 16.852-.924-.383 M0 0 m16.852 15.228-.383-.923 M0 0 m16.852 20.773-.383.924 M19 10.35V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16 M0 0 m19.148 15.228.383-.923 M0 0 m19.53 21.697-.382-.924 M2 21h8.58 M0 0 m20.773 16.852.922-.383 M0 0 m20.773 19.148.922.383 M9 12h.01 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -4198,14 +4200,14 @@ pub const DOT: IconData = IconData {
 /// Lucide `download` icon (24 × 24 stroke grid).
 pub const DOWNLOAD: IconData = IconData {
     name: "download",
-    stroke: "M12 15V3 M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 m7 10 5 5 5-5",
+    stroke: "M12 15V3 M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M0 0 m7 10 5 5 5-5",
     fill: "",
 };
 
 /// Lucide `drafting-compass` icon (24 × 24 stroke grid).
 pub const DRAFTING_COMPASS: IconData = IconData {
     name: "drafting-compass",
-    stroke: "m12.99 6.74 1.93 3.44 M19.136 12a10 10 0 0 1-14.271 0 m21 21-2.16-3.84 m3 21 8.02-14.26 M10 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M0 0 m12.99 6.74 1.93 3.44 M19.136 12a10 10 0 0 1-14.271 0 M0 0 m21 21-2.16-3.84 M0 0 m3 21 8.02-14.26 M10 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -4219,21 +4221,21 @@ pub const DRAMA: IconData = IconData {
 /// Lucide `drill` icon (24 × 24 stroke grid).
 pub const DRILL: IconData = IconData {
     name: "drill",
-    stroke: "M10 18a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a3 3 0 0 1-3-3 1 1 0 0 1 1-1z M13 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1l-.81 3.242a1 1 0 0 1-.97.758H8 M14 4h3a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-3 M18 6h4 m5 10-2 8 m7 18 2-8",
+    stroke: "M10 18a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a3 3 0 0 1-3-3 1 1 0 0 1 1-1z M13 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1l-.81 3.242a1 1 0 0 1-.97.758H8 M14 4h3a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-3 M18 6h4 M0 0 m5 10-2 8 M0 0 m7 18 2-8",
     fill: "",
 };
 
 /// Lucide `drone` icon (24 × 24 stroke grid).
 pub const DRONE: IconData = IconData {
     name: "drone",
-    stroke: "M10 10 7 7 m10 14-3 3 m14 10 3-3 m14 14 3 3 M14.205 4.139a4 4 0 1 1 5.439 5.863 M19.637 14a4 4 0 1 1-5.432 5.868 M4.367 10a4 4 0 1 1 5.438-5.862 M9.795 19.862a4 4 0 1 1-5.429-5.873 M11 8H13a1 1 0 0 1 1 1V15a1 1 0 0 1 -1 1H11a1 1 0 0 1 -1 -1V9a1 1 0 0 1 1 -1Z",
+    stroke: "M10 10 7 7 M0 0 m10 14-3 3 M0 0 m14 10 3-3 M0 0 m14 14 3 3 M14.205 4.139a4 4 0 1 1 5.439 5.863 M19.637 14a4 4 0 1 1-5.432 5.868 M4.367 10a4 4 0 1 1 5.438-5.862 M9.795 19.862a4 4 0 1 1-5.429-5.873 M11 8H13a1 1 0 0 1 1 1V15a1 1 0 0 1 -1 1H11a1 1 0 0 1 -1 -1V9a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
 /// Lucide `droplet-off` icon (24 × 24 stroke grid).
 pub const DROPLET_OFF: IconData = IconData {
     name: "droplet-off",
-    stroke: "M18.715 13.186C18.29 11.858 17.384 10.607 16 9.5c-2-1.6-3.5-4-4-6.5a10.7 10.7 0 0 1-.884 2.586 m2 2 20 20 M8.795 8.797A11 11 0 0 1 8 9.5C6 11.1 5 13 5 15a7 7 0 0 0 13.222 3.208",
+    stroke: "M18.715 13.186C18.29 11.858 17.384 10.607 16 9.5c-2-1.6-3.5-4-4-6.5a10.7 10.7 0 0 1-.884 2.586 M0 0 m2 2 20 20 M8.795 8.797A11 11 0 0 1 8 9.5C6 11.1 5 13 5 15a7 7 0 0 0 13.222 3.208",
     fill: "",
 };
 
@@ -4254,21 +4256,21 @@ pub const DROPLETS: IconData = IconData {
 /// Lucide `drum` icon (24 × 24 stroke grid).
 pub const DRUM: IconData = IconData {
     name: "drum",
-    stroke: "m2 2 8 8 m22 2-8 8 M2 9a10 5 0 1 0 20 0a10 5 0 1 0 -20 0Z M7 13.4v7.9 M12 14v8 M17 13.4v7.9 M2 9v8a10 5 0 0 0 20 0V9",
+    stroke: "M0 0 m2 2 8 8 M0 0 m22 2-8 8 M2 9a10 5 0 1 0 20 0a10 5 0 1 0 -20 0Z M7 13.4v7.9 M12 14v8 M17 13.4v7.9 M2 9v8a10 5 0 0 0 20 0V9",
     fill: "",
 };
 
 /// Lucide `drumstick` icon (24 × 24 stroke grid).
 pub const DRUMSTICK: IconData = IconData {
     name: "drumstick",
-    stroke: "M15.4 15.63a7.875 6 135 1 1 6.23-6.23 4.5 3.43 135 0 0-6.23 6.23 m8.29 12.71-2.6 2.6a2.5 2.5 0 1 0-1.65 4.65A2.5 2.5 0 1 0 8.7 18.3l2.59-2.59",
+    stroke: "M15.4 15.63a7.875 6 135 1 1 6.23-6.23 4.5 3.43 135 0 0-6.23 6.23 M0 0 m8.29 12.71-2.6 2.6a2.5 2.5 0 1 0-1.65 4.65A2.5 2.5 0 1 0 8.7 18.3l2.59-2.59",
     fill: "",
 };
 
 /// Lucide `dumbbell` icon (24 × 24 stroke grid).
 pub const DUMBBELL: IconData = IconData {
     name: "dumbbell",
-    stroke: "M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z m2.5 21.5 1.4-1.4 m20.1 3.9 1.4-1.4 M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z m9.6 14.4 4.8-4.8",
+    stroke: "M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z M0 0 m2.5 21.5 1.4-1.4 M0 0 m20.1 3.9 1.4-1.4 M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z M0 0 m9.6 14.4 4.8-4.8",
     fill: "",
 };
 
@@ -4317,7 +4319,7 @@ pub const EGG_FRIED: IconData = IconData {
 /// Lucide `egg-off` icon (24 × 24 stroke grid).
 pub const EGG_OFF: IconData = IconData {
     name: "egg-off",
-    stroke: "m2 2 20 20 M20 14.347V14c0-6-4-12-8-12-1.078 0-2.157.436-3.157 1.19 M6.206 6.21C4.871 8.4 4 11.2 4 14a8 8 0 0 0 14.568 4.568",
+    stroke: "M0 0 m2 2 20 20 M20 14.347V14c0-6-4-12-8-12-1.078 0-2.157.436-3.157 1.19 M6.206 6.21C4.871 8.4 4 11.2 4 14a8 8 0 0 0 14.568 4.568",
     fill: "",
 };
 
@@ -4331,7 +4333,7 @@ pub const EGG: IconData = IconData {
 /// Lucide `eighth-note` icon (24 × 24 stroke grid).
 pub const EIGHTH_NOTE: IconData = IconData {
     name: "eighth-note",
-    stroke: "m19 6-5.2-3.9a.5.5 0 0 0-.8.4V18 M5 18a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z",
+    stroke: "M0 0 m19 6-5.2-3.9a.5.5 0 0 0-.8.4V18 M5 18a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z",
     fill: "",
 };
 
@@ -4408,7 +4410,7 @@ pub const EQUAL: IconData = IconData {
 /// Lucide `eraser` icon (24 × 24 stroke grid).
 pub const ERASER: IconData = IconData {
     name: "eraser",
-    stroke: "M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21 m5.082 11.09 8.828 8.828",
+    stroke: "M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21 M0 0 m5.082 11.09 8.828 8.828",
     fill: "",
 };
 
@@ -4429,14 +4431,14 @@ pub const EURO: IconData = IconData {
 /// Lucide `ev-charger` icon (24 × 24 stroke grid).
 pub const EV_CHARGER: IconData = IconData {
     name: "ev-charger",
-    stroke: "M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-6.998a2 2 0 0 0-.59-1.42L18 5 M14 21V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16 M2 21h13 M3 7h11 m9 11-2 3h3l-2 3",
+    stroke: "M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-6.998a2 2 0 0 0-.59-1.42L18 5 M14 21V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16 M2 21h13 M3 7h11 M0 0 m9 11-2 3h3l-2 3",
     fill: "",
 };
 
 /// Lucide `expand` icon (24 × 24 stroke grid).
 pub const EXPAND: IconData = IconData {
     name: "expand",
-    stroke: "m15 15 6 6 m15 9 6-6 M21 16v5h-5 M21 8V3h-5 M3 16v5h5 m3 21 6-6 M3 8V3h5 M9 9 3 3",
+    stroke: "M0 0 m15 15 6 6 M0 0 m15 9 6-6 M21 16v5h-5 M21 8V3h-5 M3 16v5h5 M0 0 m3 21 6-6 M3 8V3h5 M9 9 3 3",
     fill: "",
 };
 
@@ -4450,7 +4452,7 @@ pub const EXTERNAL_LINK: IconData = IconData {
 /// Lucide `eye-closed` icon (24 × 24 stroke grid).
 pub const EYE_CLOSED: IconData = IconData {
     name: "eye-closed",
-    stroke: "m15 18-.722-3.25 M2 8a10.645 10.645 0 0 0 20 0 m20 15-1.726-2.05 m4 15 1.726-2.05 m9 18 .722-3.25",
+    stroke: "M0 0 m15 18-.722-3.25 M2 8a10.645 10.645 0 0 0 20 0 M0 0 m20 15-1.726-2.05 M0 0 m4 15 1.726-2.05 M0 0 m9 18 .722-3.25",
     fill: "",
 };
 
@@ -4464,7 +4466,7 @@ pub const EYE_DASHED: IconData = IconData {
 /// Lucide `eye-off` icon (24 × 24 stroke grid).
 pub const EYE_OFF: IconData = IconData {
     name: "eye-off",
-    stroke: "M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49 M14.084 14.158a3 3 0 0 1-4.242-4.242 M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143 m2 2 20 20",
+    stroke: "M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49 M14.084 14.158a3 3 0 0 1-4.242-4.242 M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143 M0 0 m2 2 20 20",
     fill: "",
 };
 
@@ -4549,7 +4551,7 @@ pub const FAST_FORWARD: IconData = IconData {
 /// Lucide `faucet` icon (24 × 24 stroke grid).
 pub const FAUCET: IconData = IconData {
     name: "faucet",
-    stroke: "M10.083 5.428 5.57 4.083a2 2 0 10.001 3.834l4.512-1.345 M12 8v3 m13.917 5.428 4.511-1.345a2 2 0 110 3.834l-4.51-1.345 M18 17v-4.006 M22 11v8 M22 12h-3a1 1 0 00-1 .994h-2.539a4 4 0 00-6.915-.012L7 13a5 5 0 00-5 5v1a1 1 0 001 1h2a1 1 0 001-1v-1a1 1 0 01.995-1l1.552.018a4 4 0 006.907 0L18 17a1 1 0 001 1h3 M10 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M10.083 5.428 5.57 4.083a2 2 0 10.001 3.834l4.512-1.345 M12 8v3 M0 0 m13.917 5.428 4.511-1.345a2 2 0 110 3.834l-4.51-1.345 M18 17v-4.006 M22 11v8 M22 12h-3a1 1 0 00-1 .994h-2.539a4 4 0 00-6.915-.012L7 13a5 5 0 00-5 5v1a1 1 0 001 1h2a1 1 0 001-1v-1a1 1 0 01.995-1l1.552.018a4 4 0 006.907 0L18 17a1 1 0 001 1h3 M10 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -4563,14 +4565,14 @@ pub const FEATHER: IconData = IconData {
 /// Lucide `fence` icon (24 × 24 stroke grid).
 pub const FENCE: IconData = IconData {
     name: "fence",
-    stroke: "M4 3 2 5v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z M6 8h4 M6 18h4 m12 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z M14 8h4 M14 18h4 m20 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z",
+    stroke: "M4 3 2 5v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z M6 8h4 M6 18h4 M0 0 m12 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z M14 8h4 M14 18h4 M0 0 m20 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z",
     fill: "",
 };
 
 /// Lucide `ferris-wheel` icon (24 × 24 stroke grid).
 pub const FERRIS_WHEEL: IconData = IconData {
     name: "ferris-wheel",
-    stroke: "M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M12 2v4 m6.8 15-3.5 2 m20.7 7-3.5 2 M6.8 9 3.3 7 m20.7 17-3.5-2 m9 22 3-8 3 8 M8 22h8 M18 18.7a9 9 0 1 0-12 0",
+    stroke: "M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M12 2v4 M0 0 m6.8 15-3.5 2 M0 0 m20.7 7-3.5 2 M6.8 9 3.3 7 M0 0 m20.7 17-3.5-2 M0 0 m9 22 3-8 3 8 M8 22h8 M18 18.7a9 9 0 1 0-12 0",
     fill: "",
 };
 
@@ -4584,14 +4586,14 @@ pub const FILE_ARCHIVE: IconData = IconData {
 /// Lucide `file-axis-3d` icon (24 × 24 stroke grid).
 pub const FILE_AXIS_3D: IconData = IconData {
     name: "file-axis-3d",
-    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 m8 18 4-4 M8 10v8h8",
+    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 M0 0 m8 18 4-4 M8 10v8h8",
     fill: "",
 };
 
 /// Lucide `file-badge` icon (24 × 24 stroke grid).
 pub const FILE_BADGE: IconData = IconData {
     name: "file-badge",
-    stroke: "M13 22h5a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v3.3 M14 2v5a1 1 0 0 0 1 1h5 m7.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.879.001l-1.846.85a.5.5 0 0 1-.692-.593l1.29-4.88 M3 14a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M13 22h5a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v3.3 M14 2v5a1 1 0 0 0 1 1h5 M0 0 m7.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.879.001l-1.846.85a.5.5 0 0 1-.692-.593l1.29-4.88 M3 14a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -4633,7 +4635,7 @@ pub const FILE_CHART_COLUMN: IconData = IconData {
 /// Lucide `file-chart-line` icon (24 × 24 stroke grid).
 pub const FILE_CHART_LINE: IconData = IconData {
     name: "file-chart-line",
-    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 m16 13-3.5 3.5-2-2L8 17",
+    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 M0 0 m16 13-3.5 3.5-2-2L8 17",
     fill: "",
 };
 
@@ -4647,14 +4649,14 @@ pub const FILE_CHART_PIE: IconData = IconData {
 /// Lucide `file-check-corner` icon (24 × 24 stroke grid).
 pub const FILE_CHECK_CORNER: IconData = IconData {
     name: "file-check-corner",
-    stroke: "M10.5 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v6 M14 2v5a1 1 0 0 0 1 1h5 m14 20 2 2 4-4",
+    stroke: "M10.5 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v6 M14 2v5a1 1 0 0 0 1 1h5 M0 0 m14 20 2 2 4-4",
     fill: "",
 };
 
 /// Lucide `file-check` icon (24 × 24 stroke grid).
 pub const FILE_CHECK: IconData = IconData {
     name: "file-check",
-    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 m9 15 2 2 4-4",
+    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 M0 0 m9 15 2 2 4-4",
     fill: "",
 };
 
@@ -4668,21 +4670,21 @@ pub const FILE_CLOCK: IconData = IconData {
 /// Lucide `file-code-corner` icon (24 × 24 stroke grid).
 pub const FILE_CODE_CORNER: IconData = IconData {
     name: "file-code-corner",
-    stroke: "M4 12.15V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2h-3.35 M14 2v5a1 1 0 0 0 1 1h5 m5 16-3 3 3 3 m9 22 3-3-3-3",
+    stroke: "M4 12.15V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2h-3.35 M14 2v5a1 1 0 0 0 1 1h5 M0 0 m5 16-3 3 3 3 M0 0 m9 22 3-3-3-3",
     fill: "",
 };
 
 /// Lucide `file-code` icon (24 × 24 stroke grid).
 pub const FILE_CODE: IconData = IconData {
     name: "file-code",
-    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 M10 12.5 8 15l2 2.5 m14 12.5 2 2.5-2 2.5",
+    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 M10 12.5 8 15l2 2.5 M0 0 m14 12.5 2 2.5-2 2.5",
     fill: "",
 };
 
 /// Lucide `file-cog` icon (24 × 24 stroke grid).
 pub const FILE_COG: IconData = IconData {
     name: "file-cog",
-    stroke: "M15 8a1 1 0 0 1-1-1V2a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8z M20 8v12a2 2 0 0 1-2 2h-4.182 m3.305 19.53.923-.382 M4 10.592V4a2 2 0 0 1 2-2h8 m4.228 16.852-.924-.383 m5.852 15.228-.383-.923 m5.852 20.772-.383.924 m8.148 15.228.383-.923 m8.53 21.696-.382-.924 m9.773 16.852.922-.383 m9.773 19.148.922.383 M4 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M15 8a1 1 0 0 1-1-1V2a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8z M20 8v12a2 2 0 0 1-2 2h-4.182 M0 0 m3.305 19.53.923-.382 M4 10.592V4a2 2 0 0 1 2-2h8 M0 0 m4.228 16.852-.924-.383 M0 0 m5.852 15.228-.383-.923 M0 0 m5.852 20.772-.383.924 M0 0 m8.148 15.228.383-.923 M0 0 m8.53 21.696-.382-.924 M0 0 m9.773 16.852.922-.383 M0 0 m9.773 19.148.922.383 M4 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -4703,7 +4705,7 @@ pub const FILE_DIGIT: IconData = IconData {
 /// Lucide `file-down` icon (24 × 24 stroke grid).
 pub const FILE_DOWN: IconData = IconData {
     name: "file-down",
-    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 M12 18v-6 m9 15 3 3 3-3",
+    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 M12 18v-6 M0 0 m9 15 3 3 3-3",
     fill: "",
 };
 
@@ -4731,14 +4733,14 @@ pub const FILE_HEART: IconData = IconData {
 /// Lucide `file-image` icon (24 × 24 stroke grid).
 pub const FILE_IMAGE: IconData = IconData {
     name: "file-image",
-    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 M8 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z m20 17-1.296-1.296a2.41 2.41 0 0 0-3.408 0L9 22",
+    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 M8 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M0 0 m20 17-1.296-1.296a2.41 2.41 0 0 0-3.408 0L9 22",
     fill: "",
 };
 
 /// Lucide `file-input` icon (24 × 24 stroke grid).
 pub const FILE_INPUT: IconData = IconData {
     name: "file-input",
-    stroke: "M4 11V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1 M14 2v5a1 1 0 0 0 1 1h5 M2 15h10 m9 18 3-3-3-3",
+    stroke: "M4 11V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1 M14 2v5a1 1 0 0 0 1 1h5 M2 15h10 M0 0 m9 18 3-3-3-3",
     fill: "",
 };
 
@@ -4780,7 +4782,7 @@ pub const FILE_MUSIC: IconData = IconData {
 /// Lucide `file-output` icon (24 × 24 stroke grid).
 pub const FILE_OUTPUT: IconData = IconData {
     name: "file-output",
-    stroke: "M4.226 20.925A2 2 0 0 0 6 22h12a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v3.127 M14 2v5a1 1 0 0 0 1 1h5 m5 11-3 3 m5 17-3-3h10",
+    stroke: "M4.226 20.925A2 2 0 0 0 6 22h12a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v3.127 M14 2v5a1 1 0 0 0 1 1h5 M0 0 m5 11-3 3 M0 0 m5 17-3-3h10",
     fill: "",
 };
 
@@ -4836,7 +4838,7 @@ pub const FILE_SCAN: IconData = IconData {
 /// Lucide `file-search-corner` icon (24 × 24 stroke grid).
 pub const FILE_SEARCH_CORNER: IconData = IconData {
     name: "file-search-corner",
-    stroke: "M11.1 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.589 3.588A2.4 2.4 0 0 1 20 8v3.25 M14 2v5a1 1 0 0 0 1 1h5 m21 22-2.88-2.88 M13 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M11.1 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.589 3.588A2.4 2.4 0 0 1 20 8v3.25 M14 2v5a1 1 0 0 0 1 1h5 M0 0 m21 22-2.88-2.88 M13 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -4878,14 +4880,14 @@ pub const FILE_STACK: IconData = IconData {
 /// Lucide `file-symlink` icon (24 × 24 stroke grid).
 pub const FILE_SYMLINK: IconData = IconData {
     name: "file-symlink",
-    stroke: "M4 11V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h7 M14 2v5a1 1 0 0 0 1 1h5 m10 18 3-3-3-3",
+    stroke: "M4 11V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h7 M14 2v5a1 1 0 0 0 1 1h5 M0 0 m10 18 3-3-3-3",
     fill: "",
 };
 
 /// Lucide `file-terminal` icon (24 × 24 stroke grid).
 pub const FILE_TERMINAL: IconData = IconData {
     name: "file-terminal",
-    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 m8 16 2-2-2-2 M12 18h4",
+    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 M0 0 m8 16 2-2-2-2 M12 18h4",
     fill: "",
 };
 
@@ -4913,7 +4915,7 @@ pub const FILE_TYPE: IconData = IconData {
 /// Lucide `file-up` icon (24 × 24 stroke grid).
 pub const FILE_UP: IconData = IconData {
     name: "file-up",
-    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 M12 12v6 m15 15-3-3-3 3",
+    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 M12 12v6 M0 0 m15 15-3-3-3 3",
     fill: "",
 };
 
@@ -4927,7 +4929,7 @@ pub const FILE_USER: IconData = IconData {
 /// Lucide `file-video-camera` icon (24 × 24 stroke grid).
 pub const FILE_VIDEO_CAMERA: IconData = IconData {
     name: "file-video-camera",
-    stroke: "M4 12V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2 M14 2v5a1 1 0 0 0 1 1h5 m10 17.843 3.033-1.755a.64.64 0 0 1 .967.56v4.704a.65.65 0 0 1-.967.56L10 20.157 M4 16H9a1 1 0 0 1 1 1V21a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V17a1 1 0 0 1 1 -1Z",
+    stroke: "M4 12V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2 M14 2v5a1 1 0 0 0 1 1h5 M0 0 m10 17.843 3.033-1.755a.64.64 0 0 1 .967.56v4.704a.65.65 0 0 1-.967.56L10 20.157 M4 16H9a1 1 0 0 1 1 1V21a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V17a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
@@ -4941,14 +4943,14 @@ pub const FILE_VOLUME: IconData = IconData {
 /// Lucide `file-x-corner` icon (24 × 24 stroke grid).
 pub const FILE_X_CORNER: IconData = IconData {
     name: "file-x-corner",
-    stroke: "M11 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v5 M14 2v5a1 1 0 0 0 1 1h5 m15 17 5 5 m20 17-5 5",
+    stroke: "M11 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v5 M14 2v5a1 1 0 0 0 1 1h5 M0 0 m15 17 5 5 M0 0 m20 17-5 5",
     fill: "",
 };
 
 /// Lucide `file-x` icon (24 × 24 stroke grid).
 pub const FILE_X: IconData = IconData {
     name: "file-x",
-    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 m14.5 12.5-5 5 m9.5 12.5 5 5",
+    stroke: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z M14 2v5a1 1 0 0 0 1 1h5 M0 0 m14.5 12.5-5 5 M0 0 m9.5 12.5 5 5",
     fill: "",
 };
 
@@ -4990,7 +4992,7 @@ pub const FIRE_EXTINGUISHER: IconData = IconData {
 /// Lucide `fish-off` icon (24 × 24 stroke grid).
 pub const FISH_OFF: IconData = IconData {
     name: "fish-off",
-    stroke: "M18 12.47v.03m0-.5v.47m-.475 5.056A6.744 6.744 0 0 1 15 18c-3.56 0-7.56-2.53-8.5-6 .348-1.28 1.114-2.433 2.121-3.38m3.444-2.088A8.802 8.802 0 0 1 15 6c3.56 0 6.06 2.54 7 6-.309 1.14-.786 2.177-1.413 3.058 M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33m7.48-4.372A9.77 9.77 0 0 1 16 6.07m0 11.86a9.77 9.77 0 0 1-1.728-3.618 m16.01 17.93-.23 1.4A2 2 0 0 1 13.8 21H9.5a5.96 5.96 0 0 0 1.49-3.98M8.53 3h5.27a2 2 0 0 1 1.98 1.67l.23 1.4M2 2l20 20",
+    stroke: "M18 12.47v.03m0-.5v.47m-.475 5.056A6.744 6.744 0 0 1 15 18c-3.56 0-7.56-2.53-8.5-6 .348-1.28 1.114-2.433 2.121-3.38m3.444-2.088A8.802 8.802 0 0 1 15 6c3.56 0 6.06 2.54 7 6-.309 1.14-.786 2.177-1.413 3.058 M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33m7.48-4.372A9.77 9.77 0 0 1 16 6.07m0 11.86a9.77 9.77 0 0 1-1.728-3.618 M0 0 m16.01 17.93-.23 1.4A2 2 0 0 1 13.8 21H9.5a5.96 5.96 0 0 0 1.49-3.98M8.53 3h5.27a2 2 0 0 1 1.98 1.67l.23 1.4M2 2l20 20",
     fill: "",
 };
 
@@ -5004,14 +5006,14 @@ pub const FISH_SYMBOL: IconData = IconData {
 /// Lucide `fish` icon (24 × 24 stroke grid).
 pub const FISH: IconData = IconData {
     name: "fish",
-    stroke: "M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6Z M18 12v.5 M16 17.93a9.77 9.77 0 0 1 0-11.86 M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33 M10.46 7.26C10.2 5.88 9.17 4.24 8 3h5.8a2 2 0 0 1 1.98 1.67l.23 1.4 m16.01 17.93-.23 1.4A2 2 0 0 1 13.8 21H9.5a5.96 5.96 0 0 0 1.49-3.98",
+    stroke: "M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6Z M18 12v.5 M16 17.93a9.77 9.77 0 0 1 0-11.86 M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33 M10.46 7.26C10.2 5.88 9.17 4.24 8 3h5.8a2 2 0 0 1 1.98 1.67l.23 1.4 M0 0 m16.01 17.93-.23 1.4A2 2 0 0 1 13.8 21H9.5a5.96 5.96 0 0 0 1.49-3.98",
     fill: "",
 };
 
 /// Lucide `fishing-hook` icon (24 × 24 stroke grid).
 pub const FISHING_HOOK: IconData = IconData {
     name: "fishing-hook",
-    stroke: "m17.586 11.414-5.93 5.93a1 1 0 0 1-8-8l3.137-3.137a.707.707 0 0 1 1.207.5V10 M20.414 8.586 22 7 M17 10a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M0 0 m17.586 11.414-5.93 5.93a1 1 0 0 1-8-8l3.137-3.137a.707.707 0 0 1 1.207.5V10 M20.414 8.586 22 7 M17 10a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -5025,7 +5027,7 @@ pub const FISHING_ROD: IconData = IconData {
 /// Lucide `flag-off` icon (24 × 24 stroke grid).
 pub const FLAG_OFF: IconData = IconData {
     name: "flag-off",
-    stroke: "M16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528 m2 2 20 20 M4 22V4 M7.656 2H8c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10.347",
+    stroke: "M16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528 M0 0 m2 2 20 20 M4 22V4 M7.656 2H8c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10.347",
     fill: "",
 };
 
@@ -5053,7 +5055,7 @@ pub const FLAG: IconData = IconData {
 /// Lucide `flame-kindling` icon (24 × 24 stroke grid).
 pub const FLAME_KINDLING: IconData = IconData {
     name: "flame-kindling",
-    stroke: "M12 2c1 3 2.5 3.5 3.5 4.5A5 5 0 0 1 17 10a5 5 0 1 1-10 0c0-.3 0-.6.1-.9a2 2 0 1 0 3.3-2C8 4.5 11 2 12 2Z m5 22 14-4 m5 18 14 4",
+    stroke: "M12 2c1 3 2.5 3.5 3.5 4.5A5 5 0 0 1 17 10a5 5 0 1 1-10 0c0-.3 0-.6.1-.9a2 2 0 1 0 3.3-2C8 4.5 11 2 12 2Z M0 0 m5 22 14-4 M0 0 m5 18 14 4",
     fill: "",
 };
 
@@ -5068,7 +5070,7 @@ pub const FLAME: IconData = IconData {
 /// Lucide `flashlight-off` icon (24 × 24 stroke grid).
 pub const FLASHLIGHT_OFF: IconData = IconData {
     name: "flashlight-off",
-    stroke: "M11.652 6H18 M12 13v1 M16 16v4a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-8a4 4 0 0 0-.8-2.4l-.6-.8A3 3 0 0 1 6 7V6 m2 2 20 20 M7.649 2H17a1 1 0 0 1 1 1v4a3 3 0 0 1-.6 1.8l-.6.8a4 4 0 0 0-.55 1.007",
+    stroke: "M11.652 6H18 M12 13v1 M16 16v4a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-8a4 4 0 0 0-.8-2.4l-.6-.8A3 3 0 0 1 6 7V6 M0 0 m2 2 20 20 M7.649 2H17a1 1 0 0 1 1 1v4a3 3 0 0 1-.6 1.8l-.6.8a4 4 0 0 0-.55 1.007",
     fill: "",
 };
 
@@ -5082,7 +5084,7 @@ pub const FLASHLIGHT: IconData = IconData {
 /// Lucide `flask-conical-off` icon (24 × 24 stroke grid).
 pub const FLASK_CONICAL_OFF: IconData = IconData {
     name: "flask-conical-off",
-    stroke: "M10 2v2.343 M14 2v6.343 m2 2 20 20 M20 20a2 2 0 0 1-2 2H6a2 2 0 0 1-1.755-2.96l5.227-9.563 M6.453 15H15 M8.5 2h7",
+    stroke: "M10 2v2.343 M14 2v6.343 M0 0 m2 2 20 20 M20 20a2 2 0 0 1-2 2H6a2 2 0 0 1-1.755-2.96l5.227-9.563 M6.453 15H15 M8.5 2h7",
     fill: "",
 };
 
@@ -5110,7 +5112,7 @@ pub const FLOWER_2: IconData = IconData {
 /// Lucide `flower` icon (24 × 24 stroke grid).
 pub const FLOWER: IconData = IconData {
     name: "flower",
-    stroke: "M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 1 1 4.5 4.5 4.5 4.5 0 1 1-4.5 4.5 M12 7.5V9 M7.5 12H9 M16.5 12H15 M12 16.5V15 m8 8 1.88 1.88 M14.12 9.88 16 8 m8 16 1.88-1.88 M14.12 14.12 16 16",
+    stroke: "M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 1 1 4.5 4.5 4.5 4.5 0 1 1-4.5 4.5 M12 7.5V9 M7.5 12H9 M16.5 12H15 M12 16.5V15 M0 0 m8 8 1.88 1.88 M14.12 9.88 16 8 M0 0 m8 16 1.88-1.88 M14.12 14.12 16 16",
     fill: "",
 };
 
@@ -5124,14 +5126,15 @@ pub const FOCUS: IconData = IconData {
 /// Lucide `fold-horizontal` icon (24 × 24 stroke grid).
 pub const FOLD_HORIZONTAL: IconData = IconData {
     name: "fold-horizontal",
-    stroke: "M2 12h6 M22 12h-6 M12 2v2 M12 8v2 M12 14v2 M12 20v2 m19 9-3 3 3 3 m5 15 3-3-3-3",
+    stroke:
+        "M2 12h6 M22 12h-6 M12 2v2 M12 8v2 M12 14v2 M12 20v2 M0 0 m19 9-3 3 3 3 M0 0 m5 15 3-3-3-3",
     fill: "",
 };
 
 /// Lucide `fold-vertical` icon (24 × 24 stroke grid).
 pub const FOLD_VERTICAL: IconData = IconData {
     name: "fold-vertical",
-    stroke: "M12 22v-6 M12 8V2 M4 12H2 M10 12H8 M16 12h-2 M22 12h-2 m15 19-3-3-3 3 m15 5-3 3-3-3",
+    stroke: "M12 22v-6 M12 8V2 M4 12H2 M10 12H8 M16 12h-2 M22 12h-2 M0 0 m15 19-3-3-3 3 M0 0 m15 5-3 3-3-3",
     fill: "",
 };
 
@@ -5152,7 +5155,7 @@ pub const FOLDER_BOOKMARK: IconData = IconData {
 /// Lucide `folder-check` icon (24 × 24 stroke grid).
 pub const FOLDER_CHECK: IconData = IconData {
     name: "folder-check",
-    stroke: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z m9 13 2 2 4-4",
+    stroke: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z M0 0 m9 13 2 2 4-4",
     fill: "",
 };
 
@@ -5173,14 +5176,14 @@ pub const FOLDER_CLOSED: IconData = IconData {
 /// Lucide `folder-code` icon (24 × 24 stroke grid).
 pub const FOLDER_CODE: IconData = IconData {
     name: "folder-code",
-    stroke: "M10 10.5 8 13l2 2.5 m14 10.5 2 2.5-2 2.5 M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z",
+    stroke: "M10 10.5 8 13l2 2.5 M0 0 m14 10.5 2 2.5-2 2.5 M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z",
     fill: "",
 };
 
 /// Lucide `folder-cog` icon (24 × 24 stroke grid).
 pub const FOLDER_COG: IconData = IconData {
     name: "folder-cog",
-    stroke: "M10.3 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.98a2 2 0 0 1 1.69.9l.66 1.2A2 2 0 0 0 12 6h8a2 2 0 0 1 2 2v3.3 m14.305 19.53.923-.382 m15.228 16.852-.923-.383 m16.852 15.228-.383-.923 m16.852 20.772-.383.924 m19.148 15.228.383-.923 m19.53 21.696-.382-.924 m20.772 16.852.924-.383 m20.772 19.148.924.383 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M10.3 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.98a2 2 0 0 1 1.69.9l.66 1.2A2 2 0 0 0 12 6h8a2 2 0 0 1 2 2v3.3 M0 0 m14.305 19.53.923-.382 M0 0 m15.228 16.852-.923-.383 M0 0 m16.852 15.228-.383-.923 M0 0 m16.852 20.772-.383.924 M0 0 m19.148 15.228.383-.923 M0 0 m19.53 21.696-.382-.924 M0 0 m20.772 16.852.924-.383 M0 0 m20.772 19.148.924.383 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -5194,7 +5197,7 @@ pub const FOLDER_DOT: IconData = IconData {
 /// Lucide `folder-down` icon (24 × 24 stroke grid).
 pub const FOLDER_DOWN: IconData = IconData {
     name: "folder-down",
-    stroke: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z M12 10v6 m15 13-3 3-3-3",
+    stroke: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z M12 10v6 M0 0 m15 13-3 3-3-3",
     fill: "",
 };
 
@@ -5222,7 +5225,7 @@ pub const FOLDER_HEART: IconData = IconData {
 /// Lucide `folder-input` icon (24 × 24 stroke grid).
 pub const FOLDER_INPUT: IconData = IconData {
     name: "folder-input",
-    stroke: "M2 9V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1 M2 13h10 m9 16 3-3-3-3",
+    stroke: "M2 9V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1 M2 13h10 M0 0 m9 16 3-3-3-3",
     fill: "",
 };
 
@@ -5257,21 +5260,21 @@ pub const FOLDER_MINUS: IconData = IconData {
 /// Lucide `folder-open-dot` icon (24 × 24 stroke grid).
 pub const FOLDER_OPEN_DOT: IconData = IconData {
     name: "folder-open-dot",
-    stroke: "m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2 M13 15a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z",
+    stroke: "M0 0 m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2 M13 15a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z",
     fill: "",
 };
 
 /// Lucide `folder-open` icon (24 × 24 stroke grid).
 pub const FOLDER_OPEN: IconData = IconData {
     name: "folder-open",
-    stroke: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2",
+    stroke: "M0 0 m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2",
     fill: "",
 };
 
 /// Lucide `folder-output` icon (24 × 24 stroke grid).
 pub const FOLDER_OUTPUT: IconData = IconData {
     name: "folder-output",
-    stroke: "M2 7.5V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-1.5 M2 13h10 m5 10-3 3 3 3",
+    stroke: "M2 7.5V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-1.5 M2 13h10 M0 0 m5 10-3 3 3 3",
     fill: "",
 };
 
@@ -5306,21 +5309,21 @@ pub const FOLDER_SEARCH_2: IconData = IconData {
 /// Lucide `folder-search` icon (24 × 24 stroke grid).
 pub const FOLDER_SEARCH: IconData = IconData {
     name: "folder-search",
-    stroke: "M10.7 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v4.1 m21 21-1.9-1.9 M14 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M10.7 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v4.1 M0 0 m21 21-1.9-1.9 M14 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
 /// Lucide `folder-symlink` icon (24 × 24 stroke grid).
 pub const FOLDER_SYMLINK: IconData = IconData {
     name: "folder-symlink",
-    stroke: "M2 9.35V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h7 m8 16 3-3-3-3",
+    stroke: "M2 9.35V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h7 M0 0 m8 16 3-3-3-3",
     fill: "",
 };
 
 /// Lucide `folder-sync` icon (24 × 24 stroke grid).
 pub const FOLDER_SYNC: IconData = IconData {
     name: "folder-sync",
-    stroke: "M9 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v.5 M12 10v4h4 m12 14 1.535-1.605a5 5 0 0 1 8 1.5 M22 22v-4h-4 m22 18-1.535 1.605a5 5 0 0 1-8-1.5",
+    stroke: "M9 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v.5 M12 10v4h4 M0 0 m12 14 1.535-1.605a5 5 0 0 1 8 1.5 M22 22v-4h-4 M0 0 m22 18-1.535 1.605a5 5 0 0 1-8-1.5",
     fill: "",
 };
 
@@ -5334,7 +5337,7 @@ pub const FOLDER_TREE: IconData = IconData {
 /// Lucide `folder-up` icon (24 × 24 stroke grid).
 pub const FOLDER_UP: IconData = IconData {
     name: "folder-up",
-    stroke: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z M12 10v6 m9 13 3-3 3 3",
+    stroke: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z M12 10v6 M0 0 m9 13 3-3 3 3",
     fill: "",
 };
 
@@ -5355,7 +5358,7 @@ pub const FOLDER_USERS: IconData = IconData {
 /// Lucide `folder-x` icon (24 × 24 stroke grid).
 pub const FOLDER_X: IconData = IconData {
     name: "folder-x",
-    stroke: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z m9.5 10.5 5 5 m14.5 10.5-5 5",
+    stroke: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z M0 0 m9.5 10.5 5 5 M0 0 m14.5 10.5-5 5",
     fill: "",
 };
 
@@ -5397,7 +5400,7 @@ pub const FORM: IconData = IconData {
 /// Lucide `forward` icon (24 × 24 stroke grid).
 pub const FORWARD: IconData = IconData {
     name: "forward",
-    stroke: "m15 17 5-5-5-5 M4 18v-2a4 4 0 0 1 4-4h12",
+    stroke: "M0 0 m15 17 5-5-5-5 M4 18v-2a4 4 0 0 1 4-4h12",
     fill: "",
 };
 
@@ -5432,7 +5435,7 @@ pub const FUNNEL_PLUS: IconData = IconData {
 /// Lucide `funnel-x` icon (24 × 24 stroke grid).
 pub const FUNNEL_X: IconData = IconData {
     name: "funnel-x",
-    stroke: "M12.531 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14v6a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341l.427-.473 m16.5 3.5 5 5 m21.5 3.5-5 5",
+    stroke: "M12.531 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14v6a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341l.427-.473 M0 0 m16.5 3.5 5 5 M0 0 m21.5 3.5-5 5",
     fill: "",
 };
 
@@ -5523,14 +5526,14 @@ pub const GAP_VERTICAL: IconData = IconData {
 /// Lucide `gauge` icon (24 × 24 stroke grid).
 pub const GAUGE: IconData = IconData {
     name: "gauge",
-    stroke: "m12 14 4-4 M3.34 19a10 10 0 1 1 17.32 0",
+    stroke: "M0 0 m12 14 4-4 M3.34 19a10 10 0 1 1 17.32 0",
     fill: "",
 };
 
 /// Lucide `gavel` icon (24 × 24 stroke grid).
 pub const GAVEL: IconData = IconData {
     name: "gavel",
-    stroke: "m14 13-8.381 8.38a1 1 0 0 1-3.001-3l8.384-8.381 m16 16 6-6 m21.5 10.5-8-8 m8 8 6-6 m8.5 7.5 8 8",
+    stroke: "M0 0 m14 13-8.381 8.38a1 1 0 0 1-3.001-3l8.384-8.381 M0 0 m16 16 6-6 M0 0 m21.5 10.5-8-8 M0 0 m8 8 6-6 M0 0 m8.5 7.5 8 8",
     fill: "",
 };
 
@@ -5551,14 +5554,14 @@ pub const GEORGIAN_LARI: IconData = IconData {
 /// Lucide `germ-off` icon (24 × 24 stroke grid).
 pub const GERM_OFF: IconData = IconData {
     name: "germ-off",
-    stroke: "m11 2 .925 1.848 M13 15h.01 M13.424 7.768a2 2 0 112.808 2.808 m16 21-1-2.472 M16.988 16.988A12 12 0 019 20a5 5 0 01-2.759-9.171 8.8 8.8 0 002.307-2.28 m19 2-1 1.804 m2 19 2.746-1.373 m2 2 20 20 m22 16-2.474-2.13a12 12 0 001.376-3.786 6 6 0 00-10.313-5.151 m22 5-1.804 1 m3 10 2 2 M9 16h.01 M9 20v2",
+    stroke: "M0 0 m11 2 .925 1.848 M13 15h.01 M13.424 7.768a2 2 0 112.808 2.808 M0 0 m16 21-1-2.472 M16.988 16.988A12 12 0 019 20a5 5 0 01-2.759-9.171 8.8 8.8 0 002.307-2.28 M0 0 m19 2-1 1.804 M0 0 m2 19 2.746-1.373 M0 0 m2 2 20 20 M0 0 m22 16-2.474-2.13a12 12 0 001.376-3.786 6 6 0 00-10.313-5.151 M0 0 m22 5-1.804 1 M0 0 m3 10 2 2 M9 16h.01 M9 20v2",
     fill: "",
 };
 
 /// Lucide `germ` icon (24 × 24 stroke grid).
 pub const GERM: IconData = IconData {
     name: "germ",
-    stroke: "m11 2 .925 1.848 M13 15h.01 m16 21-1-2.472 m19 2-1 1.804 m2 19 2.746-1.373 m22 16-2.474-2.13 m22 5-1.804 1 m3 10 2 2 M9 16h.01 M9 20v2 M9.33 7.035c-.51 1.478-1.786 2.93-3.09 3.794A5 5 0 009 20a12.1 12.1 0 0011.902-9.916A6 6 0 009.33 7.035 M13 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M0 0 m11 2 .925 1.848 M13 15h.01 M0 0 m16 21-1-2.472 M0 0 m19 2-1 1.804 M0 0 m2 19 2.746-1.373 M0 0 m22 16-2.474-2.13 M0 0 m22 5-1.804 1 M0 0 m3 10 2 2 M9 16h.01 M9 20v2 M9.33 7.035c-.51 1.478-1.786 2.93-3.09 3.794A5 5 0 009 20a12.1 12.1 0 0011.902-9.916A6 6 0 009.33 7.035 M13 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -5614,7 +5617,7 @@ pub const GIT_COMMIT_VERTICAL: IconData = IconData {
 /// Lucide `git-compare-arrows` icon (24 × 24 stroke grid).
 pub const GIT_COMPARE_ARROWS: IconData = IconData {
     name: "git-compare-arrows",
-    stroke: "M2 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M12 6h5a2 2 0 0 1 2 2v7 m15 9-3-3 3-3 M16 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M12 18H7a2 2 0 0 1-2-2V9 m9 15 3 3-3 3",
+    stroke: "M2 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M12 6h5a2 2 0 0 1 2 2v7 M0 0 m15 9-3-3 3-3 M16 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M12 18H7a2 2 0 0 1-2-2V9 M0 0 m9 15 3 3-3 3",
     fill: "",
 };
 
@@ -5642,7 +5645,7 @@ pub const GIT_GRAPH: IconData = IconData {
 /// Lucide `git-merge-conflict` icon (24 × 24 stroke grid).
 pub const GIT_MERGE_CONFLICT: IconData = IconData {
     name: "git-merge-conflict",
-    stroke: "M12 6h4a2 2 0 0 1 2 2v7 M6 12v9 m8.5 3.5-5 5 m8.5 8.5-5-5 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M12 6h4a2 2 0 0 1 2 2v7 M6 12v9 M0 0 m8.5 3.5-5 5 M0 0 m8.5 8.5-5-5 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -5656,21 +5659,21 @@ pub const GIT_MERGE: IconData = IconData {
 /// Lucide `git-pull-request-arrow` icon (24 × 24 stroke grid).
 pub const GIT_PULL_REQUEST_ARROW: IconData = IconData {
     name: "git-pull-request-arrow",
-    stroke: "M2 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M5 9v12 M16 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z m15 9-3-3 3-3 M12 6h5a2 2 0 0 1 2 2v7",
+    stroke: "M2 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M5 9v12 M16 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M0 0 m15 9-3-3 3-3 M12 6h5a2 2 0 0 1 2 2v7",
     fill: "",
 };
 
 /// Lucide `git-pull-request-closed` icon (24 × 24 stroke grid).
 pub const GIT_PULL_REQUEST_CLOSED: IconData = IconData {
     name: "git-pull-request-closed",
-    stroke: "m15.5 3.5 5 5 m15.5 8.5 5-5 M18 11.62V15 M6 9v12 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M3 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M0 0 m15.5 3.5 5 5 M0 0 m15.5 8.5 5-5 M18 11.62V15 M6 9v12 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M3 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
 /// Lucide `git-pull-request-create-arrow` icon (24 × 24 stroke grid).
 pub const GIT_PULL_REQUEST_CREATE_ARROW: IconData = IconData {
     name: "git-pull-request-create-arrow",
-    stroke: "M2 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M5 9v12 m15 9-3-3 3-3 M12 6h5a2 2 0 0 1 2 2v3 M19 15v6 M22 18h-6",
+    stroke: "M2 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M5 9v12 M0 0 m15 9-3-3 3-3 M12 6h5a2 2 0 0 1 2 2v3 M19 15v6 M22 18h-6",
     fill: "",
 };
 
@@ -5712,7 +5715,8 @@ pub const GLASSES: IconData = IconData {
 /// Lucide `globe-check` icon (24 × 24 stroke grid).
 pub const GLOBE_CHECK: IconData = IconData {
     name: "globe-check",
-    stroke: "m15 6 2 2 4-4 M2 12h20A10 10 0 1 1 12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 4-10",
+    stroke:
+        "M0 0 m15 6 2 2 4-4 M2 12h20A10 10 0 1 1 12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 4-10",
     fill: "",
 };
 
@@ -5733,15 +5737,14 @@ pub const GLOBE_LOCK: IconData = IconData {
 /// Lucide `globe-off` icon (24 × 24 stroke grid).
 pub const GLOBE_OFF: IconData = IconData {
     name: "globe-off",
-    stroke: "M10.114 4.462A14.5 14.5 0 0 1 12 2a10 10 0 0 1 9.313 13.643 M15.557 15.556A14.5 14.5 0 0 1 12 22 10 10 0 0 1 4.929 4.929 M15.892 10.234A14.5 14.5 0 0 0 12 2a10 10 0 0 0-3.643.687 M17.656 12H22 M19.071 19.071A10 10 0 0 1 12 22 14.5 14.5 0 0 1 8.44 8.45 M2 12h10 m2 2 20 20",
+    stroke: "M10.114 4.462A14.5 14.5 0 0 1 12 2a10 10 0 0 1 9.313 13.643 M15.557 15.556A14.5 14.5 0 0 1 12 22 10 10 0 0 1 4.929 4.929 M15.892 10.234A14.5 14.5 0 0 0 12 2a10 10 0 0 0-3.643.687 M17.656 12H22 M19.071 19.071A10 10 0 0 1 12 22 14.5 14.5 0 0 1 8.44 8.45 M2 12h10 M0 0 m2 2 20 20",
     fill: "",
 };
 
 /// Lucide `globe-x` icon (24 × 24 stroke grid).
 pub const GLOBE_X: IconData = IconData {
     name: "globe-x",
-    stroke:
-        "m16 3 5 5 M2 12h20A10 10 0 1 1 12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 4-10 m21 3-5 5",
+    stroke: "M0 0 m16 3 5 5 M2 12h20A10 10 0 1 1 12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 4-10 M0 0 m21 3-5 5",
     fill: "",
 };
 
@@ -5790,14 +5793,14 @@ pub const GRAPH_HUB: IconData = IconData {
 /// Lucide `graph-star` icon (24 × 24 stroke grid).
 pub const GRAPH_STAR: IconData = IconData {
     name: "graph-star",
-    stroke: "m12.342 9.316 1.764-3.527 m12.59 14.545 2.35 3.759 m13.982 12.332 4.03.447 M5.414 17.586 8.88 14.12 M9.025 9.742 5.317 5.505 M8 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M13 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M14 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M18 13a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M2 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M2 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M0 0 m12.342 9.316 1.764-3.527 M0 0 m12.59 14.545 2.35 3.759 M0 0 m13.982 12.332 4.03.447 M5.414 17.586 8.88 14.12 M9.025 9.742 5.317 5.505 M8 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M13 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M14 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M18 13a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M2 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M2 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `grid-2x2-check` icon (24 × 24 stroke grid).
 pub const GRID_2X2_CHECK: IconData = IconData {
     name: "grid-2x2-check",
-    stroke: "M12 3v17a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1H3 m16 19 2 2 4-4",
+    stroke: "M12 3v17a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1H3 M0 0 m16 19 2 2 4-4",
     fill: "",
 };
 
@@ -5811,7 +5814,7 @@ pub const GRID_2X2_PLUS: IconData = IconData {
 /// Lucide `grid-2x2-x` icon (24 × 24 stroke grid).
 pub const GRID_2X2_X: IconData = IconData {
     name: "grid-2x2-x",
-    stroke: "M12 3v17a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1H3 m16.5 16.5 5 5 m16.5 21.5 5-5",
+    stroke: "M12 3v17a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1H3 M0 0 m16.5 16.5 5 5 M0 0 m16.5 21.5 5-5",
     fill: "",
 };
 
@@ -5874,14 +5877,14 @@ pub const GROUP: IconData = IconData {
 /// Lucide `guitar-electric` icon (24 × 24 stroke grid).
 pub const GUITAR_ELECTRIC: IconData = IconData {
     name: "guitar-electric",
-    stroke: "m12.172 11.828 4.242-4.242 M16.414 7.586A2 2 0 0017 6.172V5a2 2 0 011.177-1.823L20.59 2.09a1 1 0 011.32 1.32l-1.088 2.412A2 2 0 0119 7h-1a2 2 0 00-1.586.586 m6 16 2 2 M8.23 9.85a3 3 0 011.28-1.454 1 1 0 011.496.815 4 4 0 003.783 3.783 1 1 0 01.815 1.496 3 3 0 01-1.454 1.28l-.92.38A2 2 0 0012 18a4 4 0 01-4 4 6 6 0 01-6-6 4 4 0 014-4 2 2 0 001.85-1.23z",
+    stroke: "M0 0 m12.172 11.828 4.242-4.242 M16.414 7.586A2 2 0 0017 6.172V5a2 2 0 011.177-1.823L20.59 2.09a1 1 0 011.32 1.32l-1.088 2.412A2 2 0 0119 7h-1a2 2 0 00-1.586.586 M0 0 m6 16 2 2 M8.23 9.85a3 3 0 011.28-1.454 1 1 0 011.496.815 4 4 0 003.783 3.783 1 1 0 01.815 1.496 3 3 0 01-1.454 1.28l-.92.38A2 2 0 0012 18a4 4 0 01-4 4 6 6 0 01-6-6 4 4 0 014-4 2 2 0 001.85-1.23z",
     fill: "",
 };
 
 /// Lucide `guitar` icon (24 × 24 stroke grid).
 pub const GUITAR: IconData = IconData {
     name: "guitar",
-    stroke: "m11.9 12.1 4.514-4.514 M20.1 2.3a1 1 0 0 0-1.4 0l-1.114 1.114A2 2 0 0 0 17 4.828v1.344a2 2 0 0 1-.586 1.414A2 2 0 0 1 17.828 7h1.344a2 2 0 0 0 1.414-.586L21.7 5.3a1 1 0 0 0 0-1.4z m6 16 2 2 M8.23 9.85A3 3 0 0 1 11 8a5 5 0 0 1 5 5 3 3 0 0 1-1.85 2.77l-.92.38A2 2 0 0 0 12 18a4 4 0 0 1-4 4 6 6 0 0 1-6-6 4 4 0 0 1 4-4 2 2 0 0 0 1.85-1.23z",
+    stroke: "M0 0 m11.9 12.1 4.514-4.514 M20.1 2.3a1 1 0 0 0-1.4 0l-1.114 1.114A2 2 0 0 0 17 4.828v1.344a2 2 0 0 1-.586 1.414A2 2 0 0 1 17.828 7h1.344a2 2 0 0 0 1.414-.586L21.7 5.3a1 1 0 0 0 0-1.4z M0 0 m6 16 2 2 M8.23 9.85A3 3 0 0 1 11 8a5 5 0 0 1 5 5 3 3 0 0 1-1.85 2.77l-.92.38A2 2 0 0 0 12 18a4 4 0 0 1-4 4 6 6 0 0 1-6-6 4 4 0 0 1 4-4 2 2 0 0 0 1.85-1.23z",
     fill: "",
 };
 
@@ -5895,28 +5898,28 @@ pub const HALF_NOTE: IconData = IconData {
 /// Lucide `ham` icon (24 × 24 stroke grid).
 pub const HAM: IconData = IconData {
     name: "ham",
-    stroke: "M13.144 21.144A7.274 10.445 45 1 0 2.856 10.856 M13.144 21.144A7.274 4.365 45 0 0 2.856 10.856a7.274 4.365 45 0 0 10.288 10.288 M16.565 10.435 18.6 8.4a2.501 2.501 0 1 0 1.65-4.65 2.5 2.5 0 1 0-4.66 1.66l-2.024 2.025 m8.5 16.5-1-1",
+    stroke: "M13.144 21.144A7.274 10.445 45 1 0 2.856 10.856 M13.144 21.144A7.274 4.365 45 0 0 2.856 10.856a7.274 4.365 45 0 0 10.288 10.288 M16.565 10.435 18.6 8.4a2.501 2.501 0 1 0 1.65-4.65 2.5 2.5 0 1 0-4.66 1.66l-2.024 2.025 M0 0 m8.5 16.5-1-1",
     fill: "",
 };
 
 /// Lucide `hamburger` icon (24 × 24 stroke grid).
 pub const HAMBURGER: IconData = IconData {
     name: "hamburger",
-    stroke: "M12 16H4a2 2 0 1 1 0-4h16a2 2 0 1 1 0 4h-4.25 M5 12a2 2 0 0 1-2-2 9 7 0 0 1 18 0 2 2 0 0 1-2 2 M5 16a2 2 0 0 0-2 2 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 2 2 0 0 0-2-2q0 0 0 0 m6.67 12 6.13 4.6a2 2 0 0 0 2.8-.4l3.15-4.2",
+    stroke: "M12 16H4a2 2 0 1 1 0-4h16a2 2 0 1 1 0 4h-4.25 M5 12a2 2 0 0 1-2-2 9 7 0 0 1 18 0 2 2 0 0 1-2 2 M5 16a2 2 0 0 0-2 2 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 2 2 0 0 0-2-2q0 0 0 0 M0 0 m6.67 12 6.13 4.6a2 2 0 0 0 2.8-.4l3.15-4.2",
     fill: "",
 };
 
 /// Lucide `hammer` icon (24 × 24 stroke grid).
 pub const HAMMER: IconData = IconData {
     name: "hammer",
-    stroke: "m15 12-9.373 9.373a1 1 0 0 1-3.001-3L12 9 m18 15 4-4 m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172v-.344a2 2 0 0 0-.586-1.414l-1.657-1.657A6 6 0 0 0 12.516 3H9l1.243 1.243A6 6 0 0 1 12 8.485V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5",
+    stroke: "M0 0 m15 12-9.373 9.373a1 1 0 0 1-3.001-3L12 9 M0 0 m18 15 4-4 M0 0 m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172v-.344a2 2 0 0 0-.586-1.414l-1.657-1.657A6 6 0 0 0 12.516 3H9l1.243 1.243A6 6 0 0 1 12 8.485V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5",
     fill: "",
 };
 
 /// Lucide `hand-coins` icon (24 × 24 stroke grid).
 pub const HAND_COINS: IconData = IconData {
     name: "hand-coins",
-    stroke: "M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17 m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9 m2 16 6 6 M13.1 9a2.9 2.9 0 1 0 5.8 0a2.9 2.9 0 1 0 -5.8 0Z M3 5a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17 M0 0 m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9 M0 0 m2 16 6 6 M13.1 9a2.9 2.9 0 1 0 5.8 0a2.9 2.9 0 1 0 -5.8 0Z M3 5a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -5937,28 +5940,28 @@ pub const HAND_GRAB: IconData = IconData {
 /// Lucide `hand-heart` icon (24 × 24 stroke grid).
 pub const HAND_HEART: IconData = IconData {
     name: "hand-heart",
-    stroke: "M11 14h2a2 2 0 0 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 16 m14.45 13.39 5.05-4.694C20.196 8 21 6.85 21 5.75a2.75 2.75 0 0 0-4.797-1.837.276.276 0 0 1-.406 0A2.75 2.75 0 0 0 11 5.75c0 1.2.802 2.248 1.5 2.946L16 11.95 m2 15 6 6 m7 20 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a1 1 0 0 0-2.75-2.91",
+    stroke: "M11 14h2a2 2 0 0 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 16 M0 0 m14.45 13.39 5.05-4.694C20.196 8 21 6.85 21 5.75a2.75 2.75 0 0 0-4.797-1.837.276.276 0 0 1-.406 0A2.75 2.75 0 0 0 11 5.75c0 1.2.802 2.248 1.5 2.946L16 11.95 M0 0 m2 15 6 6 M0 0 m7 20 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a1 1 0 0 0-2.75-2.91",
     fill: "",
 };
 
 /// Lucide `hand-helping` icon (24 × 24 stroke grid).
 pub const HAND_HELPING: IconData = IconData {
     name: "hand-helping",
-    stroke: "M11 12h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 14 m7 18 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9 m2 13 6 6",
+    stroke: "M11 12h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 14 M0 0 m7 18 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9 M0 0 m2 13 6 6",
     fill: "",
 };
 
 /// Lucide `hand-metal` icon (24 × 24 stroke grid).
 pub const HAND_METAL: IconData = IconData {
     name: "hand-metal",
-    stroke: "M18 12.5V10a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1.4 M14 11V9a2 2 0 1 0-4 0v2 M10 10.5V5a2 2 0 1 0-4 0v9 m7 15-1.76-1.76a2 2 0 0 0-2.83 2.82l3.6 3.6C7.5 21.14 9.2 22 12 22h2a8 8 0 0 0 8-8V7a2 2 0 1 0-4 0v5",
+    stroke: "M18 12.5V10a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1.4 M14 11V9a2 2 0 1 0-4 0v2 M10 10.5V5a2 2 0 1 0-4 0v9 M0 0 m7 15-1.76-1.76a2 2 0 0 0-2.83 2.82l3.6 3.6C7.5 21.14 9.2 22 12 22h2a8 8 0 0 0 8-8V7a2 2 0 1 0-4 0v5",
     fill: "",
 };
 
 /// Lucide `hand-platter` icon (24 × 24 stroke grid).
 pub const HAND_PLATTER: IconData = IconData {
     name: "hand-platter",
-    stroke: "M12 3V2 m15.4 17.4 3.2-2.8a2 2 0 1 1 2.8 2.9l-3.6 3.3c-.7.8-1.7 1.2-2.8 1.2h-4c-1.1 0-2.1-.4-2.8-1.2l-1.302-1.464A1 1 0 0 0 6.151 19H5 M2 14h12a2 2 0 0 1 0 4h-2 M4 10h16 M5 10a7 7 0 0 1 14 0 M5 14v6a1 1 0 0 1-1 1H2",
+    stroke: "M12 3V2 M0 0 m15.4 17.4 3.2-2.8a2 2 0 1 1 2.8 2.9l-3.6 3.3c-.7.8-1.7 1.2-2.8 1.2h-4c-1.1 0-2.1-.4-2.8-1.2l-1.302-1.464A1 1 0 0 0 6.151 19H5 M2 14h12a2 2 0 0 1 0 4h-2 M4 10h16 M5 10a7 7 0 0 1 14 0 M5 14v6a1 1 0 0 1-1 1H2",
     fill: "",
 };
 
@@ -5979,28 +5982,28 @@ pub const HANDBAG: IconData = IconData {
 /// Lucide `handle-bottom-right` icon (24 × 24 stroke grid).
 pub const HANDLE_BOTTOM_RIGHT: IconData = IconData {
     name: "handle-bottom-right",
-    stroke: "M21 8 8 21 m21 15-6 6",
+    stroke: "M21 8 8 21 M0 0 m21 15-6 6",
     fill: "",
 };
 
 /// Lucide `handshake` icon (24 × 24 stroke grid).
 pub const HANDSHAKE: IconData = IconData {
     name: "handshake",
-    stroke: "m11 17 2 2a1 1 0 1 0 3-3 m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4 m21 3 1 11h-2 M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3 M3 4h8",
+    stroke: "M0 0 m11 17 2 2a1 1 0 1 0 3-3 M0 0 m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4 M0 0 m21 3 1 11h-2 M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3 M3 4h8",
     fill: "",
 };
 
 /// Lucide `hard-drive-download` icon (24 × 24 stroke grid).
 pub const HARD_DRIVE_DOWNLOAD: IconData = IconData {
     name: "hard-drive-download",
-    stroke: "M12 2v8 m16 6-4 4-4-4 M4 14H20a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V16a2 2 0 0 1 2 -2Z M6 18h.01 M10 18h.01",
+    stroke: "M12 2v8 M0 0 m16 6-4 4-4-4 M4 14H20a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V16a2 2 0 0 1 2 -2Z M6 18h.01 M10 18h.01",
     fill: "",
 };
 
 /// Lucide `hard-drive-upload` icon (24 × 24 stroke grid).
 pub const HARD_DRIVE_UPLOAD: IconData = IconData {
     name: "hard-drive-upload",
-    stroke: "m16 6-4-4-4 4 M12 2v8 M4 14H20a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V16a2 2 0 0 1 2 -2Z M6 18h.01 M10 18h.01",
+    stroke: "M0 0 m16 6-4-4-4 4 M12 2v8 M4 14H20a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V16a2 2 0 0 1 2 -2Z M6 18h.01 M10 18h.01",
     fill: "",
 };
 
@@ -6028,14 +6031,14 @@ pub const HASH: IconData = IconData {
 /// Lucide `hat-glasses` icon (24 × 24 stroke grid).
 pub const HAT_GLASSES: IconData = IconData {
     name: "hat-glasses",
-    stroke: "M14 18a2 2 0 0 0-4 0 m19 11-2.11-6.657a2 2 0 0 0-2.752-1.148l-1.276.61A2 2 0 0 1 12 4H8.5a2 2 0 0 0-1.925 1.456L5 11 M2 11h20 M14 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M4 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M14 18a2 2 0 0 0-4 0 M0 0 m19 11-2.11-6.657a2 2 0 0 0-2.752-1.148l-1.276.61A2 2 0 0 1 12 4H8.5a2 2 0 0 0-1.925 1.456L5 11 M2 11h20 M14 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M4 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
 /// Lucide `haze` icon (24 × 24 stroke grid).
 pub const HAZE: IconData = IconData {
     name: "haze",
-    stroke: "m5.2 6.2 1.4 1.4 M2 13h2 M20 13h2 m17.4 7.6 1.4-1.4 M22 17H2 M22 21H2 M16 13a4 4 0 0 0-8 0 M12 5V2.5",
+    stroke: "M0 0 m5.2 6.2 1.4 1.4 M2 13h2 M20 13h2 M0 0 m17.4 7.6 1.4-1.4 M22 17H2 M22 21H2 M16 13a4 4 0 0 0-8 0 M12 5V2.5",
     fill: "",
 };
 
@@ -6056,7 +6059,7 @@ pub const HDMI_PORT: IconData = IconData {
 /// Lucide `heading-1` icon (24 × 24 stroke grid).
 pub const HEADING_1: IconData = IconData {
     name: "heading-1",
-    stroke: "M4 12h8 M4 18V6 M12 18V6 m17 12 3-2v8",
+    stroke: "M4 12h8 M4 18V6 M12 18V6 M0 0 m17 12 3-2v8",
     fill: "",
 };
 
@@ -6105,7 +6108,7 @@ pub const HEADING: IconData = IconData {
 /// Lucide `headphone-off` icon (24 × 24 stroke grid).
 pub const HEADPHONE_OFF: IconData = IconData {
     name: "headphone-off",
-    stroke: "M21 14h-1.343 M9.128 3.47A9 9 0 0 1 21 12v3.343 m2 2 20 20 M20.414 20.414A2 2 0 0 1 19 21h-1a2 2 0 0 1-2-2v-3 M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 2.636-6.364",
+    stroke: "M21 14h-1.343 M9.128 3.47A9 9 0 0 1 21 12v3.343 M0 0 m2 2 20 20 M20.414 20.414A2 2 0 0 1 19 21h-1a2 2 0 0 1-2-2v-3 M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 2.636-6.364",
     fill: "",
 };
 
@@ -6140,21 +6143,21 @@ pub const HEART_HANDSHAKE: IconData = IconData {
 /// Lucide `heart-minus` icon (24 × 24 stroke grid).
 pub const HEART_MINUS: IconData = IconData {
     name: "heart-minus",
-    stroke: "m14.876 18.99-1.368 1.323a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5a5.2 5.2 0 0 1-.244 1.572 M15 15h6",
+    stroke: "M0 0 m14.876 18.99-1.368 1.323a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5a5.2 5.2 0 0 1-.244 1.572 M15 15h6",
     fill: "",
 };
 
 /// Lucide `heart-off` icon (24 × 24 stroke grid).
 pub const HEART_OFF: IconData = IconData {
     name: "heart-off",
-    stroke: "M10.5 4.893a5.5 5.5 0 0 1 1.091.931.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 1.872-1.002 3.356-2.187 4.655 m16.967 16.967-3.459 3.346a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5a5.5 5.5 0 0 1 2.747-4.761 m2 2 20 20",
+    stroke: "M10.5 4.893a5.5 5.5 0 0 1 1.091.931.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 1.872-1.002 3.356-2.187 4.655 M0 0 m16.967 16.967-3.459 3.346a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5a5.5 5.5 0 0 1 2.747-4.761 M0 0 m2 2 20 20",
     fill: "",
 };
 
 /// Lucide `heart-plus` icon (24 × 24 stroke grid).
 pub const HEART_PLUS: IconData = IconData {
     name: "heart-plus",
-    stroke: "m14.479 19.374-.971.939a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5a5.2 5.2 0 0 1-.219 1.49 M15 15h6 M18 12v6",
+    stroke: "M0 0 m14.479 19.374-.971.939a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5a5.2 5.2 0 0 1-.219 1.49 M15 15h6 M18 12v6",
     fill: "",
 };
 
@@ -6168,7 +6171,7 @@ pub const HEART_PULSE: IconData = IconData {
 /// Lucide `heart-x` icon (24 × 24 stroke grid).
 pub const HEART_X: IconData = IconData {
     name: "heart-x",
-    stroke: "m15.5 12.5 5 5 m20.5 12.5-5 5 M21.955 8.774a5.5 5.5 0 0 0-9.546-2.95.6.6 0 0 1-.818 0A5.5 5.5 0 0 0 2 9.5c0 2.3 1.5 4 3 5.5l5.508 5.332a2 2 0 0 0 2.57.352",
+    stroke: "M0 0 m15.5 12.5 5 5 M0 0 m20.5 12.5-5 5 M21.955 8.774a5.5 5.5 0 0 0-9.546-2.95.6.6 0 0 1-.818 0A5.5 5.5 0 0 0 2 9.5c0 2.3 1.5 4 3 5.5l5.508 5.332a2 2 0 0 0 2.57.352",
     fill: "",
 };
 
@@ -6203,21 +6206,22 @@ pub const HEXAGON: IconData = IconData {
 /// Lucide `highlighter` icon (24 × 24 stroke grid).
 pub const HIGHLIGHTER: IconData = IconData {
     name: "highlighter",
-    stroke: "m9 11-6 6v3h9l3-3 m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4",
+    stroke:
+        "M0 0 m9 11-6 6v3h9l3-3 M0 0 m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4",
     fill: "",
 };
 
 /// Lucide `hiking-stick` icon (24 × 24 stroke grid).
 pub const HIKING_STICK: IconData = IconData {
     name: "hiking-stick",
-    stroke: "M13.5 10.5 2 22 M16.352 11.648a1.205 1.205 0 01-1.704 0l-2.296-2.296a1.205 1.205 0 010-1.704l.72-.72a2 2 0 011.022-.546l.599-.12a2 2 0 001.569-1.57l.12-.598a2 2 0 01.546-1.022l.72-.72a1.205 1.205 0 011.704 0l2.296 2.296a1.205 1.205 0 010 1.704l-6.02 6.02a1 1 0 103 3l.201-.201A7.4 7.4 0 0021 9.93V7 m6 21-3-3",
+    stroke: "M13.5 10.5 2 22 M16.352 11.648a1.205 1.205 0 01-1.704 0l-2.296-2.296a1.205 1.205 0 010-1.704l.72-.72a2 2 0 011.022-.546l.599-.12a2 2 0 001.569-1.57l.12-.598a2 2 0 01.546-1.022l.72-.72a1.205 1.205 0 011.704 0l2.296 2.296a1.205 1.205 0 010 1.704l-6.02 6.02a1 1 0 103 3l.201-.201A7.4 7.4 0 0021 9.93V7 M0 0 m6 21-3-3",
     fill: "",
 };
 
 /// Lucide `hop-off` icon (24 × 24 stroke grid).
 pub const HOP_OFF: IconData = IconData {
     name: "hop-off",
-    stroke: "M10.82 16.12c1.69.6 3.91.79 5.18.85.28.01.53-.09.7-.27 M11.14 20.57c.52.24 2.44 1.12 4.08 1.37.46.06.86-.25.9-.71.12-1.52-.3-3.43-.5-4.28 M16.13 21.05c1.65.63 3.68.84 4.87.91a.9.9 0 0 0 .7-.26 M17.99 5.52a20.83 20.83 0 0 1 3.15 4.5.8.8 0 0 1-.68 1.13c-1.17.1-2.5.02-3.9-.25 M20.57 11.14c.24.52 1.12 2.44 1.37 4.08.04.3-.08.59-.31.75 M4.93 4.93a10 10 0 0 0-.67 13.4c.35.43.96.4 1.17-.12.69-1.71 1.07-5.07 1.07-6.71 1.34.45 3.1.9 4.88.62a.85.85 0 0 0 .48-.24 M5.52 17.99c1.05.95 2.91 2.42 4.5 3.15a.8.8 0 0 0 1.13-.68c.2-2.34-.33-5.3-1.57-8.28 M8.35 2.68a10 10 0 0 1 9.98 1.58c.43.35.4.96-.12 1.17-1.5.6-4.3.98-6.07 1.05 m2 2 20 20",
+    stroke: "M10.82 16.12c1.69.6 3.91.79 5.18.85.28.01.53-.09.7-.27 M11.14 20.57c.52.24 2.44 1.12 4.08 1.37.46.06.86-.25.9-.71.12-1.52-.3-3.43-.5-4.28 M16.13 21.05c1.65.63 3.68.84 4.87.91a.9.9 0 0 0 .7-.26 M17.99 5.52a20.83 20.83 0 0 1 3.15 4.5.8.8 0 0 1-.68 1.13c-1.17.1-2.5.02-3.9-.25 M20.57 11.14c.24.52 1.12 2.44 1.37 4.08.04.3-.08.59-.31.75 M4.93 4.93a10 10 0 0 0-.67 13.4c.35.43.96.4 1.17-.12.69-1.71 1.07-5.07 1.07-6.71 1.34.45 3.1.9 4.88.62a.85.85 0 0 0 .48-.24 M5.52 17.99c1.05.95 2.91 2.42 4.5 3.15a.8.8 0 0 0 1.13-.68c.2-2.34-.33-5.3-1.57-8.28 M8.35 2.68a10 10 0 0 1 9.98 1.58c.43.35.4.96-.12 1.17-1.5.6-4.3.98-6.07 1.05 M0 0 m2 2 20 20",
     fill: "",
 };
 
@@ -6245,7 +6249,7 @@ pub const HOTEL: IconData = IconData {
 /// Lucide `hourglass-cog` icon (24 × 24 stroke grid).
 pub const HOURGLASS_COG: IconData = IconData {
     name: "hourglass-cog",
-    stroke: "m14.305 19.53.923-.382 m15.228 16.852-.923-.383 m16.852 15.228-.383-.923 m16.852 20.772-.383.924 M17 2v4.172a2 2 0 0 1-.586 1.414l-8.828 8.828A2 2 0 0 0 7 17.828V22 m19.148 15.228.383-.923 m19.53 21.696-.382-.924 m20.772 16.852.924-.383 m20.772 19.148.924.383 M5 22h6.159 M5 2h14 M7 2v4.172a2 2 0 0 0 .586 1.414l5.188 5.188 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M0 0 m14.305 19.53.923-.382 M0 0 m15.228 16.852-.923-.383 M0 0 m16.852 15.228-.383-.923 M0 0 m16.852 20.772-.383.924 M17 2v4.172a2 2 0 0 1-.586 1.414l-8.828 8.828A2 2 0 0 0 7 17.828V22 M0 0 m19.148 15.228.383-.923 M0 0 m19.53 21.696-.382-.924 M0 0 m20.772 16.852.924-.383 M0 0 m20.772 19.148.924.383 M5 22h6.159 M5 2h14 M7 2v4.172a2 2 0 0 0 .586 1.414l5.188 5.188 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -6259,7 +6263,7 @@ pub const HOURGLASS: IconData = IconData {
 /// Lucide `house-cog` icon (24 × 24 stroke grid).
 pub const HOUSE_COG: IconData = IconData {
     name: "house-cog",
-    stroke: "M10.584 21H5a2 2 0 01-2-2v-9a2 2 0 01.709-1.527l7-6a2 2 0 012.582 0l7 6A2 2 0 0121 10.001v.583 M14 12H10a1 1 0 00-1 1v8 m14.305 19.53.923-.382 m15.229 16.852-.924-.383 m16.852 15.228-.383-.923 m16.852 20.773-.383.924 m19.148 15.228.383-.923 m19.53 21.697-.382-.924 m20.773 16.852.922-.383 m20.773 19.148.922.383 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M10.584 21H5a2 2 0 01-2-2v-9a2 2 0 01.709-1.527l7-6a2 2 0 012.582 0l7 6A2 2 0 0121 10.001v.583 M14 12H10a1 1 0 00-1 1v8 M0 0 m14.305 19.53.923-.382 M0 0 m15.229 16.852-.924-.383 M0 0 m16.852 15.228-.383-.923 M0 0 m16.852 20.773-.383.924 M0 0 m19.148 15.228.383-.923 M0 0 m19.53 21.697-.382-.924 M0 0 m20.773 16.852.922-.383 M0 0 m20.773 19.148.922.383 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -6301,7 +6305,7 @@ pub const HOUSE: IconData = IconData {
 /// Lucide `houses` icon (24 × 24 stroke grid).
 pub const HOUSES: IconData = IconData {
     name: "houses",
-    stroke: "m12.681 4.24.834-.715a1.45 1.45 0 011.88 0l5.09 4.364A1.45 1.45 0 0121 9v6.546a1.45 1.45 0 01-1 1.381 M15.485 11.889A1.45 1.45 0 0116 13v6.546A1.454 1.454 0 0114.546 21H4.364a1.454 1.454 0 01-1.454-1.454V13a1.45 1.45 0 01.515-1.111l5.09-4.364a1.45 1.45 0 011.88 0z M7.41 20.546v-4a1 1 0 011-1h2a1 1 0 011 1v4",
+    stroke: "M0 0 m12.681 4.24.834-.715a1.45 1.45 0 011.88 0l5.09 4.364A1.45 1.45 0 0121 9v6.546a1.45 1.45 0 01-1 1.381 M15.485 11.889A1.45 1.45 0 0116 13v6.546A1.454 1.454 0 0114.546 21H4.364a1.454 1.454 0 01-1.454-1.454V13a1.45 1.45 0 01.515-1.111l5.09-4.364a1.45 1.45 0 011.88 0z M7.41 20.546v-4a1 1 0 011-1h2a1 1 0 011 1v4",
     fill: "",
 };
 
@@ -6315,14 +6319,14 @@ pub const ICE_CREAM_BOWL: IconData = IconData {
 /// Lucide `ice-cream-cone` icon (24 × 24 stroke grid).
 pub const ICE_CREAM_CONE: IconData = IconData {
     name: "ice-cream-cone",
-    stroke: "m7 11 4.08 10.35a1 1 0 0 0 1.84 0L17 11 M17 7A5 5 0 0 0 7 7 M17 7a2 2 0 0 1 0 4H7a2 2 0 0 1 0-4",
+    stroke: "M0 0 m7 11 4.08 10.35a1 1 0 0 0 1.84 0L17 11 M17 7A5 5 0 0 0 7 7 M17 7a2 2 0 0 1 0 4H7a2 2 0 0 1 0-4",
     fill: "",
 };
 
 /// Lucide `id-card-lanyard` icon (24 × 24 stroke grid).
 pub const ID_CARD_LANYARD: IconData = IconData {
     name: "id-card-lanyard",
-    stroke: "M13.5 8h-3 m15 2-1 2h3a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2h3 M16 22a4 4 0 00-8 0 m9 2 3 6 M9 15a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M13.5 8h-3 M0 0 m15 2-1 2h3a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2h3 M16 22a4 4 0 00-8 0 M0 0 m9 2 3 6 M9 15a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -6336,14 +6340,14 @@ pub const ID_CARD: IconData = IconData {
 /// Lucide `image-down` icon (24 × 24 stroke grid).
 pub const IMAGE_DOWN: IconData = IconData {
     name: "image-down",
-    stroke: "M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21 m14 19 3 3v-5.5 m17 22 3-3 M7 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21 M0 0 m14 19 3 3v-5.5 M0 0 m17 22 3-3 M7 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `image-minus` icon (24 × 24 stroke grid).
 pub const IMAGE_MINUS: IconData = IconData {
     name: "image-minus",
-    stroke: "M21 9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7 M16 5L22 5 M7 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21",
+    stroke: "M21 9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7 M16 5L22 5 M7 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M0 0 m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21",
     fill: "",
 };
 
@@ -6357,49 +6361,49 @@ pub const IMAGE_OFF: IconData = IconData {
 /// Lucide `image-play` icon (24 × 24 stroke grid).
 pub const IMAGE_PLAY: IconData = IconData {
     name: "image-play",
-    stroke: "M15 15.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997a1 1 0 0 1-1.517-.86z M21 12.17V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6 m6 21 5-5 M7 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M15 15.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997a1 1 0 0 1-1.517-.86z M21 12.17V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6 M0 0 m6 21 5-5 M7 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `image-plus` icon (24 × 24 stroke grid).
 pub const IMAGE_PLUS: IconData = IconData {
     name: "image-plus",
-    stroke: "M16 5h6 M19 2v6 M21 11.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7.5 m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21 M7 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M16 5h6 M19 2v6 M21 11.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7.5 M0 0 m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21 M7 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `image-up` icon (24 × 24 stroke grid).
 pub const IMAGE_UP: IconData = IconData {
     name: "image-up",
-    stroke: "M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21 m14 19.5 3-3 3 3 M17 22v-5.5 M7 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21 M0 0 m14 19.5 3-3 3 3 M17 22v-5.5 M7 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `image-upscale` icon (24 × 24 stroke grid).
 pub const IMAGE_UPSCALE: IconData = IconData {
     name: "image-upscale",
-    stroke: "M16 3h5v5 M17 21h2a2 2 0 0 0 2-2 M21 12v3 m21 3-5 5 M3 7V5a2 2 0 0 1 2-2 m5 21 4.144-4.144a1.21 1.21 0 0 1 1.712 0L13 19 M9 3h3 M4 11H12a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V12a1 1 0 0 1 1 -1Z",
+    stroke: "M16 3h5v5 M17 21h2a2 2 0 0 0 2-2 M21 12v3 M0 0 m21 3-5 5 M3 7V5a2 2 0 0 1 2-2 M0 0 m5 21 4.144-4.144a1.21 1.21 0 0 1 1.712 0L13 19 M9 3h3 M4 11H12a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V12a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
 /// Lucide `image` icon (24 × 24 stroke grid).
 pub const IMAGE: IconData = IconData {
     name: "image",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M7 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M7 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M0 0 m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21",
     fill: "",
 };
 
 /// Lucide `images` icon (24 × 24 stroke grid).
 pub const IMAGES: IconData = IconData {
     name: "images",
-    stroke: "m22 11-1.296-1.296a2.4 2.4 0 0 0-3.408 0L11 16 M4 8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2 M12 7a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z M10 2H20a2 2 0 0 1 2 2V14a2 2 0 0 1 -2 2H10a2 2 0 0 1 -2 -2V4a2 2 0 0 1 2 -2Z",
+    stroke: "M0 0 m22 11-1.296-1.296a2.4 2.4 0 0 0-3.408 0L11 16 M4 8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2 M12 7a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z M10 2H20a2 2 0 0 1 2 2V14a2 2 0 0 1 -2 2H10a2 2 0 0 1 -2 -2V4a2 2 0 0 1 2 -2Z",
     fill: "M12 7a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z",
 };
 
 /// Lucide `import` icon (24 × 24 stroke grid).
 pub const IMPORT: IconData = IconData {
     name: "import",
-    stroke: "M12 3v12 m8 11 4 4 4-4 M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4",
+    stroke: "M12 3v12 M0 0 m8 11 4 4 4-4 M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4",
     fill: "",
 };
 
@@ -6413,7 +6417,7 @@ pub const INBOX: IconData = IconData {
 /// Lucide `indian-rupee` icon (24 × 24 stroke grid).
 pub const INDIAN_RUPEE: IconData = IconData {
     name: "indian-rupee",
-    stroke: "M6 3h12 M6 8h12 m6 13 8.5 8 M6 13h3 M9 13c6.667 0 6.667-10 0-10",
+    stroke: "M6 3h12 M6 8h12 M0 0 m6 13 8.5 8 M6 13h3 M9 13c6.667 0 6.667-10 0-10",
     fill: "",
 };
 
@@ -6448,14 +6452,14 @@ pub const ITALIC: IconData = IconData {
 /// Lucide `iteration-ccw` icon (24 × 24 stroke grid).
 pub const ITERATION_CCW: IconData = IconData {
     name: "iteration-ccw",
-    stroke: "m16 14 4 4-4 4 M20 10a8 8 0 1 0-8 8h8",
+    stroke: "M0 0 m16 14 4 4-4 4 M20 10a8 8 0 1 0-8 8h8",
     fill: "",
 };
 
 /// Lucide `iteration-cw` icon (24 × 24 stroke grid).
 pub const ITERATION_CW: IconData = IconData {
     name: "iteration-cw",
-    stroke: "M4 10a8 8 0 1 1 8 8H4 m8 22-4-4 4-4",
+    stroke: "M4 10a8 8 0 1 1 8 8H4 M0 0 m8 22-4-4 4-4",
     fill: "",
 };
 
@@ -6490,7 +6494,7 @@ pub const KANBAN: IconData = IconData {
 /// Lucide `kayak` icon (24 × 24 stroke grid).
 pub const KAYAK: IconData = IconData {
     name: "kayak",
-    stroke: "M18 17a1 1 0 0 0-1 1v1a2 2 0 1 0 2-2z M20.97 3.61a.45.45 0 0 0-.58-.58C10.2 6.6 6.6 10.2 3.03 20.39a.45.45 0 0 0 .58.58C13.8 17.4 17.4 13.8 20.97 3.61 m6.707 6.707 10.586 10.586 M7 5a2 2 0 1 0-2 2h1a1 1 0 0 0 1-1z",
+    stroke: "M18 17a1 1 0 0 0-1 1v1a2 2 0 1 0 2-2z M20.97 3.61a.45.45 0 0 0-.58-.58C10.2 6.6 6.6 10.2 3.03 20.39a.45.45 0 0 0 .58.58C13.8 17.4 17.4 13.8 20.97 3.61 M0 0 m6.707 6.707 10.586 10.586 M7 5a2 2 0 1 0-2 2h1a1 1 0 0 0 1-1z",
     fill: "",
 };
 
@@ -6511,14 +6515,14 @@ pub const KEY_ROUND: IconData = IconData {
 /// Lucide `key-square` icon (24 × 24 stroke grid).
 pub const KEY_SQUARE: IconData = IconData {
     name: "key-square",
-    stroke: "M12.4 2.7a2.5 2.5 0 0 1 3.4 0l5.5 5.5a2.5 2.5 0 0 1 0 3.4l-3.7 3.7a2.5 2.5 0 0 1-3.4 0L8.7 9.8a2.5 2.5 0 0 1 0-3.4z m14 7 3 3 m9.4 10.6-6.814 6.814A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814",
+    stroke: "M12.4 2.7a2.5 2.5 0 0 1 3.4 0l5.5 5.5a2.5 2.5 0 0 1 0 3.4l-3.7 3.7a2.5 2.5 0 0 1-3.4 0L8.7 9.8a2.5 2.5 0 0 1 0-3.4z M0 0 m14 7 3 3 M0 0 m9.4 10.6-6.814 6.814A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814",
     fill: "",
 };
 
 /// Lucide `key` icon (24 × 24 stroke grid).
 pub const KEY: IconData = IconData {
     name: "key",
-    stroke: "m2 21 9.6-9.6 m7.5 15.5 2.3 2.3a1 1 0 0 1 0 1.4l-2.1 2.1a1 1 0 0 1-1.4 0L4 19 M10 7.5a5.5 5.5 0 1 0 11 0a5.5 5.5 0 1 0 -11 0Z",
+    stroke: "M0 0 m2 21 9.6-9.6 M0 0 m7.5 15.5 2.3 2.3a1 1 0 0 1 0 1.4l-2.1 2.1a1 1 0 0 1-1.4 0L4 19 M10 7.5a5.5 5.5 0 1 0 11 0a5.5 5.5 0 1 0 -11 0Z",
     fill: "",
 };
 
@@ -6532,7 +6536,7 @@ pub const KEYBOARD_MUSIC: IconData = IconData {
 /// Lucide `keyboard-off` icon (24 × 24 stroke grid).
 pub const KEYBOARD_OFF: IconData = IconData {
     name: "keyboard-off",
-    stroke: "M 20 4 A2 2 0 0 1 22 6 M 22 6 L 22 16.41 M 7 16 L 16 16 M 9.69 4 L 20 4 M14 8h.01 M18 8h.01 m2 2 20 20 M20 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2 M6 8h.01 M8 12h.01",
+    stroke: "M 20 4 A2 2 0 0 1 22 6 M 22 6 L 22 16.41 M 7 16 L 16 16 M 9.69 4 L 20 4 M14 8h.01 M18 8h.01 M0 0 m2 2 20 20 M20 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2 M6 8h.01 M8 12h.01",
     fill: "",
 };
 
@@ -6560,7 +6564,7 @@ pub const LAMP_CEILING: IconData = IconData {
 /// Lucide `lamp-desk` icon (24 × 24 stroke grid).
 pub const LAMP_DESK: IconData = IconData {
     name: "lamp-desk",
-    stroke: "M10.293 2.293a1 1 0 0 1 1.414 0l2.5 2.5 5.994 1.227a1 1 0 0 1 .506 1.687l-7 7a1 1 0 0 1-1.687-.506l-1.227-5.994-2.5-2.5a1 1 0 0 1 0-1.414z m14.207 4.793-3.414 3.414 M3 20a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z m9.086 6.5-4.793 4.793a1 1 0 0 0-.18 1.17L7 18",
+    stroke: "M10.293 2.293a1 1 0 0 1 1.414 0l2.5 2.5 5.994 1.227a1 1 0 0 1 .506 1.687l-7 7a1 1 0 0 1-1.687-.506l-1.227-5.994-2.5-2.5a1 1 0 0 1 0-1.414z M0 0 m14.207 4.793-3.414 3.414 M3 20a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z M0 0 m9.086 6.5-4.793 4.793a1 1 0 0 0-.18 1.17L7 18",
     fill: "",
 };
 
@@ -6595,7 +6599,7 @@ pub const LAMP: IconData = IconData {
 /// Lucide `land-plot` icon (24 × 24 stroke grid).
 pub const LAND_PLOT: IconData = IconData {
     name: "land-plot",
-    stroke: "m12 8 6-3-6-3v10 m8 11.99-5.5 3.14a1 1 0 0 0 0 1.74l8.5 4.86a2 2 0 0 0 2 0l8.5-4.86a1 1 0 0 0 0-1.74L16 12 m6.49 12.85 11.02 6.3 M17.51 12.85 6.5 19.15",
+    stroke: "M0 0 m12 8 6-3-6-3v10 M0 0 m8 11.99-5.5 3.14a1 1 0 0 0 0 1.74l8.5 4.86a2 2 0 0 0 2 0l8.5-4.86a1 1 0 0 0 0-1.74L16 12 M0 0 m6.49 12.85 11.02 6.3 M17.51 12.85 6.5 19.15",
     fill: "",
 };
 
@@ -6609,14 +6613,14 @@ pub const LANDMARK: IconData = IconData {
 /// Lucide `languages` icon (24 × 24 stroke grid).
 pub const LANGUAGES: IconData = IconData {
     name: "languages",
-    stroke: "m5 8 6 6 m4 14 6-6 2-3 M2 5h12 M7 2h1 m22 22-5-10-5 10 M14 18h6",
+    stroke: "M0 0 m5 8 6 6 M0 0 m4 14 6-6 2-3 M2 5h12 M7 2h1 M0 0 m22 22-5-10-5 10 M14 18h6",
     fill: "",
 };
 
 /// Lucide `laptop-minimal-check` icon (24 × 24 stroke grid).
 pub const LAPTOP_MINIMAL_CHECK: IconData = IconData {
     name: "laptop-minimal-check",
-    stroke: "M2 20h20 m9 10 2 2 4-4 M5 4H19a2 2 0 0 1 2 2V14a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2Z",
+    stroke: "M2 20h20 M0 0 m9 10 2 2 4-4 M5 4H19a2 2 0 0 1 2 2V14a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
@@ -6652,35 +6656,35 @@ pub const LASSO: IconData = IconData {
 /// Lucide `layer-arrow-down` icon (24 × 24 stroke grid).
 pub const LAYER_ARROW_DOWN: IconData = IconData {
     name: "layer-arrow-down",
-    stroke: "M12 10v10 M22 10a1 1 0 01-.59.92l-5.077 2.308 M22.017 10.005a1 1 0 00-.597-.916l-8.59-3.91a2 2 0 00-1.66.001L2.6 9.08a1 1 0 00-.02 1.831l5.093 2.316 m9 17 3 3 3-3",
+    stroke: "M12 10v10 M22 10a1 1 0 01-.59.92l-5.077 2.308 M22.017 10.005a1 1 0 00-.597-.916l-8.59-3.91a2 2 0 00-1.66.001L2.6 9.08a1 1 0 00-.02 1.831l5.093 2.316 M0 0 m9 17 3 3 3-3",
     fill: "",
 };
 
 /// Lucide `layer-arrow-up` icon (24 × 24 stroke grid).
 pub const LAYER_ARROW_UP: IconData = IconData {
     name: "layer-arrow-up",
-    stroke: "M12 14V4 M7.674 10.774 2.58 13.09a1 1 0 000 1.822l8.6 3.91a2 2 0 001.65 0l8.58-3.9a1 1 0 00.59-.92 1 1 0 00-.59-.922l-5.078-2.308 m9 7 3-3 3 3",
+    stroke: "M12 14V4 M7.674 10.774 2.58 13.09a1 1 0 000 1.822l8.6 3.91a2 2 0 001.65 0l8.58-3.9a1 1 0 00.59-.92 1 1 0 00-.59-.922l-5.078-2.308 M0 0 m9 7 3-3 3 3",
     fill: "",
 };
 
 /// Lucide `layers-2` icon (24 × 24 stroke grid).
 pub const LAYERS_2: IconData = IconData {
     name: "layers-2",
-    stroke: "M13 13.74a2 2 0 0 1-2 0L2.5 8.87a1 1 0 0 1 0-1.74L11 2.26a2 2 0 0 1 2 0l8.5 4.87a1 1 0 0 1 0 1.74z m20 14.285 1.5.845a1 1 0 0 1 0 1.74L13 21.74a2 2 0 0 1-2 0l-8.5-4.87a1 1 0 0 1 0-1.74l1.5-.845",
+    stroke: "M13 13.74a2 2 0 0 1-2 0L2.5 8.87a1 1 0 0 1 0-1.74L11 2.26a2 2 0 0 1 2 0l8.5 4.87a1 1 0 0 1 0 1.74z M0 0 m20 14.285 1.5.845a1 1 0 0 1 0 1.74L13 21.74a2 2 0 0 1-2 0l-8.5-4.87a1 1 0 0 1 0-1.74l1.5-.845",
     fill: "",
 };
 
 /// Lucide `layers-arrow-down` icon (24 × 24 stroke grid).
 pub const LAYERS_ARROW_DOWN: IconData = IconData {
     name: "layers-arrow-down",
-    stroke: "M12 7v15 M2 12a1 1 0 00.58.91l5.093 2.316 M22 12a1 1 0 01-.59.92l-5.077 2.308 M8 10.37 2.6 7.91a1 1 0 010-1.831l8.57-3.9a2 2 0 011.66.001l8.59 3.91a1 1 0 010 1.831l-5.392 2.45 m9 19 3 3 3-3",
+    stroke: "M12 7v15 M2 12a1 1 0 00.58.91l5.093 2.316 M22 12a1 1 0 01-.59.92l-5.077 2.308 M8 10.37 2.6 7.91a1 1 0 010-1.831l8.57-3.9a2 2 0 011.66.001l8.59 3.91a1 1 0 010 1.831l-5.392 2.45 M0 0 m9 19 3 3 3-3",
     fill: "",
 };
 
 /// Lucide `layers-arrow-up` icon (24 × 24 stroke grid).
 pub const LAYERS_ARROW_UP: IconData = IconData {
     name: "layers-arrow-up",
-    stroke: "M12 12V2 M2 17.002a1 1 0 00.58.91l8.6 3.91a2 2 0 001.65 0l8.58-3.9a1 1 0 00.59-.92 M7.674 8.774 2.58 11.09a1 1 0 000 1.822l8.6 3.91a2 2 0 001.65 0l8.58-3.9a1 1 0 00.59-.92 1 1 0 00-.59-.922l-5.078-2.308 m9 5 3-3 3 3",
+    stroke: "M12 12V2 M2 17.002a1 1 0 00.58.91l8.6 3.91a2 2 0 001.65 0l8.58-3.9a1 1 0 00.59-.92 M7.674 8.774 2.58 11.09a1 1 0 000 1.822l8.6 3.91a2 2 0 001.65 0l8.58-3.9a1 1 0 00.59-.92 1 1 0 00-.59-.922l-5.078-2.308 M0 0 m9 5 3-3 3 3",
     fill: "",
 };
 
@@ -6708,14 +6712,14 @@ pub const LAYERS: IconData = IconData {
 /// Lucide `layout-arrow-down` icon (24 × 24 stroke grid).
 pub const LAYOUT_ARROW_DOWN: IconData = IconData {
     name: "layout-arrow-down",
-    stroke: "M4 3H9a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M4 14H9a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z M18 3v18 m21 18-3 3-3-3",
+    stroke: "M4 3H9a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M4 14H9a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z M18 3v18 M0 0 m21 18-3 3-3-3",
     fill: "",
 };
 
 /// Lucide `layout-arrow-right` icon (24 × 24 stroke grid).
 pub const LAYOUT_ARROW_RIGHT: IconData = IconData {
     name: "layout-arrow-right",
-    stroke: "M4 3H9a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M15 3H20a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H15a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M3 18h18 m18 21 3-3-3-3",
+    stroke: "M4 3H9a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M15 3H20a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H15a1 1 0 0 1 -1 -1V4a1 1 0 0 1 1 -1Z M3 18h18 M0 0 m18 21 3-3-3-3",
     fill: "",
 };
 
@@ -6820,14 +6824,14 @@ pub const LENS: IconData = IconData {
 /// Lucide `letter-spacing` icon (24 × 24 stroke grid).
 pub const LETTER_SPACING: IconData = IconData {
     name: "letter-spacing",
-    stroke: "M15 14H9 M21 3v18 M3 3v18 m8 16 3.453-7.648a.6.6 0 011.094.001L16 16",
+    stroke: "M15 14H9 M21 3v18 M3 3v18 M0 0 m8 16 3.453-7.648a.6.6 0 011.094.001L16 16",
     fill: "",
 };
 
 /// Lucide `letters` icon (24 × 24 stroke grid).
 pub const LETTERS: IconData = IconData {
     name: "letters",
-    stroke: "M15 8H9 M21 15.354a4 4 0 100 5.292 M3 18h4a2 2 0 010 4H3.5a.5.5 0 01-.5-.5v-7a.5.5 0 01.5-.5H6a2 2 0 010 4 m8 10 3.453-7.648a.6.6 0 011.094 0L16 10",
+    stroke: "M15 8H9 M21 15.354a4 4 0 100 5.292 M3 18h4a2 2 0 010 4H3.5a.5.5 0 01-.5-.5v-7a.5.5 0 01.5-.5H6a2 2 0 010 4 M0 0 m8 10 3.453-7.648a.6.6 0 011.094 0L16 10",
     fill: "",
 };
 
@@ -6841,14 +6845,14 @@ pub const LIBRARY_BIG: IconData = IconData {
 /// Lucide `library` icon (24 × 24 stroke grid).
 pub const LIBRARY: IconData = IconData {
     name: "library",
-    stroke: "m16 6 4 14 M12 6v14 M8 8v12 M4 4v16",
+    stroke: "M0 0 m16 6 4 14 M12 6v14 M8 8v12 M4 4v16",
     fill: "",
 };
 
 /// Lucide `life-buoy` icon (24 × 24 stroke grid).
 pub const LIFE_BUOY: IconData = IconData {
     name: "life-buoy",
-    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z m4.93 4.93 4.24 4.24 m14.83 9.17 4.24-4.24 m14.83 14.83 4.24 4.24 m9.17 14.83-4.24 4.24 M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z",
+    stroke: "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z M0 0 m4.93 4.93 4.24 4.24 M0 0 m14.83 9.17 4.24-4.24 M0 0 m14.83 14.83 4.24 4.24 M0 0 m9.17 14.83-4.24 4.24 M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z",
     fill: "",
 };
 
@@ -6862,7 +6866,7 @@ pub const LIGATURE: IconData = IconData {
 /// Lucide `lightbulb-off` icon (24 × 24 stroke grid).
 pub const LIGHTBULB_OFF: IconData = IconData {
     name: "lightbulb-off",
-    stroke: "M16.8 11.2c.8-.9 1.2-2 1.2-3.2a6 6 0 0 0-9.3-5 m2 2 20 20 M6.3 6.3a4.67 4.67 0 0 0 1.2 5.2c.7.7 1.3 1.5 1.5 2.5 M9 18h6 M10 22h4",
+    stroke: "M16.8 11.2c.8-.9 1.2-2 1.2-3.2a6 6 0 0 0-9.3-5 M0 0 m2 2 20 20 M6.3 6.3a4.67 4.67 0 0 0 1.2 5.2c.7.7 1.3 1.5 1.5 2.5 M9 18h6 M10 22h4",
     fill: "",
 };
 
@@ -6876,7 +6880,7 @@ pub const LIGHTBULB: IconData = IconData {
 /// Lucide `lighthouse` icon (24 × 24 stroke grid).
 pub const LIGHTHOUSE: IconData = IconData {
     name: "lighthouse",
-    stroke: "M12 3V2 M16.066 16.865 7 22l2-11V6a3 3 0 016 0v5l2 11 m19.792 4.5.866-.5 m19.797 13.5.866.5 M21 9h1 M3 9H2 m4.203 13.5-.866.5 M4.208 4.5 3.342 4 M5.5 22h13 m7.932 16.875 7.377-4.178 M8 11h8 M8 7h8",
+    stroke: "M12 3V2 M16.066 16.865 7 22l2-11V6a3 3 0 016 0v5l2 11 M0 0 m19.792 4.5.866-.5 M0 0 m19.797 13.5.866.5 M21 9h1 M3 9H2 M0 0 m4.203 13.5-.866.5 M4.208 4.5 3.342 4 M5.5 22h13 M0 0 m7.932 16.875 7.377-4.178 M8 11h8 M8 7h8",
     fill: "",
 };
 
@@ -6911,7 +6915,7 @@ pub const LINE_DOT_TOP_VERTICAL: IconData = IconData {
 /// Lucide `line-height` icon (24 × 24 stroke grid).
 pub const LINE_HEIGHT: IconData = IconData {
     name: "line-height",
-    stroke: "M15 14H9 M21 21H3 M21 3H3 m8 16 3.453-7.648a.6.6 0 011.094.001L16 16",
+    stroke: "M15 14H9 M21 21H3 M21 3H3 M0 0 m8 16 3.453-7.648a.6.6 0 011.094.001L16 16",
     fill: "",
 };
 
@@ -6953,28 +6957,28 @@ pub const LINK: IconData = IconData {
 /// Lucide `list-check` icon (24 × 24 stroke grid).
 pub const LIST_CHECK: IconData = IconData {
     name: "list-check",
-    stroke: "M16 5H3 M16 12H3 M11 19H3 m15 18 2 2 4-4",
+    stroke: "M16 5H3 M16 12H3 M11 19H3 M0 0 m15 18 2 2 4-4",
     fill: "",
 };
 
 /// Lucide `list-checks` icon (24 × 24 stroke grid).
 pub const LIST_CHECKS: IconData = IconData {
     name: "list-checks",
-    stroke: "M13 5h8 M13 12h8 M13 19h8 m3 17 2 2 4-4 m3 7 2 2 4-4",
+    stroke: "M13 5h8 M13 12h8 M13 19h8 M0 0 m3 17 2 2 4-4 M0 0 m3 7 2 2 4-4",
     fill: "",
 };
 
 /// Lucide `list-chevrons-down-up` icon (24 × 24 stroke grid).
 pub const LIST_CHEVRONS_DOWN_UP: IconData = IconData {
     name: "list-chevrons-down-up",
-    stroke: "M3 5h8 M3 12h8 M3 19h8 m15 5 3 3 3-3 m15 19 3-3 3 3",
+    stroke: "M3 5h8 M3 12h8 M3 19h8 M0 0 m15 5 3 3 3-3 M0 0 m15 19 3-3 3 3",
     fill: "",
 };
 
 /// Lucide `list-chevrons-up-down` icon (24 × 24 stroke grid).
 pub const LIST_CHEVRONS_UP_DOWN: IconData = IconData {
     name: "list-chevrons-up-down",
-    stroke: "M3 5h8 M3 12h8 M3 19h8 m15 8 3-3 3 3 m15 16 3 3 3-3",
+    stroke: "M3 5h8 M3 12h8 M3 19h8 M0 0 m15 8 3-3 3 3 M0 0 m15 16 3 3 3-3",
     fill: "",
 };
 
@@ -6989,14 +6993,14 @@ pub const LIST_CLOCK: IconData = IconData {
 /// Lucide `list-collapse` icon (24 × 24 stroke grid).
 pub const LIST_COLLAPSE: IconData = IconData {
     name: "list-collapse",
-    stroke: "M10 5h11 M10 12h11 M10 19h11 m3 10 3-3-3-3 m3 20 3-3-3-3",
+    stroke: "M10 5h11 M10 12h11 M10 19h11 M0 0 m3 10 3-3-3-3 M0 0 m3 20 3-3-3-3",
     fill: "",
 };
 
 /// Lucide `list-end` icon (24 × 24 stroke grid).
 pub const LIST_END: IconData = IconData {
     name: "list-end",
-    stroke: "M16 5H3 M16 12H3 M9 19H3 m16 16-3 3 3 3 M21 5v12a2 2 0 0 1-2 2h-6",
+    stroke: "M16 5H3 M16 12H3 M9 19H3 M0 0 m16 16-3 3 3 3 M21 5v12a2 2 0 0 1-2 2h-6",
     fill: "",
 };
 
@@ -7017,14 +7021,14 @@ pub const LIST_FILTER: IconData = IconData {
 /// Lucide `list-indent-decrease` icon (24 × 24 stroke grid).
 pub const LIST_INDENT_DECREASE: IconData = IconData {
     name: "list-indent-decrease",
-    stroke: "M21 5H11 M21 12H11 M21 19H11 m7 8-4 4 4 4",
+    stroke: "M21 5H11 M21 12H11 M21 19H11 M0 0 m7 8-4 4 4 4",
     fill: "",
 };
 
 /// Lucide `list-indent-increase` icon (24 × 24 stroke grid).
 pub const LIST_INDENT_INCREASE: IconData = IconData {
     name: "list-indent-increase",
-    stroke: "M21 5H11 M21 12H11 M21 19H11 m3 8 4 4-4 4",
+    stroke: "M21 5H11 M21 12H11 M21 19H11 M0 0 m3 8 4 4-4 4",
     fill: "",
 };
 
@@ -7080,14 +7084,14 @@ pub const LIST_SORT_DESCENDING: IconData = IconData {
 /// Lucide `list-start` icon (24 × 24 stroke grid).
 pub const LIST_START: IconData = IconData {
     name: "list-start",
-    stroke: "M3 5h6 M3 12h13 M3 19h13 m16 8-3-3 3-3 M21 19V7a2 2 0 0 0-2-2h-6",
+    stroke: "M3 5h6 M3 12h13 M3 19h13 M0 0 m16 8-3-3 3-3 M21 19V7a2 2 0 0 0-2-2h-6",
     fill: "",
 };
 
 /// Lucide `list-todo` icon (24 × 24 stroke grid).
 pub const LIST_TODO: IconData = IconData {
     name: "list-todo",
-    stroke: "M13 5h8 M13 12h8 M13 19h8 m3 17 2 2 4-4 M4 4H8a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V5a1 1 0 0 1 1 -1Z",
+    stroke: "M13 5h8 M13 12h8 M13 19h8 M0 0 m3 17 2 2 4-4 M4 4H8a1 1 0 0 1 1 1V9a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V5a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
@@ -7108,7 +7112,7 @@ pub const LIST_VIDEO: IconData = IconData {
 /// Lucide `list-x` icon (24 × 24 stroke grid).
 pub const LIST_X: IconData = IconData {
     name: "list-x",
-    stroke: "M16 5H3 M11 12H3 M16 19H3 m15.5 9.5 5 5 m20.5 9.5-5 5",
+    stroke: "M16 5H3 M11 12H3 M16 19H3 M0 0 m15.5 9.5 5 5 M0 0 m20.5 9.5-5 5",
     fill: "",
 };
 
@@ -7136,7 +7140,7 @@ pub const LOADER_PINWHEEL: IconData = IconData {
 /// Lucide `loader` icon (24 × 24 stroke grid).
 pub const LOADER: IconData = IconData {
     name: "loader",
-    stroke: "M12 2v4 m16.2 7.8 2.9-2.9 M18 12h4 m16.2 16.2 2.9 2.9 M12 18v4 m4.9 19.1 2.9-2.9 M2 12h4 m4.9 4.9 2.9 2.9",
+    stroke: "M12 2v4 M0 0 m16.2 7.8 2.9-2.9 M18 12h4 M0 0 m16.2 16.2 2.9 2.9 M12 18v4 M0 0 m4.9 19.1 2.9-2.9 M2 12h4 M0 0 m4.9 4.9 2.9 2.9",
     fill: "",
 };
 
@@ -7150,7 +7154,7 @@ pub const LOCATE_FIXED: IconData = IconData {
 /// Lucide `locate-off` icon (24 × 24 stroke grid).
 pub const LOCATE_OFF: IconData = IconData {
     name: "locate-off",
-    stroke: "M12 19v3 M12 2v3 M18.89 13.24a7 7 0 0 0-8.13-8.13 M19 12h3 M2 12h3 m2 2 20 20 M7.05 7.05a7 7 0 0 0 9.9 9.9",
+    stroke: "M12 19v3 M12 2v3 M18.89 13.24a7 7 0 0 0-8.13-8.13 M19 12h3 M2 12h3 M0 0 m2 2 20 20 M7.05 7.05a7 7 0 0 0 9.9 9.9",
     fill: "",
 };
 
@@ -7192,14 +7196,14 @@ pub const LOCK: IconData = IconData {
 /// Lucide `log-in` icon (24 × 24 stroke grid).
 pub const LOG_IN: IconData = IconData {
     name: "log-in",
-    stroke: "m10 17 5-5-5-5 M15 12H3 M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4",
+    stroke: "M0 0 m10 17 5-5-5-5 M15 12H3 M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4",
     fill: "",
 };
 
 /// Lucide `log-out` icon (24 × 24 stroke grid).
 pub const LOG_OUT: IconData = IconData {
     name: "log-out",
-    stroke: "m16 17 5-5-5-5 M21 12H9 M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4",
+    stroke: "M0 0 m16 17 5-5-5-5 M21 12H9 M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4",
     fill: "",
 };
 
@@ -7213,7 +7217,7 @@ pub const LOGS: IconData = IconData {
 /// Lucide `lollipop` icon (24 × 24 stroke grid).
 pub const LOLLIPOP: IconData = IconData {
     name: "lollipop",
-    stroke: "M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z m21 21-4.3-4.3 M11 11a2 2 0 0 0 4 0 4 4 0 0 0-8 0 6 6 0 0 0 12 0",
+    stroke: "M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M0 0 m21 21-4.3-4.3 M11 11a2 2 0 0 0 4 0 4 4 0 0 0-8 0 6 6 0 0 0 12 0",
     fill: "",
 };
 
@@ -7227,98 +7231,98 @@ pub const LUGGAGE: IconData = IconData {
 /// Lucide `magnet` icon (24 × 24 stroke grid).
 pub const MAGNET: IconData = IconData {
     name: "magnet",
-    stroke: "m12 15 4 4 M2.352 10.648a1.205 1.205 0 0 0 0 1.704l2.296 2.296a1.205 1.205 0 0 0 1.704 0l6.029-6.029a1 1 0 1 1 3 3l-6.029 6.029a1.205 1.205 0 0 0 0 1.704l2.296 2.296a1.205 1.205 0 0 0 1.704 0l6.365-6.367A1 1 0 0 0 8.716 4.282z m5 8 4 4",
+    stroke: "M0 0 m12 15 4 4 M2.352 10.648a1.205 1.205 0 0 0 0 1.704l2.296 2.296a1.205 1.205 0 0 0 1.704 0l6.029-6.029a1 1 0 1 1 3 3l-6.029 6.029a1.205 1.205 0 0 0 0 1.704l2.296 2.296a1.205 1.205 0 0 0 1.704 0l6.365-6.367A1 1 0 0 0 8.716 4.282z M0 0 m5 8 4 4",
     fill: "",
 };
 
 /// Lucide `mail-badge` icon (24 × 24 stroke grid).
 pub const MAIL_BADGE: IconData = IconData {
     name: "mail-badge",
-    stroke: "M22 7.7V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8.25 M12 12.996a1.94 1.94 0 0 1-1.03-.296L2 7 m20.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.879.001l-1.846.85a.5.5 0 0 1-.692-.593l1.29-4.88 M16 14a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M22 7.7V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8.25 M12 12.996a1.94 1.94 0 0 1-1.03-.296L2 7 M0 0 m20.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.879.001l-1.846.85a.5.5 0 0 1-.692-.593l1.29-4.88 M16 14a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
 /// Lucide `mail-check` icon (24 × 24 stroke grid).
 pub const MAIL_CHECK: IconData = IconData {
     name: "mail-check",
-    stroke: "M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8 m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7 m16 19 2 2 4-4",
+    stroke: "M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8 M0 0 m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7 M0 0 m16 19 2 2 4-4",
     fill: "",
 };
 
 /// Lucide `mail-clock` icon (24 × 24 stroke grid).
 pub const MAIL_CLOCK: IconData = IconData {
     name: "mail-clock",
-    stroke: "M16 14v2.2l1.6 1 m22 7-.759.484 M6.835 20H4a2 2 0 01-2-2V6a2 2 0 012-2h16a2 2 0 012 2v2 M7.605 10.567 2 7 M10 16a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
+    stroke: "M16 14v2.2l1.6 1 M0 0 m22 7-.759.484 M6.835 20H4a2 2 0 01-2-2V6a2 2 0 012-2h16a2 2 0 012 2v2 M7.605 10.567 2 7 M10 16a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
     fill: "",
 };
 
 /// Lucide `mail-dot` icon (24 × 24 stroke grid).
 pub const MAIL_DOT: IconData = IconData {
     name: "mail-dot",
-    stroke: "M12.674 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4.675 m2 7 9 5.701a2 2 0 0 0 2 0l1.084-.686 M16 7a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M12.674 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4.675 M0 0 m2 7 9 5.701a2 2 0 0 0 2 0l1.084-.686 M16 7a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
 /// Lucide `mail-minus` icon (24 × 24 stroke grid).
 pub const MAIL_MINUS: IconData = IconData {
     name: "mail-minus",
-    stroke: "M22 15V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8 m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7 M16 19h6",
+    stroke: "M22 15V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8 M0 0 m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7 M16 19h6",
     fill: "",
 };
 
 /// Lucide `mail-open` icon (24 × 24 stroke grid).
 pub const MAIL_OPEN: IconData = IconData {
     name: "mail-open",
-    stroke: "M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10",
+    stroke: "M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z M0 0 m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10",
     fill: "",
 };
 
 /// Lucide `mail-pen` icon (24 × 24 stroke grid).
 pub const MAIL_PEN: IconData = IconData {
     name: "mail-pen",
-    stroke: "M15.363 17.634a2 2 0 00-.506.854l-.837 2.87a.5.5 0 00.62.62l2.87-.837a2 2 0 00.854-.506l3.013-3.009a1 1 0 10-3.004-3.004z M22 10.38V6a2 2 0 00-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h6.25 m22 7-8.991 5.727a2 2 0 01-2.009 0L2 7",
+    stroke: "M15.363 17.634a2 2 0 00-.506.854l-.837 2.87a.5.5 0 00.62.62l2.87-.837a2 2 0 00.854-.506l3.013-3.009a1 1 0 10-3.004-3.004z M22 10.38V6a2 2 0 00-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h6.25 M0 0 m22 7-8.991 5.727a2 2 0 01-2.009 0L2 7",
     fill: "",
 };
 
 /// Lucide `mail-plus` icon (24 × 24 stroke grid).
 pub const MAIL_PLUS: IconData = IconData {
     name: "mail-plus",
-    stroke: "M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8 m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7 M19 16v6 M16 19h6",
+    stroke: "M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8 M0 0 m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7 M19 16v6 M16 19h6",
     fill: "",
 };
 
 /// Lucide `mail-question-mark` icon (24 × 24 stroke grid).
 pub const MAIL_QUESTION_MARK: IconData = IconData {
     name: "mail-question-mark",
-    stroke: "M22 10.5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12.5 m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7 M18 15.28c.2-.4.5-.8.9-1a2.1 2.1 0 0 1 2.6.4c.3.4.5.8.5 1.3 0 1.3-2 2-2 2 M20 22v.01",
+    stroke: "M22 10.5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12.5 M0 0 m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7 M18 15.28c.2-.4.5-.8.9-1a2.1 2.1 0 0 1 2.6.4c.3.4.5.8.5 1.3 0 1.3-2 2-2 2 M20 22v.01",
     fill: "",
 };
 
 /// Lucide `mail-search` icon (24 × 24 stroke grid).
 pub const MAIL_SEARCH: IconData = IconData {
     name: "mail-search",
-    stroke: "M22 12.5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h7.5 m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7 M18 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z m22 22-1.5-1.5",
+    stroke: "M22 12.5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h7.5 M0 0 m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7 M18 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M0 0 m22 22-1.5-1.5",
     fill: "",
 };
 
 /// Lucide `mail-warning` icon (24 × 24 stroke grid).
 pub const MAIL_WARNING: IconData = IconData {
     name: "mail-warning",
-    stroke: "M22 10.5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12.5 m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7 M20 14v4 M20 22v.01",
+    stroke: "M22 10.5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h12.5 M0 0 m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7 M20 14v4 M20 22v.01",
     fill: "",
 };
 
 /// Lucide `mail-x` icon (24 × 24 stroke grid).
 pub const MAIL_X: IconData = IconData {
     name: "mail-x",
-    stroke: "M22 12.532V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8.792 m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7 m16.5 16.5 5 5 m21.5 16.5-5 5",
+    stroke: "M22 12.532V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8.792 M0 0 m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7 M0 0 m16.5 16.5 5 5 M0 0 m21.5 16.5-5 5",
     fill: "",
 };
 
 /// Lucide `mail` icon (24 × 24 stroke grid).
 pub const MAIL: IconData = IconData {
     name: "mail",
-    stroke: "m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7 M4 4H20a2 2 0 0 1 2 2V18a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2Z",
+    stroke: "M0 0 m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7 M4 4H20a2 2 0 0 1 2 2V18a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
@@ -7332,28 +7336,28 @@ pub const MAILBOX: IconData = IconData {
 /// Lucide `mails` icon (24 × 24 stroke grid).
 pub const MAILS: IconData = IconData {
     name: "mails",
-    stroke: "M17 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 1-1.732 m22 5.5-6.419 4.179a2 2 0 0 1-2.162 0L7 5.5 M9 3H20a2 2 0 0 1 2 2V13a2 2 0 0 1 -2 2H9a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z",
+    stroke: "M17 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 1-1.732 M0 0 m22 5.5-6.419 4.179a2 2 0 0 1-2.162 0L7 5.5 M9 3H20a2 2 0 0 1 2 2V13a2 2 0 0 1 -2 2H9a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
 /// Lucide `map-minus` icon (24 × 24 stroke grid).
 pub const MAP_MINUS: IconData = IconData {
     name: "map-minus",
-    stroke: "m11 19-1.106-.552a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0l4.212 2.106a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619V14 M15 5.764V14 M21 18h-6 M9 3.236v15",
+    stroke: "M0 0 m11 19-1.106-.552a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0l4.212 2.106a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619V14 M15 5.764V14 M21 18h-6 M9 3.236v15",
     fill: "",
 };
 
 /// Lucide `map-pin-check-inside` icon (24 × 24 stroke grid).
 pub const MAP_PIN_CHECK_INSIDE: IconData = IconData {
     name: "map-pin-check-inside",
-    stroke: "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0 m9 10 2 2 4-4",
+    stroke: "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0 M0 0 m9 10 2 2 4-4",
     fill: "",
 };
 
 /// Lucide `map-pin-check` icon (24 × 24 stroke grid).
 pub const MAP_PIN_CHECK: IconData = IconData {
     name: "map-pin-check",
-    stroke: "M19.43 12.935c.357-.967.57-1.955.57-2.935a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32.197 32.197 0 0 0 .813-.728 M9 10a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z m16 18 2 2 4-4",
+    stroke: "M19.43 12.935c.357-.967.57-1.955.57-2.935a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32.197 32.197 0 0 0 .813-.728 M9 10a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M0 0 m16 18 2 2 4-4",
     fill: "",
 };
 
@@ -7381,7 +7385,7 @@ pub const MAP_PIN_MINUS: IconData = IconData {
 /// Lucide `map-pin-off` icon (24 × 24 stroke grid).
 pub const MAP_PIN_OFF: IconData = IconData {
     name: "map-pin-off",
-    stroke: "M12.75 7.09a3 3 0 0 1 2.16 2.16 M17.072 17.072c-1.634 2.17-3.527 3.912-4.471 4.727a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 1.432-4.568 m2 2 20 20 M8.475 2.818A8 8 0 0 1 20 10c0 1.183-.31 2.377-.81 3.533 M9.13 9.13a3 3 0 0 0 3.74 3.74",
+    stroke: "M12.75 7.09a3 3 0 0 1 2.16 2.16 M17.072 17.072c-1.634 2.17-3.527 3.912-4.471 4.727a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 1.432-4.568 M0 0 m2 2 20 20 M8.475 2.818A8 8 0 0 1 20 10c0 1.183-.31 2.377-.81 3.533 M9.13 9.13a3 3 0 0 0 3.74 3.74",
     fill: "",
 };
 
@@ -7409,21 +7413,21 @@ pub const MAP_PIN_PLUS: IconData = IconData {
 /// Lucide `map-pin-search` icon (24 × 24 stroke grid).
 pub const MAP_PIN_SEARCH: IconData = IconData {
     name: "map-pin-search",
-    stroke: "M 12.248 21.969 a 1 1 0 0 1 -0.849 -0.17 C 9.539 20.193 4 14.993 4 10 a 8 8 0 0 1 16 0 C 20 10.42 19.961 10.841 19.888 11.262 m22 22-1.88-1.88 M9 10a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M 12.248 21.969 a 1 1 0 0 1 -0.849 -0.17 C 9.539 20.193 4 14.993 4 10 a 8 8 0 0 1 16 0 C 20 10.42 19.961 10.841 19.888 11.262 M0 0 m22 22-1.88-1.88 M9 10a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
 /// Lucide `map-pin-x-inside` icon (24 × 24 stroke grid).
 pub const MAP_PIN_X_INSIDE: IconData = IconData {
     name: "map-pin-x-inside",
-    stroke: "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0 m14.5 7.5-5 5 m9.5 7.5 5 5",
+    stroke: "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0 M0 0 m14.5 7.5-5 5 M0 0 m9.5 7.5 5 5",
     fill: "",
 };
 
 /// Lucide `map-pin-x` icon (24 × 24 stroke grid).
 pub const MAP_PIN_X: IconData = IconData {
     name: "map-pin-x",
-    stroke: "M19.752 11.901A7.78 7.78 0 0 0 20 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 19 19 0 0 0 .09-.077 M9 10a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z m21.5 15.5-5 5 m21.5 20.5-5-5",
+    stroke: "M19.752 11.901A7.78 7.78 0 0 0 20 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 19 19 0 0 0 .09-.077 M9 10a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M0 0 m21.5 15.5-5 5 M0 0 m21.5 20.5-5-5",
     fill: "",
 };
 
@@ -7444,7 +7448,7 @@ pub const MAP_PINNED: IconData = IconData {
 /// Lucide `map-plus` icon (24 × 24 stroke grid).
 pub const MAP_PLUS: IconData = IconData {
     name: "map-plus",
-    stroke: "m11 19-1.106-.552a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0l4.212 2.106a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619V12 M15 5.764V12 M18 15v6 M21 18h-6 M9 3.236v15",
+    stroke: "M0 0 m11 19-1.106-.552a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0l4.212 2.106a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619V12 M15 5.764V12 M18 15v6 M21 18h-6 M9 3.236v15",
     fill: "",
 };
 
@@ -7458,14 +7462,14 @@ pub const MAP: IconData = IconData {
 /// Lucide `mars-stroke` icon (24 × 24 stroke grid).
 pub const MARS_STROKE: IconData = IconData {
     name: "mars-stroke",
-    stroke: "m14 6 4 4 M17 3h4v4 m21 3-7.75 7.75 M3 15a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
+    stroke: "M0 0 m14 6 4 4 M17 3h4v4 M0 0 m21 3-7.75 7.75 M3 15a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
     fill: "",
 };
 
 /// Lucide `mars` icon (24 × 24 stroke grid).
 pub const MARS: IconData = IconData {
     name: "mars",
-    stroke: "M16 3h5v5 m21 3-6.75 6.75 M4 14a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
+    stroke: "M16 3h5v5 M0 0 m21 3-6.75 6.75 M4 14a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
     fill: "",
 };
 
@@ -7479,7 +7483,7 @@ pub const MARTINI: IconData = IconData {
 /// Lucide `maximize-2` icon (24 × 24 stroke grid).
 pub const MAXIMIZE_2: IconData = IconData {
     name: "maximize-2",
-    stroke: "M15 3h6v6 m21 3-7 7 m3 21 7-7 M9 21H3v-6",
+    stroke: "M15 3h6v6 M0 0 m21 3-7 7 M0 0 m3 21 7-7 M9 21H3v-6",
     fill: "",
 };
 
@@ -7493,14 +7497,14 @@ pub const MAXIMIZE: IconData = IconData {
 /// Lucide `medal` icon (24 × 24 stroke grid).
 pub const MEDAL: IconData = IconData {
     name: "medal",
-    stroke: "M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15 M11 12 5.12 2.2 m13 12 5.88-9.8 M8 7h8 M7 17a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z M12 18v-2h-.5",
+    stroke: "M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15 M11 12 5.12 2.2 M0 0 m13 12 5.88-9.8 M8 7h8 M7 17a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z M12 18v-2h-.5",
     fill: "",
 };
 
 /// Lucide `megaphone-off` icon (24 × 24 stroke grid).
 pub const MEGAPHONE_OFF: IconData = IconData {
     name: "megaphone-off",
-    stroke: "M11.636 6A13 13 0 0 0 19.4 3.2 1 1 0 0 1 21 4v11.344 M14.378 14.357A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1 m2 2 20 20 M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14 M8 8v6",
+    stroke: "M11.636 6A13 13 0 0 0 19.4 3.2 1 1 0 0 1 21 4v11.344 M14.378 14.357A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1 M0 0 m2 2 20 20 M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14 M8 8v6",
     fill: "",
 };
 
@@ -7528,35 +7532,35 @@ pub const MENU: IconData = IconData {
 /// Lucide `merge` icon (24 × 24 stroke grid).
 pub const MERGE: IconData = IconData {
     name: "merge",
-    stroke: "m8 6 4-4 4 4 M12 2v10.3a4 4 0 0 1-1.172 2.872L4 22 m20 22-5-5",
+    stroke: "M0 0 m8 6 4-4 4 4 M12 2v10.3a4 4 0 0 1-1.172 2.872L4 22 M0 0 m20 22-5-5",
     fill: "",
 };
 
 /// Lucide `message-circle-check` icon (24 × 24 stroke grid).
 pub const MESSAGE_CIRCLE_CHECK: IconData = IconData {
     name: "message-circle-check",
-    stroke: "M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719 m16 9-5.5 5.5L8 12",
+    stroke: "M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719 M0 0 m16 9-5.5 5.5L8 12",
     fill: "",
 };
 
 /// Lucide `message-circle-code` icon (24 × 24 stroke grid).
 pub const MESSAGE_CIRCLE_CODE: IconData = IconData {
     name: "message-circle-code",
-    stroke: "m10 9-3 3 3 3 m14 15 3-3-3-3 M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719",
+    stroke: "M0 0 m10 9-3 3 3 3 M0 0 m14 15 3-3-3-3 M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719",
     fill: "",
 };
 
 /// Lucide `message-circle-dashed-check` icon (24 × 24 stroke grid).
 pub const MESSAGE_CIRCLE_DASHED_CHECK: IconData = IconData {
     name: "message-circle-dashed-check",
-    stroke: "M10.1 2.182a10 10 0 013.8 0 M13.9 21.818a10 10 0 01-3.8 0 M17.609 3.72a10 10 0 012.69 2.7 M2.182 13.9a10 10 0 010-3.8 M20.28 17.61a10 10 0 01-2.7 2.69 M21.818 10.1a10 10 0 010 3.8 M3.721 6.391a10 10 0 012.7-2.69 m6.163 21.117-2.906.85a1 1 0 01-1.236-1.169l.965-2.98 m16 9-5.5 5.5L8 12",
+    stroke: "M10.1 2.182a10 10 0 013.8 0 M13.9 21.818a10 10 0 01-3.8 0 M17.609 3.72a10 10 0 012.69 2.7 M2.182 13.9a10 10 0 010-3.8 M20.28 17.61a10 10 0 01-2.7 2.69 M21.818 10.1a10 10 0 010 3.8 M3.721 6.391a10 10 0 012.7-2.69 M0 0 m6.163 21.117-2.906.85a1 1 0 01-1.236-1.169l.965-2.98 M0 0 m16 9-5.5 5.5L8 12",
     fill: "",
 };
 
 /// Lucide `message-circle-dashed` icon (24 × 24 stroke grid).
 pub const MESSAGE_CIRCLE_DASHED: IconData = IconData {
     name: "message-circle-dashed",
-    stroke: "M10.1 2.182a10 10 0 0 1 3.8 0 M13.9 21.818a10 10 0 0 1-3.8 0 M17.609 3.72a10 10 0 0 1 2.69 2.7 M2.182 13.9a10 10 0 0 1 0-3.8 M20.28 17.61a10 10 0 0 1-2.7 2.69 M21.818 10.1a10 10 0 0 1 0 3.8 M3.721 6.391a10 10 0 0 1 2.7-2.69 m6.163 21.117-2.906.85a1 1 0 0 1-1.236-1.169l.965-2.98",
+    stroke: "M10.1 2.182a10 10 0 0 1 3.8 0 M13.9 21.818a10 10 0 0 1-3.8 0 M17.609 3.72a10 10 0 0 1 2.69 2.7 M2.182 13.9a10 10 0 0 1 0-3.8 M20.28 17.61a10 10 0 0 1-2.7 2.69 M21.818 10.1a10 10 0 0 1 0 3.8 M3.721 6.391a10 10 0 0 1 2.7-2.69 M0 0 m6.163 21.117-2.906.85a1 1 0 0 1-1.236-1.169l.965-2.98",
     fill: "",
 };
 
@@ -7577,7 +7581,7 @@ pub const MESSAGE_CIRCLE_MORE: IconData = IconData {
 /// Lucide `message-circle-off` icon (24 × 24 stroke grid).
 pub const MESSAGE_CIRCLE_OFF: IconData = IconData {
     name: "message-circle-off",
-    stroke: "m2 2 20 20 M4.93 4.929a10 10 0 0 0-1.938 11.412 2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 0 0 11.302-1.989 M8.35 2.69A10 10 0 0 1 21.3 15.65",
+    stroke: "M0 0 m2 2 20 20 M4.93 4.929a10 10 0 0 0-1.938 11.412 2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 0 0 11.302-1.989 M8.35 2.69A10 10 0 0 1 21.3 15.65",
     fill: "",
 };
 
@@ -7598,7 +7602,7 @@ pub const MESSAGE_CIRCLE_QUESTION_MARK: IconData = IconData {
 /// Lucide `message-circle-reply` icon (24 × 24 stroke grid).
 pub const MESSAGE_CIRCLE_REPLY: IconData = IconData {
     name: "message-circle-reply",
-    stroke: "M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719 m10 15-3-3 3-3 M7 12h8a2 2 0 0 1 2 2v1",
+    stroke: "M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719 M0 0 m10 15-3-3 3-3 M7 12h8a2 2 0 0 1 2 2v1",
     fill: "",
 };
 
@@ -7619,7 +7623,7 @@ pub const MESSAGE_CIRCLE_WARNING: IconData = IconData {
 /// Lucide `message-circle-x` icon (24 × 24 stroke grid).
 pub const MESSAGE_CIRCLE_X: IconData = IconData {
     name: "message-circle-x",
-    stroke: "M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719 m15 9-6 6 m9 9 6 6",
+    stroke: "M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719 M0 0 m15 9-6 6 M0 0 m9 9 6 6",
     fill: "",
 };
 
@@ -7633,14 +7637,14 @@ pub const MESSAGE_CIRCLE: IconData = IconData {
 /// Lucide `message-square-check` icon (24 × 24 stroke grid).
 pub const MESSAGE_SQUARE_CHECK: IconData = IconData {
     name: "message-square-check",
-    stroke: "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.7.7 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z m9 11 2 2 4-4",
+    stroke: "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.7.7 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z M0 0 m9 11 2 2 4-4",
     fill: "",
 };
 
 /// Lucide `message-square-code` icon (24 × 24 stroke grid).
 pub const MESSAGE_SQUARE_CODE: IconData = IconData {
     name: "message-square-code",
-    stroke: "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z m10 8-3 3 3 3 m14 14 3-3-3-3",
+    stroke: "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z M0 0 m10 8-3 3 3 3 M0 0 m14 14 3-3-3-3",
     fill: "",
 };
 
@@ -7689,7 +7693,7 @@ pub const MESSAGE_SQUARE_MORE: IconData = IconData {
 /// Lucide `message-square-off` icon (24 × 24 stroke grid).
 pub const MESSAGE_SQUARE_OFF: IconData = IconData {
     name: "message-square-off",
-    stroke: "M19 19H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.7.7 0 0 1 2 21.286V5a2 2 0 0 1 1.184-1.826 m2 2 20 20 M8.656 3H20a2 2 0 0 1 2 2v11.344",
+    stroke: "M19 19H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.7.7 0 0 1 2 21.286V5a2 2 0 0 1 1.184-1.826 M0 0 m2 2 20 20 M8.656 3H20a2 2 0 0 1 2 2v11.344",
     fill: "",
 };
 
@@ -7710,14 +7714,14 @@ pub const MESSAGE_SQUARE_QUOTE: IconData = IconData {
 /// Lucide `message-square-reply` icon (24 × 24 stroke grid).
 pub const MESSAGE_SQUARE_REPLY: IconData = IconData {
     name: "message-square-reply",
-    stroke: "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z m10 8-3 3 3 3 M17 14v-1a2 2 0 0 0-2-2H7",
+    stroke: "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z M0 0 m10 8-3 3 3 3 M17 14v-1a2 2 0 0 0-2-2H7",
     fill: "",
 };
 
 /// Lucide `message-square-share` icon (24 × 24 stroke grid).
 pub const MESSAGE_SQUARE_SHARE: IconData = IconData {
     name: "message-square-share",
-    stroke: "M12 3H4a2 2 0 0 0-2 2v16.286a.71.71 0 0 0 1.212.502l2.202-2.202A2 2 0 0 1 6.828 19H20a2 2 0 0 0 2-2v-4 M16 3h6v6 m16 9 6-6",
+    stroke: "M12 3H4a2 2 0 0 0-2 2v16.286a.71.71 0 0 0 1.212.502l2.202-2.202A2 2 0 0 1 6.828 19H20a2 2 0 0 0 2-2v-4 M16 3h6v6 M0 0 m16 9 6-6",
     fill: "",
 };
 
@@ -7738,7 +7742,7 @@ pub const MESSAGE_SQUARE_WARNING: IconData = IconData {
 /// Lucide `message-square-x` icon (24 × 24 stroke grid).
 pub const MESSAGE_SQUARE_X: IconData = IconData {
     name: "message-square-x",
-    stroke: "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z m14.5 8.5-5 5 m9.5 8.5 5 5",
+    stroke: "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z M0 0 m14.5 8.5-5 5 M0 0 m9.5 8.5 5 5",
     fill: "",
 };
 
@@ -7766,7 +7770,7 @@ pub const MESSAGES_SQUARE: IconData = IconData {
 /// Lucide `metronome` icon (24 × 24 stroke grid).
 pub const METRONOME: IconData = IconData {
     name: "metronome",
-    stroke: "M12 11.4V9.1 m12 17 6.59-6.59 m15.05 5.7-.218-.691a3 3 0 0 0-5.663 0L4.418 19.695A1 1 0 0 0 5.37 21h13.253a1 1 0 0 0 .951-1.31L18.45 16.2 M18 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M12 11.4V9.1 M0 0 m12 17 6.59-6.59 M0 0 m15.05 5.7-.218-.691a3 3 0 0 0-5.663 0L4.418 19.695A1 1 0 0 0 5.37 21h13.253a1 1 0 0 0 .951-1.31L18.45 16.2 M18 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -7780,7 +7784,7 @@ pub const MIC_AUDIO_LINES: IconData = IconData {
 /// Lucide `mic-off` icon (24 × 24 stroke grid).
 pub const MIC_OFF: IconData = IconData {
     name: "mic-off",
-    stroke: "M12 19v3 M15 9.34V5a3 3 0 0 0-5.68-1.33 M16.95 16.95A7 7 0 0 1 5 12v-2 M18.89 13.23A7 7 0 0 0 19 12v-2 m2 2 20 20 M9 9v3a3 3 0 0 0 5.12 2.12",
+    stroke: "M12 19v3 M15 9.34V5a3 3 0 0 0-5.68-1.33 M16.95 16.95A7 7 0 0 1 5 12v-2 M18.89 13.23A7 7 0 0 0 19 12v-2 M0 0 m2 2 20 20 M9 9v3a3 3 0 0 0 5.12 2.12",
     fill: "",
 };
 
@@ -7794,7 +7798,7 @@ pub const MIC_SIGNAL: IconData = IconData {
 /// Lucide `mic-vocal` icon (24 × 24 stroke grid).
 pub const MIC_VOCAL: IconData = IconData {
     name: "mic-vocal",
-    stroke: "m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12 M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5 M11 7a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z",
+    stroke: "M0 0 m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12 M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5 M11 7a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z",
     fill: "",
 };
 
@@ -7857,7 +7861,7 @@ pub const MILK: IconData = IconData {
 /// Lucide `minimize-2` icon (24 × 24 stroke grid).
 pub const MINIMIZE_2: IconData = IconData {
     name: "minimize-2",
-    stroke: "m14 10 7-7 M20 10h-6V4 m3 21 7-7 M4 14h6v6",
+    stroke: "M0 0 m14 10 7-7 M20 10h-6V4 M0 0 m3 21 7-7 M4 14h6v6",
     fill: "",
 };
 
@@ -7878,7 +7882,7 @@ pub const MINUS: IconData = IconData {
 /// Lucide `mirror-rectangular` icon (24 × 24 stroke grid).
 pub const MIRROR_RECTANGULAR: IconData = IconData {
     name: "mirror-rectangular",
-    stroke: "M11 6 8 9 m16 7-8 8 M6 2H18a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H6a2 2 0 0 1 -2 -2V4a2 2 0 0 1 2 -2Z",
+    stroke: "M11 6 8 9 M0 0 m16 7-8 8 M6 2H18a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H6a2 2 0 0 1 -2 -2V4a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
@@ -7892,7 +7896,7 @@ pub const MIRROR_ROUND: IconData = IconData {
 /// Lucide `monitor-check` icon (24 × 24 stroke grid).
 pub const MONITOR_CHECK: IconData = IconData {
     name: "monitor-check",
-    stroke: "m9 10 2 2 4-4 M4 3H20a2 2 0 0 1 2 2V15a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M12 17v4 M8 21h8",
+    stroke: "M0 0 m9 10 2 2 4-4 M4 3H20a2 2 0 0 1 2 2V15a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M12 17v4 M8 21h8",
     fill: "",
 };
 
@@ -7906,7 +7910,7 @@ pub const MONITOR_CLOUD: IconData = IconData {
 /// Lucide `monitor-cog` icon (24 × 24 stroke grid).
 pub const MONITOR_COG: IconData = IconData {
     name: "monitor-cog",
-    stroke: "M12 17v4 m14.305 7.53.923-.382 m15.228 4.852-.923-.383 m16.852 3.228-.383-.924 m16.852 8.772-.383.923 m19.148 3.228.383-.924 m19.53 9.696-.382-.924 m20.772 4.852.924-.383 m20.772 7.148.924.383 M22 13v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7 M8 21h8 M15 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M12 17v4 M0 0 m14.305 7.53.923-.382 M0 0 m15.228 4.852-.923-.383 M0 0 m16.852 3.228-.383-.924 M0 0 m16.852 8.772-.383.923 M0 0 m19.148 3.228.383-.924 M0 0 m19.53 9.696-.382-.924 M0 0 m20.772 4.852.924-.383 M0 0 m20.772 7.148.924.383 M22 13v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7 M8 21h8 M15 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -7920,14 +7924,14 @@ pub const MONITOR_DOT: IconData = IconData {
 /// Lucide `monitor-down` icon (24 × 24 stroke grid).
 pub const MONITOR_DOWN: IconData = IconData {
     name: "monitor-down",
-    stroke: "M12 13V7 m15 10-3 3-3-3 M4 3H20a2 2 0 0 1 2 2V15a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M12 17v4 M8 21h8",
+    stroke: "M12 13V7 M0 0 m15 10-3 3-3-3 M4 3H20a2 2 0 0 1 2 2V15a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M12 17v4 M8 21h8",
     fill: "",
 };
 
 /// Lucide `monitor-off` icon (24 × 24 stroke grid).
 pub const MONITOR_OFF: IconData = IconData {
     name: "monitor-off",
-    stroke: "M12 17v4 M17 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 1.184-1.826 m2 2 20 20 M8 21h8 M8.656 3H20a2 2 0 0 1 2 2v10a2 2 0 0 1-.293 1.042",
+    stroke: "M12 17v4 M17 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 1.184-1.826 M0 0 m2 2 20 20 M8 21h8 M8.656 3H20a2 2 0 0 1 2 2v10a2 2 0 0 1-.293 1.042",
     fill: "",
 };
 
@@ -7976,14 +7980,14 @@ pub const MONITOR_STOP: IconData = IconData {
 /// Lucide `monitor-up` icon (24 × 24 stroke grid).
 pub const MONITOR_UP: IconData = IconData {
     name: "monitor-up",
-    stroke: "m9 10 3-3 3 3 M12 13V7 M4 3H20a2 2 0 0 1 2 2V15a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M12 17v4 M8 21h8",
+    stroke: "M0 0 m9 10 3-3 3 3 M12 13V7 M4 3H20a2 2 0 0 1 2 2V15a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M12 17v4 M8 21h8",
     fill: "",
 };
 
 /// Lucide `monitor-x` icon (24 × 24 stroke grid).
 pub const MONITOR_X: IconData = IconData {
     name: "monitor-x",
-    stroke: "m14.5 12.5-5-5 m9.5 12.5 5-5 M4 3H20a2 2 0 0 1 2 2V15a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M12 17v4 M8 21h8",
+    stroke: "M0 0 m14.5 12.5-5-5 M0 0 m9.5 12.5 5-5 M4 3H20a2 2 0 0 1 2 2V15a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M12 17v4 M8 21h8",
     fill: "",
 };
 
@@ -8011,14 +8015,14 @@ pub const MOON: IconData = IconData {
 /// Lucide `mop-sparkles` icon (24 × 24 stroke grid).
 pub const MOP_SPARKLES: IconData = IconData {
     name: "mop-sparkles",
-    stroke: "M10 22a3 3 0 01-3-3 M10 22c2.761 0 5-1.79 5-4-4.42 0-4.08-5-8.5-5a4.501 4.501 0 000 9z M10 3H8 M12.5 11.5 22 2 M20 13v4 M22 15h-4 M4 5v4 M6 7H2 m6.98 13.02 2.665-2.664a1.21 1.21 0 011.71 0l2.29 2.288a1.21 1.21 0 010 1.712l-2.088 2.087 M9 2v2",
+    stroke: "M10 22a3 3 0 01-3-3 M10 22c2.761 0 5-1.79 5-4-4.42 0-4.08-5-8.5-5a4.501 4.501 0 000 9z M10 3H8 M12.5 11.5 22 2 M20 13v4 M22 15h-4 M4 5v4 M6 7H2 M0 0 m6.98 13.02 2.665-2.664a1.21 1.21 0 011.71 0l2.29 2.288a1.21 1.21 0 010 1.712l-2.088 2.087 M9 2v2",
     fill: "",
 };
 
 /// Lucide `mop` icon (24 × 24 stroke grid).
 pub const MOP: IconData = IconData {
     name: "mop",
-    stroke: "M10 22c2.761 0 5-1.79 5-4-4.42 0-4.08-5-8.5-5a1 1 0 100 9za3 3 0 01-3-3 M12.5 11.5 22 2 m6.98 13.02 2.665-2.664a1.21 1.21 0 011.71 0l2.29 2.288a1.21 1.21 0 010 1.712l-2.088 2.087",
+    stroke: "M10 22c2.761 0 5-1.79 5-4-4.42 0-4.08-5-8.5-5a1 1 0 100 9za3 3 0 01-3-3 M12.5 11.5 22 2 M0 0 m6.98 13.02 2.665-2.664a1.21 1.21 0 011.71 0l2.29 2.288a1.21 1.21 0 010 1.712l-2.088 2.087",
     fill: "",
 };
 
@@ -8032,22 +8036,21 @@ pub const MOSQUE: IconData = IconData {
 /// Lucide `motorbike` icon (24 × 24 stroke grid).
 pub const MOTORBIKE: IconData = IconData {
     name: "motorbike",
-    stroke: "m18 14-1-3 m3 9 6 2a2 2 0 0 1 2-2h2a2 2 0 0 1 1.99 1.81 M8 17h3a1 1 0 0 0 1-1 6 6 0 0 1 6-6 1 1 0 0 0 1-1v-.75A5 5 0 0 0 17 5 M16 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M2 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M0 0 m18 14-1-3 M0 0 m3 9 6 2a2 2 0 0 1 2-2h2a2 2 0 0 1 1.99 1.81 M8 17h3a1 1 0 0 0 1-1 6 6 0 0 1 6-6 1 1 0 0 0 1-1v-.75A5 5 0 0 0 17 5 M16 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M2 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
 /// Lucide `mountain-snow` icon (24 × 24 stroke grid).
 pub const MOUNTAIN_SNOW: IconData = IconData {
     name: "mountain-snow",
-    stroke:
-        "m8 3 4 8 5-5 5 15H2L8 3z M4.14 15.08c2.62-1.57 5.24-1.43 7.86.42 2.74 1.94 5.49 2 8.23.19",
+    stroke: "M0 0 m8 3 4 8 5-5 5 15H2L8 3z M4.14 15.08c2.62-1.57 5.24-1.43 7.86.42 2.74 1.94 5.49 2 8.23.19",
     fill: "",
 };
 
 /// Lucide `mountain` icon (24 × 24 stroke grid).
 pub const MOUNTAIN: IconData = IconData {
     name: "mountain",
-    stroke: "m8 3 4 8 5-5 5 15H2L8 3z",
+    stroke: "M0 0 m8 3 4 8 5-5 5 15H2L8 3z",
     fill: "",
 };
 
@@ -8068,7 +8071,7 @@ pub const MOUSE_OFF: IconData = IconData {
 /// Lucide `mouse-pointer-2-off` icon (24 × 24 stroke grid).
 pub const MOUSE_POINTER_2_OFF: IconData = IconData {
     name: "mouse-pointer-2-off",
-    stroke: "m15.55 8.45 5.138 2.087a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063L8.45 15.551 M22 2 2 22 m6.816 11.528-2.779-6.84a.495.495 0 0 1 .651-.651l6.84 2.779",
+    stroke: "M0 0 m15.55 8.45 5.138 2.087a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063L8.45 15.551 M22 2 2 22 M0 0 m6.816 11.528-2.779-6.84a.495.495 0 0 1 .651-.651l6.84 2.779",
     fill: "",
 };
 
@@ -8082,14 +8085,14 @@ pub const MOUSE_POINTER_2: IconData = IconData {
 /// Lucide `mouse-pointer-ban` icon (24 × 24 stroke grid).
 pub const MOUSE_POINTER_BAN: IconData = IconData {
     name: "mouse-pointer-ban",
-    stroke: "M2.034 2.681a.498.498 0 0 1 .647-.647l9 3.5a.5.5 0 0 1-.033.944L8.204 7.545a1 1 0 0 0-.66.66l-1.066 3.443a.5.5 0 0 1-.944.033z M10 16a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z m11.8 11.8 8.4 8.4",
+    stroke: "M2.034 2.681a.498.498 0 0 1 .647-.647l9 3.5a.5.5 0 0 1-.033.944L8.204 7.545a1 1 0 0 0-.66.66l-1.066 3.443a.5.5 0 0 1-.944.033z M10 16a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z M0 0 m11.8 11.8 8.4 8.4",
     fill: "",
 };
 
 /// Lucide `mouse-pointer-click` icon (24 × 24 stroke grid).
 pub const MOUSE_POINTER_CLICK: IconData = IconData {
     name: "mouse-pointer-click",
-    stroke: "M14 4.1 12 6 m5.1 8-2.9-.8 m6 12-1.9 2 M7.2 2.2 8 5.1 M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z",
+    stroke: "M14 4.1 12 6 M0 0 m5.1 8-2.9-.8 M0 0 m6 12-1.9 2 M7.2 2.2 8 5.1 M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z",
     fill: "",
 };
 
@@ -8117,7 +8120,7 @@ pub const MOUSE: IconData = IconData {
 /// Lucide `mouth-off` icon (24 × 24 stroke grid).
 pub const MOUTH_OFF: IconData = IconData {
     name: "mouth-off",
-    stroke: "M13.074 7.417a2.6 2.6 0 012.989.099c1.829 1.36 3.053 2.076 5.479 3.644a1 1 0 01.308 1.368 11.6 11.6 0 01-1.617 2.05 M2 12a50.5 50.5 0 0010.99.99 m2 2 20 20 M21 11a1 1 0 011 1 51 51 0 01-3.734.61 M7.695 7.695c-1.7 1.247-2.92 1.967-5.238 3.464a1 1 0 00-.307 1.369 11.6 11.6 0 0014.766 4.388",
+    stroke: "M13.074 7.417a2.6 2.6 0 012.989.099c1.829 1.36 3.053 2.076 5.479 3.644a1 1 0 01.308 1.368 11.6 11.6 0 01-1.617 2.05 M2 12a50.5 50.5 0 0010.99.99 M0 0 m2 2 20 20 M21 11a1 1 0 011 1 51 51 0 01-3.734.61 M7.695 7.695c-1.7 1.247-2.92 1.967-5.238 3.464a1 1 0 00-.307 1.369 11.6 11.6 0 0014.766 4.388",
     fill: "",
 };
 
@@ -8131,14 +8134,14 @@ pub const MOUTH: IconData = IconData {
 /// Lucide `move-3d` icon (24 × 24 stroke grid).
 pub const MOVE_3D: IconData = IconData {
     name: "move-3d",
-    stroke: "M5 3v16h16 m5 19 6-6 m2 6 3-3 3 3 m18 16 3 3-3 3",
+    stroke: "M5 3v16h16 M0 0 m5 19 6-6 M0 0 m2 6 3-3 3 3 M0 0 m18 16 3 3-3 3",
     fill: "",
 };
 
 /// Lucide `move-diagonal-2` icon (24 × 24 stroke grid).
 pub const MOVE_DIAGONAL_2: IconData = IconData {
     name: "move-diagonal-2",
-    stroke: "M19 13v6h-6 M5 11V5h6 m5 5 14 14",
+    stroke: "M19 13v6h-6 M5 11V5h6 M0 0 m5 5 14 14",
     fill: "",
 };
 
@@ -8173,7 +8176,7 @@ pub const MOVE_DOWN: IconData = IconData {
 /// Lucide `move-horizontal` icon (24 × 24 stroke grid).
 pub const MOVE_HORIZONTAL: IconData = IconData {
     name: "move-horizontal",
-    stroke: "m18 8 4 4-4 4 M2 12h20 m6 8-4 4 4 4",
+    stroke: "M0 0 m18 8 4 4-4 4 M2 12h20 M0 0 m6 8-4 4 4 4",
     fill: "",
 };
 
@@ -8215,14 +8218,14 @@ pub const MOVE_UP: IconData = IconData {
 /// Lucide `move-vertical` icon (24 × 24 stroke grid).
 pub const MOVE_VERTICAL: IconData = IconData {
     name: "move-vertical",
-    stroke: "M12 2v20 m8 18 4 4 4-4 m8 6 4-4 4 4",
+    stroke: "M12 2v20 M0 0 m8 18 4 4 4-4 M0 0 m8 6 4-4 4 4",
     fill: "",
 };
 
 /// Lucide `move` icon (24 × 24 stroke grid).
 pub const MOVE: IconData = IconData {
     name: "move",
-    stroke: "M12 2v20 m15 19-3 3-3-3 m19 9 3 3-3 3 M2 12h20 m5 9-3 3 3 3 m9 5 3-3 3 3",
+    stroke: "M12 2v20 M0 0 m15 19-3 3-3-3 M0 0 m19 9 3 3-3 3 M2 12h20 M0 0 m5 9-3 3 3 3 M0 0 m9 5 3-3 3 3",
     fill: "",
 };
 
@@ -8285,7 +8288,7 @@ pub const NFC: IconData = IconData {
 /// Lucide `non-binary` icon (24 × 24 stroke grid).
 pub const NON_BINARY: IconData = IconData {
     name: "non-binary",
-    stroke: "M12 2v10 m8.5 4 7 4 m8.5 8 7-4 M7 17a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z",
+    stroke: "M12 2v10 M0 0 m8.5 4 7 4 M0 0 m8.5 8 7-4 M7 17a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z",
     fill: "",
 };
 
@@ -8341,7 +8344,7 @@ pub const NOTEPAD_TEXT: IconData = IconData {
 /// Lucide `nut-off` icon (24 × 24 stroke grid).
 pub const NUT_OFF: IconData = IconData {
     name: "nut-off",
-    stroke: "M11.868 11.868a.88.88 0 01-.488.252c-1.78.28-3.54-.17-4.88-.62 0 1.272-.229 3.578-.653 5.347a10 10 0 01-.417 1.363c-.21.52-.82.55-1.17.12a10 10 0 01.677-13.393 M12.14 6.485a27.4 27.4 0 004.707-.638L20 9a7.23 7.23 0 011.706 7.05 m2 2 20 20 M20.707 20.707A1 1 0 0120 21h-1c-1.069 0-1.648.242-2.485.552A7.2 7.2 0 019.002 20l-3.155-3.153 M8.356 2.7a10 10 0 019.974 1.56c.43.35.4.97-.12 1.17a10 10 0 01-1.363.417",
+    stroke: "M11.868 11.868a.88.88 0 01-.488.252c-1.78.28-3.54-.17-4.88-.62 0 1.272-.229 3.578-.653 5.347a10 10 0 01-.417 1.363c-.21.52-.82.55-1.17.12a10 10 0 01.677-13.393 M12.14 6.485a27.4 27.4 0 004.707-.638L20 9a7.23 7.23 0 011.706 7.05 M0 0 m2 2 20 20 M20.707 20.707A1 1 0 0120 21h-1c-1.069 0-1.648.242-2.485.552A7.2 7.2 0 019.002 20l-3.155-3.153 M8.356 2.7a10 10 0 019.974 1.56c.43.35.4.97-.12 1.17a10 10 0 01-1.363.417",
     fill: "",
 };
 
@@ -8376,7 +8379,7 @@ pub const OCTAGON_PAUSE: IconData = IconData {
 /// Lucide `octagon-x` icon (24 × 24 stroke grid).
 pub const OCTAGON_X: IconData = IconData {
     name: "octagon-x",
-    stroke: "m15 9-6 6 M2.586 16.726A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2h6.624a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586z m9 9 6 6",
+    stroke: "M0 0 m15 9-6 6 M2.586 16.726A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2h6.624a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586z M0 0 m9 9 6 6",
     fill: "",
 };
 
@@ -8411,7 +8414,7 @@ pub const ORBIT: IconData = IconData {
 /// Lucide `origami` icon (24 × 24 stroke grid).
 pub const ORIGAMI: IconData = IconData {
     name: "origami",
-    stroke: "M12 12V4a1 1 0 0 1 1-1h6.297a1 1 0 0 1 .651 1.759l-4.696 4.025 m12 21-7.414-7.414A2 2 0 0 1 4 12.172V6.415a1.002 1.002 0 0 1 1.707-.707L20 20.009 m12.214 3.381 8.414 14.966a1 1 0 0 1-.167 1.199l-1.168 1.163a1 1 0 0 1-.706.291H6.351a1 1 0 0 1-.625-.219L3.25 18.8a1 1 0 0 1 .631-1.781l4.165.027",
+    stroke: "M12 12V4a1 1 0 0 1 1-1h6.297a1 1 0 0 1 .651 1.759l-4.696 4.025 M0 0 m12 21-7.414-7.414A2 2 0 0 1 4 12.172V6.415a1.002 1.002 0 0 1 1.707-.707L20 20.009 M0 0 m12.214 3.381 8.414 14.966a1 1 0 0 1-.167 1.199l-1.168 1.163a1 1 0 0 1-.706.291H6.351a1 1 0 0 1-.625-.219L3.25 18.8a1 1 0 0 1 .631-1.781l4.165.027",
     fill: "",
 };
 
@@ -8425,14 +8428,14 @@ pub const PACKAGE_2: IconData = IconData {
 /// Lucide `package-check` icon (24 × 24 stroke grid).
 pub const PACKAGE_CHECK: IconData = IconData {
     name: "package-check",
-    stroke: "M12 22V12 m16 17 2 2 4-4 M21 11.127V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l1.32-.753 M3.29 7 12 12l8.71-5 m7.5 4.27 8.997 5.148",
+    stroke: "M12 22V12 M0 0 m16 17 2 2 4-4 M21 11.127V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l1.32-.753 M3.29 7 12 12l8.71-5 M0 0 m7.5 4.27 8.997 5.148",
     fill: "",
 };
 
 /// Lucide `package-minus` icon (24 × 24 stroke grid).
 pub const PACKAGE_MINUS: IconData = IconData {
     name: "package-minus",
-    stroke: "M12 22V12 M16 17h6 M21 13V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l1.675-.955 M3.29 7 12 12l8.71-5 m7.5 4.27 8.997 5.148",
+    stroke: "M12 22V12 M16 17h6 M21 13V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l1.675-.955 M3.29 7 12 12l8.71-5 M0 0 m7.5 4.27 8.997 5.148",
     fill: "",
 };
 
@@ -8446,35 +8449,35 @@ pub const PACKAGE_OPEN: IconData = IconData {
 /// Lucide `package-plus` icon (24 × 24 stroke grid).
 pub const PACKAGE_PLUS: IconData = IconData {
     name: "package-plus",
-    stroke: "M12 22V12 M16 17h6 M19 14v6 M21 10.535V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l1.675-.955 M3.29 7 12 12l8.71-5 m7.5 4.27 8.997 5.148",
+    stroke: "M12 22V12 M16 17h6 M19 14v6 M21 10.535V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l1.675-.955 M3.29 7 12 12l8.71-5 M0 0 m7.5 4.27 8.997 5.148",
     fill: "",
 };
 
 /// Lucide `package-search` icon (24 × 24 stroke grid).
 pub const PACKAGE_SEARCH: IconData = IconData {
     name: "package-search",
-    stroke: "M12 22V12 M20.27 18.27 22 20 M21 10.498V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l.98-.559 M3.29 7 12 12l8.71-5 m7.5 4.27 8.997 5.148 M16 16.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0Z",
+    stroke: "M12 22V12 M20.27 18.27 22 20 M21 10.498V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l.98-.559 M3.29 7 12 12l8.71-5 M0 0 m7.5 4.27 8.997 5.148 M16 16.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0Z",
     fill: "",
 };
 
 /// Lucide `package-x` icon (24 × 24 stroke grid).
 pub const PACKAGE_X: IconData = IconData {
     name: "package-x",
-    stroke: "M12 22V12 m16.5 14.5 5 5 m16.5 19.5 5-5 M21 10.5V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l.13-.074 M3.29 7 12 12l8.71-5 m7.5 4.27 8.997 5.148",
+    stroke: "M12 22V12 M0 0 m16.5 14.5 5 5 M0 0 m16.5 19.5 5-5 M21 10.5V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l.13-.074 M3.29 7 12 12l8.71-5 M0 0 m7.5 4.27 8.997 5.148",
     fill: "",
 };
 
 /// Lucide `package` icon (24 × 24 stroke grid).
 pub const PACKAGE: IconData = IconData {
     name: "package",
-    stroke: "M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z M12 22V12 M3.29 7 12 12 20.71 7 m7.5 4.27 9 5.15",
+    stroke: "M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z M12 22V12 M3.29 7 12 12 20.71 7 M0 0 m7.5 4.27 9 5.15",
     fill: "",
 };
 
 /// Lucide `paint-bucket` icon (24 × 24 stroke grid).
 pub const PAINT_BUCKET: IconData = IconData {
     name: "paint-bucket",
-    stroke: "M11 7 6 2 M18.992 12H2.041 M21.145 18.38A3.34 3.34 0 0 1 20 16.5a3.3 3.3 0 0 1-1.145 1.88c-.575.46-.855 1.02-.855 1.595A2 2 0 0 0 20 22a2 2 0 0 0 2-2.025c0-.58-.285-1.13-.855-1.595 m8.5 4.5 2.148-2.148a1.205 1.205 0 0 1 1.704 0l7.296 7.296a1.205 1.205 0 0 1 0 1.704l-7.592 7.592a3.615 3.615 0 0 1-5.112 0l-3.888-3.888a3.615 3.615 0 0 1 0-5.112L5.67 7.33",
+    stroke: "M11 7 6 2 M18.992 12H2.041 M21.145 18.38A3.34 3.34 0 0 1 20 16.5a3.3 3.3 0 0 1-1.145 1.88c-.575.46-.855 1.02-.855 1.595A2 2 0 0 0 20 22a2 2 0 0 0 2-2.025c0-.58-.285-1.13-.855-1.595 M0 0 m8.5 4.5 2.148-2.148a1.205 1.205 0 0 1 1.704 0l7.296 7.296a1.205 1.205 0 0 1 0 1.704l-7.592 7.592a3.615 3.615 0 0 1-5.112 0l-3.888-3.888a3.615 3.615 0 0 1 0-5.112L5.67 7.33",
     fill: "",
 };
 
@@ -8495,7 +8498,7 @@ pub const PAINTBRUSH_VERTICAL: IconData = IconData {
 /// Lucide `paintbrush` icon (24 × 24 stroke grid).
 pub const PAINTBRUSH: IconData = IconData {
     name: "paintbrush",
-    stroke: "m14.622 17.897-10.68-2.913 M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.944.944a2.41 2.41 0 0 1 0 3.408l-.944.944a.5.5 0 0 1-.707 0L8.354 7.348a.5.5 0 0 1 0-.707l.944-.944a2.41 2.41 0 0 1 3.408 0l.944.944a.5.5 0 0 0 .707 0z M9 8c-1.804 2.71-3.97 3.46-6.583 3.948a.507.507 0 0 0-.302.819l7.32 8.883a1 1 0 0 0 1.185.204C12.735 20.405 16 16.792 16 15",
+    stroke: "M0 0 m14.622 17.897-10.68-2.913 M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.944.944a2.41 2.41 0 0 1 0 3.408l-.944.944a.5.5 0 0 1-.707 0L8.354 7.348a.5.5 0 0 1 0-.707l.944-.944a2.41 2.41 0 0 1 3.408 0l.944.944a.5.5 0 0 0 .707 0z M9 8c-1.804 2.71-3.97 3.46-6.583 3.948a.507.507 0 0 0-.302.819l7.32 8.883a1 1 0 0 0 1.185.204C12.735 20.405 16 16.792 16 15",
     fill: "",
 };
 
@@ -8509,14 +8512,14 @@ pub const PALETTE: IconData = IconData {
 /// Lucide `panda` icon (24 × 24 stroke grid).
 pub const PANDA: IconData = IconData {
     name: "panda",
-    stroke: "M11.25 17.25h1.5L12 18z m15 12 2 2 M17.902 6.599a8 8 0 0 0-.5-.5 M2 14.5C2 19.47 6.48 22 12 22s10-2.53 10-7.5a10 10 0 0 0-1.3-4.83 4.5 4.5 0 1 0-7.05-5.5 8 8 0 0 0-3.3 0 4.5 4.5 0 1 0-7.04 5.5A10 10 0 0 0 2 14.5 M6.099 6.599a8 8 0 0 1 .5-.5 m9 12-2 2",
+    stroke: "M11.25 17.25h1.5L12 18z M0 0 m15 12 2 2 M17.902 6.599a8 8 0 0 0-.5-.5 M2 14.5C2 19.47 6.48 22 12 22s10-2.53 10-7.5a10 10 0 0 0-1.3-4.83 4.5 4.5 0 1 0-7.05-5.5 8 8 0 0 0-3.3 0 4.5 4.5 0 1 0-7.04 5.5A10 10 0 0 0 2 14.5 M6.099 6.599a8 8 0 0 1 .5-.5 M0 0 m9 12-2 2",
     fill: "",
 };
 
 /// Lucide `panel-bottom-close` icon (24 × 24 stroke grid).
 pub const PANEL_BOTTOM_CLOSE: IconData = IconData {
     name: "panel-bottom-close",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M3 15h18 m15 8-3 3-3-3",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M3 15h18 M0 0 m15 8-3 3-3-3",
     fill: "",
 };
 
@@ -8530,7 +8533,7 @@ pub const PANEL_BOTTOM_DASHED: IconData = IconData {
 /// Lucide `panel-bottom-open` icon (24 × 24 stroke grid).
 pub const PANEL_BOTTOM_OPEN: IconData = IconData {
     name: "panel-bottom-open",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M3 15h18 m9 10 3-3 3 3",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M3 15h18 M0 0 m9 10 3-3 3 3",
     fill: "",
 };
 
@@ -8544,7 +8547,7 @@ pub const PANEL_BOTTOM: IconData = IconData {
 /// Lucide `panel-left-close` icon (24 × 24 stroke grid).
 pub const PANEL_LEFT_CLOSE: IconData = IconData {
     name: "panel-left-close",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M9 3v18 m16 15-3-3 3-3",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M9 3v18 M0 0 m16 15-3-3 3-3",
     fill: "",
 };
 
@@ -8558,7 +8561,7 @@ pub const PANEL_LEFT_DASHED: IconData = IconData {
 /// Lucide `panel-left-open` icon (24 × 24 stroke grid).
 pub const PANEL_LEFT_OPEN: IconData = IconData {
     name: "panel-left-open",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M9 3v18 m14 9 3 3-3 3",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M9 3v18 M0 0 m14 9 3 3-3 3",
     fill: "",
 };
 
@@ -8579,7 +8582,7 @@ pub const PANEL_LEFT: IconData = IconData {
 /// Lucide `panel-right-close` icon (24 × 24 stroke grid).
 pub const PANEL_RIGHT_CLOSE: IconData = IconData {
     name: "panel-right-close",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M15 3v18 m8 9 3 3-3 3",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M15 3v18 M0 0 m8 9 3 3-3 3",
     fill: "",
 };
 
@@ -8593,7 +8596,7 @@ pub const PANEL_RIGHT_DASHED: IconData = IconData {
 /// Lucide `panel-right-open` icon (24 × 24 stroke grid).
 pub const PANEL_RIGHT_OPEN: IconData = IconData {
     name: "panel-right-open",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M15 3v18 m10 15-3-3 3-3",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M15 3v18 M0 0 m10 15-3-3 3-3",
     fill: "",
 };
 
@@ -8614,7 +8617,7 @@ pub const PANEL_TOP_BOTTOM_DASHED: IconData = IconData {
 /// Lucide `panel-top-close` icon (24 × 24 stroke grid).
 pub const PANEL_TOP_CLOSE: IconData = IconData {
     name: "panel-top-close",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M3 9h18 m9 16 3-3 3 3",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M3 9h18 M0 0 m9 16 3-3 3 3",
     fill: "",
 };
 
@@ -8628,7 +8631,7 @@ pub const PANEL_TOP_DASHED: IconData = IconData {
 /// Lucide `panel-top-open` icon (24 × 24 stroke grid).
 pub const PANEL_TOP_OPEN: IconData = IconData {
     name: "panel-top-open",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M3 9h18 m15 14-3 3-3-3",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M3 9h18 M0 0 m15 14-3 3-3-3",
     fill: "",
 };
 
@@ -8670,7 +8673,7 @@ pub const PAPER_BAG: IconData = IconData {
 /// Lucide `paperclip` icon (24 × 24 stroke grid).
 pub const PAPERCLIP: IconData = IconData {
     name: "paperclip",
-    stroke: "m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551",
+    stroke: "M0 0 m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551",
     fill: "",
 };
 
@@ -8691,7 +8694,7 @@ pub const PARENTHESES: IconData = IconData {
 /// Lucide `park` icon (24 × 24 stroke grid).
 pub const PARK: IconData = IconData {
     name: "park",
-    stroke: "M12 18h10 M13.248 9.998A4.5 4.5 0 0 0 11.75 8.6V8a1 1 0 0 0-7.5 0 4.9 4.9 0 0 0 2.25 9H8 m15 14-2 6 m19 14 2 6 M21 14h-8 M8 20v-5.922a2 2 0 0 0-.586-1.414L6.5 11.75 M9.205 12.795 8 14 M17 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M12 18h10 M13.248 9.998A4.5 4.5 0 0 0 11.75 8.6V8a1 1 0 0 0-7.5 0 4.9 4.9 0 0 0 2.25 9H8 M0 0 m15 14-2 6 M0 0 m19 14 2 6 M21 14h-8 M8 20v-5.922a2 2 0 0 0-.586-1.414L6.5 11.75 M9.205 12.795 8 14 M17 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -8705,7 +8708,7 @@ pub const PARKING_METER: IconData = IconData {
 /// Lucide `party-popper` icon (24 × 24 stroke grid).
 pub const PARTY_POPPER: IconData = IconData {
     name: "party-popper",
-    stroke: "M5.8 11.3 2 22l10.7-3.79 M4 3h.01 M22 8h.01 M15 2h.01 M22 20h.01 m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10 m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17 m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7 M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z",
+    stroke: "M5.8 11.3 2 22l10.7-3.79 M4 3h.01 M22 8h.01 M15 2h.01 M22 20h.01 M0 0 m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10 M0 0 m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17 M0 0 m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7 M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z",
     fill: "",
 };
 
@@ -8740,14 +8743,14 @@ pub const PEN_LINE: IconData = IconData {
 /// Lucide `pen-off` icon (24 × 24 stroke grid).
 pub const PEN_OFF: IconData = IconData {
     name: "pen-off",
-    stroke: "m10 10-6.157 6.162a2 2 0 0 0-.5.833l-1.322 4.36a.5.5 0 0 0 .622.624l4.358-1.323a2 2 0 0 0 .83-.5L14 13.982 m12.829 7.172 4.359-4.346a1 1 0 1 1 3.986 3.986l-4.353 4.353 m2 2 20 20",
+    stroke: "M0 0 m10 10-6.157 6.162a2 2 0 0 0-.5.833l-1.322 4.36a.5.5 0 0 0 .622.624l4.358-1.323a2 2 0 0 0 .83-.5L14 13.982 M0 0 m12.829 7.172 4.359-4.346a1 1 0 1 1 3.986 3.986l-4.353 4.353 M0 0 m2 2 20 20",
     fill: "",
 };
 
 /// Lucide `pen-tool` icon (24 × 24 stroke grid).
 pub const PEN_TOOL: IconData = IconData {
     name: "pen-tool",
-    stroke: "m18 13-.654-4.736a4 4 0 00-2.756-3.266l-9.163-2.9a2 2 0 00-2.017.493l-.82.819a2 2 0 00-.492 2.017l2.9 9.163a4 4 0 003.266 2.756L13 18 M18.648 12.352a1.205 1.205 0 011.704 0l1.296 1.296a1.205 1.205 0 010 1.704l-6.296 6.296a1.205 1.205 0 01-1.704 0l-1.296-1.296a1.205 1.205 0 010-1.704z m3 3 6.586 6.586 M9 11a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M0 0 m18 13-.654-4.736a4 4 0 00-2.756-3.266l-9.163-2.9a2 2 0 00-2.017.493l-.82.819a2 2 0 00-.492 2.017l2.9 9.163a4 4 0 003.266 2.756L13 18 M18.648 12.352a1.205 1.205 0 011.704 0l1.296 1.296a1.205 1.205 0 010 1.704l-6.296 6.296a1.205 1.205 0 01-1.704 0l-1.296-1.296a1.205 1.205 0 010-1.704z M0 0 m3 3 6.586 6.586 M9 11a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -8761,35 +8764,35 @@ pub const PEN: IconData = IconData {
 /// Lucide `pencil-line` icon (24 × 24 stroke grid).
 pub const PENCIL_LINE: IconData = IconData {
     name: "pencil-line",
-    stroke: "M13 21h8 m15 5 4 4 M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
+    stroke: "M13 21h8 M0 0 m15 5 4 4 M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
     fill: "",
 };
 
 /// Lucide `pencil-off` icon (24 × 24 stroke grid).
 pub const PENCIL_OFF: IconData = IconData {
     name: "pencil-off",
-    stroke: "m10 10-6.157 6.162a2 2 0 0 0-.5.833l-1.322 4.36a.5.5 0 0 0 .622.624l4.358-1.323a2 2 0 0 0 .83-.5L14 13.982 m12.829 7.172 4.359-4.346a1 1 0 1 1 3.986 3.986l-4.353 4.353 m15 5 4 4 m2 2 20 20",
+    stroke: "M0 0 m10 10-6.157 6.162a2 2 0 0 0-.5.833l-1.322 4.36a.5.5 0 0 0 .622.624l4.358-1.323a2 2 0 0 0 .83-.5L14 13.982 M0 0 m12.829 7.172 4.359-4.346a1 1 0 1 1 3.986 3.986l-4.353 4.353 M0 0 m15 5 4 4 M0 0 m2 2 20 20",
     fill: "",
 };
 
 /// Lucide `pencil-ruler` icon (24 × 24 stroke grid).
 pub const PENCIL_RULER: IconData = IconData {
     name: "pencil-ruler",
-    stroke: "M13 7 8.7 2.7a2.41 2.41 0 0 0-3.4 0L2.7 5.3a2.41 2.41 0 0 0 0 3.4L7 13 m8 6 2-2 m18 16 2-2 m17 11 4.3 4.3c.94.94.94 2.46 0 3.4l-2.6 2.6c-.94.94-2.46.94-3.4 0L11 17 M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z m15 5 4 4",
+    stroke: "M13 7 8.7 2.7a2.41 2.41 0 0 0-3.4 0L2.7 5.3a2.41 2.41 0 0 0 0 3.4L7 13 M0 0 m8 6 2-2 M0 0 m18 16 2-2 M0 0 m17 11 4.3 4.3c.94.94.94 2.46 0 3.4l-2.6 2.6c-.94.94-2.46.94-3.4 0L11 17 M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z M0 0 m15 5 4 4",
     fill: "",
 };
 
 /// Lucide `pencil-sparkles` icon (24 × 24 stroke grid).
 pub const PENCIL_SPARKLES: IconData = IconData {
     name: "pencil-sparkles",
-    stroke: "M10 3H8 m15.007 5.008 3.987 3.986 M20 15v4 M21.174 6.813a2.82 2.82 0 0 0-3.986-3.987L3.842 16.175a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z M22 17h-4 M4 5v4 M6 7H2 M9 2v2",
+    stroke: "M10 3H8 M0 0 m15.007 5.008 3.987 3.986 M20 15v4 M21.174 6.813a2.82 2.82 0 0 0-3.986-3.987L3.842 16.175a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z M22 17h-4 M4 5v4 M6 7H2 M9 2v2",
     fill: "",
 };
 
 /// Lucide `pencil` icon (24 × 24 stroke grid).
 pub const PENCIL: IconData = IconData {
     name: "pencil",
-    stroke: "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z m15 5 4 4",
+    stroke: "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z M0 0 m15 5 4 4",
     fill: "",
 };
 
@@ -8817,7 +8820,7 @@ pub const PERFUME_BOTTLE: IconData = IconData {
 /// Lucide `person-standing` icon (24 × 24 stroke grid).
 pub const PERSON_STANDING: IconData = IconData {
     name: "person-standing",
-    stroke: "M11 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z m9 20 3-6 3 6 m6 8 6 2 6-2 M12 10v4",
+    stroke: "M11 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z M0 0 m9 20 3-6 3 6 M0 0 m6 8 6 2 6-2 M12 10v4",
     fill: "",
 };
 
@@ -8845,14 +8848,14 @@ pub const PHONE_CALL: IconData = IconData {
 /// Lucide `phone-forwarded` icon (24 × 24 stroke grid).
 pub const PHONE_FORWARDED: IconData = IconData {
     name: "phone-forwarded",
-    stroke: "M14 6h8 m18 2 4 4-4 4 M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384",
+    stroke: "M14 6h8 M0 0 m18 2 4 4-4 4 M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384",
     fill: "",
 };
 
 /// Lucide `phone-incoming` icon (24 × 24 stroke grid).
 pub const PHONE_INCOMING: IconData = IconData {
     name: "phone-incoming",
-    stroke: "M16 2v6h6 m22 2-6 6 M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384",
+    stroke: "M16 2v6h6 M0 0 m22 2-6 6 M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384",
     fill: "",
 };
 
@@ -8866,7 +8869,7 @@ pub const PHONE_LOG: IconData = IconData {
 /// Lucide `phone-missed` icon (24 × 24 stroke grid).
 pub const PHONE_MISSED: IconData = IconData {
     name: "phone-missed",
-    stroke: "m16 2 6 6 m22 2-6 6 M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384",
+    stroke: "M0 0 m16 2 6 6 M0 0 m22 2-6 6 M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384",
     fill: "",
 };
 
@@ -8880,7 +8883,7 @@ pub const PHONE_OFF: IconData = IconData {
 /// Lucide `phone-outgoing` icon (24 × 24 stroke grid).
 pub const PHONE_OUTGOING: IconData = IconData {
     name: "phone-outgoing",
-    stroke: "m16 8 6-6 M22 8V2h-6 M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384",
+    stroke: "M0 0 m16 8 6-6 M22 8V2h-6 M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384",
     fill: "",
 };
 
@@ -8908,7 +8911,7 @@ pub const PIANO: IconData = IconData {
 /// Lucide `pickaxe` icon (24 × 24 stroke grid).
 pub const PICKAXE: IconData = IconData {
     name: "pickaxe",
-    stroke: "m14 13-8.381 8.38a1 1 0 0 1-3.001-3L11 9.999 M15.973 4.027A13 13 0 0 0 5.902 2.373c-1.398.342-1.092 2.158.277 2.601a19.9 19.9 0 0 1 5.822 3.024 M16.001 11.999a19.9 19.9 0 0 1 3.024 5.824c.444 1.369 2.26 1.676 2.603.278A13 13 0 0 0 20 8.069 M18.352 3.352a1.205 1.205 0 0 0-1.704 0l-5.296 5.296a1.205 1.205 0 0 0 0 1.704l2.296 2.296a1.205 1.205 0 0 0 1.704 0l5.296-5.296a1.205 1.205 0 0 0 0-1.704z",
+    stroke: "M0 0 m14 13-8.381 8.38a1 1 0 0 1-3.001-3L11 9.999 M15.973 4.027A13 13 0 0 0 5.902 2.373c-1.398.342-1.092 2.158.277 2.601a19.9 19.9 0 0 1 5.822 3.024 M16.001 11.999a19.9 19.9 0 0 1 3.024 5.824c.444 1.369 2.26 1.676 2.603.278A13 13 0 0 0 20 8.069 M18.352 3.352a1.205 1.205 0 0 0-1.704 0l-5.296 5.296a1.205 1.205 0 0 0 0 1.704l2.296 2.296a1.205 1.205 0 0 0 1.704 0l5.296-5.296a1.205 1.205 0 0 0 0-1.704z",
     fill: "",
 };
 
@@ -8922,7 +8925,7 @@ pub const PICTURE_IN_PICTURE_2: IconData = IconData {
 /// Lucide `picture-in-picture` icon (24 × 24 stroke grid).
 pub const PICTURE_IN_PICTURE: IconData = IconData {
     name: "picture-in-picture",
-    stroke: "M2 10h6V4 m2 4 6 6 M21 10V7a2 2 0 0 0-2-2h-7 M3 14v2a2 2 0 0 0 2 2h3 M13 14H21a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H13a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z",
+    stroke: "M2 10h6V4 M0 0 m2 4 6 6 M21 10V7a2 2 0 0 0-2-2h-7 M3 14v2a2 2 0 0 0 2 2h3 M13 14H21a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H13a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
@@ -8936,14 +8939,14 @@ pub const PIGGY_BANK: IconData = IconData {
 /// Lucide `pilcrow-left` icon (24 × 24 stroke grid).
 pub const PILCROW_LEFT: IconData = IconData {
     name: "pilcrow-left",
-    stroke: "M14 3v11 M14 9h-3a3 3 0 0 1 0-6h9 M18 3v11 M22 18H2l4-4 m6 22-4-4",
+    stroke: "M14 3v11 M14 9h-3a3 3 0 0 1 0-6h9 M18 3v11 M22 18H2l4-4 M0 0 m6 22-4-4",
     fill: "",
 };
 
 /// Lucide `pilcrow-right` icon (24 × 24 stroke grid).
 pub const PILCROW_RIGHT: IconData = IconData {
     name: "pilcrow-right",
-    stroke: "M10 3v11 M10 9H7a1 1 0 0 1 0-6h8 M14 3v11 m18 14 4 4H2 m22 18-4 4",
+    stroke: "M10 3v11 M10 9H7a1 1 0 0 1 0-6h8 M14 3v11 M0 0 m18 14 4 4H2 M0 0 m22 18-4 4",
     fill: "",
 };
 
@@ -8964,14 +8967,15 @@ pub const PILL_BOTTLE: IconData = IconData {
 /// Lucide `pill` icon (24 × 24 stroke grid).
 pub const PILL: IconData = IconData {
     name: "pill",
-    stroke: "m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z m8.5 8.5 7 7",
+    stroke:
+        "M0 0 m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z M0 0 m8.5 8.5 7 7",
     fill: "",
 };
 
 /// Lucide `pin-off` icon (24 × 24 stroke grid).
 pub const PIN_OFF: IconData = IconData {
     name: "pin-off",
-    stroke: "M12 17v5 M15 9.34V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H7.89 m2 2 20 20 M9 9v1.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h11",
+    stroke: "M12 17v5 M15 9.34V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H7.89 M0 0 m2 2 20 20 M9 9v1.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h11",
     fill: "",
 };
 
@@ -8985,14 +8989,14 @@ pub const PIN: IconData = IconData {
 /// Lucide `pipette` icon (24 × 24 stroke grid).
 pub const PIPETTE: IconData = IconData {
     name: "pipette",
-    stroke: "m12 9-8.414 8.414A2 2 0 0 0 3 18.828v1.344a2 2 0 0 1-.586 1.414A2 2 0 0 1 3.828 21h1.344a2 2 0 0 0 1.414-.586L15 12 m18 9 .4.4a1 1 0 1 1-3 3l-3.8-3.8a1 1 0 1 1 3-3l.4.4 3.4-3.4a1 1 0 1 1 3 3z m2 22 .414-.414",
+    stroke: "M0 0 m12 9-8.414 8.414A2 2 0 0 0 3 18.828v1.344a2 2 0 0 1-.586 1.414A2 2 0 0 1 3.828 21h1.344a2 2 0 0 0 1.414-.586L15 12 M0 0 m18 9 .4.4a1 1 0 1 1-3 3l-3.8-3.8a1 1 0 1 1 3-3l.4.4 3.4-3.4a1 1 0 1 1 3 3z M0 0 m2 22 .414-.414",
     fill: "",
 };
 
 /// Lucide `pizza` icon (24 × 24 stroke grid).
 pub const PIZZA: IconData = IconData {
     name: "pizza",
-    stroke: "m12 14-1 1 m13.75 18.25-1.25 1.42 M17.775 5.654a15.68 15.68 0 0 0-12.121 12.12 M18.8 9.3a1 1 0 0 0 2.1 7.7 M21.964 20.732a1 1 0 0 1-1.232 1.232l-18-5a1 1 0 0 1-.695-1.232A19.68 19.68 0 0 1 15.732 2.037a1 1 0 0 1 1.232.695z",
+    stroke: "M0 0 m12 14-1 1 M0 0 m13.75 18.25-1.25 1.42 M17.775 5.654a15.68 15.68 0 0 0-12.121 12.12 M18.8 9.3a1 1 0 0 0 2.1 7.7 M21.964 20.732a1 1 0 0 1-1.232 1.232l-18-5a1 1 0 0 1-.695-1.232A19.68 19.68 0 0 1 15.732 2.037a1 1 0 0 1 1.232.695z",
     fill: "",
 };
 
@@ -9020,14 +9024,14 @@ pub const PLANE: IconData = IconData {
 /// Lucide `plant-pot` icon (24 × 24 stroke grid).
 pub const PLANT_POT: IconData = IconData {
     name: "plant-pot",
-    stroke: "M14 8.536V6a4 4 0 014-4h1.5a.5.5 0 01.5.5V4a4 4 0 01-4 4 4 4 0 00-4 4 5 5 0 01-8-4 5 5 0 018 4c0 2 1 3 1 5 m18 17-1.085 3.58A2 2 0 0115 22H9.002a2 2 0 01-1.913-1.418L6 17 M5 17h14",
+    stroke: "M14 8.536V6a4 4 0 014-4h1.5a.5.5 0 01.5.5V4a4 4 0 01-4 4 4 4 0 00-4 4 5 5 0 01-8-4 5 5 0 018 4c0 2 1 3 1 5 M0 0 m18 17-1.085 3.58A2 2 0 0115 22H9.002a2 2 0 01-1.913-1.418L6 17 M5 17h14",
     fill: "",
 };
 
 /// Lucide `play-off` icon (24 × 24 stroke grid).
 pub const PLAY_OFF: IconData = IconData {
     name: "play-off",
-    stroke: "m10.215 4.56 9.79 5.71a2 2 0 0 1 .003 3.458l-.393.23 m16.042 16.042-8.034 4.686A2 2 0 0 1 5 19V5 m2 2 20 20",
+    stroke: "M0 0 m10.215 4.56 9.79 5.71a2 2 0 0 1 .003 3.458l-.393.23 M0 0 m16.042 16.042-8.034 4.686A2 2 0 0 1 5 19V5 M0 0 m2 2 20 20",
     fill: "",
 };
 
@@ -9048,14 +9052,14 @@ pub const PLAYING_CARD: IconData = IconData {
 /// Lucide `playing-cards-fan` icon (24 × 24 stroke grid).
 pub const PLAYING_CARDS_FAN: IconData = IconData {
     name: "playing-cards-fan",
-    stroke: "M12.65 7.65a2 2 0 012.629-1.046l5.51 2.374a2 2 0 011.046 2.628l-3.957 9.184a2 2 0 01-2.628 1.046l-5.51-2.374a2 2 0 01-1.046-2.628z M18 7.777V4a2 2 0 00-2-2h-6a2 2 0 00-2 2v10a2 2 0 001.137 1.805 m8 4.389-4.364.809a2 2 0 00-1.602 2.33l1.822 9.833a2 2 0 002.331 1.602l2.542-.47",
+    stroke: "M12.65 7.65a2 2 0 012.629-1.046l5.51 2.374a2 2 0 011.046 2.628l-3.957 9.184a2 2 0 01-2.628 1.046l-5.51-2.374a2 2 0 01-1.046-2.628z M18 7.777V4a2 2 0 00-2-2h-6a2 2 0 00-2 2v10a2 2 0 001.137 1.805 M0 0 m8 4.389-4.364.809a2 2 0 00-1.602 2.33l1.822 9.833a2 2 0 002.331 1.602l2.542-.47",
     fill: "",
 };
 
 /// Lucide `playing-cards` icon (24 × 24 stroke grid).
 pub const PLAYING_CARDS: IconData = IconData {
     name: "playing-cards",
-    stroke: "M14.832 8.445a1 1 0 00-1.589-.098l-2.075 3.098a1 1 0 000 1.11l2 3a1 1 0 001.664 0l2-3a1 1 0 000-1.11z m7.18 20.827-5-11a2 2 0 01.993-2.647L7 5.44 M9 2H19a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H9a2 2 0 0 1 -2 -2V4a2 2 0 0 1 2 -2Z",
+    stroke: "M14.832 8.445a1 1 0 00-1.589-.098l-2.075 3.098a1 1 0 000 1.11l2 3a1 1 0 001.664 0l2-3a1 1 0 000-1.11z M0 0 m7.18 20.827-5-11a2 2 0 01.993-2.647L7 5.44 M9 2H19a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H9a2 2 0 0 1 -2 -2V4a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
@@ -9069,7 +9073,7 @@ pub const PLUG_2: IconData = IconData {
 /// Lucide `plug-zap` icon (24 × 24 stroke grid).
 pub const PLUG_ZAP: IconData = IconData {
     name: "plug-zap",
-    stroke: "M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z m2 22 3-3 M7.5 13.5 10 11 M10.5 16.5 13 14 m18 3-4 4h6l-4 4",
+    stroke: "M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z M0 0 m2 22 3-3 M7.5 13.5 10 11 M10.5 16.5 13 14 M0 0 m18 3-4 4h6l-4 4",
     fill: "",
 };
 
@@ -9104,7 +9108,7 @@ pub const PODIUM: IconData = IconData {
 /// Lucide `pointer-off` icon (24 × 24 stroke grid).
 pub const POINTER_OFF: IconData = IconData {
     name: "pointer-off",
-    stroke: "M10 4.5V4a2 2 0 0 0-2.41-1.957 M13.9 8.4a2 2 0 0 0-1.26-1.295 M21.7 16.2A8 8 0 0 0 22 14v-3a2 2 0 1 0-4 0v-1a2 2 0 0 0-3.63-1.158 m7 15-1.8-1.8a2 2 0 0 0-2.79 2.86L6 19.7a7.74 7.74 0 0 0 6 2.3h2a8 8 0 0 0 5.657-2.343 M6 6v8 m2 2 20 20",
+    stroke: "M10 4.5V4a2 2 0 0 0-2.41-1.957 M13.9 8.4a2 2 0 0 0-1.26-1.295 M21.7 16.2A8 8 0 0 0 22 14v-3a2 2 0 1 0-4 0v-1a2 2 0 0 0-3.63-1.158 M0 0 m7 15-1.8-1.8a2 2 0 0 0-2.79 2.86L6 19.7a7.74 7.74 0 0 0 6 2.3h2a8 8 0 0 0 5.657-2.343 M6 6v8 M0 0 m2 2 20 20",
     fill: "",
 };
 
@@ -9118,14 +9122,14 @@ pub const POINTER: IconData = IconData {
 /// Lucide `popcorn` icon (24 × 24 stroke grid).
 pub const POPCORN: IconData = IconData {
     name: "popcorn",
-    stroke: "M18 8a2 2 0 0 0 0-4 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0 0 4 M10 22 9 8 m14 22 1-14 M20 8c.5 0 .9.4.8 1l-2.6 12c-.1.5-.7 1-1.2 1H7c-.6 0-1.1-.4-1.2-1L3.2 9c-.1-.6.3-1 .8-1Z",
+    stroke: "M18 8a2 2 0 0 0 0-4 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0 0 4 M10 22 9 8 M0 0 m14 22 1-14 M20 8c.5 0 .9.4.8 1l-2.6 12c-.1.5-.7 1-1.2 1H7c-.6 0-1.1-.4-1.2-1L3.2 9c-.1-.6.3-1 .8-1Z",
     fill: "",
 };
 
 /// Lucide `popsicle` icon (24 × 24 stroke grid).
 pub const POPSICLE: IconData = IconData {
     name: "popsicle",
-    stroke: "M18.6 14.4c.8-.8.8-2 0-2.8l-8.1-8.1a4.95 4.95 0 1 0-7.1 7.1l8.1 8.1c.9.7 2.1.7 2.9-.1Z m22 22-5.5-5.5",
+    stroke: "M18.6 14.4c.8-.8.8-2 0-2.8l-8.1-8.1a4.95 4.95 0 1 0-7.1 7.1l8.1 8.1c.9.7 2.1.7 2.9-.1Z M0 0 m22 22-5.5-5.5",
     fill: "",
 };
 
@@ -9139,7 +9143,8 @@ pub const POUND_STERLING: IconData = IconData {
 /// Lucide `power-off` icon (24 × 24 stroke grid).
 pub const POWER_OFF: IconData = IconData {
     name: "power-off",
-    stroke: "M18.36 6.64A9 9 0 0 1 20.77 15 M6.16 6.16a9 9 0 1 0 12.68 12.68 M12 2v4 m2 2 20 20",
+    stroke:
+        "M18.36 6.64A9 9 0 0 1 20.77 15 M6.16 6.16a9 9 0 1 0 12.68 12.68 M12 2v4 M0 0 m2 2 20 20",
     fill: "",
 };
 
@@ -9153,7 +9158,7 @@ pub const POWER: IconData = IconData {
 /// Lucide `presentation` icon (24 × 24 stroke grid).
 pub const PRESENTATION: IconData = IconData {
     name: "presentation",
-    stroke: "M2 3h20 M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3 m7 21 5-5 5 5",
+    stroke: "M2 3h20 M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3 M0 0 m7 21 5-5 5 5",
     fill: "",
 };
 
@@ -9167,14 +9172,14 @@ pub const PRINTER_3D: IconData = IconData {
 /// Lucide `printer-check` icon (24 × 24 stroke grid).
 pub const PRINTER_CHECK: IconData = IconData {
     name: "printer-check",
-    stroke: "M13.5 22H7a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v.5 m16 19 2 2 4-4 M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2 M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6",
+    stroke: "M13.5 22H7a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v.5 M0 0 m16 19 2 2 4-4 M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2 M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6",
     fill: "",
 };
 
 /// Lucide `printer-x` icon (24 × 24 stroke grid).
 pub const PRINTER_X: IconData = IconData {
     name: "printer-x",
-    stroke: "M12.531 22H7a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h6.377 m16.5 16.5 5 5 m16.5 21.5 5-5 M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1.5 M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6",
+    stroke: "M12.531 22H7a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h6.377 M0 0 m16.5 16.5 5 5 M0 0 m16.5 21.5 5-5 M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1.5 M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6",
     fill: "",
 };
 
@@ -9188,7 +9193,7 @@ pub const PRINTER: IconData = IconData {
 /// Lucide `projector` icon (24 × 24 stroke grid).
 pub const PROJECTOR: IconData = IconData {
     name: "projector",
-    stroke: "M5 7 3 5 M9 6V3 m13 7 2-2 M6 13a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M11.83 12H20a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h2.17 M16 16h2",
+    stroke: "M5 7 3 5 M9 6V3 M0 0 m13 7 2-2 M6 13a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M11.83 12H20a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h2.17 M16 16h2",
     fill: "",
 };
 
@@ -9237,7 +9242,7 @@ pub const RABBIT: IconData = IconData {
 /// Lucide `radar` icon (24 × 24 stroke grid).
 pub const RADAR: IconData = IconData {
     name: "radar",
-    stroke: "M19.07 4.93A10 10 0 0 0 6.99 3.34 M4 6h.01 M2.29 9.62A10 10 0 1 0 21.31 8.35 M16.24 7.76A6 6 0 1 0 8.23 16.67 M12 18h.01 M17.99 11.66A6 6 0 0 1 15.77 16.67 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z m13.41 10.59 5.66-5.66",
+    stroke: "M19.07 4.93A10 10 0 0 0 6.99 3.34 M4 6h.01 M2.29 9.62A10 10 0 1 0 21.31 8.35 M16.24 7.76A6 6 0 1 0 8.23 16.67 M12 18h.01 M17.99 11.66A6 6 0 0 1 15.77 16.67 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M0 0 m13.41 10.59 5.66-5.66",
     fill: "",
 };
 
@@ -9258,7 +9263,7 @@ pub const RADICAL: IconData = IconData {
 /// Lucide `radio-off` icon (24 × 24 stroke grid).
 pub const RADIO_OFF: IconData = IconData {
     name: "radio-off",
-    stroke: "M13.414 13.414a2 2 0 1 1-2.828-2.828 M16.247 7.761a6 6 0 0 1 1.744 4.572 M19.075 4.933a10 10 0 0 1 2.234 10.72 m2 2 20 20 M4.925 19.067a10 10 0 0 1 0-14.134 M7.753 16.239a6 6 0 0 1 0-8.478",
+    stroke: "M13.414 13.414a2 2 0 1 1-2.828-2.828 M16.247 7.761a6 6 0 0 1 1.744 4.572 M19.075 4.933a10 10 0 0 1 2.234 10.72 M0 0 m2 2 20 20 M4.925 19.067a10 10 0 0 1 0-14.134 M7.753 16.239a6 6 0 0 1 0-8.478",
     fill: "",
 };
 
@@ -9272,7 +9277,7 @@ pub const RADIO_RECEIVER: IconData = IconData {
 /// Lucide `radio-tower` icon (24 × 24 stroke grid).
 pub const RADIO_TOWER: IconData = IconData {
     name: "radio-tower",
-    stroke: "M4.9 16.1C1 12.2 1 5.8 4.9 1.9 M7.8 4.7a6.14 6.14 0 0 0-.8 7.5 M10 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M16.2 4.8c2 2 2.26 5.11.8 7.47 M19.1 1.9a9.96 9.96 0 0 1 0 14.1 M9.5 18h5 m8 22 4-11 4 11",
+    stroke: "M4.9 16.1C1 12.2 1 5.8 4.9 1.9 M7.8 4.7a6.14 6.14 0 0 0-.8 7.5 M10 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M16.2 4.8c2 2 2.26 5.11.8 7.47 M19.1 1.9a9.96 9.96 0 0 1 0 14.1 M9.5 18h5 M0 0 m8 22 4-11 4 11",
     fill: "",
 };
 
@@ -9286,7 +9291,7 @@ pub const RADIO: IconData = IconData {
 /// Lucide `radius` icon (24 × 24 stroke grid).
 pub const RADIUS: IconData = IconData {
     name: "radius",
-    stroke: "M20.34 17.52a10 10 0 1 0-2.82 2.82 M17 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z m13.41 13.41 4.18 4.18 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M20.34 17.52a10 10 0 1 0-2.82 2.82 M17 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M0 0 m13.41 13.41 4.18 4.18 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -9335,7 +9340,7 @@ pub const RECEIPT_INDIAN_RUPEE: IconData = IconData {
 /// Lucide `receipt-japanese-yen` icon (24 × 24 stroke grid).
 pub const RECEIPT_JAPANESE_YEN: IconData = IconData {
     name: "receipt-japanese-yen",
-    stroke: "m12 10 3-3 M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z M9 11h6 M9 15h6 m9 7 3 3v7",
+    stroke: "M0 0 m12 10 3-3 M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z M9 11h6 M9 15h6 M0 0 m9 7 3 3v7",
     fill: "",
 };
 
@@ -9370,7 +9375,7 @@ pub const RECEIPT_TEXT: IconData = IconData {
 /// Lucide `receipt-turkish-lira` icon (24 × 24 stroke grid).
 pub const RECEIPT_TURKISH_LIRA: IconData = IconData {
     name: "receipt-turkish-lira",
-    stroke: "M10 7v10a5 5 0 0 0 5-5 m14 8-6 3 M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z",
+    stroke: "M10 7v10a5 5 0 0 0 5-5 M0 0 m14 8-6 3 M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z",
     fill: "",
 };
 
@@ -9419,14 +9424,14 @@ pub const RECTANGLE_VERTICAL: IconData = IconData {
 /// Lucide `recycle` icon (24 × 24 stroke grid).
 pub const RECYCLE: IconData = IconData {
     name: "recycle",
-    stroke: "M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5 M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12 m14 16-3 3 3 3 M8.293 13.596 7.196 9.5 3.1 10.598 m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 11.985 3a1.784 1.784 0 0 1 1.546.888l3.943 6.843 m13.378 9.633 4.096 1.098 1.097-4.096",
+    stroke: "M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5 M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12 M0 0 m14 16-3 3 3 3 M8.293 13.596 7.196 9.5 3.1 10.598 M0 0 m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 11.985 3a1.784 1.784 0 0 1 1.546.888l3.943 6.843 M0 0 m13.378 9.633 4.096 1.098 1.097-4.096",
     fill: "",
 };
 
 /// Lucide `redo-2` icon (24 × 24 stroke grid).
 pub const REDO_2: IconData = IconData {
     name: "redo-2",
-    stroke: "m15 14 5-5-5-5 M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13",
+    stroke: "M0 0 m15 14 5-5-5-5 M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13",
     fill: "",
 };
 
@@ -9462,7 +9467,7 @@ pub const REFRESH_CCW: IconData = IconData {
 /// Lucide `refresh-cw-off` icon (24 × 24 stroke grid).
 pub const REFRESH_CW_OFF: IconData = IconData {
     name: "refresh-cw-off",
-    stroke: "M21 8L18.74 5.74A9.75 9.75 0 0 0 12 3C11 3 10.03 3.16 9.13 3.47 M8 16H3v5 M3 12C3 9.51 4 7.26 5.64 5.64 m3 16 2.26 2.26A9.75 9.75 0 0 0 12 21c2.49 0 4.74-1 6.36-2.64 M21 12c0 1-.16 1.97-.47 2.87 M21 3v5h-5 M22 22 2 2",
+    stroke: "M21 8L18.74 5.74A9.75 9.75 0 0 0 12 3C11 3 10.03 3.16 9.13 3.47 M8 16H3v5 M3 12C3 9.51 4 7.26 5.64 5.64 M0 0 m3 16 2.26 2.26A9.75 9.75 0 0 0 12 21c2.49 0 4.74-1 6.36-2.64 M21 12c0 1-.16 1.97-.47 2.87 M21 3v5h-5 M22 22 2 2",
     fill: "",
 };
 
@@ -9484,71 +9489,72 @@ pub const REFRIGERATOR: IconData = IconData {
 /// Lucide `regex` icon (24 × 24 stroke grid).
 pub const REGEX: IconData = IconData {
     name: "regex",
-    stroke: "M17 3v10 m12.67 5.5 8.66 5 m12.67 10.5 8.66-5 M9 17a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2z",
+    stroke: "M17 3v10 M0 0 m12.67 5.5 8.66 5 M0 0 m12.67 10.5 8.66-5 M9 17a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2z",
     fill: "",
 };
 
 /// Lucide `remove-formatting` icon (24 × 24 stroke grid).
 pub const REMOVE_FORMATTING: IconData = IconData {
     name: "remove-formatting",
-    stroke: "M4 7V4h16v3 M5 20h6 M13 4 8 20 m15 15 5 5 m20 15-5 5",
+    stroke: "M4 7V4h16v3 M5 20h6 M13 4 8 20 M0 0 m15 15 5 5 M0 0 m20 15-5 5",
     fill: "",
 };
 
 /// Lucide `repeat-1` icon (24 × 24 stroke grid).
 pub const REPEAT_1: IconData = IconData {
     name: "repeat-1",
-    stroke:
-        "m17 2 4 4-4 4 M3 11v-1a4 4 0 0 1 4-4h14 m7 22-4-4 4-4 M21 13v1a4 4 0 0 1-4 4H3 M11 10h1v4",
+    stroke: "M0 0 m17 2 4 4-4 4 M3 11v-1a4 4 0 0 1 4-4h14 M0 0 m7 22-4-4 4-4 M21 13v1a4 4 0 0 1-4 4H3 M11 10h1v4",
     fill: "",
 };
 
 /// Lucide `repeat-2` icon (24 × 24 stroke grid).
 pub const REPEAT_2: IconData = IconData {
     name: "repeat-2",
-    stroke: "m2 9 3-3 3 3 M13 18H7a2 2 0 0 1-2-2V6 m22 15-3 3-3-3 M11 6h6a2 2 0 0 1 2 2v10",
+    stroke:
+        "M0 0 m2 9 3-3 3 3 M13 18H7a2 2 0 0 1-2-2V6 M0 0 m22 15-3 3-3-3 M11 6h6a2 2 0 0 1 2 2v10",
     fill: "",
 };
 
 /// Lucide `repeat-off` icon (24 × 24 stroke grid).
 pub const REPEAT_OFF: IconData = IconData {
     name: "repeat-off",
-    stroke: "M11.656 6H21l-4-4 M17.898 17.898A4 4 0 0 1 17 18H3l4-4 m2 2 20 20 M21 13v1a4 4 0 0 1-.171 1.159 m21 6-4 4 M3 11v-1a4 4 0 0 1 3.102-3.898 m7 22-4-4",
+    stroke: "M11.656 6H21l-4-4 M17.898 17.898A4 4 0 0 1 17 18H3l4-4 M0 0 m2 2 20 20 M21 13v1a4 4 0 0 1-.171 1.159 M0 0 m21 6-4 4 M3 11v-1a4 4 0 0 1 3.102-3.898 M0 0 m7 22-4-4",
     fill: "",
 };
 
 /// Lucide `repeat` icon (24 × 24 stroke grid).
 pub const REPEAT: IconData = IconData {
     name: "repeat",
-    stroke: "m17 2 4 4-4 4 M3 11v-1a4 4 0 0 1 4-4h14 m7 22-4-4 4-4 M21 13v1a4 4 0 0 1-4 4H3",
+    stroke:
+        "M0 0 m17 2 4 4-4 4 M3 11v-1a4 4 0 0 1 4-4h14 M0 0 m7 22-4-4 4-4 M21 13v1a4 4 0 0 1-4 4H3",
     fill: "",
 };
 
 /// Lucide `replace-all` icon (24 × 24 stroke grid).
 pub const REPLACE_ALL: IconData = IconData {
     name: "replace-all",
-    stroke: "M14 14a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 M14 4a1 1 0 0 1 1-1 M15 10a1 1 0 0 1-1-1 M19 14a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 M21 4a1 1 0 0 0-1-1 M21 9a1 1 0 0 1-1 1 m3 7 3 3 3-3 M6 10V5a2 2 0 0 1 2-2h2 M4 14H9a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z",
+    stroke: "M14 14a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 M14 4a1 1 0 0 1 1-1 M15 10a1 1 0 0 1-1-1 M19 14a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1 M21 4a1 1 0 0 0-1-1 M21 9a1 1 0 0 1-1 1 M0 0 m3 7 3 3 3-3 M6 10V5a2 2 0 0 1 2-2h2 M4 14H9a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
 /// Lucide `replace` icon (24 × 24 stroke grid).
 pub const REPLACE: IconData = IconData {
     name: "replace",
-    stroke: "M14 4a1 1 0 0 1 1-1 M15 10a1 1 0 0 1-1-1 M21 4a1 1 0 0 0-1-1 M21 9a1 1 0 0 1-1 1 m3 7 3 3 3-3 M6 10V5a2 2 0 0 1 2-2h2 M4 14H9a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z",
+    stroke: "M14 4a1 1 0 0 1 1-1 M15 10a1 1 0 0 1-1-1 M21 4a1 1 0 0 0-1-1 M21 9a1 1 0 0 1-1 1 M0 0 m3 7 3 3 3-3 M6 10V5a2 2 0 0 1 2-2h2 M4 14H9a1 1 0 0 1 1 1V20a1 1 0 0 1 -1 1H4a1 1 0 0 1 -1 -1V15a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
 /// Lucide `reply-all` icon (24 × 24 stroke grid).
 pub const REPLY_ALL: IconData = IconData {
     name: "reply-all",
-    stroke: "m12 17-5-5 5-5 M22 18v-2a4 4 0 0 0-4-4H7 m7 17-5-5 5-5",
+    stroke: "M0 0 m12 17-5-5 5-5 M22 18v-2a4 4 0 0 0-4-4H7 M0 0 m7 17-5-5 5-5",
     fill: "",
 };
 
 /// Lucide `reply` icon (24 × 24 stroke grid).
 pub const REPLY: IconData = IconData {
     name: "reply",
-    stroke: "M20 18v-2a4 4 0 0 0-4-4H4 m9 17-5-5 5-5",
+    stroke: "M20 18v-2a4 4 0 0 0-4-4H4 M0 0 m9 17-5-5 5-5",
     fill: "",
 };
 
@@ -9562,7 +9568,7 @@ pub const REWIND: IconData = IconData {
 /// Lucide `ribbon` icon (24 × 24 stroke grid).
 pub const RIBBON: IconData = IconData {
     name: "ribbon",
-    stroke: "M12 11.22C11 9.997 10 9 10 8a2 2 0 0 1 4 0c0 1-.998 2.002-2.01 3.22 m12 18 2.57-3.5 M6.243 9.016a7 7 0 0 1 11.507-.009 M9.35 14.53 12 11.22 M9.35 14.53C7.728 12.246 6 10.221 6 7a6 5 0 0 1 12 0c-.005 3.22-1.778 5.235-3.43 7.5l3.557 4.527a1 1 0 0 1-.203 1.43l-1.894 1.36a1 1 0 0 1-1.384-.215L12 18l-2.679 3.593a1 1 0 0 1-1.39.213l-1.865-1.353a1 1 0 0 1-.203-1.422z",
+    stroke: "M12 11.22C11 9.997 10 9 10 8a2 2 0 0 1 4 0c0 1-.998 2.002-2.01 3.22 M0 0 m12 18 2.57-3.5 M6.243 9.016a7 7 0 0 1 11.507-.009 M9.35 14.53 12 11.22 M9.35 14.53C7.728 12.246 6 10.221 6 7a6 5 0 0 1 12 0c-.005 3.22-1.778 5.235-3.43 7.5l3.557 4.527a1 1 0 0 1-.203 1.43l-1.894 1.36a1 1 0 0 1-1.384-.215L12 18l-2.679 3.593a1 1 0 0 1-1.39.213l-1.865-1.353a1 1 0 0 1-.203-1.422z",
     fill: "",
 };
 
@@ -9576,7 +9582,7 @@ pub const ROAD: IconData = IconData {
 /// Lucide `robot-arm` icon (24 × 24 stroke grid).
 pub const ROBOT_ARM: IconData = IconData {
     name: "robot-arm",
-    stroke: "M12 21 7.5 8.322 m14 7 1.75-3.767a.5.5 0 0 1 .662-.172L20 5.005 m20 8.998-3.588 1.944a.5.5 0 0 1-.662-.172L14 7H8 M3.486 21h10 M5 21V8.732 M4 7a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M12 21 7.5 8.322 M0 0 m14 7 1.75-3.767a.5.5 0 0 1 .662-.172L20 5.005 M0 0 m20 8.998-3.588 1.944a.5.5 0 0 1-.662-.172L14 7H8 M3.486 21h10 M5 21V8.732 M4 7a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -9597,7 +9603,7 @@ pub const ROCKET: IconData = IconData {
 /// Lucide `rocking-chair` icon (24 × 24 stroke grid).
 pub const ROCKING_CHAIR: IconData = IconData {
     name: "rocking-chair",
-    stroke: "m15 13 3.708 7.416 M3 19a15 15 0 0 0 18 0 m3 2 3.21 9.633A2 2 0 0 0 8.109 13H18 m9 13-3.708 7.416",
+    stroke: "M0 0 m15 13 3.708 7.416 M3 19a15 15 0 0 0 18 0 M0 0 m3 2 3.21 9.633A2 2 0 0 0 8.109 13H18 M0 0 m9 13-3.708 7.416",
     fill: "",
 };
 
@@ -9618,7 +9624,7 @@ pub const ROSE: IconData = IconData {
 /// Lucide `rotate-3d` icon (24 × 24 stroke grid).
 pub const ROTATE_3D: IconData = IconData {
     name: "rotate-3d",
-    stroke: "m15.194 13.707 3.814 1.86-1.86 3.814 M16.47214 7.52786 A 5 10 0 1 0 13 21.79796 M21.79796 11 A 10 5 0 1 0 19 15.57071",
+    stroke: "M0 0 m15.194 13.707 3.814 1.86-1.86 3.814 M16.47214 7.52786 A 5 10 0 1 0 13 21.79796 M21.79796 11 A 10 5 0 1 0 19 15.57071",
     fill: "",
 };
 
@@ -9639,7 +9645,7 @@ pub const ROTATE_CCW_KEY: IconData = IconData {
 /// Lucide `rotate-ccw-square` icon (24 × 24 stroke grid).
 pub const ROTATE_CCW_SQUARE: IconData = IconData {
     name: "rotate-ccw-square",
-    stroke: "M20 9V7a2 2 0 0 0-2-2h-6 m15 2-3 3 3 3 M20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2",
+    stroke: "M20 9V7a2 2 0 0 0-2-2h-6 M0 0 m15 2-3 3 3 3 M20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2",
     fill: "",
 };
 
@@ -9653,7 +9659,7 @@ pub const ROTATE_CCW: IconData = IconData {
 /// Lucide `rotate-cw-clock` icon (24 × 24 stroke grid).
 pub const ROTATE_CW_CLOCK: IconData = IconData {
     name: "rotate-cw-clock",
-    stroke: "M12 7v5l4 2 M16 8h5V3 m21 8-2.3-2.3A9.7 9.7 0 0012 3a9 9 0 109 9",
+    stroke: "M12 7v5l4 2 M16 8h5V3 M0 0 m21 8-2.3-2.3A9.7 9.7 0 0012 3a9 9 0 109 9",
     fill: "",
 };
 
@@ -9667,7 +9673,7 @@ pub const ROTATE_CW_FADING_CLOCK: IconData = IconData {
 /// Lucide `rotate-cw-square` icon (24 × 24 stroke grid).
 pub const ROTATE_CW_SQUARE: IconData = IconData {
     name: "rotate-cw-square",
-    stroke: "M12 5H6a2 2 0 0 0-2 2v3 m9 8 3-3-3-3 M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2",
+    stroke: "M12 5H6a2 2 0 0 0-2 2v3 M0 0 m9 8 3-3-3-3 M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2",
     fill: "",
 };
 
@@ -9681,7 +9687,7 @@ pub const ROTATE_CW: IconData = IconData {
 /// Lucide `route-off` icon (24 × 24 stroke grid).
 pub const ROUTE_OFF: IconData = IconData {
     name: "route-off",
-    stroke: "M3 19a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M9 19h8.5c.4 0 .9-.1 1.3-.2 M5.2 5.2A3.5 3.53 0 0 0 6.5 12H12 m2 2 20 20 M21 15.3a3.5 3.5 0 0 0-3.3-3.3 M15 5h-4.3 M15 5a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M3 19a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M9 19h8.5c.4 0 .9-.1 1.3-.2 M5.2 5.2A3.5 3.53 0 0 0 6.5 12H12 M0 0 m2 2 20 20 M21 15.3a3.5 3.5 0 0 0-3.3-3.3 M15 5h-4.3 M15 5a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -9730,7 +9736,7 @@ pub const RSS: IconData = IconData {
 /// Lucide `rugby-ball` icon (24 × 24 stroke grid).
 pub const RUGBY_BALL: IconData = IconData {
     name: "rugby-ball",
-    stroke: "m10 10 4 4 m13 7 4 4 M15.34 2.138A15 15 0 002.138 15.34c-.357 2.94.004 4.919.805 5.717.798.8 2.778 1.162 5.718.805A15 15 0 0021.862 8.661c.357-2.94-.004-4.92-.805-5.718-.798-.8-2.778-1.162-5.717-.805 M17 7 7 17 m7 13 4 4",
+    stroke: "M0 0 m10 10 4 4 M0 0 m13 7 4 4 M15.34 2.138A15 15 0 002.138 15.34c-.357 2.94.004 4.919.805 5.717.798.8 2.778 1.162 5.718.805A15 15 0 0021.862 8.661c.357-2.94-.004-4.92-.805-5.718-.798-.8-2.778-1.162-5.717-.805 M17 7 7 17 M0 0 m7 13 4 4",
     fill: "",
 };
 
@@ -9744,7 +9750,7 @@ pub const RULER_DIMENSION_LINE: IconData = IconData {
 /// Lucide `ruler` icon (24 × 24 stroke grid).
 pub const RULER: IconData = IconData {
     name: "ruler",
-    stroke: "M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z m14.5 12.5 2-2 m11.5 9.5 2-2 m8.5 6.5 2-2 m17.5 15.5 2-2",
+    stroke: "M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z M0 0 m14.5 12.5 2-2 M0 0 m11.5 9.5 2-2 M0 0 m8.5 6.5 2-2 M0 0 m17.5 15.5 2-2",
     fill: "",
 };
 
@@ -9772,28 +9778,28 @@ pub const SALAD: IconData = IconData {
 /// Lucide `sandwich` icon (24 × 24 stroke grid).
 pub const SANDWICH: IconData = IconData {
     name: "sandwich",
-    stroke: "m2.37 11.223 8.372-6.777a2 2 0 0 1 2.516 0l8.371 6.777 M21 15a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-5.25 M3 15a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h9 m6.67 15 6.13 4.6a2 2 0 0 0 2.8-.4l3.15-4.2 M3 11H21a1 1 0 0 1 1 1V14a1 1 0 0 1 -1 1H3a1 1 0 0 1 -1 -1V12a1 1 0 0 1 1 -1Z",
+    stroke: "M0 0 m2.37 11.223 8.372-6.777a2 2 0 0 1 2.516 0l8.371 6.777 M21 15a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-5.25 M3 15a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h9 M0 0 m6.67 15 6.13 4.6a2 2 0 0 0 2.8-.4l3.15-4.2 M3 11H21a1 1 0 0 1 1 1V14a1 1 0 0 1 -1 1H3a1 1 0 0 1 -1 -1V12a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
 /// Lucide `satellite-dish` icon (24 × 24 stroke grid).
 pub const SATELLITE_DISH: IconData = IconData {
     name: "satellite-dish",
-    stroke: "M18 12a6 6 0 00-6-6 M2.824 10.459a8 8 0 0010.717 10.717c.558-.276.623-1.012.183-1.452l-9.448-9.448c-.44-.44-1.176-.375-1.452.183 M22 12A10 10 0 0012 2 m9 15 4-4",
+    stroke: "M18 12a6 6 0 00-6-6 M2.824 10.459a8 8 0 0010.717 10.717c.558-.276.623-1.012.183-1.452l-9.448-9.448c-.44-.44-1.176-.375-1.452.183 M22 12A10 10 0 0012 2 M0 0 m9 15 4-4",
     fill: "",
 };
 
 /// Lucide `satellite` icon (24 × 24 stroke grid).
 pub const SATELLITE: IconData = IconData {
     name: "satellite",
-    stroke: "m13.5 6.5-3.148-3.148a1.205 1.205 0 0 0-1.704 0L6.352 5.648a1.205 1.205 0 0 0 0 1.704L9.5 10.5 M16.5 7.5 19 5 m17.5 10.5 3.148 3.148a1.205 1.205 0 0 1 0 1.704l-2.296 2.296a1.205 1.205 0 0 1-1.704 0L13.5 14.5 M9 21a6 6 0 0 0-6-6 M9.352 10.648a1.205 1.205 0 0 0 0 1.704l2.296 2.296a1.205 1.205 0 0 0 1.704 0l4.296-4.296a1.205 1.205 0 0 0 0-1.704l-2.296-2.296a1.205 1.205 0 0 0-1.704 0z",
+    stroke: "M0 0 m13.5 6.5-3.148-3.148a1.205 1.205 0 0 0-1.704 0L6.352 5.648a1.205 1.205 0 0 0 0 1.704L9.5 10.5 M16.5 7.5 19 5 M0 0 m17.5 10.5 3.148 3.148a1.205 1.205 0 0 1 0 1.704l-2.296 2.296a1.205 1.205 0 0 1-1.704 0L13.5 14.5 M9 21a6 6 0 0 0-6-6 M9.352 10.648a1.205 1.205 0 0 0 0 1.704l2.296 2.296a1.205 1.205 0 0 0 1.704 0l4.296-4.296a1.205 1.205 0 0 0 0-1.704l-2.296-2.296a1.205 1.205 0 0 0-1.704 0z",
     fill: "",
 };
 
 /// Lucide `saudi-riyal` icon (24 × 24 stroke grid).
 pub const SAUDI_RIYAL: IconData = IconData {
     name: "saudi-riyal",
-    stroke: "m20 19.5-5.5 1.2 M14.5 4v11.22a1 1 0 0 0 1.242.97L20 15.2 m2.978 19.351 5.549-1.363A2 2 0 0 0 10 16V2 M20 10 4 13.5",
+    stroke: "M0 0 m20 19.5-5.5 1.2 M14.5 4v11.22a1 1 0 0 0 1.242.97L20 15.2 M0 0 m2.978 19.351 5.549-1.363A2 2 0 0 0 10 16V2 M20 10 4 13.5",
     fill: "",
 };
 
@@ -9807,14 +9813,14 @@ pub const SAVE_ALL: IconData = IconData {
 /// Lucide `save-check` icon (24 × 24 stroke grid).
 pub const SAVE_CHECK: IconData = IconData {
     name: "save-check",
-    stroke: "M12.5 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10.2a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4v4.35 m16 19 2 2 4-4 M17 15.13V14a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7 M7 3v4a1 1 0 0 0 1 1h7",
+    stroke: "M12.5 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10.2a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4v4.35 M0 0 m16 19 2 2 4-4 M17 15.13V14a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7 M7 3v4a1 1 0 0 0 1 1h7",
     fill: "",
 };
 
 /// Lucide `save-off` icon (24 × 24 stroke grid).
 pub const SAVE_OFF: IconData = IconData {
     name: "save-off",
-    stroke: "M13 13H8a1 1 0 0 0-1 1v7 M14 8h1 M17 21v-4 m2 2 20 20 M20.41 20.41A2 2 0 0 1 19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 .59-1.41 M9 3h6.2a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V15",
+    stroke: "M13 13H8a1 1 0 0 0-1 1v7 M14 8h1 M17 21v-4 M0 0 m2 2 20 20 M20.41 20.41A2 2 0 0 1 19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 .59-1.41 M9 3h6.2a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V15",
     fill: "",
 };
 
@@ -9849,7 +9855,7 @@ pub const SCALE_3D: IconData = IconData {
 /// Lucide `scale` icon (24 × 24 stroke grid).
 pub const SCALE: IconData = IconData {
     name: "scale",
-    stroke: "M12 3v18 m19 8 3 8a5 5 0 0 1-6 0zV7 M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1 m5 8 3 8a5 5 0 0 1-6 0zV7 M7 21h10",
+    stroke: "M12 3v18 M0 0 m19 8 3 8a5 5 0 0 1-6 0zV7 M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1 M0 0 m5 8 3 8a5 5 0 0 1-6 0zV7 M7 21h10",
     fill: "",
 };
 
@@ -9912,7 +9918,7 @@ pub const SCAN_QR_CODE: IconData = IconData {
 /// Lucide `scan-search` icon (24 × 24 stroke grid).
 pub const SCAN_SEARCH: IconData = IconData {
     name: "scan-search",
-    stroke: "M3 7V5a2 2 0 0 1 2-2h2 M17 3h2a2 2 0 0 1 2 2v2 M21 17v2a2 2 0 0 1-2 2h-2 M7 21H5a2 2 0 0 1-2-2v-2 M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z m16 16-1.9-1.9",
+    stroke: "M3 7V5a2 2 0 0 1 2-2h2 M17 3h2a2 2 0 0 1 2 2v2 M21 17v2a2 2 0 0 1-2 2h-2 M7 21H5a2 2 0 0 1-2-2v-2 M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M0 0 m16 16-1.9-1.9",
     fill: "",
 };
 
@@ -9940,14 +9946,14 @@ pub const SCAN: IconData = IconData {
 /// Lucide `school` icon (24 × 24 stroke grid).
 pub const SCHOOL: IconData = IconData {
     name: "school",
-    stroke: "M14 21v-3a2 2 0 0 0-4 0v3 M18 4.933V21 m4 6 7.106-3.79a2 2 0 0 1 1.788 0L20 6 m6 11-3.52 2.147a1 1 0 0 0-.48.854V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a1 1 0 0 0-.48-.853L18 11 M6 4.933V21 M10 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M14 21v-3a2 2 0 0 0-4 0v3 M18 4.933V21 M0 0 m4 6 7.106-3.79a2 2 0 0 1 1.788 0L20 6 M0 0 m6 11-3.52 2.147a1 1 0 0 0-.48.854V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a1 1 0 0 0-.48-.853L18 11 M6 4.933V21 M10 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `scissors-line-dashed` icon (24 × 24 stroke grid).
 pub const SCISSORS_LINE_DASHED: IconData = IconData {
     name: "scissors-line-dashed",
-    stroke: "M5.42 9.42 8 12 M2 8a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z m14 6-8.58 8.58 M2 16a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M10.8 14.8 14 18 M16 12h-2 M22 12h-2",
+    stroke: "M5.42 9.42 8 12 M2 8a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M0 0 m14 6-8.58 8.58 M2 16a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M10.8 14.8 14 18 M16 12h-2 M22 12h-2",
     fill: "",
 };
 
@@ -9975,14 +9981,14 @@ pub const SCRATCH_BLOCKS: IconData = IconData {
 /// Lucide `screen-share-off` icon (24 × 24 stroke grid).
 pub const SCREEN_SHARE_OFF: IconData = IconData {
     name: "screen-share-off",
-    stroke: "M13 3H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3 M8 21h8 M12 17v4 m22 3-5 5 m17 3 5 5",
+    stroke: "M13 3H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3 M8 21h8 M12 17v4 M0 0 m22 3-5 5 M0 0 m17 3 5 5",
     fill: "",
 };
 
 /// Lucide `screen-share` icon (24 × 24 stroke grid).
 pub const SCREEN_SHARE: IconData = IconData {
     name: "screen-share",
-    stroke: "M13 3H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3 M8 21h8 M12 17v4 m17 8 5-5 M17 3h5v5",
+    stroke: "M13 3H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3 M8 21h8 M12 17v4 M0 0 m17 8 5-5 M17 3h5v5",
     fill: "",
 };
 
@@ -10010,42 +10016,42 @@ pub const SCROLL: IconData = IconData {
 /// Lucide `search-alert` icon (24 × 24 stroke grid).
 pub const SEARCH_ALERT: IconData = IconData {
     name: "search-alert",
-    stroke: "M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z m21 21-4.3-4.3 M11 7v4 M11 15h.01",
+    stroke: "M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M0 0 m21 21-4.3-4.3 M11 7v4 M11 15h.01",
     fill: "",
 };
 
 /// Lucide `search-check` icon (24 × 24 stroke grid).
 pub const SEARCH_CHECK: IconData = IconData {
     name: "search-check",
-    stroke: "m8 11 2 2 4-4 M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z m21 21-4.3-4.3",
+    stroke: "M0 0 m8 11 2 2 4-4 M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M0 0 m21 21-4.3-4.3",
     fill: "",
 };
 
 /// Lucide `search-code` icon (24 × 24 stroke grid).
 pub const SEARCH_CODE: IconData = IconData {
     name: "search-code",
-    stroke: "m13 13.5 2-2.5-2-2.5 m21 21-4.3-4.3 M9 8.5 7 11l2 2.5 M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z",
+    stroke: "M0 0 m13 13.5 2-2.5-2-2.5 M0 0 m21 21-4.3-4.3 M9 8.5 7 11l2 2.5 M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z",
     fill: "",
 };
 
 /// Lucide `search-slash` icon (24 × 24 stroke grid).
 pub const SEARCH_SLASH: IconData = IconData {
     name: "search-slash",
-    stroke: "m13.5 8.5-5 5 M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z m21 21-4.3-4.3",
+    stroke: "M0 0 m13.5 8.5-5 5 M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M0 0 m21 21-4.3-4.3",
     fill: "",
 };
 
 /// Lucide `search-x` icon (24 × 24 stroke grid).
 pub const SEARCH_X: IconData = IconData {
     name: "search-x",
-    stroke: "m13.5 8.5-5 5 m8.5 8.5 5 5 M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z m21 21-4.3-4.3",
+    stroke: "M0 0 m13.5 8.5-5 5 M0 0 m8.5 8.5 5 5 M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M0 0 m21 21-4.3-4.3",
     fill: "",
 };
 
 /// Lucide `search` icon (24 × 24 stroke grid).
 pub const SEARCH: IconData = IconData {
     name: "search",
-    stroke: "m21 21-4.34-4.34 M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z",
+    stroke: "M0 0 m21 21-4.34-4.34 M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z",
     fill: "",
 };
 
@@ -10073,35 +10079,35 @@ pub const SEND_TO_BACK: IconData = IconData {
 /// Lucide `send` icon (24 × 24 stroke grid).
 pub const SEND: IconData = IconData {
     name: "send",
-    stroke: "M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z m21.854 2.147-10.94 10.939",
+    stroke: "M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z M0 0 m21.854 2.147-10.94 10.939",
     fill: "",
 };
 
 /// Lucide `separator-horizontal` icon (24 × 24 stroke grid).
 pub const SEPARATOR_HORIZONTAL: IconData = IconData {
     name: "separator-horizontal",
-    stroke: "m16 16-4 4-4-4 M3 12h18 m8 8 4-4 4 4",
+    stroke: "M0 0 m16 16-4 4-4-4 M3 12h18 M0 0 m8 8 4-4 4 4",
     fill: "",
 };
 
 /// Lucide `separator-vertical` icon (24 × 24 stroke grid).
 pub const SEPARATOR_VERTICAL: IconData = IconData {
     name: "separator-vertical",
-    stroke: "M12 3v18 m16 16 4-4-4-4 m8 8-4 4 4 4",
+    stroke: "M12 3v18 M0 0 m16 16 4-4-4-4 M0 0 m8 8-4 4 4 4",
     fill: "",
 };
 
 /// Lucide `server-cog` icon (24 × 24 stroke grid).
 pub const SERVER_COG: IconData = IconData {
     name: "server-cog",
-    stroke: "m10.852 14.772-.383.923 M13.148 14.772a3 3 0 1 0-2.296-5.544l-.383-.923 m13.148 9.228.383-.923 m13.53 15.696-.382-.924a3 3 0 1 1-2.296-5.544 m14.772 10.852.923-.383 m14.772 13.148.923.383 M4.5 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-.5 M4.5 14H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-.5 M6 18h.01 M6 6h.01 m9.228 10.852-.923-.383 m9.228 13.148-.923.383",
+    stroke: "M0 0 m10.852 14.772-.383.923 M13.148 14.772a3 3 0 1 0-2.296-5.544l-.383-.923 M0 0 m13.148 9.228.383-.923 M0 0 m13.53 15.696-.382-.924a3 3 0 1 1-2.296-5.544 M0 0 m14.772 10.852.923-.383 M0 0 m14.772 13.148.923.383 M4.5 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-.5 M4.5 14H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-.5 M6 18h.01 M6 6h.01 M0 0 m9.228 10.852-.923-.383 M0 0 m9.228 13.148-.923.383",
     fill: "",
 };
 
 /// Lucide `server-crash` icon (24 × 24 stroke grid).
 pub const SERVER_CRASH: IconData = IconData {
     name: "server-crash",
-    stroke: "M6 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2 M6 14H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2 M6 6h.01 M6 18h.01 m13 6-4 6h6l-4 6",
+    stroke: "M6 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2 M6 14H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2 M6 6h.01 M6 18h.01 M0 0 m13 6-4 6h6l-4 6",
     fill: "",
 };
 
@@ -10115,7 +10121,7 @@ pub const SERVER_NAS: IconData = IconData {
 /// Lucide `server-off` icon (24 × 24 stroke grid).
 pub const SERVER_OFF: IconData = IconData {
     name: "server-off",
-    stroke: "M7 2h13a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-5 M10 10 2.5 2.5C2 2 2 2.5 2 5v3a2 2 0 0 0 2 2h6z M22 17v-1a2 2 0 0 0-2-2h-1 M4 14a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16.5l1-.5.5.5-8-8H4z M6 18h.01 m2 2 20 20",
+    stroke: "M7 2h13a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-5 M10 10 2.5 2.5C2 2 2 2.5 2 5v3a2 2 0 0 0 2 2h6z M22 17v-1a2 2 0 0 0-2-2h-1 M4 14a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16.5l1-.5.5.5-8-8H4z M6 18h.01 M0 0 m2 2 20 20",
     fill: "",
 };
 
@@ -10165,7 +10171,7 @@ pub const SHARE_2: IconData = IconData {
 /// Lucide `share` icon (24 × 24 stroke grid).
 pub const SHARE: IconData = IconData {
     name: "share",
-    stroke: "M12 2v13 m16 6-4-4-4 4 M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8",
+    stroke: "M12 2v13 M0 0 m16 6-4-4-4 4 M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8",
     fill: "",
 };
 
@@ -10200,28 +10206,28 @@ pub const SHIELD_ALERT: IconData = IconData {
 /// Lucide `shield-ban` icon (24 × 24 stroke grid).
 pub const SHIELD_BAN: IconData = IconData {
     name: "shield-ban",
-    stroke: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z m4.243 5.21 14.39 12.472",
+    stroke: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z M0 0 m4.243 5.21 14.39 12.472",
     fill: "",
 };
 
 /// Lucide `shield-check` icon (24 × 24 stroke grid).
 pub const SHIELD_CHECK: IconData = IconData {
     name: "shield-check",
-    stroke: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z m9 12 2 2 4-4",
+    stroke: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z M0 0 m9 12 2 2 4-4",
     fill: "",
 };
 
 /// Lucide `shield-cog-corner` icon (24 × 24 stroke grid).
 pub const SHIELD_COG_CORNER: IconData = IconData {
     name: "shield-cog-corner",
-    stroke: "M11 22c-3.806-1.45-7-3.966-7-9V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1v4 M14.923 16.547 14 16.164 m14.923 18.843-.923.383 M16.547 14.923 16.164 14 m16.547 20.467-.383.924 m18.843 14.923.383-.923 m19.225 21.391-.382-.924 m20.467 16.547.923-.383 m20.467 18.843.923.383 M14.695 17.695a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M11 22c-3.806-1.45-7-3.966-7-9V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1v4 M14.923 16.547 14 16.164 M0 0 m14.923 18.843-.923.383 M16.547 14.923 16.164 14 M0 0 m16.547 20.467-.383.924 M0 0 m18.843 14.923.383-.923 M0 0 m19.225 21.391-.382-.924 M0 0 m20.467 16.547.923-.383 M0 0 m20.467 18.843.923.383 M14.695 17.695a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
 /// Lucide `shield-cog` icon (24 × 24 stroke grid).
 pub const SHIELD_COG: IconData = IconData {
     name: "shield-cog",
-    stroke: "m10.929 14.467-.383.924 M10.929 8.923 10.546 8 M13.225 8.923 13.608 8 m13.607 15.391-.382-.924 m14.849 10.547.923-.383 m14.849 12.843.923.383 M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z m9.305 10.547-.923-.383 m9.305 12.843-.923.383 M9.077 11.695a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M0 0 m10.929 14.467-.383.924 M10.929 8.923 10.546 8 M13.225 8.923 13.608 8 M0 0 m13.607 15.391-.382-.924 M0 0 m14.849 10.547.923-.383 M0 0 m14.849 12.843.923.383 M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z M0 0 m9.305 10.547-.923-.383 M0 0 m9.305 12.843-.923.383 M9.077 11.695a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -10270,7 +10276,7 @@ pub const SHIELD_MINUS: IconData = IconData {
 /// Lucide `shield-off` icon (24 × 24 stroke grid).
 pub const SHIELD_OFF: IconData = IconData {
     name: "shield-off",
-    stroke: "m2 2 20 20 M5 5a1 1 0 0 0-1 1v7c0 5 3.5 7.5 7.67 8.94a1 1 0 0 0 .67.01c2.35-.82 4.48-1.97 5.9-3.71 M9.309 3.652A12.252 12.252 0 0 0 11.24 2.28a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1v7a9.784 9.784 0 0 1-.08 1.264",
+    stroke: "M0 0 m2 2 20 20 M5 5a1 1 0 0 0-1 1v7c0 5 3.5 7.5 7.67 8.94a1 1 0 0 0 .67.01c2.35-.82 4.48-1.97 5.9-3.71 M9.309 3.652A12.252 12.252 0 0 0 11.24 2.28a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1v7a9.784 9.784 0 0 1-.08 1.264",
     fill: "",
 };
 
@@ -10298,7 +10304,7 @@ pub const SHIELD_USER: IconData = IconData {
 /// Lucide `shield-x` icon (24 × 24 stroke grid).
 pub const SHIELD_X: IconData = IconData {
     name: "shield-x",
-    stroke: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z m14.5 9.5-5 5 m9.5 9.5 5 5",
+    stroke: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z M0 0 m14.5 9.5-5 5 M0 0 m9.5 9.5 5 5",
     fill: "",
 };
 
@@ -10319,7 +10325,7 @@ pub const SHIP_CARGO: IconData = IconData {
 /// Lucide `ship-wheel` icon (24 × 24 stroke grid).
 pub const SHIP_WHEEL: IconData = IconData {
     name: "ship-wheel",
-    stroke: "M4 12a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M12 2v7.5 m19 5-5.23 5.23 M22 12h-7.5 m19 19-5.23-5.23 M12 14.5V22 M10.23 13.77 5 19 M9.5 12H2 M10.23 10.23 5 5 M9.5 12a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0Z",
+    stroke: "M4 12a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z M12 2v7.5 M0 0 m19 5-5.23 5.23 M22 12h-7.5 M0 0 m19 19-5.23-5.23 M12 14.5V22 M10.23 13.77 5 19 M9.5 12H2 M10.23 10.23 5 5 M9.5 12a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0Z",
     fill: "",
 };
 
@@ -10347,42 +10353,42 @@ pub const SHOPPING_BAG: IconData = IconData {
 /// Lucide `shopping-basket` icon (24 × 24 stroke grid).
 pub const SHOPPING_BASKET: IconData = IconData {
     name: "shopping-basket",
-    stroke: "m15 11-1 9 m19 11-4-7 M2 11h20 m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4 M4.5 15.5h15 m5 11 4-7 m9 11 1 9",
+    stroke: "M0 0 m15 11-1 9 M0 0 m19 11-4-7 M2 11h20 M0 0 m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4 M4.5 15.5h15 M0 0 m5 11 4-7 M0 0 m9 11 1 9",
     fill: "",
 };
 
 /// Lucide `shopping-cart-minus` icon (24 × 24 stroke grid).
 pub const SHOPPING_CART_MINUS: IconData = IconData {
     name: "shopping-cart-minus",
-    stroke: "M16 5h6 m2.05 2.05 1.099-.028a1 1 0 011.008.815l2.69 14.347A1 1 0 007.83 18H18 M4.564 5H12 M6.25 14h12.712a2 2 0 001.991-1.57l.514-3.113 M16 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M6 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M16 5h6 M0 0 m2.05 2.05 1.099-.028a1 1 0 011.008.815l2.69 14.347A1 1 0 007.83 18H18 M4.564 5H12 M6.25 14h12.712a2 2 0 001.991-1.57l.514-3.113 M16 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M6 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `shopping-cart-plus` icon (24 × 24 stroke grid).
 pub const SHOPPING_CART_PLUS: IconData = IconData {
     name: "shopping-cart-plus",
-    stroke: "M16 5h6 M19 2v6 m2.05 2.05 1.099-.028a1 1 0 011.008.815l2.69 14.347A1 1 0 007.83 18H18 M4.564 5H12 M6.25 14h12.712a2 2 0 001.991-1.57l.172-1.041 M16 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M6 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M16 5h6 M19 2v6 M0 0 m2.05 2.05 1.099-.028a1 1 0 011.008.815l2.69 14.347A1 1 0 007.83 18H18 M4.564 5H12 M6.25 14h12.712a2 2 0 001.991-1.57l.172-1.041 M16 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M6 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `shopping-cart` icon (24 × 24 stroke grid).
 pub const SHOPPING_CART: IconData = IconData {
     name: "shopping-cart",
-    stroke: "m2.05 2.05 1.099-.028a1 1 0 0 1 1.008.815l2.69 14.347A1 1 0 0 0 7.83 18H18 M4.563 5h16.435a1 1 0 0 1 .981 1.204l-1.026 6.226A2 2 0 0 1 18.962 14H6.25 M16 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M6 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M0 0 m2.05 2.05 1.099-.028a1 1 0 0 1 1.008.815l2.69 14.347A1 1 0 0 0 7.83 18H18 M4.563 5h16.435a1 1 0 0 1 .981 1.204l-1.026 6.226A2 2 0 0 1 18.962 14H6.25 M16 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M6 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `shovel` icon (24 × 24 stroke grid).
 pub const SHOVEL: IconData = IconData {
     name: "shovel",
-    stroke: "M21.56 4.56a1.5 1.5 0 0 1 0 2.122l-.47.47a3 3 0 0 1-4.212-.03 3 3 0 0 1 0-4.243l.44-.44a1.5 1.5 0 0 1 2.121 0z M3 22a1 1 0 0 1-1-1v-3.586a1 1 0 0 1 .293-.707l3.355-3.355a1.205 1.205 0 0 1 1.704 0l3.296 3.296a1.205 1.205 0 0 1 0 1.704l-3.355 3.355a1 1 0 0 1-.707.293z m9 15 7.879-7.878",
+    stroke: "M21.56 4.56a1.5 1.5 0 0 1 0 2.122l-.47.47a3 3 0 0 1-4.212-.03 3 3 0 0 1 0-4.243l.44-.44a1.5 1.5 0 0 1 2.121 0z M3 22a1 1 0 0 1-1-1v-3.586a1 1 0 0 1 .293-.707l3.355-3.355a1.205 1.205 0 0 1 1.704 0l3.296 3.296a1.205 1.205 0 0 1 0 1.704l-3.355 3.355a1 1 0 0 1-.707.293z M0 0 m9 15 7.879-7.878",
     fill: "",
 };
 
 /// Lucide `shower-head` icon (24 × 24 stroke grid).
 pub const SHOWER_HEAD: IconData = IconData {
     name: "shower-head",
-    stroke: "m4 4 2.5 2.5 M13.5 6.5a4.95 4.95 0 0 0-7 7 M15 5 5 15 M14 17v.01 M10 16v.01 M13 13v.01 M16 10v.01 M11 20v.01 M17 14v.01 M20 11v.01",
+    stroke: "M0 0 m4 4 2.5 2.5 M13.5 6.5a4.95 4.95 0 0 0-7 7 M15 5 5 15 M14 17v.01 M10 16v.01 M13 13v.01 M16 10v.01 M11 20v.01 M17 14v.01 M20 11v.01",
     fill: "",
 };
 
@@ -10396,7 +10402,7 @@ pub const SHREDDER: IconData = IconData {
 /// Lucide `shrimp-off` icon (24 × 24 stroke grid).
 pub const SHRIMP_OFF: IconData = IconData {
     name: "shrimp-off",
-    stroke: "M10 2a3.28 3.28 0 003.227 1.798l6.17-.561A1 1 0 1119.614 8H13.5 M11 20c-.5.5-1.12 1-2.5 1a1 1 0 010-5H12a7 7 0 003.283-.817 M11 22c-.5-.5-1.12-1-2.5-1a6.5 6.5 0 01-5.63-3.25 6.44 6.44 0 015.236-9.744 M18.04 12.54A7 7 0 0019 9V8 m2 2 20 20 M8 16c-2 0-4.5-4-4-6 M9.43 9.33A8.5 8.5 0 0010 16",
+    stroke: "M10 2a3.28 3.28 0 003.227 1.798l6.17-.561A1 1 0 1119.614 8H13.5 M11 20c-.5.5-1.12 1-2.5 1a1 1 0 010-5H12a7 7 0 003.283-.817 M11 22c-.5-.5-1.12-1-2.5-1a6.5 6.5 0 01-5.63-3.25 6.44 6.44 0 015.236-9.744 M18.04 12.54A7 7 0 0019 9V8 M0 0 m2 2 20 20 M8 16c-2 0-4.5-4-4-6 M9.43 9.33A8.5 8.5 0 0010 16",
     fill: "",
 };
 
@@ -10410,7 +10416,7 @@ pub const SHRIMP: IconData = IconData {
 /// Lucide `shrink` icon (24 × 24 stroke grid).
 pub const SHRINK: IconData = IconData {
     name: "shrink",
-    stroke: "m15 15 6 6m-6-6v4.8m0-4.8h4.8 M9 19.8V15m0 0H4.2M9 15l-6 6 M15 4.2V9m0 0h4.8M15 9l6-6 M9 4.2V9m0 0H4.2M9 9 3 3",
+    stroke: "M0 0 m15 15 6 6m-6-6v4.8m0-4.8h4.8 M9 19.8V15m0 0H4.2M9 15l-6 6 M15 4.2V9m0 0h4.8M15 9l6-6 M9 4.2V9m0 0H4.2M9 9 3 3",
     fill: "",
 };
 
@@ -10424,7 +10430,7 @@ pub const SHRUB: IconData = IconData {
 /// Lucide `shuffle` icon (24 × 24 stroke grid).
 pub const SHUFFLE: IconData = IconData {
     name: "shuffle",
-    stroke: "m18 14 4 4-4 4 m18 2 4 4-4 4 M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22 M2 6h1.972a4 4 0 0 1 3.6 2.2 M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45",
+    stroke: "M0 0 m18 14 4 4-4 4 M0 0 m18 2 4 4-4 4 M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22 M2 6h1.972a4 4 0 0 1 3.6 2.2 M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45",
     fill: "",
 };
 
@@ -10473,7 +10479,7 @@ pub const SIGNAL: IconData = IconData {
 /// Lucide `signature` icon (24 × 24 stroke grid).
 pub const SIGNATURE: IconData = IconData {
     name: "signature",
-    stroke: "m21 17-2.156-1.868A.5.5 0 0 0 18 15.5v.5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1c0-2.545-3.991-3.97-8.5-4a1 1 0 0 0 0 5c4.153 0 4.745-11.295 5.708-13.5a2.5 2.5 0 1 1 3.31 3.284 M3 21h18",
+    stroke: "M0 0 m21 17-2.156-1.868A.5.5 0 0 0 18 15.5v.5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1c0-2.545-3.991-3.97-8.5-4a1 1 0 0 0 0 5c4.153 0 4.745-11.295 5.708-13.5a2.5 2.5 0 1 1 3.31 3.284 M3 21h18",
     fill: "",
 };
 
@@ -10494,7 +10500,7 @@ pub const SIGNPOST: IconData = IconData {
 /// Lucide `siren` icon (24 × 24 stroke grid).
 pub const SIREN: IconData = IconData {
     name: "siren",
-    stroke: "M7 18v-6a5 5 0 1 1 10 0v6 M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z M21 12h1 M18.5 4.5 18 5 M2 12h1 M12 2v1 m4.929 4.929.707.707 M12 12v6",
+    stroke: "M7 18v-6a5 5 0 1 1 10 0v6 M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z M21 12h1 M18.5 4.5 18 5 M2 12h1 M12 2v1 M0 0 m4.929 4.929.707.707 M12 12v6",
     fill: "",
 };
 
@@ -10522,7 +10528,7 @@ pub const SKIP_FORWARD: IconData = IconData {
 /// Lucide `skull` icon (24 × 24 stroke grid).
 pub const SKULL: IconData = IconData {
     name: "skull",
-    stroke: "m12.5 17-.5-1-.5 1h1z M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z M14 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z M8 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z",
+    stroke: "M0 0 m12.5 17-.5-1-.5 1h1z M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z M14 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z M8 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z",
     fill: "",
 };
 
@@ -10594,7 +10600,7 @@ pub const SNAIL: IconData = IconData {
 /// Lucide `snowflake` icon (24 × 24 stroke grid).
 pub const SNOWFLAKE: IconData = IconData {
     name: "snowflake",
-    stroke: "m10 20-1.25-2.5L6 18 M10 4 8.75 6.5 6 6 m14 20 1.25-2.5L18 18 m14 4 1.25 2.5L18 6 m17 21-3-6h-4 m17 3-3 6 1.5 3 M2 12h6.5L10 9 m20 10-1.5 2 1.5 2 M22 12h-6.5L14 15 m4 10 1.5 2L4 14 m7 21 3-6-1.5-3 m7 3 3 6h4",
+    stroke: "M0 0 m10 20-1.25-2.5L6 18 M10 4 8.75 6.5 6 6 M0 0 m14 20 1.25-2.5L18 18 M0 0 m14 4 1.25 2.5L18 6 M0 0 m17 21-3-6h-4 M0 0 m17 3-3 6 1.5 3 M2 12h6.5L10 9 M0 0 m20 10-1.5 2 1.5 2 M22 12h-6.5L14 15 M0 0 m4 10 1.5 2L4 14 M0 0 m7 21 3-6-1.5-3 M0 0 m7 3 3 6h4",
     fill: "",
 };
 
@@ -10615,7 +10621,7 @@ pub const SOFA: IconData = IconData {
 /// Lucide `solar-panel` icon (24 × 24 stroke grid).
 pub const SOLAR_PANEL: IconData = IconData {
     name: "solar-panel",
-    stroke: "M11 2h2 m14.28 14-4.56 8 m21 22-1.558-4H4.558 M3 10v2 M6.245 15.04A2 2 0 0 1 8 14h12a1 1 0 0 1 .864 1.505l-3.11 5.457A2 2 0 0 1 16 22H4a1 1 0 0 1-.863-1.506z M7 2a4 4 0 0 1-4 4 m8.66 7.66 1.41 1.41",
+    stroke: "M11 2h2 M0 0 m14.28 14-4.56 8 M0 0 m21 22-1.558-4H4.558 M3 10v2 M6.245 15.04A2 2 0 0 1 8 14h12a1 1 0 0 1 .864 1.505l-3.11 5.457A2 2 0 0 1 16 22H4a1 1 0 0 1-.863-1.506z M7 2a4 4 0 0 1-4 4 M0 0 m8.66 7.66 1.41 1.41",
     fill: "",
 };
 
@@ -10671,14 +10677,14 @@ pub const SPEECH: IconData = IconData {
 /// Lucide `spell-check-2` icon (24 × 24 stroke grid).
 pub const SPELL_CHECK_2: IconData = IconData {
     name: "spell-check-2",
-    stroke: "m6 16 6-12 6 12 M8 12h8 M4 21c1.1 0 1.1-1 2.3-1s1.1 1 2.3 1c1.1 0 1.1-1 2.3-1 1.1 0 1.1 1 2.3 1 1.1 0 1.1-1 2.3-1 1.1 0 1.1 1 2.3 1 1.1 0 1.1-1 2.3-1",
+    stroke: "M0 0 m6 16 6-12 6 12 M8 12h8 M4 21c1.1 0 1.1-1 2.3-1s1.1 1 2.3 1c1.1 0 1.1-1 2.3-1 1.1 0 1.1 1 2.3 1 1.1 0 1.1-1 2.3-1 1.1 0 1.1 1 2.3 1 1.1 0 1.1-1 2.3-1",
     fill: "",
 };
 
 /// Lucide `spell-check` icon (24 × 24 stroke grid).
 pub const SPELL_CHECK: IconData = IconData {
     name: "spell-check",
-    stroke: "m20 15-5.5 5.5L12 18 m4 16 6-12 5.115 10.23 M6 12h8",
+    stroke: "M0 0 m20 15-5.5 5.5L12 18 M0 0 m4 16 6-12 5.115 10.23 M6 12h8",
     fill: "",
 };
 
@@ -10699,35 +10705,35 @@ pub const SPLINE: IconData = IconData {
 /// Lucide `split` icon (24 × 24 stroke grid).
 pub const SPLIT: IconData = IconData {
     name: "split",
-    stroke: "M16 3h5v5 M8 3H3v5 M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3 m15 9 6-6",
+    stroke: "M16 3h5v5 M8 3H3v5 M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3 M0 0 m15 9 6-6",
     fill: "",
 };
 
 /// Lucide `spool` icon (24 × 24 stroke grid).
 pub const SPOOL: IconData = IconData {
     name: "spool",
-    stroke: "M17 13.44 4.442 17.082A2 2 0 0 0 4.982 21H19a2 2 0 0 0 .558-3.921l-1.115-.32A2 2 0 0 1 17 14.837V7.66 m7 10.56 12.558-3.642A2 2 0 0 0 19.018 3H5a2 2 0 0 0-.558 3.921l1.115.32A2 2 0 0 1 7 9.163v7.178",
+    stroke: "M17 13.44 4.442 17.082A2 2 0 0 0 4.982 21H19a2 2 0 0 0 .558-3.921l-1.115-.32A2 2 0 0 1 17 14.837V7.66 M0 0 m7 10.56 12.558-3.642A2 2 0 0 0 19.018 3H5a2 2 0 0 0-.558 3.921l1.115.32A2 2 0 0 1 7 9.163v7.178",
     fill: "",
 };
 
 /// Lucide `sport-shoe` icon (24 × 24 stroke grid).
 pub const SPORT_SHOE: IconData = IconData {
     name: "sport-shoe",
-    stroke: "m15 10.42 4.8-5.07 M19 18h3 M9.5 22 21.414 9.415A2 2 0 0 0 21.2 6.4l-5.61-4.208A1 1 0 0 0 14 3v2a2 2 0 0 1-1.394 1.906L8.677 8.053A1 1 0 0 0 8 9c-.155 6.393-2.082 9-4 9a2 2 0 0 0 0 4h14",
+    stroke: "M0 0 m15 10.42 4.8-5.07 M19 18h3 M9.5 22 21.414 9.415A2 2 0 0 0 21.2 6.4l-5.61-4.208A1 1 0 0 0 14 3v2a2 2 0 0 1-1.394 1.906L8.677 8.053A1 1 0 0 0 8 9c-.155 6.393-2.082 9-4 9a2 2 0 0 0 0 4h14",
     fill: "",
 };
 
 /// Lucide `spotlight` icon (24 × 24 stroke grid).
 pub const SPOTLIGHT: IconData = IconData {
     name: "spotlight",
-    stroke: "M15.295 19.562 16 22 m17 16 3.758 2.098 m19 12.5 3.026-.598 M7.61 6.3a3 3 0 0 0-3.92 1.3l-1.38 2.79a3 3 0 0 0 1.3 3.91l6.89 3.597a1 1 0 0 0 1.342-.447l3.106-6.211a1 1 0 0 0-.447-1.341z M8 9V2",
+    stroke: "M15.295 19.562 16 22 M0 0 m17 16 3.758 2.098 M0 0 m19 12.5 3.026-.598 M7.61 6.3a3 3 0 0 0-3.92 1.3l-1.38 2.79a3 3 0 0 0 1.3 3.91l6.89 3.597a1 1 0 0 0 1.342-.447l3.106-6.211a1 1 0 0 0-.447-1.341z M8 9V2",
     fill: "",
 };
 
 /// Lucide `spray-can` icon (24 × 24 stroke grid).
 pub const SPRAY_CAN: IconData = IconData {
     name: "spray-can",
-    stroke: "M3 3h.01 M7 5h.01 M11 7h.01 M3 7h.01 M7 9h.01 M3 11h.01 M15 5h4v4h-4Z m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2 m13 14 8-2 m13 19 8-2",
+    stroke: "M3 3h.01 M7 5h.01 M11 7h.01 M3 7h.01 M7 9h.01 M3 11h.01 M15 5h4v4h-4Z M0 0 m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2 M0 0 m13 14 8-2 M0 0 m13 19 8-2",
     fill: "",
 };
 
@@ -10762,63 +10768,63 @@ pub const SQUARE_ARROW_DOWN_RIGHT: IconData = IconData {
 /// Lucide `square-arrow-down` icon (24 × 24 stroke grid).
 pub const SQUARE_ARROW_DOWN: IconData = IconData {
     name: "square-arrow-down",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M12 8v8 m8 12 4 4 4-4",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M12 8v8 M0 0 m8 12 4 4 4-4",
     fill: "",
 };
 
 /// Lucide `square-arrow-left` icon (24 × 24 stroke grid).
 pub const SQUARE_ARROW_LEFT: IconData = IconData {
     name: "square-arrow-left",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z m12 8-4 4 4 4 M16 12H8",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M0 0 m12 8-4 4 4 4 M16 12H8",
     fill: "",
 };
 
 /// Lucide `square-arrow-out-down-left` icon (24 × 24 stroke grid).
 pub const SQUARE_ARROW_OUT_DOWN_LEFT: IconData = IconData {
     name: "square-arrow-out-down-left",
-    stroke: "M13 21h6a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6 m3 21 9-9 M9 21H3v-6",
+    stroke: "M13 21h6a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6 M0 0 m3 21 9-9 M9 21H3v-6",
     fill: "",
 };
 
 /// Lucide `square-arrow-out-down-right` icon (24 × 24 stroke grid).
 pub const SQUARE_ARROW_OUT_DOWN_RIGHT: IconData = IconData {
     name: "square-arrow-out-down-right",
-    stroke: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6 m21 21-9-9 M21 15v6h-6",
+    stroke: "M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6 M0 0 m21 21-9-9 M21 15v6h-6",
     fill: "",
 };
 
 /// Lucide `square-arrow-out-up-left` icon (24 × 24 stroke grid).
 pub const SQUARE_ARROW_OUT_UP_LEFT: IconData = IconData {
     name: "square-arrow-out-up-left",
-    stroke: "M13 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6 m3 3 9 9 M3 9V3h6",
+    stroke: "M13 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6 M0 0 m3 3 9 9 M3 9V3h6",
     fill: "",
 };
 
 /// Lucide `square-arrow-out-up-right` icon (24 × 24 stroke grid).
 pub const SQUARE_ARROW_OUT_UP_RIGHT: IconData = IconData {
     name: "square-arrow-out-up-right",
-    stroke: "M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6 m21 3-9 9 M15 3h6v6",
+    stroke: "M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6 M0 0 m21 3-9 9 M15 3h6v6",
     fill: "",
 };
 
 /// Lucide `square-arrow-right-enter` icon (24 × 24 stroke grid).
 pub const SQUARE_ARROW_RIGHT_ENTER: IconData = IconData {
     name: "square-arrow-right-enter",
-    stroke: "m10 16 4-4-4-4 M3 12h11 M3 8V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3",
+    stroke: "M0 0 m10 16 4-4-4-4 M3 12h11 M3 8V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3",
     fill: "",
 };
 
 /// Lucide `square-arrow-right-exit` icon (24 × 24 stroke grid).
 pub const SQUARE_ARROW_RIGHT_EXIT: IconData = IconData {
     name: "square-arrow-right-exit",
-    stroke: "M10 12h11 m17 16 4-4-4-4 M21 6.344V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1.344",
+    stroke: "M10 12h11 M0 0 m17 16 4-4-4-4 M21 6.344V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1.344",
     fill: "",
 };
 
 /// Lucide `square-arrow-right` icon (24 × 24 stroke grid).
 pub const SQUARE_ARROW_RIGHT: IconData = IconData {
     name: "square-arrow-right",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M8 12h8 m12 16 4-4-4-4",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M8 12h8 M0 0 m12 16 4-4-4-4",
     fill: "",
 };
 
@@ -10832,21 +10838,21 @@ pub const SQUARE_ARROW_UP_LEFT: IconData = IconData {
 /// Lucide `square-arrow-up-right` icon (24 × 24 stroke grid).
 pub const SQUARE_ARROW_UP_RIGHT: IconData = IconData {
     name: "square-arrow-up-right",
-    stroke: "M15 15V9H9 m9 15 6-6 M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z",
+    stroke: "M15 15V9H9 M0 0 m9 15 6-6 M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
 /// Lucide `square-arrow-up` icon (24 × 24 stroke grid).
 pub const SQUARE_ARROW_UP: IconData = IconData {
     name: "square-arrow-up",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z m16 12-4-4-4 4 M12 16V8",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M0 0 m16 12-4-4-4 4 M12 16V8",
     fill: "",
 };
 
 /// Lucide `square-asterisk` icon (24 × 24 stroke grid).
 pub const SQUARE_ASTERISK: IconData = IconData {
     name: "square-asterisk",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M12 8v8 m8.5 14 7-4 m8.5 10 7 4",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M12 8v8 M0 0 m8.5 14 7-4 M0 0 m8.5 10 7 4",
     fill: "",
 };
 
@@ -10860,7 +10866,7 @@ pub const SQUARE_BOOKMARK: IconData = IconData {
 /// Lucide `square-bottom-dashed-scissors` icon (24 × 24 stroke grid).
 pub const SQUARE_BOTTOM_DASHED_SCISSORS: IconData = IconData {
     name: "square-bottom-dashed-scissors",
-    stroke: "M14 21h1 m17 17-2.18-2.18 M5 21a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2 M9 21h1 M9.56 14.44 17 7 M9.56 9.56 12 12 M7 15.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0Z M7 8.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0Z",
+    stroke: "M14 21h1 M0 0 m17 17-2.18-2.18 M5 21a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2 M9 21h1 M9.56 14.44 17 7 M9.56 9.56 12 12 M7 15.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0Z M7 8.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0Z",
     fill: "",
 };
 
@@ -10888,60 +10894,57 @@ pub const SQUARE_CHART_GANTT: IconData = IconData {
 /// Lucide `square-check-big` icon (24 × 24 stroke grid).
 pub const SQUARE_CHECK_BIG: IconData = IconData {
     name: "square-check-big",
-    stroke: "M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344 m9 11 3 3L22 4",
+    stroke:
+        "M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344 M0 0 m9 11 3 3L22 4",
     fill: "",
 };
 
 /// Lucide `square-check` icon (24 × 24 stroke grid).
 pub const SQUARE_CHECK: IconData = IconData {
     name: "square-check",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z m16 9-5.5 5.5L8 12",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M0 0 m16 9-5.5 5.5L8 12",
     fill: "",
 };
 
 /// Lucide `square-chevron-down` icon (24 × 24 stroke grid).
 pub const SQUARE_CHEVRON_DOWN: IconData = IconData {
     name: "square-chevron-down",
-    stroke:
-        "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z m16 10-4 4-4-4",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M0 0 m16 10-4 4-4-4",
     fill: "",
 };
 
 /// Lucide `square-chevron-left` icon (24 × 24 stroke grid).
 pub const SQUARE_CHEVRON_LEFT: IconData = IconData {
     name: "square-chevron-left",
-    stroke:
-        "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z m14 16-4-4 4-4",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M0 0 m14 16-4-4 4-4",
     fill: "",
 };
 
 /// Lucide `square-chevron-right` icon (24 × 24 stroke grid).
 pub const SQUARE_CHEVRON_RIGHT: IconData = IconData {
     name: "square-chevron-right",
-    stroke:
-        "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z m10 8 4 4-4 4",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M0 0 m10 8 4 4-4 4",
     fill: "",
 };
 
 /// Lucide `square-chevron-up` icon (24 × 24 stroke grid).
 pub const SQUARE_CHEVRON_UP: IconData = IconData {
     name: "square-chevron-up",
-    stroke:
-        "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z m8 14 4-4 4 4",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M0 0 m8 14 4-4 4 4",
     fill: "",
 };
 
 /// Lucide `square-code` icon (24 × 24 stroke grid).
 pub const SQUARE_CODE: IconData = IconData {
     name: "square-code",
-    stroke: "m10 9-3 3 3 3 m14 15 3-3-3-3 M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z",
+    stroke: "M0 0 m10 9-3 3 3 3 M0 0 m14 15 3-3-3-3 M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
 /// Lucide `square-dashed-bottom-code` icon (24 × 24 stroke grid).
 pub const SQUARE_DASHED_BOTTOM_CODE: IconData = IconData {
     name: "square-dashed-bottom-code",
-    stroke: "M10 9.5 8 12l2 2.5 M14 21h1 m14 9.5 2 2.5-2 2.5 M5 21a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2 M9 21h1",
+    stroke: "M10 9.5 8 12l2 2.5 M14 21h1 M0 0 m14 9.5 2 2.5-2 2.5 M5 21a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2 M9 21h1",
     fill: "",
 };
 
@@ -10991,14 +10994,14 @@ pub const SQUARE_DASHED_TOP_SOLID: IconData = IconData {
 /// Lucide `square-dashed-x-corner` icon (24 × 24 stroke grid).
 pub const SQUARE_DASHED_X_CORNER: IconData = IconData {
     name: "square-dashed-x-corner",
-    stroke: "M14 3h1 m16 16 5 5 M19 3a2 2 0 012 2 m21 16-5 5 M21 9v1 M3 14v1 M3 9v1 M5 21a2 2 0 01-2-2 M5 3a2 2 0 00-2 2 M9 21h1 M9 3h1",
+    stroke: "M14 3h1 M0 0 m16 16 5 5 M19 3a2 2 0 012 2 M0 0 m21 16-5 5 M21 9v1 M3 14v1 M3 9v1 M5 21a2 2 0 01-2-2 M5 3a2 2 0 00-2 2 M9 21h1 M9 3h1",
     fill: "",
 };
 
 /// Lucide `square-dashed-x` icon (24 × 24 stroke grid).
 pub const SQUARE_DASHED_X: IconData = IconData {
     name: "square-dashed-x",
-    stroke: "M14 21h1 M14 3h1 M19 3a2 2 0 012 2 M21 14v1 M21 19a2 2 0 01-2 2 M21 9v1 M3 14v1 M3 9v1 M5 21a2 2 0 01-2-2 M5 3a2 2 0 00-2 2 m9 15 6-6 M9 21h1 M9 3h1 m9 9 6 6",
+    stroke: "M14 21h1 M14 3h1 M19 3a2 2 0 012 2 M21 14v1 M21 19a2 2 0 01-2 2 M21 9v1 M3 14v1 M3 9v1 M5 21a2 2 0 01-2-2 M5 3a2 2 0 00-2 2 M0 0 m9 15 6-6 M9 21h1 M9 3h1 M0 0 m9 9 6 6",
     fill: "",
 };
 
@@ -11061,7 +11064,7 @@ pub const SQUARE_KANBAN: IconData = IconData {
 /// Lucide `square-library` icon (24 × 24 stroke grid).
 pub const SQUARE_LIBRARY: IconData = IconData {
     name: "square-library",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M7 7v10 M11 7v10 m15 7 2 10",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M7 7v10 M11 7v10 M0 0 m15 7 2 10",
     fill: "",
 };
 
@@ -11103,7 +11106,7 @@ pub const SQUARE_OFF: IconData = IconData {
 /// Lucide `square-parking-off` icon (24 × 24 stroke grid).
 pub const SQUARE_PARKING_OFF: IconData = IconData {
     name: "square-parking-off",
-    stroke: "M3.6 3.6A2 2 0 0 1 5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-.59 1.41 M3 8.7V19a2 2 0 0 0 2 2h10.3 m2 2 20 20 M13 13a3 3 0 1 0 0-6H9v2 M9 17v-2.3",
+    stroke: "M3.6 3.6A2 2 0 0 1 5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-.59 1.41 M3 8.7V19a2 2 0 0 0 2 2h10.3 M0 0 m2 2 20 20 M13 13a3 3 0 1 0 0-6H9v2 M9 17v-2.3",
     fill: "",
 };
 
@@ -11131,7 +11134,7 @@ pub const SQUARE_PEN: IconData = IconData {
 /// Lucide `square-percent` icon (24 × 24 stroke grid).
 pub const SQUARE_PERCENT: IconData = IconData {
     name: "square-percent",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z m15 9-6 6 M9 9h.01 M15 15h.01",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M0 0 m15 9-6 6 M9 9h.01 M15 15h.01",
     fill: "",
 };
 
@@ -11187,7 +11190,7 @@ pub const SQUARE_ROUND_CORNER: IconData = IconData {
 /// Lucide `square-scissors` icon (24 × 24 stroke grid).
 pub const SQUARE_SCISSORS: IconData = IconData {
     name: "square-scissors",
-    stroke: "m17 17-2.18-2.18 M9.56 14.44 17 7 M9.56 9.56 12 12 M7 15.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0Z M7 8.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0Z M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z",
+    stroke: "M0 0 m17 17-2.18-2.18 M9.56 14.44 17 7 M9.56 9.56 12 12 M7 15.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0Z M7 8.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0Z M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
@@ -11260,7 +11263,7 @@ pub const SQUARE_STOP: IconData = IconData {
 /// Lucide `square-terminal` icon (24 × 24 stroke grid).
 pub const SQUARE_TERMINAL: IconData = IconData {
     name: "square-terminal",
-    stroke: "m7 11 2-2-2-2 M11 13h4 M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z",
+    stroke: "M0 0 m7 11 2-2-2-2 M11 13h4 M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
@@ -11288,7 +11291,7 @@ pub const SQUARE_USER: IconData = IconData {
 /// Lucide `square-x` icon (24 × 24 stroke grid).
 pub const SQUARE_X: IconData = IconData {
     name: "square-x",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z m15 9-6 6 m9 9 6 6",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M0 0 m15 9-6 6 M0 0 m9 9 6 6",
     fill: "",
 };
 
@@ -11358,7 +11361,7 @@ pub const STAMP: IconData = IconData {
 /// Lucide `star-check` icon (24 × 24 stroke grid).
 pub const STAR_CHECK: IconData = IconData {
     name: "star-check",
-    stroke: "m19.06 12.501 2.78-2.707a.53.53 0 0 0-.294-.905l-5.166-.755a2.1 2.1 0 0 1-1.595-1.16l-2.31-4.68a.53.53 0 0 0-.95.001L9.216 6.974a2.1 2.1 0 0 1-1.597 1.16l-5.165.755a.53.53 0 0 0-.294.906l3.736 3.637a2.1 2.1 0 0 1 .611 1.879l-.88 5.139a.53.53 0 0 0 .769.56l4.617-2.428.027-.014 m15 18 2 2 4-4",
+    stroke: "M0 0 m19.06 12.501 2.78-2.707a.53.53 0 0 0-.294-.905l-5.166-.755a2.1 2.1 0 0 1-1.595-1.16l-2.31-4.68a.53.53 0 0 0-.95.001L9.216 6.974a2.1 2.1 0 0 1-1.597 1.16l-5.165.755a.53.53 0 0 0-.294.906l3.736 3.637a2.1 2.1 0 0 1 .611 1.879l-.88 5.139a.53.53 0 0 0 .769.56l4.617-2.428.027-.014 M0 0 m15 18 2 2 4-4",
     fill: "",
 };
 
@@ -11379,7 +11382,7 @@ pub const STAR_MINUS: IconData = IconData {
 /// Lucide `star-off` icon (24 × 24 stroke grid).
 pub const STAR_OFF: IconData = IconData {
     name: "star-off",
-    stroke: "m10.344 4.688 1.181-2.393a.53.53 0 0 1 .95 0l2.31 4.679a2.12 2.12 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.237 3.152 m17.945 17.945.43 2.505a.53.53 0 0 1-.771.56l-4.618-2.428a2.12 2.12 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.12 2.12 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a8 8 0 0 0 .4-.099 m2 2 20 20",
+    stroke: "M0 0 m10.344 4.688 1.181-2.393a.53.53 0 0 1 .95 0l2.31 4.679a2.12 2.12 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.237 3.152 M0 0 m17.945 17.945.43 2.505a.53.53 0 0 1-.771.56l-4.618-2.428a2.12 2.12 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.12 2.12 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a8 8 0 0 0 .4-.099 M0 0 m2 2 20 20",
     fill: "",
 };
 
@@ -11393,7 +11396,7 @@ pub const STAR_PLUS: IconData = IconData {
 /// Lucide `star-x` icon (24 × 24 stroke grid).
 pub const STAR_X: IconData = IconData {
     name: "star-x",
-    stroke: "m15.5 15.5 5 5 m20.063 11.525 1.777-1.731a.53.53 0 0 0-.294-.905l-5.166-.755a2.1 2.1 0 0 1-1.595-1.16l-2.31-4.68a.53.53 0 0 0-.95.001L9.216 6.974a2.1 2.1 0 0 1-1.597 1.16l-5.165.755a.53.53 0 0 0-.294.906l3.736 3.637a2.1 2.1 0 0 1 .611 1.879l-.88 5.139a.53.53 0 0 0 .769.56l4.617-2.428a2.1 2.1 0 0 1 .987-.243 2 2 0 0 1 .132.004 m20.5 15.5-5 5",
+    stroke: "M0 0 m15.5 15.5 5 5 M0 0 m20.063 11.525 1.777-1.731a.53.53 0 0 0-.294-.905l-5.166-.755a2.1 2.1 0 0 1-1.595-1.16l-2.31-4.68a.53.53 0 0 0-.95.001L9.216 6.974a2.1 2.1 0 0 1-1.597 1.16l-5.165.755a.53.53 0 0 0-.294.906l3.736 3.637a2.1 2.1 0 0 1 .611 1.879l-.88 5.139a.53.53 0 0 0 .769.56l4.617-2.428a2.1 2.1 0 0 1 .987-.243 2 2 0 0 1 .132.004 M0 0 m20.5 15.5-5 5",
     fill: "",
 };
 
@@ -11435,7 +11438,7 @@ pub const STICKER: IconData = IconData {
 /// Lucide `sticky-note-check` icon (24 × 24 stroke grid).
 pub const STICKY_NOTE_CHECK: IconData = IconData {
     name: "sticky-note-check",
-    stroke: "m15 19 2 2 4-4 M15 3v5a1 1 0 0 0 1 1h5 M21 13V9a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6.5",
+    stroke: "M0 0 m15 19 2 2 4-4 M15 3v5a1 1 0 0 0 1 1h5 M21 13V9a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6.5",
     fill: "",
 };
 
@@ -11449,7 +11452,7 @@ pub const STICKY_NOTE_MINUS: IconData = IconData {
 /// Lucide `sticky-note-off` icon (24 × 24 stroke grid).
 pub const STICKY_NOTE_OFF: IconData = IconData {
     name: "sticky-note-off",
-    stroke: "M15 3v5a1 1 0 0 0 1 1h5 m2 2 20 20 M3.586 3.586A2 2 0 0 0 3 5v14a2 2 0 0 0 2 2h14a2 2 0 0 0 1.414-.586 M8.656 3H15a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 21 9v6.344",
+    stroke: "M15 3v5a1 1 0 0 0 1 1h5 M0 0 m2 2 20 20 M3.586 3.586A2 2 0 0 0 3 5v14a2 2 0 0 0 2 2h14a2 2 0 0 0 1.414-.586 M8.656 3H15a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 21 9v6.344",
     fill: "",
 };
 
@@ -11463,7 +11466,7 @@ pub const STICKY_NOTE_PLUS: IconData = IconData {
 /// Lucide `sticky-note-x` icon (24 × 24 stroke grid).
 pub const STICKY_NOTE_X: IconData = IconData {
     name: "sticky-note-x",
-    stroke: "M15 3v5a1 1 0 0 0 1 1h5 m16 16 5 5 M21 12V9a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7 m21 16-5 5",
+    stroke: "M15 3v5a1 1 0 0 0 1 1h5 M0 0 m16 16 5 5 M21 12V9a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7 M0 0 m21 16-5 5",
     fill: "",
 };
 
@@ -11519,14 +11522,14 @@ pub const STRIKETHROUGH: IconData = IconData {
 /// Lucide `subscript` icon (24 × 24 stroke grid).
 pub const SUBSCRIPT: IconData = IconData {
     name: "subscript",
-    stroke: "m4 5 8 8 m12 5-8 8 M20 19h-4c0-1.5.44-2 1.5-2.5S20 15.33 20 14c0-.47-.17-.93-.48-1.29a2.11 2.11 0 0 0-2.62-.44c-.42.24-.74.62-.9 1.07",
+    stroke: "M0 0 m4 5 8 8 M0 0 m12 5-8 8 M20 19h-4c0-1.5.44-2 1.5-2.5S20 15.33 20 14c0-.47-.17-.93-.48-1.29a2.11 2.11 0 0 0-2.62-.44c-.42.24-.74.62-.9 1.07",
     fill: "",
 };
 
 /// Lucide `summary` icon (24 × 24 stroke grid).
 pub const SUMMARY: IconData = IconData {
     name: "summary",
-    stroke: "M15 4H7 m18 16 3 3-3 3 M3 4v13a2 2 0 0 0 2 2h16 M7 14h7 M7 9h12",
+    stroke: "M15 4H7 M0 0 m18 16 3 3-3 3 M3 4v13a2 2 0 0 0 2 2h16 M7 14h7 M7 9h12",
     fill: "",
 };
 
@@ -11540,56 +11543,56 @@ pub const SUN_DIM: IconData = IconData {
 /// Lucide `sun-medium` icon (24 × 24 stroke grid).
 pub const SUN_MEDIUM: IconData = IconData {
     name: "sun-medium",
-    stroke: "M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z M12 3v1 M12 20v1 M3 12h1 M20 12h1 m18.364 5.636-.707.707 m6.343 17.657-.707.707 m5.636 5.636.707.707 m17.657 17.657.707.707",
+    stroke: "M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z M12 3v1 M12 20v1 M3 12h1 M20 12h1 M0 0 m18.364 5.636-.707.707 M0 0 m6.343 17.657-.707.707 M0 0 m5.636 5.636.707.707 M0 0 m17.657 17.657.707.707",
     fill: "",
 };
 
 /// Lucide `sun-moon` icon (24 × 24 stroke grid).
 pub const SUN_MOON: IconData = IconData {
     name: "sun-moon",
-    stroke: "M12 2v2 M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715 M16 12a4 4 0 0 0-4-4 m19 5-1.256 1.256 M20 12h2",
+    stroke: "M12 2v2 M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715 M16 12a4 4 0 0 0-4-4 M0 0 m19 5-1.256 1.256 M20 12h2",
     fill: "",
 };
 
 /// Lucide `sun-snow` icon (24 × 24 stroke grid).
 pub const SUN_SNOW: IconData = IconData {
     name: "sun-snow",
-    stroke: "M10 21v-1 M10 4V3 M10 9a3 3 0 0 0 0 6 m14 20 1.25-2.5L18 18 m14 4 1.25 2.5L18 6 m17 21-3-6 1.5-3H22 m17 3-3 6 1.5 3 M2 12h1 m20 10-1.5 2 1.5 2 m3.64 18.36.7-.7 m4.34 6.34-.7-.7",
+    stroke: "M10 21v-1 M10 4V3 M10 9a3 3 0 0 0 0 6 M0 0 m14 20 1.25-2.5L18 18 M0 0 m14 4 1.25 2.5L18 6 M0 0 m17 21-3-6 1.5-3H22 M0 0 m17 3-3 6 1.5 3 M2 12h1 M0 0 m20 10-1.5 2 1.5 2 M0 0 m3.64 18.36.7-.7 M0 0 m4.34 6.34-.7-.7",
     fill: "",
 };
 
 /// Lucide `sun` icon (24 × 24 stroke grid).
 pub const SUN: IconData = IconData {
     name: "sun",
-    stroke: "M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z M12 2v2 M12 20v2 m4.93 4.93 1.41 1.41 m17.66 17.66 1.41 1.41 M2 12h2 M20 12h2 m6.34 17.66-1.41 1.41 m19.07 4.93-1.41 1.41",
+    stroke: "M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z M12 2v2 M12 20v2 M0 0 m4.93 4.93 1.41 1.41 M0 0 m17.66 17.66 1.41 1.41 M2 12h2 M20 12h2 M0 0 m6.34 17.66-1.41 1.41 M0 0 m19.07 4.93-1.41 1.41",
     fill: "",
 };
 
 /// Lucide `sunrise` icon (24 × 24 stroke grid).
 pub const SUNRISE: IconData = IconData {
     name: "sunrise",
-    stroke: "M12 2v8 m4.93 10.93 1.41 1.41 M2 18h2 M20 18h2 m19.07 10.93-1.41 1.41 M22 22H2 m8 6 4-4 4 4 M16 18a4 4 0 0 0-8 0",
+    stroke: "M12 2v8 M0 0 m4.93 10.93 1.41 1.41 M2 18h2 M20 18h2 M0 0 m19.07 10.93-1.41 1.41 M22 22H2 M0 0 m8 6 4-4 4 4 M16 18a4 4 0 0 0-8 0",
     fill: "",
 };
 
 /// Lucide `sunset` icon (24 × 24 stroke grid).
 pub const SUNSET: IconData = IconData {
     name: "sunset",
-    stroke: "M12 10V2 m4.93 10.93 1.41 1.41 M2 18h2 M20 18h2 m19.07 10.93-1.41 1.41 M22 22H2 m16 6-4 4-4-4 M16 18a4 4 0 0 0-8 0",
+    stroke: "M12 10V2 M0 0 m4.93 10.93 1.41 1.41 M2 18h2 M20 18h2 M0 0 m19.07 10.93-1.41 1.41 M22 22H2 M0 0 m16 6-4 4-4-4 M16 18a4 4 0 0 0-8 0",
     fill: "",
 };
 
 /// Lucide `superscript` icon (24 × 24 stroke grid).
 pub const SUPERSCRIPT: IconData = IconData {
     name: "superscript",
-    stroke: "m4 19 8-8 m12 19-8-8 M20 12h-4c0-1.5.442-2 1.5-2.5S20 8.334 20 7.002c0-.472-.17-.93-.484-1.29a2.105 2.105 0 0 0-2.617-.436c-.42.239-.738.614-.899 1.06",
+    stroke: "M0 0 m4 19 8-8 M0 0 m12 19-8-8 M20 12h-4c0-1.5.442-2 1.5-2.5S20 8.334 20 7.002c0-.472-.17-.93-.484-1.29a2.105 2.105 0 0 0-2.617-.436c-.42.239-.738.614-.899 1.06",
     fill: "",
 };
 
 /// Lucide `swatch-book` icon (24 × 24 stroke grid).
 pub const SWATCH_BOOK: IconData = IconData {
     name: "swatch-book",
-    stroke: "M11 17a4 4 0 0 1-8 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2Z M16.7 13H19a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H7 M 7 17h.01 m11 8 2.3-2.3a2.4 2.4 0 0 1 3.404.004L18.6 7.6a2.4 2.4 0 0 1 .026 3.434L9.9 19.8",
+    stroke: "M11 17a4 4 0 0 1-8 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2Z M16.7 13H19a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H7 M 7 17h.01 M0 0 m11 8 2.3-2.3a2.4 2.4 0 0 1 3.404.004L18.6 7.6a2.4 2.4 0 0 1 .026 3.434L9.9 19.8",
     fill: "",
 };
 
@@ -11603,28 +11606,28 @@ pub const SWISS_FRANC: IconData = IconData {
 /// Lucide `switch-camera` icon (24 × 24 stroke grid).
 pub const SWITCH_CAMERA: IconData = IconData {
     name: "switch-camera",
-    stroke: "M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5 M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5 M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z m18 22-3-3 3-3 m6 2 3 3-3 3",
+    stroke: "M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5 M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5 M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M0 0 m18 22-3-3 3-3 M0 0 m6 2 3 3-3 3",
     fill: "",
 };
 
 /// Lucide `sword` icon (24 × 24 stroke grid).
 pub const SWORD: IconData = IconData {
     name: "sword",
-    stroke: "m11 19-6-6 m5 21-2-2 m8 16-4 4 M9.5 17.5 20.414 6.586A2 2 0 0021 5.172V3h-2.172a2 2 0 00-1.414.586L6.5 14.5",
+    stroke: "M0 0 m11 19-6-6 M0 0 m5 21-2-2 M0 0 m8 16-4 4 M9.5 17.5 20.414 6.586A2 2 0 0021 5.172V3h-2.172a2 2 0 00-1.414.586L6.5 14.5",
     fill: "",
 };
 
 /// Lucide `swords` icon (24 × 24 stroke grid).
 pub const SWORDS: IconData = IconData {
     name: "swords",
-    stroke: "m13 19 6-6 M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5 m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586 m16 16 4 4 m19 21 2-2 m5 14 4 4 m5 21-2-2 M7.5 16.5 4 20",
+    stroke: "M0 0 m13 19 6-6 M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5 M0 0 m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586 M0 0 m16 16 4 4 M0 0 m19 21 2-2 M0 0 m5 14 4 4 M0 0 m5 21-2-2 M7.5 16.5 4 20",
     fill: "",
 };
 
 /// Lucide `syringe` icon (24 × 24 stroke grid).
 pub const SYRINGE: IconData = IconData {
     name: "syringe",
-    stroke: "m18 2 4 4 m17 7 3-3 M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5 m9 11 4 4 m5 19-3 3 m14 4 6 6",
+    stroke: "M0 0 m18 2 4 4 M0 0 m17 7 3-3 M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5 M0 0 m9 11 4 4 M0 0 m5 19-3 3 M0 0 m14 4 6 6",
     fill: "",
 };
 
@@ -11701,21 +11704,21 @@ pub const TABLET: IconData = IconData {
 /// Lucide `tablets` icon (24 × 24 stroke grid).
 pub const TABLETS: IconData = IconData {
     name: "tablets",
-    stroke: "M2 7a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z M12 17a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z M12 17h10 m3.46 10.54 7.08-7.08",
+    stroke: "M2 7a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z M12 17a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z M12 17h10 M0 0 m3.46 10.54 7.08-7.08",
     fill: "",
 };
 
 /// Lucide `tag-plus` icon (24 × 24 stroke grid).
 pub const TAG_PLUS: IconData = IconData {
     name: "tag-plus",
-    stroke: "M16 13h6 m16.5 6.5-3.914-3.914A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l1.79-1.79 M19 10v6 M7 7.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z",
+    stroke: "M16 13h6 M0 0 m16.5 6.5-3.914-3.914A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l1.79-1.79 M19 10v6 M7 7.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z",
     fill: "M7 7.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z",
 };
 
 /// Lucide `tag-x` icon (24 × 24 stroke grid).
 pub const TAG_X: IconData = IconData {
     name: "tag-x",
-    stroke: "m16.5 6.5-3.914-3.914A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.43 2.43 0 0 0 3.42 0l1.79-1.79 m16.5 10.5 5 5 m21.5 10.5-5 5 M7 7.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z",
+    stroke: "M0 0 m16.5 6.5-3.914-3.914A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.43 2.43 0 0 0 3.42 0l1.79-1.79 M0 0 m16.5 10.5 5 5 M0 0 m21.5 10.5-5 5 M7 7.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z",
     fill: "M7 7.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z",
 };
 
@@ -11785,14 +11788,14 @@ pub const TARGET: IconData = IconData {
 /// Lucide `telescope` icon (24 × 24 stroke grid).
 pub const TELESCOPE: IconData = IconData {
     name: "telescope",
-    stroke: "m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44 m13.56 11.747 4.332-.924 m16 21-3.105-6.21 M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455z m6.158 8.633 1.114 4.456 m8 21 3.105-6.21 M10 13a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M0 0 m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44 M0 0 m13.56 11.747 4.332-.924 M0 0 m16 21-3.105-6.21 M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455z M0 0 m6.158 8.633 1.114 4.456 M0 0 m8 21 3.105-6.21 M10 13a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `tent-tree` icon (24 × 24 stroke grid).
 pub const TENT_TREE: IconData = IconData {
     name: "tent-tree",
-    stroke: "M2 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z m14 5 3-3 3 3 m14 10 3-3 3 3 M17 14V2 M17 14H7l-5 8h20Z M8 14v8 m9 14 5 8",
+    stroke: "M2 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M0 0 m14 5 3-3 3 3 M0 0 m14 10 3-3 3 3 M17 14V2 M17 14H7l-5 8h20Z M8 14v8 M0 0 m9 14 5 8",
     fill: "",
 };
 
@@ -11806,14 +11809,15 @@ pub const TENT: IconData = IconData {
 /// Lucide `terminal` icon (24 × 24 stroke grid).
 pub const TERMINAL: IconData = IconData {
     name: "terminal",
-    stroke: "M12 19h8 m4 17 6-6-6-6",
+    stroke: "M12 19h8 M0 0 m4 17 6-6-6-6",
     fill: "",
 };
 
 /// Lucide `test-tube-diagonal` icon (24 × 24 stroke grid).
 pub const TEST_TUBE_DIAGONAL: IconData = IconData {
     name: "test-tube-diagonal",
-    stroke: "M21 7 6.82 21.18a2.83 2.83 0 0 1-3.99-.01a2.83 2.83 0 0 1 0-4L17 3 m16 2 6 6 M12 16H4",
+    stroke:
+        "M21 7 6.82 21.18a2.83 2.83 0 0 1-3.99-.01a2.83 2.83 0 0 1 0-4L17 3 M0 0 m16 2 6 6 M12 16H4",
     fill: "",
 };
 
@@ -11897,7 +11901,8 @@ pub const TEXT_CURSOR: IconData = IconData {
 /// Lucide `text-initial` icon (24 × 24 stroke grid).
 pub const TEXT_INITIAL: IconData = IconData {
     name: "text-initial",
-    stroke: "M15 5h6 M15 12h6 M3 19h18 m3 12 3.553-7.724a.5.5 0 0 1 .894 0L11 12 M3.92 10h6.16",
+    stroke:
+        "M15 5h6 M15 12h6 M3 19h18 M0 0 m3 12 3.553-7.724a.5.5 0 0 1 .894 0L11 12 M3.92 10h6.16",
     fill: "",
 };
 
@@ -11911,14 +11916,14 @@ pub const TEXT_QUOTE: IconData = IconData {
 /// Lucide `text-search` icon (24 × 24 stroke grid).
 pub const TEXT_SEARCH: IconData = IconData {
     name: "text-search",
-    stroke: "M21 5H3 M10 12H3 M10 19H3 M14 15a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z m21 19-1.9-1.9",
+    stroke: "M21 5H3 M10 12H3 M10 19H3 M14 15a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M0 0 m21 19-1.9-1.9",
     fill: "",
 };
 
 /// Lucide `text-wrap` icon (24 × 24 stroke grid).
 pub const TEXT_WRAP: IconData = IconData {
     name: "text-wrap",
-    stroke: "m16 16-3 3 3 3 M3 12h14.5a1 1 0 0 1 0 7H13 M3 19h6 M3 5h18",
+    stroke: "M0 0 m16 16-3 3 3 3 M3 12h14.5a1 1 0 0 1 0 7H13 M3 19h6 M3 5h18",
     fill: "",
 };
 
@@ -11932,14 +11937,14 @@ pub const THEATER: IconData = IconData {
 /// Lucide `thermometer-snowflake` icon (24 × 24 stroke grid).
 pub const THERMOMETER_SNOWFLAKE: IconData = IconData {
     name: "thermometer-snowflake",
-    stroke: "m10 20-1.25-2.5L6 18 M10 4 8.75 6.5 6 6 M10.585 15H10 M2 12h6.5L10 9 M20 14.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z m4 10 1.5 2L4 14 m7 21 3-6-1.5-3 m7 3 3 6h2",
+    stroke: "M0 0 m10 20-1.25-2.5L6 18 M10 4 8.75 6.5 6 6 M10.585 15H10 M2 12h6.5L10 9 M20 14.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z M0 0 m4 10 1.5 2L4 14 M0 0 m7 21 3-6-1.5-3 M0 0 m7 3 3 6h2",
     fill: "",
 };
 
 /// Lucide `thermometer-sun` icon (24 × 24 stroke grid).
 pub const THERMOMETER_SUN: IconData = IconData {
     name: "thermometer-sun",
-    stroke: "M12 2v2 M12 8a4 4 0 0 0-1.645 7.647 M2 12h2 M20 14.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z m4.93 4.93 1.41 1.41 m6.34 17.66-1.41 1.41",
+    stroke: "M12 2v2 M12 8a4 4 0 0 0-1.645 7.647 M2 12h2 M20 14.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z M0 0 m4.93 4.93 1.41 1.41 M0 0 m6.34 17.66-1.41 1.41",
     fill: "",
 };
 
@@ -11967,14 +11972,14 @@ pub const THUMBS_UP: IconData = IconData {
 /// Lucide `tic-tac-toe` icon (24 × 24 stroke grid).
 pub const TIC_TAC_TOE: IconData = IconData {
     name: "tic-tac-toe",
-    stroke: "M12 2v20 m21 16-5 5 m21 21-5-5 M22 12H2 M8 3 3 8 M8 8 3 3 M16 5.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0Z M3 18.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0Z",
+    stroke: "M12 2v20 M0 0 m21 16-5 5 M0 0 m21 21-5-5 M22 12H2 M8 3 3 8 M8 8 3 3 M16 5.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0Z M3 18.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0Z",
     fill: "",
 };
 
 /// Lucide `ticket-check` icon (24 × 24 stroke grid).
 pub const TICKET_CHECK: IconData = IconData {
     name: "ticket-check",
-    stroke: "M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z m9 12 2 2 4-4",
+    stroke: "M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z M0 0 m9 12 2 2 4-4",
     fill: "",
 };
 
@@ -11988,7 +11993,7 @@ pub const TICKET_MINUS: IconData = IconData {
 /// Lucide `ticket-percent` icon (24 × 24 stroke grid).
 pub const TICKET_PERCENT: IconData = IconData {
     name: "ticket-percent",
-    stroke: "M2 9a3 3 0 1 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 1 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z M9 9h.01 m15 9-6 6 M15 15h.01",
+    stroke: "M2 9a3 3 0 1 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 1 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z M9 9h.01 M0 0 m15 9-6 6 M15 15h.01",
     fill: "",
 };
 
@@ -12002,14 +12007,14 @@ pub const TICKET_PLUS: IconData = IconData {
 /// Lucide `ticket-slash` icon (24 × 24 stroke grid).
 pub const TICKET_SLASH: IconData = IconData {
     name: "ticket-slash",
-    stroke: "M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z m9.5 14.5 5-5",
+    stroke: "M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z M0 0 m9.5 14.5 5-5",
     fill: "",
 };
 
 /// Lucide `ticket-x` icon (24 × 24 stroke grid).
 pub const TICKET_X: IconData = IconData {
     name: "ticket-x",
-    stroke: "M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z m9.5 14.5 5-5 m9.5 9.5 5 5",
+    stroke: "M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z M0 0 m9.5 14.5 5-5 M0 0 m9.5 9.5 5 5",
     fill: "",
 };
 
@@ -12023,14 +12028,14 @@ pub const TICKET: IconData = IconData {
 /// Lucide `tickets-plane` icon (24 × 24 stroke grid).
 pub const TICKETS_PLANE: IconData = IconData {
     name: "tickets-plane",
-    stroke: "M10.5 17h1.227a2 2 0 0 0 1.345-.52L18 12 m12 13.5 3.794.506 m3.173 8.18 11-5a2 2 0 0 1 2.647.993L18.56 8 M6 10V8 M6 14v1 M6 19v2 M4 8H20a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V10a2 2 0 0 1 2 -2Z",
+    stroke: "M10.5 17h1.227a2 2 0 0 0 1.345-.52L18 12 M0 0 m12 13.5 3.794.506 M0 0 m3.173 8.18 11-5a2 2 0 0 1 2.647.993L18.56 8 M6 10V8 M6 14v1 M6 19v2 M4 8H20a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V10a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
 /// Lucide `tickets` icon (24 × 24 stroke grid).
 pub const TICKETS: IconData = IconData {
     name: "tickets",
-    stroke: "m3.173 8.18 11-5a2 2 0 0 1 2.647.993L18.56 8 M6 10V8 M6 14v1 M6 19v2 M4 8H20a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V10a2 2 0 0 1 2 -2Z",
+    stroke: "M0 0 m3.173 8.18 11-5a2 2 0 0 1 2.647.993L18.56 8 M6 10V8 M6 14v1 M6 19v2 M4 8H20a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V10a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
@@ -12044,7 +12049,7 @@ pub const TIMELINE: IconData = IconData {
 /// Lucide `timer-off` icon (24 × 24 stroke grid).
 pub const TIMER_OFF: IconData = IconData {
     name: "timer-off",
-    stroke: "M10 2h4 M4.6 11a8 8 0 0 0 1.7 8.7 8 8 0 0 0 8.7 1.7 M7.4 7.4a8 8 0 0 1 10.3 1 8 8 0 0 1 .9 10.2 m2 2 20 20 M12 12v-2",
+    stroke: "M10 2h4 M4.6 11a8 8 0 0 0 1.7 8.7 8 8 0 0 0 8.7 1.7 M7.4 7.4a8 8 0 0 1 10.3 1 8 8 0 0 1 .9 10.2 M0 0 m2 2 20 20 M12 12v-2",
     fill: "",
 };
 
@@ -12093,7 +12098,7 @@ pub const TOMBSTONE: IconData = IconData {
 /// Lucide `tool-case` icon (24 × 24 stroke grid).
 pub const TOOL_CASE: IconData = IconData {
     name: "tool-case",
-    stroke: "M10 15h4 m14.5 4.058.571-1.429a1 1 0 011.3-.558l5 2a1 1 0 01.549.534.88.88 0 01.01.765l-2.332 5.83 M15.634 11a2 2 0 00-.186-.34l-1.17-1.757 1.31-1.656a2 2 0 00-2.109-3.165l-2.032.57-1.17-1.758a2 2 0 00-3.664 1.028l-.086 2.11-2.032.568a2 2 0 00-.155 3.8l1.617.6 M4 12.006A1 1 0 014.994 11H19a1 1 0 011 1v7a2 2 0 01-2 2H6a2 2 0 01-2-2z",
+    stroke: "M10 15h4 M0 0 m14.5 4.058.571-1.429a1 1 0 011.3-.558l5 2a1 1 0 01.549.534.88.88 0 01.01.765l-2.332 5.83 M15.634 11a2 2 0 00-.186-.34l-1.17-1.757 1.31-1.656a2 2 0 00-2.109-3.165l-2.032.57-1.17-1.758a2 2 0 00-3.664 1.028l-.086 2.11-2.032.568a2 2 0 00-.155 3.8l1.617.6 M4 12.006A1 1 0 014.994 11H19a1 1 0 011 1v7a2 2 0 01-2 2H6a2 2 0 01-2-2z",
     fill: "",
 };
 
@@ -12107,14 +12112,14 @@ pub const TOOLBOX: IconData = IconData {
 /// Lucide `toothbrush-sparkles` icon (24 × 24 stroke grid).
 pub const TOOTHBRUSH_SPARKLES: IconData = IconData {
     name: "toothbrush-sparkles",
-    stroke: "M10 3H8 M14.586 11.414 22 4 M15 11a8 8 0 01-.429.4 m2 22 7-7c1.857-1.857 3.714-1.99 5.571-3.6l-1.985-1.986A2 2 0 0114 6a2 2 0 012-2 2 2 0 013.262-1.552l2.152 2.138 M20 15v4 M22 17h-4 M4 5v4 M6 7H2 M9 2v2",
+    stroke: "M10 3H8 M14.586 11.414 22 4 M15 11a8 8 0 01-.429.4 M0 0 m2 22 7-7c1.857-1.857 3.714-1.99 5.571-3.6l-1.985-1.986A2 2 0 0114 6a2 2 0 012-2 2 2 0 013.262-1.552l2.152 2.138 M20 15v4 M22 17h-4 M4 5v4 M6 7H2 M9 2v2",
     fill: "",
 };
 
 /// Lucide `toothbrush` icon (24 × 24 stroke grid).
 pub const TOOTHBRUSH: IconData = IconData {
     name: "toothbrush",
-    stroke: "M15 11c-2 2-4 2-6 4l-7 7 m22 4-7.414 7.414-2-2A2 2 0 0114 6c0-.512.196-1.024.586-1.414A2 2 0 0116 4a2 2 0 013.262-1.552l2.152 2.138",
+    stroke: "M15 11c-2 2-4 2-6 4l-7 7 M0 0 m22 4-7.414 7.414-2-2A2 2 0 0114 6c0-.512.196-1.024.586-1.414A2 2 0 0116 4a2 2 0 013.262-1.552l2.152 2.138",
     fill: "",
 };
 
@@ -12135,7 +12140,7 @@ pub const TORUS: IconData = IconData {
 /// Lucide `touchpad-off` icon (24 × 24 stroke grid).
 pub const TOUCHPAD_OFF: IconData = IconData {
     name: "touchpad-off",
-    stroke: "M12 20v-6 M19.656 14H22 M2 14h12 m2 2 20 20 M20 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2 M9.656 4H20a2 2 0 0 1 2 2v10.344",
+    stroke: "M12 20v-6 M19.656 14H22 M2 14h12 M0 0 m2 2 20 20 M20 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2 M9.656 4H20a2 2 0 0 1 2 2v10.344",
     fill: "",
 };
 
@@ -12156,7 +12161,7 @@ pub const TOWEL_RACK: IconData = IconData {
 /// Lucide `tower-control` icon (24 × 24 stroke grid).
 pub const TOWER_CONTROL: IconData = IconData {
     name: "tower-control",
-    stroke: "M18.2 12.27 20 6H4l1.8 6.27a1 1 0 0 0 .95.73h10.5a1 1 0 0 0 .96-.73Z M8 13v9 M16 22v-9 m9 6 1 7 m15 6-1 7 M12 6V2 M13 2h-2",
+    stroke: "M18.2 12.27 20 6H4l1.8 6.27a1 1 0 0 0 .95.73h10.5a1 1 0 0 0 .96-.73Z M8 13v9 M16 22v-9 M0 0 m9 6 1 7 M0 0 m15 6-1 7 M12 6V2 M13 2h-2",
     fill: "",
 };
 
@@ -12170,14 +12175,14 @@ pub const TOY_BRICK: IconData = IconData {
 /// Lucide `tractor` icon (24 × 24 stroke grid).
 pub const TRACTOR: IconData = IconData {
     name: "tractor",
-    stroke: "m10 11 11 .9a1 1 0 0 1 .8 1.1l-.665 4.158a1 1 0 0 1-.988.842H20 M16 18h-5 M18 5a1 1 0 0 0-1 1v5.573 M3 4h8.129a1 1 0 0 1 .99.863L13 11.246 M4 11V4 M7 15h.01 M8 10.1V4 M16 18a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M2 15a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z",
+    stroke: "M0 0 m10 11 11 .9a1 1 0 0 1 .8 1.1l-.665 4.158a1 1 0 0 1-.988.842H20 M16 18h-5 M18 5a1 1 0 0 0-1 1v5.573 M3 4h8.129a1 1 0 0 1 .99.863L13 11.246 M4 11V4 M7 15h.01 M8 10.1V4 M16 18a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M2 15a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z",
     fill: "",
 };
 
 /// Lucide `traffic-cone` icon (24 × 24 stroke grid).
 pub const TRAFFIC_CONE: IconData = IconData {
     name: "traffic-cone",
-    stroke: "M16.05 10.966a5 2.5 0 0 1-8.1 0 m16.923 14.049 4.48 2.04a1 1 0 0 1 .001 1.831l-8.574 3.9a2 2 0 0 1-1.66 0l-8.574-3.91a1 1 0 0 1 0-1.83l4.484-2.04 M16.949 14.14a5 2.5 0 1 1-9.9 0L10.063 3.5a2 2 0 0 1 3.874 0z M9.194 6.57a5 2.5 0 0 0 5.61 0",
+    stroke: "M16.05 10.966a5 2.5 0 0 1-8.1 0 M0 0 m16.923 14.049 4.48 2.04a1 1 0 0 1 .001 1.831l-8.574 3.9a2 2 0 0 1-1.66 0l-8.574-3.91a1 1 0 0 1 0-1.83l4.484-2.04 M16.949 14.14a5 2.5 0 1 1-9.9 0L10.063 3.5a2 2 0 0 1 3.874 0z M9.194 6.57a5 2.5 0 0 0 5.61 0",
     fill: "",
 };
 
@@ -12191,42 +12196,42 @@ pub const TRAILER: IconData = IconData {
 /// Lucide `train-front-tunnel` icon (24 × 24 stroke grid).
 pub const TRAIN_FRONT_TUNNEL: IconData = IconData {
     name: "train-front-tunnel",
-    stroke: "M2 22V12a10 10 0 1 1 20 0v10 M15 6.8v1.4a3 2.8 0 1 1-6 0V6.8 M10 15h.01 M14 15h.01 M10 19a4 4 0 0 1-4-4v-3a6 6 0 1 1 12 0v3a4 4 0 0 1-4 4Z m9 19-2 3 m15 19 2 3",
+    stroke: "M2 22V12a10 10 0 1 1 20 0v10 M15 6.8v1.4a3 2.8 0 1 1-6 0V6.8 M10 15h.01 M14 15h.01 M10 19a4 4 0 0 1-4-4v-3a6 6 0 1 1 12 0v3a4 4 0 0 1-4 4Z M0 0 m9 19-2 3 M0 0 m15 19 2 3",
     fill: "",
 };
 
 /// Lucide `train-front` icon (24 × 24 stroke grid).
 pub const TRAIN_FRONT: IconData = IconData {
     name: "train-front",
-    stroke: "M8 3.1V7a4 4 0 0 0 8 0V3.1 m9 15-1-1 m15 15 1-1 M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z m8 19-2 3 m16 19 2 3",
+    stroke: "M8 3.1V7a4 4 0 0 0 8 0V3.1 M0 0 m9 15-1-1 M0 0 m15 15 1-1 M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z M0 0 m8 19-2 3 M0 0 m16 19 2 3",
     fill: "",
 };
 
 /// Lucide `train-track` icon (24 × 24 stroke grid).
 pub const TRAIN_TRACK: IconData = IconData {
     name: "train-track",
-    stroke: "M2 17 17 2 m2 14 8 8 m5 11 8 8 m8 8 8 8 m11 5 8 8 m14 2 8 8 M7 22 22 7",
+    stroke: "M2 17 17 2 M0 0 m2 14 8 8 M0 0 m5 11 8 8 M0 0 m8 8 8 8 M0 0 m11 5 8 8 M0 0 m14 2 8 8 M7 22 22 7",
     fill: "",
 };
 
 /// Lucide `tram-front` icon (24 × 24 stroke grid).
 pub const TRAM_FRONT: IconData = IconData {
     name: "tram-front",
-    stroke: "M6 3H18a2 2 0 0 1 2 2V17a2 2 0 0 1 -2 2H6a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M4 11h16 M12 3v8 m8 19-2 3 m18 22-2-3 M8 15h.01 M16 15h.01",
+    stroke: "M6 3H18a2 2 0 0 1 2 2V17a2 2 0 0 1 -2 2H6a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M4 11h16 M12 3v8 M0 0 m8 19-2 3 M0 0 m18 22-2-3 M8 15h.01 M16 15h.01",
     fill: "",
 };
 
 /// Lucide `transgender` icon (24 × 24 stroke grid).
 pub const TRANSGENDER: IconData = IconData {
     name: "transgender",
-    stroke: "M12 16v6 M14 20h-4 M18 2h4v4 m2 2 7.17 7.17 M2 5.355V2h3.357 m22 2-7.17 7.17 M8 5 5 8 M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z",
+    stroke: "M12 16v6 M14 20h-4 M18 2h4v4 M0 0 m2 2 7.17 7.17 M2 5.355V2h3.357 M0 0 m22 2-7.17 7.17 M8 5 5 8 M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z",
     fill: "",
 };
 
 /// Lucide `trash-off` icon (24 × 24 stroke grid).
 pub const TRASH_OFF: IconData = IconData {
     name: "trash-off",
-    stroke: "M10 11v6 M14 17v-3 M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-1.576.768 M19 6v7.344 m2 2 20 20 M21 6h-9.344 M3 6h3 M5 6v14a2 2 0 002 2h10a2 2 0 002-2v-1",
+    stroke: "M10 11v6 M14 17v-3 M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-1.576.768 M19 6v7.344 M0 0 m2 2 20 20 M21 6h-9.344 M3 6h3 M5 6v14a2 2 0 002 2h10a2 2 0 002-2v-1",
     fill: "",
 };
 
@@ -12254,7 +12259,7 @@ pub const TREE_PALM: IconData = IconData {
 /// Lucide `tree-pine` icon (24 × 24 stroke grid).
 pub const TREE_PINE: IconData = IconData {
     name: "tree-pine",
-    stroke: "m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z M12 22v-3",
+    stroke: "M0 0 m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z M12 22v-3",
     fill: "",
 };
 
@@ -12268,35 +12273,35 @@ pub const TREES: IconData = IconData {
 /// Lucide `trending-down` icon (24 × 24 stroke grid).
 pub const TRENDING_DOWN: IconData = IconData {
     name: "trending-down",
-    stroke: "M16 17h6v-6 m22 17-8.5-8.5-5 5L2 7",
+    stroke: "M16 17h6v-6 M0 0 m22 17-8.5-8.5-5 5L2 7",
     fill: "",
 };
 
 /// Lucide `trending-up-down` icon (24 × 24 stroke grid).
 pub const TRENDING_UP_DOWN: IconData = IconData {
     name: "trending-up-down",
-    stroke: "M14.828 14.828 21 21 M21 16v5h-5 m21 3-9 9-4-4-6 6 M21 8V3h-5",
+    stroke: "M14.828 14.828 21 21 M21 16v5h-5 M0 0 m21 3-9 9-4-4-6 6 M21 8V3h-5",
     fill: "",
 };
 
 /// Lucide `trending-up` icon (24 × 24 stroke grid).
 pub const TRENDING_UP: IconData = IconData {
     name: "trending-up",
-    stroke: "M16 7h6v6 m22 7-8.5 8.5-5-5L2 17",
+    stroke: "M16 7h6v6 M0 0 m22 7-8.5 8.5-5-5L2 17",
     fill: "",
 };
 
 /// Lucide `triangle-alert` icon (24 × 24 stroke grid).
 pub const TRIANGLE_ALERT: IconData = IconData {
     name: "triangle-alert",
-    stroke: "m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3 M12 9v4 M12 17h.01",
+    stroke: "M0 0 m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3 M12 9v4 M12 17h.01",
     fill: "",
 };
 
 /// Lucide `triangle-dashed` icon (24 × 24 stroke grid).
 pub const TRIANGLE_DASHED: IconData = IconData {
     name: "triangle-dashed",
-    stroke: "M10.17 4.193a2 2 0 0 1 3.666.013 M14 21h2 m15.874 7.743 1 1.732 m18.849 12.952 1 1.732 M21.824 18.18a2 2 0 0 1-1.835 2.824 M4.024 21a2 2 0 0 1-1.839-2.839 m5.136 12.952-1 1.732 M8 21h2 m8.102 7.743-1 1.732",
+    stroke: "M10.17 4.193a2 2 0 0 1 3.666.013 M14 21h2 M0 0 m15.874 7.743 1 1.732 M0 0 m18.849 12.952 1 1.732 M21.824 18.18a2 2 0 0 1-1.835 2.824 M4.024 21a2 2 0 0 1-1.839-2.839 M0 0 m5.136 12.952-1 1.732 M8 21h2 M0 0 m8.102 7.743-1 1.732",
     fill: "",
 };
 
@@ -12359,7 +12364,7 @@ pub const TUBE_LOTION: IconData = IconData {
 /// Lucide `turkish-lira` icon (24 × 24 stroke grid).
 pub const TURKISH_LIRA: IconData = IconData {
     name: "turkish-lira",
-    stroke: "M15 4 5 9 m15 8.5-10 5 M18 12a9 9 0 0 1-9 9V3",
+    stroke: "M15 4 5 9 M0 0 m15 8.5-10 5 M18 12a9 9 0 0 1-9 9V3",
     fill: "",
 };
 
@@ -12373,7 +12378,7 @@ pub const TURNTABLE: IconData = IconData {
 /// Lucide `turtle` icon (24 × 24 stroke grid).
 pub const TURTLE: IconData = IconData {
     name: "turtle",
-    stroke: "m12 10 2 4v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a8 8 0 1 0-16 0v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3l2-4h4Z M4.82 7.9 8 10 M15.18 7.9 12 10 M16.93 10H20a2 2 0 0 1 0 4H2",
+    stroke: "M0 0 m12 10 2 4v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a8 8 0 1 0-16 0v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3l2-4h4Z M4.82 7.9 8 10 M15.18 7.9 12 10 M16.93 10H20a2 2 0 0 1 0 4H2",
     fill: "",
 };
 
@@ -12394,8 +12399,7 @@ pub const TV_MINIMAL: IconData = IconData {
 /// Lucide `tv` icon (24 × 24 stroke grid).
 pub const TV: IconData = IconData {
     name: "tv",
-    stroke:
-        "m17 2-5 5-5-5 M4 7H20a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V9a2 2 0 0 1 2 -2Z",
+    stroke: "M0 0 m17 2-5 5-5-5 M4 7H20a2 2 0 0 1 2 2V20a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V9a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
@@ -12416,7 +12420,7 @@ pub const TYPE: IconData = IconData {
 /// Lucide `umbrella-off` icon (24 × 24 stroke grid).
 pub const UMBRELLA_OFF: IconData = IconData {
     name: "umbrella-off",
-    stroke: "M12 13v7a2 2 0 0 0 4 0 M12 2v2 M18.656 13h2.336a1 1 0 0 0 .97-1.274 10.284 10.284 0 0 0-12.07-7.51 m2 2 20 20 M5.961 5.957a10.28 10.28 0 0 0-3.922 5.769A1 1 0 0 0 3 13h10",
+    stroke: "M12 13v7a2 2 0 0 0 4 0 M12 2v2 M18.656 13h2.336a1 1 0 0 0 .97-1.274 10.284 10.284 0 0 0-12.07-7.51 M0 0 m2 2 20 20 M5.961 5.957a10.28 10.28 0 0 0-3.922 5.769A1 1 0 0 0 3 13h10",
     fill: "",
 };
 
@@ -12458,14 +12462,15 @@ pub const UNDO: IconData = IconData {
 /// Lucide `unfold-horizontal` icon (24 × 24 stroke grid).
 pub const UNFOLD_HORIZONTAL: IconData = IconData {
     name: "unfold-horizontal",
-    stroke: "M16 12h6 M8 12H2 M12 2v2 M12 8v2 M12 14v2 M12 20v2 m19 15 3-3-3-3 m5 9-3 3 3 3",
+    stroke:
+        "M16 12h6 M8 12H2 M12 2v2 M12 8v2 M12 14v2 M12 20v2 M0 0 m19 15 3-3-3-3 M0 0 m5 9-3 3 3 3",
     fill: "",
 };
 
 /// Lucide `unfold-vertical` icon (24 × 24 stroke grid).
 pub const UNFOLD_VERTICAL: IconData = IconData {
     name: "unfold-vertical",
-    stroke: "M12 22v-6 M12 8V2 M4 12H2 M10 12H8 M16 12h-2 M22 12h-2 m15 19-3 3-3-3 m15 5-3-3-3 3",
+    stroke: "M12 22v-6 M12 8V2 M4 12H2 M10 12H8 M16 12h-2 M22 12h-2 M0 0 m15 19-3 3-3-3 M0 0 m15 5-3-3-3 3",
     fill: "",
 };
 
@@ -12493,21 +12498,21 @@ pub const UNLINK_2: IconData = IconData {
 /// Lucide `unlink` icon (24 × 24 stroke grid).
 pub const UNLINK: IconData = IconData {
     name: "unlink",
-    stroke: "m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71 m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71 M8 2L8 5 M2 8L5 8 M16 19L16 22 M19 16L22 16",
+    stroke: "M0 0 m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71 M0 0 m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71 M8 2L8 5 M2 8L5 8 M16 19L16 22 M19 16L22 16",
     fill: "",
 };
 
 /// Lucide `unplug` icon (24 × 24 stroke grid).
 pub const UNPLUG: IconData = IconData {
     name: "unplug",
-    stroke: "m19 5 3-3 m2 22 3-3 M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z M7.5 13.5 10 11 M10.5 16.5 13 14 m12 6 6 6 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0Z",
+    stroke: "M0 0 m19 5 3-3 M0 0 m2 22 3-3 M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z M7.5 13.5 10 11 M10.5 16.5 13 14 M0 0 m12 6 6 6 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0Z",
     fill: "",
 };
 
 /// Lucide `upload` icon (24 × 24 stroke grid).
 pub const UPLOAD: IconData = IconData {
     name: "upload",
-    stroke: "M12 3v12 m17 8-5-5-5 5 M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",
+    stroke: "M12 3v12 M0 0 m17 8-5-5-5 5 M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",
     fill: "",
 };
 
@@ -12521,21 +12526,21 @@ pub const USB_C_PORT: IconData = IconData {
 /// Lucide `usb` icon (24 × 24 stroke grid).
 pub const USB: IconData = IconData {
     name: "usb",
-    stroke: "M9 7a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z M3 20a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z M4.7 19.3 19 5 m21 3-3 1 2 2Z M9.26 7.68 5 12l2 5 m10 14 5 2 3.5-3.5 m18 12 1-1 1 1-1 1Z",
+    stroke: "M9 7a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z M3 20a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z M4.7 19.3 19 5 M0 0 m21 3-3 1 2 2Z M9.26 7.68 5 12l2 5 M0 0 m10 14 5 2 3.5-3.5 M0 0 m18 12 1-1 1 1-1 1Z",
     fill: "",
 };
 
 /// Lucide `user-check` icon (24 × 24 stroke grid).
 pub const USER_CHECK: IconData = IconData {
     name: "user-check",
-    stroke: "m16 11 2 2 4-4 M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M5 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z",
+    stroke: "M0 0 m16 11 2 2 4-4 M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M5 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z",
     fill: "",
 };
 
 /// Lucide `user-cog` icon (24 × 24 stroke grid).
 pub const USER_COG: IconData = IconData {
     name: "user-cog",
-    stroke: "M10 15H6a4 4 0 0 0-4 4v2 m14.305 16.53.923-.382 m15.228 13.852-.923-.383 m16.852 12.228-.383-.923 m16.852 17.772-.383.924 m19.148 12.228.383-.923 m19.53 18.696-.382-.924 m20.772 13.852.924-.383 m20.772 16.148.924.383 M15 15a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M5 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z",
+    stroke: "M10 15H6a4 4 0 0 0-4 4v2 M0 0 m14.305 16.53.923-.382 M0 0 m15.228 13.852-.923-.383 M0 0 m16.852 12.228-.383-.923 M0 0 m16.852 17.772-.383.924 M0 0 m19.148 12.228.383-.923 M0 0 m19.53 18.696-.382-.924 M0 0 m20.772 13.852.924-.383 M0 0 m20.772 16.148.924.383 M15 15a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M5 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z",
     fill: "",
 };
 
@@ -12585,22 +12590,21 @@ pub const USER_PLUS: IconData = IconData {
 /// Lucide `user-round-arrow-left` icon (24 × 24 stroke grid).
 pub const USER_ROUND_ARROW_LEFT: IconData = IconData {
     name: "user-round-arrow-left",
-    stroke:
-        "m19 16-3 3 M2 21a8 8 0 0 1 12.664-6.5 M22 19h-6l3 3 M5 8a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z",
+    stroke: "M0 0 m19 16-3 3 M2 21a8 8 0 0 1 12.664-6.5 M22 19h-6l3 3 M5 8a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z",
     fill: "",
 };
 
 /// Lucide `user-round-check` icon (24 × 24 stroke grid).
 pub const USER_ROUND_CHECK: IconData = IconData {
     name: "user-round-check",
-    stroke: "M2 21a8 8 0 0 1 13.292-6 M5 8a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z m16 19 2 2 4-4",
+    stroke: "M2 21a8 8 0 0 1 13.292-6 M5 8a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z M0 0 m16 19 2 2 4-4",
     fill: "",
 };
 
 /// Lucide `user-round-cog` icon (24 × 24 stroke grid).
 pub const USER_ROUND_COG: IconData = IconData {
     name: "user-round-cog",
-    stroke: "m14.305 19.53.923-.382 m15.228 16.852-.923-.383 m16.852 15.228-.383-.923 m16.852 20.772-.383.924 m19.148 15.228.383-.923 m19.53 21.696-.382-.924 M2 21a8 8 0 0 1 10.434-7.62 m20.772 16.852.924-.383 m20.772 19.148.924.383 M5 8a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M0 0 m14.305 19.53.923-.382 M0 0 m15.228 16.852-.923-.383 M0 0 m16.852 15.228-.383-.923 M0 0 m16.852 20.772-.383.924 M0 0 m19.148 15.228.383-.923 M0 0 m19.53 21.696-.382-.924 M2 21a8 8 0 0 1 10.434-7.62 M0 0 m20.772 16.852.924-.383 M0 0 m20.772 19.148.924.383 M5 8a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -12642,7 +12646,7 @@ pub const USER_ROUND_PLUS: IconData = IconData {
 /// Lucide `user-round-search` icon (24 × 24 stroke grid).
 pub const USER_ROUND_SEARCH: IconData = IconData {
     name: "user-round-search",
-    stroke: "M5 8a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z M2 21a8 8 0 0 1 10.434-7.62 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z m22 22-1.9-1.9",
+    stroke: "M5 8a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z M2 21a8 8 0 0 1 10.434-7.62 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M0 0 m22 22-1.9-1.9",
     fill: "",
 };
 
@@ -12656,7 +12660,7 @@ pub const USER_ROUND_STAR: IconData = IconData {
 /// Lucide `user-round-x` icon (24 × 24 stroke grid).
 pub const USER_ROUND_X: IconData = IconData {
     name: "user-round-x",
-    stroke: "m16.5 16.5 5 5 M2 21a8 8 0 0 1 11.531-7.18 m21.5 16.5-5 5 M5 8a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z",
+    stroke: "M0 0 m16.5 16.5 5 5 M2 21a8 8 0 0 1 11.531-7.18 M0 0 m21.5 16.5-5 5 M5 8a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z",
     fill: "",
 };
 
@@ -12670,7 +12674,7 @@ pub const USER_ROUND: IconData = IconData {
 /// Lucide `user-search` icon (24 × 24 stroke grid).
 pub const USER_SEARCH: IconData = IconData {
     name: "user-search",
-    stroke: "M6 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z M10.3 15H7a4 4 0 0 0-4 4v2 M14 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z m21 21-1.9-1.9",
+    stroke: "M6 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z M10.3 15H7a4 4 0 0 0-4 4v2 M14 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z M0 0 m21 21-1.9-1.9",
     fill: "",
 };
 
@@ -12733,7 +12737,7 @@ pub const USERS: IconData = IconData {
 /// Lucide `utensils-crossed` icon (24 × 24 stroke grid).
 pub const UTENSILS_CROSSED: IconData = IconData {
     name: "utensils-crossed",
-    stroke: "m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8 M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7 m2.1 21.8 6.4-6.3 m19 5-7 7",
+    stroke: "M0 0 m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8 M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7 M0 0 m2.1 21.8 6.4-6.3 M0 0 m19 5-7 7",
     fill: "",
 };
 
@@ -12747,7 +12751,7 @@ pub const UTENSILS: IconData = IconData {
 /// Lucide `utility-pole` icon (24 × 24 stroke grid).
 pub const UTILITY_POLE: IconData = IconData {
     name: "utility-pole",
-    stroke: "M12 2v20 M2 5h20 M3 3v2 M7 3v2 M17 3v2 M21 3v2 m19 5-7 7-7-7",
+    stroke: "M12 2v20 M2 5h20 M3 3v2 M7 3v2 M17 3v2 M21 3v2 M0 0 m19 5-7 7-7-7",
     fill: "",
 };
 
@@ -12768,14 +12772,14 @@ pub const VARIABLE: IconData = IconData {
 /// Lucide `vault` icon (24 × 24 stroke grid).
 pub const VAULT: IconData = IconData {
     name: "vault",
-    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M7 7.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z m7.9 7.9 2.7 2.7 M16 7.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z m13.4 10.6 2.7-2.7 M7 16.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z m7.9 16.1 2.7-2.7 M16 16.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z m13.4 13.4 2.7 2.7 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M5 3H19a2 2 0 0 1 2 2V19a2 2 0 0 1 -2 2H5a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z M7 7.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z M0 0 m7.9 7.9 2.7 2.7 M16 7.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z M0 0 m13.4 10.6 2.7-2.7 M7 16.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z M0 0 m7.9 16.1 2.7-2.7 M16 16.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z M0 0 m13.4 13.4 2.7 2.7 M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "M7 7.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z M16 7.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z M7 16.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z M16 16.5a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z",
 };
 
 /// Lucide `vector-polygon` icon (24 × 24 stroke grid).
 pub const VECTOR_POLYGON: IconData = IconData {
     name: "vector-polygon",
-    stroke: "m12.828 4.813 5.344 2.375 m15.769 18.153 3.461-8.306 m5.687 14.074 7.625 4.852 M9.772 5.579 5.228 11.42 M9 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M13 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M18 8a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M2 13a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M0 0 m12.828 4.813 5.344 2.375 M0 0 m15.769 18.153 3.461-8.306 M0 0 m5.687 14.074 7.625 4.852 M9.772 5.579 5.228 11.42 M9 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M13 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M18 8a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M2 13a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
@@ -12803,7 +12807,8 @@ pub const VENETIAN_MASK: IconData = IconData {
 /// Lucide `venus-and-mars` icon (24 × 24 stroke grid).
 pub const VENUS_AND_MARS: IconData = IconData {
     name: "venus-and-mars",
-    stroke: "M10 20h4 M12 16v6 M17 2h4v4 m21 2-5.46 5.46 M7 11a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z",
+    stroke:
+        "M10 20h4 M12 16v6 M17 2h4v4 M0 0 m21 2-5.46 5.46 M7 11a5 5 0 1 0 10 0a5 5 0 1 0 -10 0Z",
     fill: "",
 };
 
@@ -12817,28 +12822,28 @@ pub const VENUS: IconData = IconData {
 /// Lucide `vibrate-off` icon (24 × 24 stroke grid).
 pub const VIBRATE_OFF: IconData = IconData {
     name: "vibrate-off",
-    stroke: "m2 8 2 2-2 2 2 2-2 2 m22 8-2 2 2 2-2 2 2 2 M8 8v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2 M16 10.34V6c0-.55-.45-1-1-1h-4.34 M2 2L22 22",
+    stroke: "M0 0 m2 8 2 2-2 2 2 2-2 2 M0 0 m22 8-2 2 2 2-2 2 2 2 M8 8v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2 M16 10.34V6c0-.55-.45-1-1-1h-4.34 M2 2L22 22",
     fill: "",
 };
 
 /// Lucide `vibrate` icon (24 × 24 stroke grid).
 pub const VIBRATE: IconData = IconData {
     name: "vibrate",
-    stroke: "m2 8 2 2-2 2 2 2-2 2 m22 8-2 2 2 2-2 2 2 2 M9 5H15a1 1 0 0 1 1 1V18a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V6a1 1 0 0 1 1 -1Z",
+    stroke: "M0 0 m2 8 2 2-2 2 2 2-2 2 M0 0 m22 8-2 2 2 2-2 2 2 2 M9 5H15a1 1 0 0 1 1 1V18a1 1 0 0 1 -1 1H9a1 1 0 0 1 -1 -1V6a1 1 0 0 1 1 -1Z",
     fill: "",
 };
 
 /// Lucide `video-off` icon (24 × 24 stroke grid).
 pub const VIDEO_OFF: IconData = IconData {
     name: "video-off",
-    stroke: "M10.66 6H14a2 2 0 0 1 2 2v2.5l5.248-3.062A.5.5 0 0 1 22 7.87v8.196 M16 16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2 m2 2 20 20",
+    stroke: "M10.66 6H14a2 2 0 0 1 2 2v2.5l5.248-3.062A.5.5 0 0 1 22 7.87v8.196 M16 16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2 M0 0 m2 2 20 20",
     fill: "",
 };
 
 /// Lucide `video` icon (24 × 24 stroke grid).
 pub const VIDEO: IconData = IconData {
     name: "video",
-    stroke: "m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5 M4 6H14a2 2 0 0 1 2 2V16a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V8a2 2 0 0 1 2 -2Z",
+    stroke: "M0 0 m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5 M4 6H14a2 2 0 0 1 2 2V16a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V8a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
@@ -12859,14 +12864,14 @@ pub const VIEW: IconData = IconData {
 /// Lucide `virus-off` icon (24 × 24 stroke grid).
 pub const VIRUS_OFF: IconData = IconData {
     name: "virus-off",
-    stroke: "M10.01 10h.01 M12 14.991h.01 M12 22v-3 M12 2v3 M13 22h-2 M13 2h-2 m16.5 19.794-1-1.733 m16.5 4.205-1 1.732 M18.891 13.235a7 7 0 00-8.126-8.126 m19.794 7.5-1.732 1 M2 12h3 M2 13v-2 m2 2 20 20 M22 12h-3 M22 13v-2 m4.206 16.5 1.732-1 m4.206 7.5 1.732 1 M7.05 7.05a7 7 0 009.9 9.9 m7.5 19.794 1-1.733 M9 12h.01",
+    stroke: "M10.01 10h.01 M12 14.991h.01 M12 22v-3 M12 2v3 M13 22h-2 M13 2h-2 M0 0 m16.5 19.794-1-1.733 M0 0 m16.5 4.205-1 1.732 M18.891 13.235a7 7 0 00-8.126-8.126 M0 0 m19.794 7.5-1.732 1 M2 12h3 M2 13v-2 M0 0 m2 2 20 20 M22 12h-3 M22 13v-2 M0 0 m4.206 16.5 1.732-1 M0 0 m4.206 7.5 1.732 1 M7.05 7.05a7 7 0 009.9 9.9 M0 0 m7.5 19.794 1-1.733 M9 12h.01",
     fill: "",
 };
 
 /// Lucide `virus` icon (24 × 24 stroke grid).
 pub const VIRUS: IconData = IconData {
     name: "virus",
-    stroke: "M12 14.991h.01 M12 22v-3 M12 2v3 M13 22h-2 M13 2h-2 M13.99 10H14 m16.5 19.794-1-1.733 m16.5 4.205-1 1.732 m19.794 16.5-1.732-1 m19.794 7.5-1.732 1 M2 12h3 M2 13v-2 M22 12h-3 M22 13v-2 m4.206 16.5 1.732-1 m4.206 7.5 1.732 1 m7.5 19.794 1-1.733 m7.5 4.205 1 1.732 M9 12h.01 M5 12a7 7 0 1 0 14 0a7 7 0 1 0 -14 0Z",
+    stroke: "M12 14.991h.01 M12 22v-3 M12 2v3 M13 22h-2 M13 2h-2 M13.99 10H14 M0 0 m16.5 19.794-1-1.733 M0 0 m16.5 4.205-1 1.732 M0 0 m19.794 16.5-1.732-1 M0 0 m19.794 7.5-1.732 1 M2 12h3 M2 13v-2 M22 12h-3 M22 13v-2 M0 0 m4.206 16.5 1.732-1 M0 0 m4.206 7.5 1.732 1 M0 0 m7.5 19.794 1-1.733 M0 0 m7.5 4.205 1 1.732 M9 12h.01 M5 12a7 7 0 1 0 14 0a7 7 0 1 0 -14 0Z",
     fill: "",
 };
 
@@ -12901,14 +12906,14 @@ pub const VOLUME_2: IconData = IconData {
 /// Lucide `volume-off` icon (24 × 24 stroke grid).
 pub const VOLUME_OFF: IconData = IconData {
     name: "volume-off",
-    stroke: "M16 9a5 5 0 0 1 .95 2.293 M19.364 5.636a9 9 0 0 1 1.889 9.96 m2 2 20 20 m7 7-.587.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298V11 M9.828 4.172A.686.686 0 0 1 11 4.657v.686",
+    stroke: "M16 9a5 5 0 0 1 .95 2.293 M19.364 5.636a9 9 0 0 1 1.889 9.96 M0 0 m2 2 20 20 M0 0 m7 7-.587.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298V11 M9.828 4.172A.686.686 0 0 1 11 4.657v.686",
     fill: "",
 };
 
 /// Lucide `volume-x` icon (24 × 24 stroke grid).
 pub const VOLUME_X: IconData = IconData {
     name: "volume-x",
-    stroke: "M11 4.702a.7.7 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.7.7 0 0 0 11 19.298z m16.5 14.5 5-5 m16.5 9.5 5 5",
+    stroke: "M11 4.702a.7.7 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.7.7 0 0 0 11 19.298z M0 0 m16.5 14.5 5-5 M0 0 m16.5 9.5 5 5",
     fill: "",
 };
 
@@ -12922,7 +12927,7 @@ pub const VOLUME: IconData = IconData {
 /// Lucide `vote` icon (24 × 24 stroke grid).
 pub const VOTE: IconData = IconData {
     name: "vote",
-    stroke: "m9 12 2 2 4-4 M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z M22 19H2",
+    stroke: "M0 0 m9 12 2 2 4-4 M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z M22 19H2",
     fill: "",
 };
 
@@ -12950,21 +12955,21 @@ pub const WALLET: IconData = IconData {
 /// Lucide `wallpaper` icon (24 × 24 stroke grid).
 pub const WALLPAPER: IconData = IconData {
     name: "wallpaper",
-    stroke: "M12 17v4 M8 21h8 m9 17 6.1-6.1a2 2 0 0 1 2.81.01L22 15 M6 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M4 3H20a2 2 0 0 1 2 2V15a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z",
+    stroke: "M12 17v4 M8 21h8 M0 0 m9 17 6.1-6.1a2 2 0 0 1 2.81.01L22 15 M6 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M4 3H20a2 2 0 0 1 2 2V15a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V5a2 2 0 0 1 2 -2Z",
     fill: "",
 };
 
 /// Lucide `wand-sparkles` icon (24 × 24 stroke grid).
 pub const WAND_SPARKLES: IconData = IconData {
     name: "wand-sparkles",
-    stroke: "m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72 m14 7 3 3 M5 6v4 M19 14v4 M10 2v2 M7 8H3 M21 16h-4 M11 3H9",
+    stroke: "M0 0 m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72 M0 0 m14 7 3 3 M5 6v4 M19 14v4 M10 2v2 M7 8H3 M21 16h-4 M11 3H9",
     fill: "",
 };
 
 /// Lucide `wand` icon (24 × 24 stroke grid).
 pub const WAND: IconData = IconData {
     name: "wand",
-    stroke: "M15 4V2 M15 16v-2 M8 9h2 M20 9h2 M17.8 11.8 19 13 M15 9h.01 M17.8 6.2 19 5 m3 21 9-9 M12.2 6.2 11 5",
+    stroke: "M15 4V2 M15 16v-2 M8 9h2 M20 9h2 M17.8 11.8 19 13 M15 9h.01 M17.8 6.2 19 5 M0 0 m3 21 9-9 M12.2 6.2 11 5",
     fill: "",
 };
 
@@ -12985,7 +12990,7 @@ pub const WASHING_MACHINE: IconData = IconData {
 /// Lucide `watch` icon (24 × 24 stroke grid).
 pub const WATCH: IconData = IconData {
     name: "watch",
-    stroke: "M12 10v2.2l1.6 1 m16.13 7.66-.81-4.05a2 2 0 0 0-2-1.61h-2.68a2 2 0 0 0-2 1.61l-.78 4.05 m7.88 16.36.8 4a2 2 0 0 0 2 1.61h2.72a2 2 0 0 0 2-1.61l.81-4.05 M6 12a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
+    stroke: "M12 10v2.2l1.6 1 M0 0 m16.13 7.66-.81-4.05a2 2 0 0 0-2-1.61h-2.68a2 2 0 0 0-2 1.61l-.78 4.05 M0 0 m7.88 16.36.8 4a2 2 0 0 0 2 1.61h2.72a2 2 0 0 0 2-1.61l.81-4.05 M6 12a6 6 0 1 0 12 0a6 6 0 1 0 -12 0Z",
     fill: "",
 };
 
@@ -12999,7 +13004,7 @@ pub const WAVES_ARROW_DOWN: IconData = IconData {
 /// Lucide `waves-arrow-up` icon (24 × 24 stroke grid).
 pub const WAVES_ARROW_UP: IconData = IconData {
     name: "waves-arrow-up",
-    stroke: "M12 2v8 M2 15c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 m8 6 4-4 4 4",
+    stroke: "M12 2v8 M2 15c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 M0 0 m8 6 4-4 4 4",
     fill: "",
 };
 
@@ -13027,14 +13032,14 @@ pub const WAVES_VERTICAL: IconData = IconData {
 /// Lucide `waypoints` icon (24 × 24 stroke grid).
 pub const WAYPOINTS: IconData = IconData {
     name: "waypoints",
-    stroke: "m10.586 5.414-5.172 5.172 m18.586 13.414-5.172 5.172 M6 12h12 M10 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M10 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M18 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M2 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
+    stroke: "M0 0 m10.586 5.414-5.172 5.172 M0 0 m18.586 13.414-5.172 5.172 M6 12h12 M10 20a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M10 4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M18 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z M2 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z",
     fill: "",
 };
 
 /// Lucide `webcam-off` icon (24 × 24 stroke grid).
 pub const WEBCAM_OFF: IconData = IconData {
     name: "webcam-off",
-    stroke: "M12 22v-4 M12.754 7.096a3 3 0 0 1 2.15 2.15 M12.863 12.873a3 3 0 0 1-3.736-3.735 M16.566 16.57A8 8 0 0 1 5.43 5.433 m2 2 20 20 M7 22h10 M8.478 2.817a8 8 0 0 1 10.705 10.705",
+    stroke: "M12 22v-4 M12.754 7.096a3 3 0 0 1 2.15 2.15 M12.863 12.873a3 3 0 0 1-3.736-3.735 M16.566 16.57A8 8 0 0 1 5.43 5.433 M0 0 m2 2 20 20 M7 22h10 M8.478 2.817a8 8 0 0 1 10.705 10.705",
     fill: "",
 };
 
@@ -13048,14 +13053,14 @@ pub const WEBCAM: IconData = IconData {
 /// Lucide `webhook-off` icon (24 × 24 stroke grid).
 pub const WEBHOOK_OFF: IconData = IconData {
     name: "webhook-off",
-    stroke: "M17 17h-5c-1.09-.02-1.94.92-2.5 1.9A3 3 0 1 1 2.57 15 M9 3.4a4 4 0 0 1 6.52.66 m6 17 3.1-5.8a2.5 2.5 0 0 0 .057-2.05 M20.3 20.3a4 4 0 0 1-2.3.7 M18.6 13a4 4 0 0 1 3.357 3.414 m12 6 .6 1 m2 2 20 20",
+    stroke: "M17 17h-5c-1.09-.02-1.94.92-2.5 1.9A3 3 0 1 1 2.57 15 M9 3.4a4 4 0 0 1 6.52.66 M0 0 m6 17 3.1-5.8a2.5 2.5 0 0 0 .057-2.05 M20.3 20.3a4 4 0 0 1-2.3.7 M18.6 13a4 4 0 0 1 3.357 3.414 M0 0 m12 6 .6 1 M0 0 m2 2 20 20",
     fill: "",
 };
 
 /// Lucide `webhook` icon (24 × 24 stroke grid).
 pub const WEBHOOK: IconData = IconData {
     name: "webhook",
-    stroke: "M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2 m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06 m12 6 3.13 5.73C15.66 12.7 16.9 13 18 13a4 4 0 0 1 0 8",
+    stroke: "M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2 M0 0 m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06 M0 0 m12 6 3.13 5.73C15.66 12.7 16.9 13 18 13a4 4 0 0 1 0 8",
     fill: "",
 };
 
@@ -13076,7 +13081,7 @@ pub const WEIGHT: IconData = IconData {
 /// Lucide `wheat-off` icon (24 × 24 stroke grid).
 pub const WHEAT_OFF: IconData = IconData {
     name: "wheat-off",
-    stroke: "m2 22 10-10 m16 8-1.17 1.17 M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z m8 8-.53.53a3.5 3.5 0 0 0 0 4.94L9 15l1.53-1.53c.55-.55.88-1.25.98-1.97 M10.91 5.26c.15-.26.34-.51.56-.73L13 3l1.53 1.53a3.5 3.5 0 0 1 .28 4.62 M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z m16 16-.53.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.49 3.49 0 0 1 1.97-.98 M18.74 13.09c.26-.15.51-.34.73-.56L21 11l-1.53-1.53a3.5 3.5 0 0 0-4.62-.28 M2 2L22 22",
+    stroke: "M0 0 m2 22 10-10 M0 0 m16 8-1.17 1.17 M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z M0 0 m8 8-.53.53a3.5 3.5 0 0 0 0 4.94L9 15l1.53-1.53c.55-.55.88-1.25.98-1.97 M10.91 5.26c.15-.26.34-.51.56-.73L13 3l1.53 1.53a3.5 3.5 0 0 1 .28 4.62 M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z M0 0 m16 16-.53.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.49 3.49 0 0 1 1.97-.98 M18.74 13.09c.26-.15.51-.34.73-.56L21 11l-1.53-1.53a3.5 3.5 0 0 0-4.62-.28 M2 2L22 22",
     fill: "",
 };
 
@@ -13104,7 +13109,7 @@ pub const WHOLE_WORD: IconData = IconData {
 /// Lucide `wifi-cog` icon (24 × 24 stroke grid).
 pub const WIFI_COG: IconData = IconData {
     name: "wifi-cog",
-    stroke: "m14.305 19.53.923-.382 m15.228 16.852-.923-.383 m16.852 15.228-.383-.923 m16.852 20.772-.383.924 m19.148 15.228.383-.923 m19.53 21.696-.382-.924 M2 8.82a15 15 0 0120 0 m20.772 16.852.924-.383 m20.772 19.148.924.383 M5 12.859a10 10 0 0110.18-2.342 M8.5 16.429a5 5 0 011.998-1.2 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
+    stroke: "M0 0 m14.305 19.53.923-.382 M0 0 m15.228 16.852-.923-.383 M0 0 m16.852 15.228-.383-.923 M0 0 m16.852 20.772-.383.924 M0 0 m19.148 15.228.383-.923 M0 0 m19.53 21.696-.382-.924 M2 8.82a15 15 0 0120 0 M0 0 m20.772 16.852.924-.383 M0 0 m20.772 19.148.924.383 M5 12.859a10 10 0 0110.18-2.342 M8.5 16.429a5 5 0 011.998-1.2 M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z",
     fill: "",
 };
 
@@ -13132,7 +13137,7 @@ pub const WIFI_LOW: IconData = IconData {
 /// Lucide `wifi-off` icon (24 × 24 stroke grid).
 pub const WIFI_OFF: IconData = IconData {
     name: "wifi-off",
-    stroke: "M12 20h.01 M8.5 16.429a5 5 0 0 1 7 0 M5 12.859a10 10 0 0 1 5.17-2.69 M19 12.859a10 10 0 0 0-2.007-1.523 M2 8.82a15 15 0 0 1 4.177-2.643 M22 8.82a15 15 0 0 0-11.288-3.764 m2 2 20 20",
+    stroke: "M12 20h.01 M8.5 16.429a5 5 0 0 1 7 0 M5 12.859a10 10 0 0 1 5.17-2.69 M19 12.859a10 10 0 0 0-2.007-1.523 M2 8.82a15 15 0 0 1 4.177-2.643 M22 8.82a15 15 0 0 0-11.288-3.764 M0 0 m2 2 20 20",
     fill: "",
 };
 
@@ -13168,14 +13173,14 @@ pub const WIFI: IconData = IconData {
 /// Lucide `wind-arrow-down` icon (24 × 24 stroke grid).
 pub const WIND_ARROW_DOWN: IconData = IconData {
     name: "wind-arrow-down",
-    stroke: "M10 2v8 M12.8 21.6A2 2 0 1 0 14 18H2 M17.5 10a2.5 2.5 0 1 1 2 4H2 m6 6 4 4 4-4",
+    stroke: "M10 2v8 M12.8 21.6A2 2 0 1 0 14 18H2 M17.5 10a2.5 2.5 0 1 1 2 4H2 M0 0 m6 6 4 4 4-4",
     fill: "",
 };
 
 /// Lucide `wind-arrow-up` icon (24 × 24 stroke grid).
 pub const WIND_ARROW_UP: IconData = IconData {
     name: "wind-arrow-up",
-    stroke: "M10 2v8 M12.8 21.6A2 2 0 1 0 14 18H2 M17.5 10a2.5 2.5 0 1 1 2 4H2 m6 6 4 -4 4 4",
+    stroke: "M10 2v8 M12.8 21.6A2 2 0 1 0 14 18H2 M17.5 10a2.5 2.5 0 1 1 2 4H2 M0 0 m6 6 4 -4 4 4",
     fill: "",
 };
 
@@ -13210,14 +13215,14 @@ pub const WORKFLOW: IconData = IconData {
 /// Lucide `worm` icon (24 × 24 stroke grid).
 pub const WORM: IconData = IconData {
     name: "worm",
-    stroke: "m19 12-1.5 3 M19.63 18.81 22 20 M6.47 8.23a1.68 1.68 0 0 1 2.44 1.93l-.64 2.08a6.76 6.76 0 0 0 10.16 7.67l.42-.27a1 1 0 1 0-2.73-4.21l-.42.27a1.76 1.76 0 0 1-2.63-1.99l.64-2.08A6.66 6.66 0 0 0 3.94 3.9l-.7.4a1 1 0 1 0 2.55 4.34z",
+    stroke: "M0 0 m19 12-1.5 3 M19.63 18.81 22 20 M6.47 8.23a1.68 1.68 0 0 1 2.44 1.93l-.64 2.08a6.76 6.76 0 0 0 10.16 7.67l.42-.27a1 1 0 1 0-2.73-4.21l-.42.27a1.76 1.76 0 0 1-2.63-1.99l.64-2.08A6.66 6.66 0 0 0 3.94 3.9l-.7.4a1 1 0 1 0 2.55 4.34z",
     fill: "",
 };
 
 /// Lucide `wrench-off` icon (24 × 24 stroke grid).
 pub const WRENCH_OFF: IconData = IconData {
     name: "wrench-off",
-    stroke: "M10.747 5.093a6 6 0 0 1 6.841-2.882c.438.12.54.662.219.984L14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-2.882 6.842 m13.5 13.5-7.88 7.88a1 1 0 0 1-2.999-3l7.88-7.88 m2 2 20 20",
+    stroke: "M10.747 5.093a6 6 0 0 1 6.841-2.882c.438.12.54.662.219.984L14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-2.882 6.842 M0 0 m13.5 13.5-7.88 7.88a1 1 0 0 1-2.999-3l7.88-7.88 M0 0 m2 2 20 20",
     fill: "",
 };
 
@@ -13231,21 +13236,21 @@ pub const WRENCH: IconData = IconData {
 /// Lucide `x-line-top` icon (24 × 24 stroke grid).
 pub const X_LINE_TOP: IconData = IconData {
     name: "x-line-top",
-    stroke: "M18 4H6 M18 8 6 20 m6 8 12 12",
+    stroke: "M18 4H6 M18 8 6 20 M0 0 m6 8 12 12",
     fill: "",
 };
 
 /// Lucide `x` icon (24 × 24 stroke grid).
 pub const X: IconData = IconData {
     name: "x",
-    stroke: "M18 6 6 18 m6 6 12 12",
+    stroke: "M18 6 6 18 M0 0 m6 6 12 12",
     fill: "",
 };
 
 /// Lucide `zap-off` icon (24 × 24 stroke grid).
 pub const ZAP_OFF: IconData = IconData {
     name: "zap-off",
-    stroke: "M10.768 5.111 13.44 2.44a1.5 1.5 0 012.474 1.561l-1.633 4.625 m18.889 13.232.672-.672A1.5 1.5 0 0018.5 10h-2.844 m2 2 20 20 m7.94 7.94-3.5 3.499A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l5.5-5.5",
+    stroke: "M10.768 5.111 13.44 2.44a1.5 1.5 0 012.474 1.561l-1.633 4.625 M0 0 m18.889 13.232.672-.672A1.5 1.5 0 0018.5 10h-2.844 M0 0 m2 2 20 20 M0 0 m7.94 7.94-3.5 3.499A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l5.5-5.5",
     fill: "",
 };
 
@@ -13259,7 +13264,7 @@ pub const ZAP: IconData = IconData {
 /// Lucide `zodiac-aquarius` icon (24 × 24 stroke grid).
 pub const ZODIAC_AQUARIUS: IconData = IconData {
     name: "zodiac-aquarius",
-    stroke: "m2 10 2.456-3.684a.7.7 0 0 1 1.106-.013l2.39 3.413a.7.7 0 0 0 1.096-.001l2.402-3.432a.7.7 0 0 1 1.098 0l2.402 3.432a.7.7 0 0 0 1.098 0l2.389-3.413a.7.7 0 0 1 1.106.013L22 10 m2 18.002 2.456-3.684a.7.7 0 0 1 1.106-.013l2.39 3.413a.7.7 0 0 0 1.097 0l2.402-3.432a.7.7 0 0 1 1.098 0l2.402 3.432a.7.7 0 0 0 1.098 0l2.389-3.413a.7.7 0 0 1 1.106.013L22 18.002",
+    stroke: "M0 0 m2 10 2.456-3.684a.7.7 0 0 1 1.106-.013l2.39 3.413a.7.7 0 0 0 1.096-.001l2.402-3.432a.7.7 0 0 1 1.098 0l2.402 3.432a.7.7 0 0 0 1.098 0l2.389-3.413a.7.7 0 0 1 1.106.013L22 10 M0 0 m2 18.002 2.456-3.684a.7.7 0 0 1 1.106-.013l2.39 3.413a.7.7 0 0 0 1.097 0l2.402-3.432a.7.7 0 0 1 1.098 0l2.402 3.432a.7.7 0 0 0 1.098 0l2.389-3.413a.7.7 0 0 1 1.106.013L22 18.002",
     fill: "",
 };
 
@@ -13322,14 +13327,14 @@ pub const ZODIAC_PISCES: IconData = IconData {
 /// Lucide `zodiac-sagittarius` icon (24 × 24 stroke grid).
 pub const ZODIAC_SAGITTARIUS: IconData = IconData {
     name: "zodiac-sagittarius",
-    stroke: "M15 3h6v6 M21 3 3 21 m9 9 6 6",
+    stroke: "M15 3h6v6 M21 3 3 21 M0 0 m9 9 6 6",
     fill: "",
 };
 
 /// Lucide `zodiac-scorpio` icon (24 × 24 stroke grid).
 pub const ZODIAC_SCORPIO: IconData = IconData {
     name: "zodiac-scorpio",
-    stroke: "M10 19V5.5a1 1 0 0 1 5 0V17a2 2 0 0 0 2 2h5l-3-3 m22 19-3 3 M5 19V5.5a1 1 0 0 1 5 0 M5 5.5A2.5 2.5 0 0 0 2.5 3",
+    stroke: "M10 19V5.5a1 1 0 0 1 5 0V17a2 2 0 0 0 2 2h5l-3-3 M0 0 m22 19-3 3 M5 19V5.5a1 1 0 0 1 5 0 M5 5.5A2.5 2.5 0 0 0 2.5 3",
     fill: "",
 };
 

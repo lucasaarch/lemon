@@ -61,4 +61,24 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn combined_svg_shapes_preserve_relative_origins_and_implicit_line_commands() {
+        use vello::kurbo::{BezPath, PathSeg, Point};
+        let path = BezPath::from_svg(lucide::X.stroke).unwrap();
+        let lines: Vec<_> = path
+            .segments()
+            .filter_map(|segment| match segment {
+                PathSeg::Line(line) => Some((line.p0, line.p1)),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            lines,
+            vec![
+                (Point::new(18.0, 6.0), Point::new(6.0, 18.0)),
+                (Point::new(6.0, 6.0), Point::new(18.0, 18.0)),
+            ]
+        );
+    }
 }
