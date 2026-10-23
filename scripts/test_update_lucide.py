@@ -1,11 +1,11 @@
 """Offline regression tests for the release updater: python3 -m unittest discover -s scripts."""
 import io
 import json
-from pathlib import Path
 import subprocess
 import tarfile
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 import update_lucide as updater

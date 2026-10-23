@@ -7,16 +7,16 @@ The generated catalog records the exact release and its upstream source URL.
 """
 import json
 import os
-from pathlib import Path, PurePosixPath
 import re
 import shutil
 import subprocess
 import sys
 import tarfile
 import tempfile
+import xml.etree.ElementTree as ET
+from pathlib import Path, PurePosixPath
 from urllib.parse import quote
 from urllib.request import Request, urlopen
-import xml.etree.ElementTree as ET
 
 RELEASE_API = "https://api.github.com/repos/lucide-icons/lucide/releases/latest"
 
