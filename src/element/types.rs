@@ -43,9 +43,26 @@ impl<T: Clone + PartialEq + 'static> AnyProps for T {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Key(pub u64);
 
+/// Horizontal alignment of a field's value, placeholder, and insertion caret.
+///
+/// Start and end currently mean the physical left and right edges, respectively.
+/// This does not change the writing direction of the text.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum TextAlignment {
+    /// Align to the left edge (the default).
+    #[default]
+    Start,
+    /// Center horizontally.
+    Center,
+    /// Align to the right edge.
+    End,
+}
+
 /// Editing metadata for a single-line text field (caret painting, focus chrome).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TextInputMeta {
+    /// Horizontal alignment, also used to anchor the caret when the value is empty.
+    pub alignment: TextAlignment,
     /// UTF-8 byte offset in the displayed `value`, used to position the caret.
     pub cursor: usize,
     /// Displayed text; secure widgets provide only their mask, never the stored secret.

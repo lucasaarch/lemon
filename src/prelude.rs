@@ -14,6 +14,7 @@ pub use crate::children;
 pub use crate::element::builders::{ColumnView, Component, RowView, Text, View};
 pub use crate::element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
 pub use crate::element::style::{Align, Color, Distribute, Overflow, Placement, Position};
+pub use crate::element::types::TextAlignment;
 pub use crate::element::Element;
 pub use crate::platform::run;
 pub use crate::runtime::cx::Cx;

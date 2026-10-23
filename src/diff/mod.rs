@@ -465,6 +465,7 @@ mod tests {
 
         let old = View::new()
             .text_input(TextInputMeta {
+                alignment: Default::default(),
                 cursor: 0,
                 value: String::new(),
             })
@@ -472,6 +473,7 @@ mod tests {
             .into_element();
         let new = View::new()
             .text_input(TextInputMeta {
+                alignment: Default::default(),
                 cursor: 1,
                 value: "a".into(),
             })
@@ -498,12 +500,14 @@ mod tests {
 
         let old = View::new()
             .text_input(TextInputMeta {
+                alignment: Default::default(),
                 cursor: 0,
                 value: "hi".into(),
             })
             .into_element();
         let new = View::new()
             .text_input(TextInputMeta {
+                alignment: Default::default(),
                 cursor: 2,
                 value: "hi".into(),
             })

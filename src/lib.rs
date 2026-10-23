@@ -89,6 +89,7 @@ pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, Named
 pub use element::style::{
     BoxShadow, Color, Distribute, LinearGradient, Overflow, Placement, Position, StyleProps,
 };
+pub use element::types::TextAlignment;
 pub use layout::{
     layout_pass, layout_pass_if_dirty, measure_element_height,
     measure_element_height_with_font_context, scroll_content_max_offset, sync_scroll_layout_max,

@@ -29,6 +29,7 @@ fn app(cx: &Cx) -> Element {
         .children(children![
             TextField::new(cx, name)
                 .style(TextFieldStyle::Bordered)
+                .alignment(TextAlignment::End)
                 .placeholder("Name")
                 .width(300.0),
             SecureField::new(cx, password)

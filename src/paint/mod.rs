@@ -782,6 +782,13 @@ fn paint_text_input_caret(
         )
     };
 
+    // A placeholder is not editable text: its width must not move the empty caret
+    // away from the chosen alignment anchor.
+    let caret_x = if meta.value.is_empty() {
+        empty_field_caret_x(text_rect, meta.alignment)
+    } else {
+        caret_x
+    };
     let line = Line::new(
         (f64::from(caret_x), f64::from(caret_top)),
         (f64::from(caret_x), f64::from(caret_bottom)),
@@ -800,6 +807,16 @@ fn paint_text_input_caret(
         &line,
     );
     stats.strokes += 1;
+}
+
+fn empty_field_caret_x(rect: LayoutRect, alignment: crate::TextAlignment) -> f32 {
+    rect.x
+        + rect.width
+            * match alignment {
+                crate::TextAlignment::Start => 0.0,
+                crate::TextAlignment::Center => 0.5,
+                crate::TextAlignment::End => 1.0,
+            }
 }
 
 const WIDGET_SCROLLBAR_WIDTH: f32 = 8.0;
@@ -893,6 +910,22 @@ mod tests {
     ) -> Result<LayoutMap, crate::retained::RetainedError> {
         let mut font_cx = FontContext::new();
         crate::layout::layout_pass(tree, &mut font_cx, viewport)
+    }
+
+    #[test]
+    fn empty_caret_uses_the_alignment_anchor_instead_of_placeholder_start() {
+        let rect = LayoutRect {
+            x: 40.0,
+            y: 8.0,
+            width: 120.0,
+            height: 21.0,
+        };
+        assert_eq!(empty_field_caret_x(rect, crate::TextAlignment::Start), 40.0);
+        assert_eq!(
+            empty_field_caret_x(rect, crate::TextAlignment::Center),
+            100.0
+        );
+        assert_eq!(empty_field_caret_x(rect, crate::TextAlignment::End), 160.0);
     }
 
     fn layout_and_paint(tree: &mut RetainedTree, scale_factor: f32) -> PaintStats {
@@ -1530,6 +1563,7 @@ mod tests {
         // Inject text_input meta onto the root node so paint_focus_ring activates.
         if let Some(root) = tree.root.as_mut() {
             root.text_input = Some(TextInputMeta {
+                alignment: Default::default(),
                 value: String::new(),
                 cursor: 0,
             });

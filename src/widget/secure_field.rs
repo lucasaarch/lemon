@@ -1,4 +1,4 @@
-use crate::{element::Element, Color, Cx, State};
+use crate::{element::Element, Color, Cx, State, TextAlignment};
 
 use super::{TextField, TextFieldStyle};
 
@@ -48,6 +48,14 @@ impl SecureField {
     /// Sets a fixed width in logical points; defaults to automatic sizing.
     pub fn width(mut self, value: f32) -> Self {
         self.0 = self.0.width(value);
+        self
+    }
+
+    /// Aligns the masked value, placeholder, and caret (default: start/left).
+    ///
+    /// See [`TextField::alignment`] for placement semantics and an example.
+    pub fn alignment(mut self, alignment: TextAlignment) -> Self {
+        self.0 = self.0.alignment(alignment);
         self
     }
 

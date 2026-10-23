@@ -1178,6 +1178,7 @@ mod tests {
         let mut tree = RetainedTree::mount(
             View::new()
                 .text_input(TextInputMeta {
+                    alignment: Default::default(),
                     cursor: 0,
                     value: String::new(),
                 })
@@ -1190,6 +1191,7 @@ mod tests {
         tree.apply_patch(Patch::UpdateWidgetChrome {
             node: NodePath::root(),
             text_input: Some(TextInputMeta {
+                alignment: Default::default(),
                 cursor: 2,
                 value: "hi".into(),
             }),
@@ -1213,6 +1215,7 @@ mod tests {
         let mut tree = RetainedTree::mount(
             View::new()
                 .text_input(TextInputMeta {
+                    alignment: Default::default(),
                     cursor: 0,
                     value: String::new(),
                 })
@@ -1224,6 +1227,7 @@ mod tests {
         tree.apply_patch(Patch::UpdateWidgetChrome {
             node: NodePath::root(),
             text_input: Some(TextInputMeta {
+                alignment: Default::default(),
                 cursor: 0,
                 value: "hi".into(),
             }),
@@ -1238,6 +1242,7 @@ mod tests {
         tree.apply_patch(Patch::UpdateWidgetChrome {
             node: NodePath::root(),
             text_input: Some(TextInputMeta {
+                alignment: Default::default(),
                 cursor: 2,
                 value: "hi".into(),
             }),

@@ -2,8 +2,8 @@ use crate::{
     element::{
         builders::{RowView, Text, View},
         events::Cursor,
-        style::{Color, ColorSource},
-        types::TextInputMeta,
+        style::{Color, ColorSource, Distribute},
+        types::{TextAlignment, TextInputMeta},
         Element,
     },
     Cx, LemonKey, State,
@@ -23,7 +23,7 @@ use super::field_editor::FieldEditor;
 /// ```
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum TextFieldStyle {
-    /// Transparent background with no resting border; focus remains visible.
+    /// Transparent background without a border or focus ring by default.
     Clean,
     /// Themed surface and border. This is the default.
     #[default]
@@ -84,6 +84,7 @@ pub struct TextField {
     radius: f32,
     focus_ring_color: Color,
     style: TextFieldStyle,
+    alignment: TextAlignment,
     overrides: FieldOverrides,
     disabled: bool,
     secure: bool,
@@ -118,6 +119,7 @@ impl TextField {
             radius: theme.radius.sm,
             focus_ring_color: theme.chrome.focus_ring,
             style: TextFieldStyle::default(),
+            alignment: TextAlignment::default(),
             overrides: FieldOverrides::default(),
             disabled: false,
             secure: false,
@@ -140,6 +142,22 @@ impl TextField {
     /// Fixed width in logical points (defaults to auto).
     pub fn width(mut self, v: f32) -> Self {
         self.width = Some(v);
+        self
+    }
+
+    /// Aligns the value, placeholder, and caret horizontally (default: start/left).
+    ///
+    /// This affects content placement, not text direction or keyboard navigation.
+    ///
+    /// ```
+    /// use lemon::prelude::*;
+    /// let cx = Cx::new();
+    /// let field = TextField::new(&cx, State::new(String::new()))
+    ///     .width(240.0)
+    ///     .alignment(TextAlignment::End);
+    /// ```
+    pub fn alignment(mut self, alignment: TextAlignment) -> Self {
+        self.alignment = alignment;
         self
     }
 
@@ -175,7 +193,7 @@ impl TextField {
         self
     }
 
-    /// Overrides the focus ring color for this widget.
+    /// Overrides the focus ring color, opting into a ring even with the clean preset.
     pub fn focus_ring_color(mut self, color: Color) -> Self {
         self.overrides.focus_ring_color = Some(color);
         self
@@ -218,10 +236,14 @@ impl TextField {
         let border_color = self.overrides.border_color.unwrap_or(self.border_color);
         let padding = self.overrides.padding.unwrap_or(self.padding);
         let radius = self.overrides.radius.unwrap_or(self.radius);
-        let focus_ring_color = self
-            .overrides
-            .focus_ring_color
-            .unwrap_or(self.focus_ring_color);
+        let focus_ring_color =
+            self.overrides
+                .focus_ring_color
+                .unwrap_or(if self.style == TextFieldStyle::Clean {
+                    Color::default()
+                } else {
+                    self.focus_ring_color
+                });
         let surface_color = {
             let clean = self.style == TextFieldStyle::Clean;
             let hovered = self.hovered.clone();
@@ -285,11 +307,22 @@ impl TextField {
             } else {
                 Cursor::Text
             })
-            .child(RowView::new().clip().grow(1.0).child(text_child));
+            .child(
+                RowView::new()
+                    .clip()
+                    .grow(1.0)
+                    .distribute(match self.alignment {
+                        TextAlignment::Start => Distribute::Start,
+                        TextAlignment::Center => Distribute::Center,
+                        TextAlignment::End => Distribute::End,
+                    })
+                    .child(text_child),
+            );
         if !disabled {
             container = container
                 .focusable()
                 .text_input(TextInputMeta {
+                    alignment: self.alignment,
                     cursor,
                     value: current_value,
                 })
