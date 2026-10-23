@@ -95,6 +95,15 @@ Preserve dirty flag semantics. Determine whether a change needs layout, paint, o
 
 For input changes, verify the complete path: element/widget API → retained handlers/metadata → dispatch or hit testing → state updates and invalidation → tests. Account for focus, hover, and widget state where relevant.
 
+## Examples and releases
+
+- Examples are complete applications: `tasks`, `editor`, `preferences` and `focus`. Each must have one useful purpose, working actions, empty/error states and interaction tests under `tests/examples/`. Do not add widget catalogs, fake service integrations or duplicate demos.
+- `examples/custom.rs` is retired. Keep small API snippets in Rustdoc and the application guide rather than a throwaway example.
+- `README.md` is the landing page; detailed consumer guidance lives in `docs/guide.md`. Keep the README's requirements, platform status and example table accurate.
+- `Cargo.toml` is the package version source; update the lockfile and changelog together. The public API follows SemVer from 1.0. Do not introduce deprecated aliases or silently change public contracts.
+- Releases are explicit version tags. Follow `CONTRIBUTING.md`; never restore automatic branch-driven version bumps or publish before the required checks pass.
+- Preserve the project's MIT license and the separate Lucide ISC notice in distributed packages.
+
 ## Public APIs and documentation
 
 - Document every introduced or materially changed public API with `///` at its definition, including APIs in the owning modules, builders, hooks, event/style types, and configuration.
@@ -113,7 +122,7 @@ Run focused checks first, for example:
 cargo test reactive::
 cargo test --test reconciliation
 cargo test -p lemon --examples
-cargo build --example form
+cargo build --example editor
 ```
 
 `cargo test` does not run the tests included by example modules. Run `cargo test -p lemon --examples` when changing those examples or their tests.
@@ -123,8 +132,11 @@ Before completing non-trivial work, run `make check`, matching CI. It runs:
 ```bash
 cargo fmt --all -- --check
 cargo clippy --all-targets -- -D warnings
+cargo test --examples
 cargo test
 cargo build --examples
+RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+python3 -m unittest discover -s scripts -p 'test_*.py'
 ```
 
 For public API changes, also run `cargo doc --no-deps` when practical and resolve documentation warnings. Compilation of all examples is required after app-facing changes.

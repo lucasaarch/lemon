@@ -36,7 +36,7 @@
 //! # Keys and lists
 //!
 //! Give stable [`.key(id)`](ColumnView::key) values to siblings that are inserted, removed, or reordered
-//! (see the `keys` example). Without keys, children are reconciled by index only.
+//! (see the `tasks` example). Without keys, children are reconciled by index only.
 //!
 //! # Components
 //!

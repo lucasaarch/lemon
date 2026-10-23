@@ -1,6 +1,0 @@
-[pre]
-enabled = true
-identifier = "alpha"
-
-[pre.base_versions]
-lemon = "0.1.0"

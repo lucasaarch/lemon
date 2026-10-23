@@ -2,3 +2,6 @@
 /.worktrees
 /CONTEXT.md
 *.rlib
+
+.DS_Store
+__pycache__/
