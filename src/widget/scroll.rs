@@ -29,6 +29,9 @@ impl ScrollStyle {
 
 /// Vertical scroll viewport with internal offset state and a proportional scrollbar thumb.
 ///
+/// The content wrapper fills the viewport width, so children requesting `.fill_width()`
+/// use the full available width rather than the width of their text.
+///
 /// Scroll range is clamped using the **measured** inner content height after each layout pass
 /// (see [`layout::sync_scroll_layout_max`](crate::layout::sync_scroll_layout_max)). The track and
 /// thumb are painted in the paint pass from live layout data, so thumb size tracks content
@@ -113,6 +116,7 @@ impl Scroll {
         let layout_max_for_scroll = layout_max.clone();
 
         let inner = View::new()
+            .fill_width()
             .scroll_content()
             .outset_top(-offset_value)
             .child(self.child);

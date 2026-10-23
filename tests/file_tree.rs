@@ -238,3 +238,62 @@ fn inserting_and_reordering_nodes_preserves_selection_and_row_identity() {
     assert_eq!(root.children[0].taffy_id, original);
     assert_eq!(selected.peek(), Some(2));
 }
+
+#[test]
+fn rows_fill_the_scroll_viewport_and_remain_clickable_at_the_right_edge_on_resize() {
+    let selected = State::new(None);
+    let selection = selected.clone();
+    let mut ui = UiState::default();
+    ui.mount(move |cx| {
+        View::new()
+            .fill()
+            .inset(8.0)
+            .child(
+                Scroll::new(
+                    cx,
+                    FileTree::new(cx, nodes())
+                        .selection(selection.clone())
+                        .expanded(State::new(BTreeSet::from([1, 2]))),
+                )
+                .height(200.0)
+                .decorate(|view| view.fill_width()),
+            )
+            .into_element()
+    })
+    .unwrap();
+    for width in [304.0, 520.0, 240.0] {
+        let viewport = Viewport {
+            width,
+            height: 500.0,
+        };
+        ui.update(viewport, 1.0, ui.focused(), false).unwrap();
+        let root = ui.retained().unwrap().root().unwrap();
+        let scroll = &root.children[0];
+        let tree = &scroll.children[0].children[0];
+        let scroll_rect = ui.layout_map().get(scroll.taffy_id.unwrap()).unwrap();
+        assert_eq!(scroll_rect.width, width - 16.0);
+        for row in &tree.children {
+            let rect = ui.layout_map().get(row.taffy_id.unwrap()).unwrap();
+            assert_eq!(rect.x, scroll_rect.x);
+            assert_eq!(
+                rect.width, scroll_rect.width,
+                "every row must fill its viewport"
+            );
+        }
+        let leaf = &tree.children[2];
+        let rect = ui.layout_map().get(leaf.taffy_id.unwrap()).unwrap();
+        let point = LogicalPoint::new(
+            scroll_rect.x + scroll_rect.width - 2.0,
+            rect.y + rect.height / 2.0,
+        );
+        selected.set(None);
+        ui.update(viewport, 1.0, ui.focused(), false).unwrap();
+        ui.dispatch_input(InputEvent::Click(point)).unwrap();
+        ui.update(viewport, 1.0, ui.focused(), false).unwrap();
+        assert_eq!(
+            selected.peek(),
+            Some(3),
+            "the full-width highlight must also accept clicks"
+        );
+    }
+}
