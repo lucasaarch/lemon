@@ -36,6 +36,7 @@ fn thumb_offset(cx: &Cx, checked: bool) -> f32 {
 
 /// A labeled boolean checkbox bound to app-owned state.
 /// Click, Space and Enter toggle the entire labeled row. Defaults to enabled.
+/// Pointer clicks hide the focus outline; keyboard navigation retains it.
 ///
 /// ```
 /// use lemon::prelude::*;
@@ -187,7 +188,7 @@ impl Toggle {
         let mut element = root.into_element();
         if let Element::Row(node) = &mut element {
             node.paint.focus_ring_color = Some(accent.into());
-            node.style.focus_ring_on_pointer = !switch;
+            node.style.focus_ring_on_pointer = false;
         }
         element
     }
@@ -266,58 +267,65 @@ mod tests {
         assert_eq!(motion.sample(1.0), 3.0);
     }
     #[test]
-    fn pointer_focus_hides_switch_outline_but_tab_restores_keyboard_chrome() {
-        let mut ui = UiState::default();
-        ui.mount(|cx| {
-            Switch::new(cx, cx.state(false))
-                .label("Notifications")
-                .into_element()
-        })
-        .unwrap();
-        let now = Instant::now();
-        update(&mut ui, now);
-        ui.dispatch_input(InputEvent::Click(LogicalPoint::new(15.0, 10.0)))
+    fn pointer_focus_hides_toggle_outlines_but_tab_restores_keyboard_chrome() {
+        for switch in [false, true] {
+            let mut ui = UiState::default();
+            ui.mount(move |cx| {
+                let value = cx.state(false);
+                if switch {
+                    Switch::new(cx, value).label("Notifications").into_element()
+                } else {
+                    Checkbox::new(cx, value)
+                        .label("Accept terms")
+                        .into_element()
+                }
+            })
             .unwrap();
-        let focused = ui.focused().expect("click preserves logical focus");
-        update(&mut ui, now);
-        update(&mut ui, now + Duration::from_secs(1));
-        assert_eq!(
-            ui.transitions.visuals[&focused]
-                .paint
-                .focus_ring_color
-                .unwrap()
-                .a,
-            0.0
-        );
-        ui.dispatch_input(InputEvent::Key(KeyEvent {
-            key: LemonKey::Named(NamedKey::Tab),
-            state: KeyState::Pressed,
-            modifiers: Modifiers::default(),
-            repeat: false,
-        }))
-        .unwrap();
-        update(&mut ui, now + Duration::from_secs(1));
-        update(&mut ui, now + Duration::from_secs(2));
-        assert_eq!(ui.focused(), Some(focused));
-        assert!(
-            ui.transitions.visuals[&focused]
-                .paint
-                .focus_ring_color
-                .unwrap()
-                .a
-                > 0.0
-        );
-        ui.dispatch_input(InputEvent::Click(LogicalPoint::new(15.0, 10.0)))
+            let now = Instant::now();
+            update(&mut ui, now);
+            ui.dispatch_input(InputEvent::Click(LogicalPoint::new(15.0, 10.0)))
+                .unwrap();
+            let focused = ui.focused().expect("click preserves logical focus");
+            update(&mut ui, now);
+            update(&mut ui, now + Duration::from_secs(1));
+            assert_eq!(
+                ui.transitions.visuals[&focused]
+                    .paint
+                    .focus_ring_color
+                    .unwrap()
+                    .a,
+                0.0
+            );
+            ui.dispatch_input(InputEvent::Key(KeyEvent {
+                key: LemonKey::Named(NamedKey::Tab),
+                state: KeyState::Pressed,
+                modifiers: Modifiers::default(),
+                repeat: false,
+            }))
             .unwrap();
-        update(&mut ui, now + Duration::from_secs(2));
-        update(&mut ui, now + Duration::from_secs(3));
-        assert_eq!(
-            ui.transitions.visuals[&focused]
-                .paint
-                .focus_ring_color
-                .unwrap()
-                .a,
-            0.0
-        );
+            update(&mut ui, now + Duration::from_secs(1));
+            update(&mut ui, now + Duration::from_secs(2));
+            assert_eq!(ui.focused(), Some(focused));
+            assert!(
+                ui.transitions.visuals[&focused]
+                    .paint
+                    .focus_ring_color
+                    .unwrap()
+                    .a
+                    > 0.0
+            );
+            ui.dispatch_input(InputEvent::Click(LogicalPoint::new(15.0, 10.0)))
+                .unwrap();
+            update(&mut ui, now + Duration::from_secs(2));
+            update(&mut ui, now + Duration::from_secs(3));
+            assert_eq!(
+                ui.transitions.visuals[&focused]
+                    .paint
+                    .focus_ring_color
+                    .unwrap()
+                    .a,
+                0.0
+            );
+        }
     }
 }
