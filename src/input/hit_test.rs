@@ -83,7 +83,20 @@ fn hit_test<'a>(
             if child.style.z_index != 0 || child.style.position == crate::Position::Fixed {
                 deferred.push((child.style.z_index, child));
             } else {
+                let content_clip = node.scroll_viewport.and_then(|_| {
+                    child
+                        .style
+                        .scroll_content
+                        .then(|| crate::layout::scroll_viewport_rect(node, layout))
+                        .flatten()
+                });
+                if let Some(rect) = content_clip {
+                    clips.push(rect);
+                }
                 visit(child, layout, point, clips, accepts, hit, deferred);
+                if content_clip.is_some() {
+                    clips.pop();
+                }
             }
         }
         if clipped {
@@ -118,7 +131,8 @@ fn hit_test<'a>(
 }
 
 /// Walk the retained tree in paint order and return the top-most node under `point` that has
-/// an [`on_pointer_down`](crate::retained::EventHandlers::on_pointer_down) handler,
+/// an [`on_pointer_down`](crate::retained::EventHandlers::on_pointer_down) or
+/// [`on_drag`](crate::retained::EventHandlers::on_drag) handler,
 /// together with the hit coordinates normalized to `[0.0, 1.0]` within the node's bounds.
 pub fn hit_test_pointer_down<'a>(
     node: &'a RetainedNode,
@@ -126,7 +140,7 @@ pub fn hit_test_pointer_down<'a>(
     point: LogicalPoint,
 ) -> Option<(&'a RetainedNode, (f32, f32))> {
     let hit = hit_test(node, layout, point, |node| {
-        node.handlers.on_pointer_down.is_some()
+        node.handlers.on_pointer_down.is_some() || node.handlers.on_drag.is_some()
     });
     hit.and_then(|node| Some((node, normalize_coords(point, layout.get(node.taffy_id?)?))))
 }
@@ -237,16 +251,23 @@ pub fn dispatch_click(node: &RetainedNode) -> bool {
     }
 }
 
-/// Returns the deepest node under `point` that has an [`on_scroll`](crate::element::builders::ColumnView::on_scroll) handler.
+/// Returns the deepest scroll handler under `point` accepting a nonzero component of `delta`.
+///
+/// Marked viewports accept their own axis; perpendicular motion reaches an ancestor.
+/// Unmarked `on_scroll` handlers receive both components.
 ///
 /// Used by the platform layer to route `MouseWheel` events before paint.
 pub fn hit_test_scroll<'a>(
     node: &'a RetainedNode,
     layout: &LayoutMap,
     point: LogicalPoint,
+    delta: crate::ScrollDelta,
 ) -> Option<&'a RetainedNode> {
     let hit = hit_test(node, layout, point, |node| {
         node.handlers.on_scroll.is_some()
+            && node
+                .scroll_viewport
+                .is_none_or(|axis| axis.amount(delta) != 0.0)
     });
     hit
 }
@@ -452,14 +473,24 @@ mod tests {
         .unwrap();
 
         let root = tree.root.as_ref().unwrap();
-        let hit = hit_test_scroll(root, &layout, LogicalPoint::new(50.0, 50.0));
+        let hit = hit_test_scroll(
+            root,
+            &layout,
+            LogicalPoint::new(50.0, 50.0),
+            crate::ScrollDelta::new(0.0, 1.0),
+        );
         assert!(hit.is_some());
         if let Some(node) = hit {
-            node.handlers.on_scroll.as_ref().unwrap()(10.0);
+            node.handlers.on_scroll.as_ref().unwrap()(crate::ScrollDelta::new(0.0, 10.0));
         }
         assert!(scrolled.get());
 
-        let miss = hit_test_scroll(root, &layout, LogicalPoint::new(300.0, 300.0));
+        let miss = hit_test_scroll(
+            root,
+            &layout,
+            LogicalPoint::new(300.0, 300.0),
+            crate::ScrollDelta::new(0.0, 1.0),
+        );
         assert!(miss.is_none());
     }
 

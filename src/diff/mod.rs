@@ -64,7 +64,7 @@ pub enum Patch {
     UpdateWidgetChrome {
         node: NodePath,
         text_input: Option<crate::element::types::TextInputMeta>,
-        scroll_viewport: bool,
+        scroll_viewport: Option<crate::ScrollAxis>,
     },
     ReplaceNode {
         node: NodePath,
@@ -465,6 +465,8 @@ mod tests {
 
         let old = View::new()
             .text_input(TextInputMeta {
+                affinity: Default::default(),
+                multiline: false,
                 selection: None,
                 alignment: Default::default(),
                 cursor: 0,
@@ -474,6 +476,8 @@ mod tests {
             .into_element();
         let new = View::new()
             .text_input(TextInputMeta {
+                affinity: Default::default(),
+                multiline: false,
                 selection: None,
                 alignment: Default::default(),
                 cursor: 1,
@@ -502,6 +506,8 @@ mod tests {
 
         let old = View::new()
             .text_input(TextInputMeta {
+                affinity: Default::default(),
+                multiline: false,
                 selection: None,
                 alignment: Default::default(),
                 cursor: 0,
@@ -510,6 +516,8 @@ mod tests {
             .into_element();
         let new = View::new()
             .text_input(TextInputMeta {
+                affinity: Default::default(),
+                multiline: false,
                 selection: None,
                 alignment: Default::default(),
                 cursor: 2,

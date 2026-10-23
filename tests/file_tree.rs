@@ -249,7 +249,7 @@ fn rows_fill_the_scroll_viewport_and_remain_clickable_at_the_right_edge_on_resiz
             .fill()
             .inset(8.0)
             .child(
-                Scroll::new(
+                ScrollView::new(
                     cx,
                     FileTree::new(cx, nodes())
                         .selection(selection.clone())

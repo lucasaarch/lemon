@@ -470,11 +470,11 @@ macro_rules! container_builder {
                 self.0.handlers.on_hover_leave = Some(Rc::new(f));
                 self
             }
-            /// Mouse wheel handler; `delta` is the vertical scroll amount in logical pixels.
+            /// Mouse wheel handler; `delta` preserves both axes in logical points.
             ///
-            /// Used by scrollable regions (such as [`Scroll`](crate::widget::Scroll)). The platform
-            /// dispatches wheel events to the deepest node under the cursor with this handler.
-            pub fn on_scroll(mut self, f: impl Fn(f64) + 'static) -> Self {
+            /// Used by scrollable regions such as [`ScrollView`](crate::ScrollView). Input
+            /// routes to the deepest viewport accepting the movement's axis.
+            pub fn on_scroll(mut self, f: impl Fn(crate::ScrollDelta) + 'static) -> Self {
                 self.0.handlers.on_scroll = Some(Rc::new(f));
                 self
             }
@@ -520,12 +520,28 @@ macro_rules! container_builder {
                 self.0.handlers.on_pointer_move = Some(Rc::new(f));
                 self
             }
+            /// Drags with logical-point `(dx, dy)` deltas while the pointer is captured.
+            ///
+            /// A press on this view starts capture; movement continues outside its bounds
+            /// until release. Deltas remain stable if the view moves or resizes.
+            /// After movement, the release click is consumed to avoid activating adjacent controls.
+            ///
+            /// ```
+            /// use lemon::View;
+            /// let handle = View::new().width(20.0).height(12.0).on_drag(|_dx, dy| {
+            ///     println!("vertical movement: {dy}");
+            /// });
+            /// ```
+            pub fn on_drag(mut self, action: impl Fn(f32, f32) + 'static) -> Self {
+                self.0.handlers.on_drag = Some(Rc::new(action));
+                self
+            }
             /// Pointer release handler with normalized coordinates in this node's bounds (`0.0..=1.0`).
             pub fn on_pointer_up(mut self, f: impl Fn(f32, f32) + 'static) -> Self {
                 self.0.handlers.on_pointer_up = Some(Rc::new(f));
                 self
             }
-            /// Binds a cell updated after layout for scroll clamping (used by `Scroll` widget).
+            /// Binds a cell updated after layout for scroll clamping (used by `ScrollView`).
             pub fn scroll_layout_max(mut self, cell: std::rc::Rc<std::cell::Cell<f64>>) -> Self {
                 self.0.handlers.scroll_layout_max = Some(cell);
                 self
@@ -632,9 +648,9 @@ macro_rules! container_builder {
                 self.0.text_input = Some(meta);
                 self
             }
-            /// Marks this node as a vertical scroll viewport (scrollbar when content overflows).
-            pub fn scroll_viewport(mut self) -> Self {
-                self.0.scroll_viewport = true;
+            /// Marks this node as a scroll viewport on `axis`, drawing a scrollbar on overflow.
+            pub fn scroll_viewport(mut self, axis: crate::ScrollAxis) -> Self {
+                self.0.scroll_viewport = Some(axis);
                 self
             }
             /// Animates visual changes in this view and its descendants.

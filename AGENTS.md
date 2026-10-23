@@ -20,13 +20,13 @@ Lemon is a single Cargo package. Run Cargo and Make commands from the repository
 | `tests/examples/` | Example tests, included by the corresponding example modules |
 | `src/reactive/` | State, derived values, effects, observer tracking |
 | `src/runtime/` | Component rendering, hook state, tree freezing |
-| `src/element/` | Element model, primitive builders (split by type), shared decoration, styles, events |
+| `src/element/` | Element model, base builders (containers, text, component, icon, image, scroll), decoration, styles and events |
 | `src/diff/` | Patches, property comparisons, child reconciliation |
 | `src/retained/` | Retained nodes, patch application, focus traversal |
 | `src/layout/`, `paint/` | Geometry/text layout and Vello scene generation |
 | `src/ui.rs` | Headless update, layout, and scene orchestration (`UiState`) |
 | `src/host.rs`, `host_requests.rs`, `window.rs` | Host context, scoped theme, window request queue/types |
-| `src/widget/` | Composed widgets; common app-facing builders are also reexported here |
+| `src/widget/` | Semantic controls: button, fields in `field.rs`, select, slider and file tree; editing internals in `field/editor.rs` |
 | `src/platform/` | Native windows/event conversion, clipboard, frame scheduling, presentation |
 | `src/input/` | Headless input dispatch, hit testing, focus and capture |
 | `tests/` | Headless pipeline, reconciliation, and invalidation integration tests |
@@ -59,7 +59,7 @@ Use only the canonical API in code, examples, and docs. Do not retain deprecated
 - Size and placement: `.fill()`, `.fill_width()`, `.fill_height()`, `.center()`, `.place(Placement::...)`, `.distribute(Distribute::...)`.
 - Spacing and decoration: `.spacing()`, `.inset()` (inside), `.outset()` (outside), `.surface()`, `.rounding()`, `.gradient()`, `.shadow()`, `.layer()`, `.clip()`.
 - Positioning: `.position(Position::Relative | Absolute | Fixed | Sticky)` with `.top()`, `.right()`, `.bottom()`, `.left()` offsets. Layout owns final coordinates shared by paint and hit testing.
-- Fields accept `State<String>`; keep cursor and selection internal to each field.
+- `TextField`, `SecureField` and `TextArea` share `widget/field.rs` and accept `State<String>`; keep cursor and selection internal. `TextArea` resizes vertically only and enforces a minimum height.
 - Text and activation: `.size()`, `.font()`, `.leading()`, `.action()`.
 - Placement is physical and must behave the same for `View`, `RowView`, and `ColumnView`. Keep engine flex terminology in the owning layout/data layer.
 
@@ -69,7 +69,7 @@ Use only the canonical API in code, examples, and docs. Do not retain deprecated
 - Preserve fluent builders: `ColumnView::new()`, `RowView::new()`, `View::new()`, `Text::new(...)`.
 - `Button::new(cx, label)` is the only button builder. Controls and images compose `View`/`Text`; do not add parallel element variants or rendering paths for them.
 - `WindowConfig` lives in `src/window.rs` and configures both `run` and `Cx::open_window`. Window requests carry configuration and root content; native attributes and per-window font initialization belong to platform.
-- Scrollbars use one `.scroll_viewport()` marker and one paint path, measured from the explicit `.scroll_content()` wrapper.
+- `ScrollView` is a base builder with `.axis(ScrollAxis::Vertical | Horizontal)`, vertical by default. Scrollbars use one `.scroll_viewport(axis)` marker and one paint path, measured from the explicit `.scroll_content()` wrapper.
 - `Component::new` takes `fn(&Cx) -> Element`. Capturing closures do not fit this API.
 - `Component::new_with_props` takes a typed function pointer and `Clone + PartialEq + 'static` props. Use it for components that need per-instance data and isolated hook state. Use keyed primitive rows when isolated component state is unnecessary.
 - Call hooks in a stable order on every render. Widget constructors such as `Button::new` consume hook slots too: do not put them in a changing loop or conditional on a shared `Cx`. Use component scopes or primitives there.
@@ -88,7 +88,7 @@ When adding or changing element/style/widget fields, inspect every applicable pa
 
 Engine mutation goes through `UiState`/`RetainedTree` methods. Public inspection uses `retained()`, `root()`, `layout_map()` and dirty getters; do not reopen mutable tree, cache or dirty flag fields. Fonts change through `UiState::edit_fonts` so text caches are invalidated.
 
-Scroll offset wrappers must carry `.scroll_content()`; layout and paint must not infer them by child depth.
+ScrollView offset wrappers must carry `.scroll_content()`; layout and paint must not infer them by child depth.
 
 Preserve dirty flag semantics. Determine whether a change needs layout, paint, or both. Accumulate invalidation across update batches and preserve it on failure. Do not eagerly rerun layout or paint where existing dirty flags control the work.
 

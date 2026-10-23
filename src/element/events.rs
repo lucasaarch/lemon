@@ -66,6 +66,8 @@ pub enum Cursor {
     NotAllowed,
     Move,
     Crosshair,
+    /// Cursor for a handle that adjusts height only.
+    ResizeVertical,
 }
 
 #[cfg(test)]
@@ -103,5 +105,41 @@ mod tests {
     #[test]
     fn cursor_defaults_to_default_variant() {
         assert_eq!(Cursor::default(), Cursor::Default);
+    }
+}
+
+/// The single direction in which a [`crate::ScrollView`] scrolls.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ScrollAxis {
+    /// Scroll from top to bottom (the default).
+    #[default]
+    Vertical,
+    /// Scroll from left to right using horizontal wheel/trackpad movement or Shift+wheel.
+    Horizontal,
+}
+impl ScrollAxis {
+    pub(crate) fn amount(self, delta: ScrollDelta) -> f64 {
+        match self {
+            Self::Vertical => delta.y,
+            Self::Horizontal => delta.x,
+        }
+    }
+}
+
+/// Wheel movement in logical points, preserving both native axes.
+///
+/// Positive values move toward the start of each axis. The desktop host converts
+/// line deltas to logical points and maps Shift+vertical wheel to horizontal motion.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct ScrollDelta {
+    /// Horizontal movement.
+    pub x: f64,
+    /// Vertical movement.
+    pub y: f64,
+}
+impl ScrollDelta {
+    /// Creates a delta in logical points; use zero for an unchanged axis.
+    pub const fn new(x: f64, y: f64) -> Self {
+        Self { x, y }
     }
 }

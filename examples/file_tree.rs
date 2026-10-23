@@ -46,7 +46,7 @@ fn app(cx: &Cx) -> Element {
         .inset(8.0)
         .surface(theme.colors.surface)
         .child(
-            Scroll::new(cx, tree)
+            ScrollView::new(cx, tree)
                 .height(480.0)
                 .decorate(|view| view.fill_width()),
         )

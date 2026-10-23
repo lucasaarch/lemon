@@ -46,6 +46,7 @@ pub struct UiState {
     pub(crate) scene: Scene,
     /// Host or tree geometry changes require layout before painting.
     pub(crate) layout_dirty: bool,
+    scroll_limits_dirty: bool,
     /// Visual changes require rebuilding the scene before presentation.
     pub(crate) paint_dirty: bool,
 }
@@ -65,6 +66,7 @@ impl Default for UiState {
             font_cx: FontContext::new(),
             scene: Scene::new(),
             layout_dirty: true,
+            scroll_limits_dirty: false,
             paint_dirty: true,
         }
     }
@@ -173,12 +175,25 @@ impl UiState {
             .as_mut()
             .ok_or(RetainedError::UnsupportedElement("UI not mounted"))?;
         for patch in patches {
+            self.scroll_limits_dirty |= matches!(
+                &patch,
+                crate::diff::Patch::UpdateWidgetChrome {
+                    scroll_viewport: Some(_),
+                    ..
+                }
+            ) || matches!(&patch, crate::diff::Patch::UpdateHandlers { handlers, .. }
+                    if handlers.scroll_layout_max.is_some());
             self.paint_dirty = true;
             let result = tree.apply_patch(patch);
             self.layout_dirty |= tree.layout_dirty;
             result?;
         }
         self.reconcile_input();
+        if self.scroll_limits_dirty && !self.layout_dirty {
+            if let Some(root) = self.retained.as_ref().and_then(|tree| tree.root.as_ref()) {
+                sync_scroll_layout_max(root, &self.layout_map);
+            }
+        }
         Ok(())
     }
 
@@ -202,6 +217,7 @@ impl UiState {
             sync_scroll_layout_max(root, &self.layout_map);
         }
         self.layout_dirty = false;
+        self.scroll_limits_dirty = true;
         self.viewport = Some(viewport);
         Ok(())
     }
@@ -258,6 +274,19 @@ impl UiState {
         }
         if self.layout_dirty || self.retained.as_ref().is_some_and(|tree| tree.layout_dirty) {
             self.layout(viewport)?;
+        }
+        if std::mem::take(&mut self.scroll_limits_dirty) && self.clamp_scroll_offsets() {
+            self.apply_updates()?;
+            if self.layout_dirty {
+                self.layout(viewport)?;
+            }
+        }
+        self.scroll_limits_dirty = false;
+        if self.reveal_text_caret() {
+            self.apply_updates()?;
+            if self.layout_dirty {
+                self.layout(viewport)?;
+            }
         }
         if let Some(root) = self.retained.as_ref().and_then(|tree| tree.root.as_ref()) {
             let active = self.transitions.update(root, focused, now);

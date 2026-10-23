@@ -191,7 +191,7 @@ pub fn scroll_content_node(node: &RetainedNode) -> Option<&RetainedNode> {
     None
 }
 
-/// Total scrollable content height inside a clipped viewport (logical points).
+/// Total content extent on the viewport's scroll axis, in logical points.
 ///
 /// Uses the explicitly marked scroll-content wrapper. Unmarked trees are not
 /// scroll regions; set `StyleProps::scroll_content` on the offset wrapper.
@@ -200,7 +200,46 @@ pub fn scroll_content_extent(node: &RetainedNode, layout: &LayoutMap) -> Option<
         return None;
     }
     let inner = scroll_content_node(node)?;
-    Some(union_descendant_bounds(inner, &layout.flow_rects)?.height)
+    let bounds = union_descendant_bounds(inner, &layout.flow_rects)?;
+    Some(match node.scroll_viewport.unwrap_or_default() {
+        crate::ScrollAxis::Vertical => bounds.height,
+        crate::ScrollAxis::Horizontal => bounds.width,
+    })
+}
+
+/// Content rectangle inside a viewport's padding, shared by scrolling and editor chrome.
+pub(crate) fn scroll_viewport_rect(node: &RetainedNode, layout: &LayoutMap) -> Option<LayoutRect> {
+    let rect = *layout.get(node.taffy_id?)?;
+    let padding = node.style.padding.unwrap_or_default();
+    Some(LayoutRect {
+        x: rect.x + padding.left,
+        y: rect.y + padding.top,
+        width: (rect.width - padding.left - padding.right).max(0.0),
+        height: (rect.height - padding.top - padding.bottom).max(0.0),
+    })
+}
+
+pub(crate) fn text_scroll_viewport(node: &RetainedNode) -> Option<&RetainedNode> {
+    if node.scroll_viewport.is_some() {
+        return Some(node);
+    }
+    node.children.iter().find_map(text_scroll_viewport)
+}
+
+pub(crate) fn text_input_rect(node: &RetainedNode, layout: &LayoutMap) -> Option<LayoutRect> {
+    let viewport = if node.text_input.as_ref().is_some_and(|meta| meta.multiline) {
+        text_scroll_viewport(node).unwrap_or(node)
+    } else {
+        node
+    };
+    scroll_viewport_rect(viewport, layout)
+}
+
+pub(crate) fn text_input_node(node: &RetainedNode) -> Option<&RetainedNode> {
+    if node.text.is_some() {
+        return Some(node);
+    }
+    node.children.iter().find_map(text_input_node)
 }
 
 /// Maximum scroll offset for a clipped viewport with an inner content wrapper, from layout results.
@@ -208,9 +247,13 @@ pub fn scroll_content_max_offset(node: &RetainedNode, layout: &LayoutMap) -> Opt
     if node.handlers.on_scroll.is_none() || node.style.overflow != Overflow::Hidden {
         return None;
     }
-    let viewport_rect = layout.get(node.taffy_id?)?;
-    let content_h = scroll_content_extent(node, layout)?;
-    Some(f64::from((content_h - viewport_rect.height).max(0.0)))
+    let viewport_rect = scroll_viewport_rect(node, layout)?;
+    let content = scroll_content_extent(node, layout)?;
+    let viewport = match node.scroll_viewport.unwrap_or_default() {
+        crate::ScrollAxis::Vertical => viewport_rect.height,
+        crate::ScrollAxis::Horizontal => viewport_rect.width,
+    };
+    Some(f64::from((content - viewport).max(0.0)))
 }
 
 /// Writes [`scroll_content_max_offset`] into each node's
@@ -413,13 +456,17 @@ pub fn measure_single_line_width(content: &str, style: &TextStyle) -> f32 {
 ///
 /// Uses Parley's cursor model so trailing spaces and soft line breaks position the caret on the
 /// same line as the glyphs, instead of treating multi-line layout height as caret height.
+/// `affinity` chooses the visual side when two wrapped lines share `byte_index`.
 pub fn caret_geometry_in_layout(
     layout: &Layout<ParleyBrush>,
     content: &str,
     byte_index: usize,
     stroke_width: f32,
+    affinity: crate::element::types::CaretAffinity,
 ) -> parley::BoundingBox {
-    let affinity = if byte_index >= content.len() {
+    let affinity = if byte_index >= content.len()
+        || affinity == crate::element::types::CaretAffinity::Upstream
+    {
         Affinity::Upstream
     } else {
         Affinity::Downstream
@@ -1265,7 +1312,8 @@ mod tests {
         layout.break_all_lines(Some(360.0));
         layout.align(Alignment::Start, AlignmentOptions::default());
 
-        let geom = caret_geometry_in_layout(&layout, content, content.len(), 1.5);
+        let geom =
+            caret_geometry_in_layout(&layout, content, content.len(), 1.5, Default::default());
         let line_height = 21.0;
         assert!(
             (geom.y1 - geom.y0) <= line_height + 1.0,

@@ -151,6 +151,8 @@ fn paint_node<'a>(
             focused,
             caret_visible,
             stats,
+            node.scroll_viewport
+                .and_then(|_| crate::layout::scroll_viewport_rect(node, layout)),
             global_deferred,
         );
         return;
@@ -166,6 +168,8 @@ fn paint_node<'a>(
             focused,
             caret_visible,
             stats,
+            node.scroll_viewport
+                .and_then(|_| crate::layout::scroll_viewport_rect(node, layout)),
             global_deferred,
         );
         return;
@@ -219,6 +223,8 @@ fn paint_node<'a>(
         focused,
         caret_visible,
         stats,
+        node.scroll_viewport
+            .and_then(|_| crate::layout::scroll_viewport_rect(node, layout)),
         global_deferred,
     );
 
@@ -236,7 +242,7 @@ fn paint_node<'a>(
         ctx,
         stats,
     );
-    paint_scrollbar(node, rect, layout, scene, ctx, stats);
+    paint_scrollbar(node, layout, scene, ctx, stats);
 
     if use_opacity_layer {
         scene.pop_layer();
@@ -253,6 +259,7 @@ fn paint_children<'a>(
     focused: Option<NodeId>,
     caret_visible: bool,
     stats: &mut PaintStats,
+    scroll_clip: Option<LayoutRect>,
     global_deferred: &mut Vec<(i32, &'a RetainedNode)>,
 ) {
     for child in children {
@@ -260,6 +267,16 @@ fn paint_children<'a>(
             // Defer globally so high-z nodes paint on top of all siblings at every level.
             global_deferred.push((child.style.z_index, child));
         } else {
+            let clip = scroll_clip.filter(|_| child.style.scroll_content);
+            if let Some(rect) = clip {
+                let rect = Rect::new(
+                    rect.x as f64,
+                    rect.y as f64,
+                    (rect.x + rect.width) as f64,
+                    (rect.y + rect.height) as f64,
+                );
+                scene.push_layer(Fill::NonZero, BlendMode::default(), 1.0, ctx.base, &rect);
+            }
             paint_node(
                 child,
                 layout,
@@ -271,6 +288,9 @@ fn paint_children<'a>(
                 stats,
                 global_deferred,
             );
+            if clip.is_some() {
+                scene.pop_layer();
+            }
         }
     }
 }
@@ -732,18 +752,6 @@ fn paint_focus_ring(
     stroke_rounded_rect(scene, ctx, &shape, color, 2.0, stats);
 }
 
-fn first_text_descendant(node: &RetainedNode) -> Option<&RetainedNode> {
-    if node.text.is_some() {
-        return Some(node);
-    }
-    for child in &node.children {
-        if let Some(found) = first_text_descendant(child) {
-            return Some(found);
-        }
-    }
-    None
-}
-
 fn text_input_selection_rects(node: &RetainedNode, layout: &LayoutMap) -> Vec<Rect> {
     let Some(meta) = node.text_input.as_ref() else {
         return Vec::new();
@@ -754,7 +762,7 @@ fn text_input_selection_rects(node: &RetainedNode, layout: &LayoutMap) -> Vec<Re
     if range.start >= range.end || meta.value.get(range.clone()).is_none() {
         return Vec::new();
     }
-    let Some(text_node) = first_text_descendant(node) else {
+    let Some(text_node) = crate::layout::text_input_node(node) else {
         return Vec::new();
     };
     let Some(text) = text_node.text.as_ref() else {
@@ -770,10 +778,9 @@ fn text_input_selection_rects(node: &RetainedNode, layout: &LayoutMap) -> Vec<Re
     let Some(rect) = text_node.taffy_id.and_then(|id| layout.get(id)) else {
         return Vec::new();
     };
-    let Some(field_rect) = node.taffy_id.and_then(|id| layout.get(id)) else {
+    let Some(content) = crate::layout::text_input_rect(node, layout) else {
         return Vec::new();
     };
-    let content = inset_rect(field_rect, &node.style.padding.unwrap_or_default());
     let clip = Rect::new(
         content.x as f64,
         content.y as f64,
@@ -848,7 +855,7 @@ fn paint_text_input_caret(
         return;
     };
 
-    let text_node = first_text_descendant(node);
+    let text_node = crate::layout::text_input_node(node);
     let text_rect = text_node
         .and_then(|n| n.taffy_id.and_then(|id| layout.get(id).copied()))
         .unwrap_or_else(|| {
@@ -879,7 +886,8 @@ fn paint_text_input_caret(
     let caret_bottom_extend = font_size * CARET_BOTTOM_EXTEND_RATIO;
 
     let (caret_x, caret_top, caret_bottom) = if let Some(parley_layout) = parley_layout {
-        let geom = caret_geometry_in_layout(parley_layout, content, cursor, CARET_STROKE);
+        let geom =
+            caret_geometry_in_layout(parley_layout, content, cursor, CARET_STROKE, meta.affinity);
         let line_top = text_rect.y + geom.y0 as f32;
         let line_bottom = text_rect.y + geom.y1 as f32;
         let line_center = (line_top + line_bottom) * 0.5;
@@ -916,6 +924,16 @@ fn paint_text_input_caret(
         .and_then(|node| ctx.visual(node))
         .and_then(|visual| visual.text_color)
         .unwrap_or_else(|| crate::element::style::resolved_text_color(&text_style));
+    let Some(bounds) = crate::layout::text_input_rect(node, layout) else {
+        return;
+    };
+    let clip = Rect::new(
+        (bounds.x - CARET_STROKE * 0.5) as f64,
+        bounds.y as f64,
+        (bounds.x + bounds.width + CARET_STROKE * 0.5) as f64,
+        (bounds.y + bounds.height) as f64,
+    );
+    scene.push_layer(Fill::NonZero, BlendMode::default(), 1.0, ctx.base, &clip);
     scene.stroke(
         &Stroke::new(f64::from(CARET_STROKE)),
         ctx.base,
@@ -923,6 +941,7 @@ fn paint_text_input_caret(
         None,
         &line,
     );
+    scene.pop_layer();
     stats.strokes += 1;
 }
 
@@ -942,38 +961,60 @@ const WIDGET_SCROLLBAR_THUMB_MIN: f32 = 20.0;
 fn scroll_offset_from_inner(node: &RetainedNode) -> f32 {
     crate::layout::scroll_content_node(node)
         .and_then(|inner| inner.style.margin.as_ref())
-        .map(|m| (-m.top).max(0.0))
+        .map(|m| match node.scroll_viewport.unwrap_or_default() {
+            crate::ScrollAxis::Vertical => (-m.top).max(0.0),
+            crate::ScrollAxis::Horizontal => (-m.left).max(0.0),
+        })
         .unwrap_or(0.0)
 }
 
 fn paint_scrollbar(
     node: &RetainedNode,
-    viewport_rect: &LayoutRect,
     layout: &LayoutMap,
     scene: &mut Scene,
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
-    if !node.scroll_viewport {
+    let Some(axis) = node.scroll_viewport else {
         return;
-    }
+    };
+    let Some(viewport_rect) = crate::layout::scroll_viewport_rect(node, layout) else {
+        return;
+    };
     let Some(content_height) = crate::layout::scroll_content_extent(node, layout) else {
         return;
     };
-    let viewport_height = viewport_rect.height;
+    let viewport_height = match axis {
+        crate::ScrollAxis::Vertical => viewport_rect.height,
+        crate::ScrollAxis::Horizontal => viewport_rect.width,
+    };
     if content_height <= viewport_height + 1.0 {
         return;
     }
-
     let scroll_offset = scroll_offset_from_inner(node);
     let max_offset = (content_height - viewport_height).max(1.0);
-    let track_x = viewport_rect.x + viewport_rect.width - WIDGET_SCROLLBAR_WIDTH;
-    let track = Rect::new(
-        f64::from(track_x),
-        f64::from(viewport_rect.y),
-        f64::from(track_x + WIDGET_SCROLLBAR_WIDTH),
-        f64::from(viewport_rect.y + viewport_height),
-    );
+    let track_x = match axis {
+        crate::ScrollAxis::Vertical => {
+            viewport_rect.x + viewport_rect.width - WIDGET_SCROLLBAR_WIDTH
+        }
+        crate::ScrollAxis::Horizontal => {
+            viewport_rect.y + viewport_rect.height - WIDGET_SCROLLBAR_WIDTH
+        }
+    };
+    let track = match axis {
+        crate::ScrollAxis::Vertical => Rect::new(
+            track_x as f64,
+            viewport_rect.y as f64,
+            (track_x + WIDGET_SCROLLBAR_WIDTH) as f64,
+            (viewport_rect.y + viewport_height) as f64,
+        ),
+        crate::ScrollAxis::Horizontal => Rect::new(
+            viewport_rect.x as f64,
+            track_x as f64,
+            (viewport_rect.x + viewport_height) as f64,
+            (track_x + WIDGET_SCROLLBAR_WIDTH) as f64,
+        ),
+    };
     scene.fill(
         Fill::NonZero,
         ctx.base,
@@ -992,13 +1033,25 @@ fn paint_scrollbar(
         viewport_height,
     );
     let thumb_travel = (viewport_height - thumb_height).max(0.0);
-    let thumb_y = viewport_rect.y + (scroll_offset / max_offset).clamp(0.0, 1.0) * thumb_travel;
-    let thumb = Rect::new(
-        f64::from(track_x),
-        f64::from(thumb_y),
-        f64::from(track_x + WIDGET_SCROLLBAR_WIDTH),
-        f64::from(thumb_y + thumb_height),
-    );
+    let origin = match axis {
+        crate::ScrollAxis::Vertical => viewport_rect.y,
+        crate::ScrollAxis::Horizontal => viewport_rect.x,
+    };
+    let thumb_y = origin + (scroll_offset / max_offset).clamp(0.0, 1.0) * thumb_travel;
+    let thumb = match axis {
+        crate::ScrollAxis::Vertical => Rect::new(
+            track_x as f64,
+            thumb_y as f64,
+            (track_x + WIDGET_SCROLLBAR_WIDTH) as f64,
+            (thumb_y + thumb_height) as f64,
+        ),
+        crate::ScrollAxis::Horizontal => Rect::new(
+            thumb_y as f64,
+            track_x as f64,
+            (thumb_y + thumb_height) as f64,
+            (track_x + WIDGET_SCROLLBAR_WIDTH) as f64,
+        ),
+    };
     scene.fill(
         Fill::NonZero,
         ctx.base,
@@ -1431,7 +1484,7 @@ mod tests {
                 .width(100.0)
                 .height(8.0)
                 .clip()
-                .scroll_viewport()
+                .scroll_viewport(crate::ScrollAxis::Vertical)
                 .on_scroll(|_| {})
                 .child(
                     View::new()
@@ -1666,7 +1719,7 @@ mod tests {
         set_active_theme(custom);
 
         // Build a scroll-bar viewport whose content is taller than the viewport.
-        // Structure mirrors the Scroll widget: viewport -> inner wrapper -> content.
+        // Structure mirrors the ScrollView widget: viewport -> inner wrapper -> content.
         // scroll_content_extent returns a height and the scrollbar is drawn.
         let content = View::new()
             .width(100.0)
@@ -1677,7 +1730,7 @@ mod tests {
             .width(100.0)
             .height(80.0)
             .clip()
-            .scroll_viewport()
+            .scroll_viewport(crate::ScrollAxis::Vertical)
             .on_scroll(|_| {})
             .child(inner);
 
@@ -1719,6 +1772,8 @@ mod tests {
         // Inject text_input meta onto the root node so paint_focus_ring activates.
         if let Some(root) = tree.root.as_mut() {
             root.text_input = Some(TextInputMeta {
+                affinity: Default::default(),
+                multiline: false,
                 selection: None,
                 alignment: Default::default(),
                 value: String::new(),

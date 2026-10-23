@@ -30,6 +30,11 @@ fn app(cx: &Cx) -> Element {
                         .child(Text::new("With vertically stacked children")),
                 ),
         )
+        .child(
+            ScrollView::new(cx, RowView::new().spacing(12.0)
+                .child(Text::new("A horizontal scroll view keeps wide content on one line. Shift+wheel scrolls sideways.")))
+                .axis(ScrollAxis::Horizontal).width(360.0).height(48.0),
+        )
         .child(Text::new("Fixed to window").decorate(|view| {
             view.position(Position::Fixed)
                 .right(16.0)
@@ -45,7 +50,7 @@ fn main() {
     run(
         WindowConfig::default()
             .title("Lemon — layout")
-            .size(440.0, 280.0),
+            .size(440.0, 350.0),
         app,
     );
 }

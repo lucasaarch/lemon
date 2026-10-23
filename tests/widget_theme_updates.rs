@@ -39,7 +39,7 @@ fn all_widget_defaults_follow_live_theme_without_losing_values_or_local_override
                     vec![(1, "One".into())],
                 ))
                 .child(Slider::new(cx, source_volume.clone()))
-                .child(Scroll::new(cx, Text::new("Scroll content")).height(80.0))
+                .child(ScrollView::new(cx, Text::new("ScrollView content")).height(80.0))
                 .child(Button::new(cx, "Custom").surface(override_color))
                 .into_element()
         })

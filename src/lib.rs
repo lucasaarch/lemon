@@ -78,16 +78,20 @@ pub mod reactive;
 
 pub use animation::{AnimRegistry, AnimSlot, AnimationConfig, AnimationHandle, Easing};
 pub use asset::ImageHandle;
-pub use element::builders::{ColumnView, Component, RowView, Text, View};
+pub use element::builders::{
+    ColumnView, Component, Icon, Image, RowView, ScrollView, ScrollViewStyle, Text, View,
+};
 pub use font::{register_font_bytes, register_font_path, FontRegistrationError};
 pub use icons::IconData;
 pub use transition::{Transition, TransitionProperty};
 pub use widget::{
-    Button, ButtonStyle, FileTree, FileTreeNode, FileTreeStyle, Icon, Image, Scroll, ScrollStyle,
-    SecureField, Select, SelectStyle, Slider, SliderStyle, TextField, TextFieldStyle,
+    Button, ButtonStyle, FileTree, FileTreeNode, FileTreeStyle, SecureField, Select, SelectStyle,
+    Slider, SliderStyle, TextArea, TextField, TextFieldStyle,
 };
 
-pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
+pub use element::events::{
+    Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey, ScrollAxis, ScrollDelta,
+};
 pub use element::style::{
     BoxShadow, Color, Distribute, LinearGradient, Overflow, Placement, Position, StyleProps,
 };

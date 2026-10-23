@@ -1,3 +1,4 @@
+use crate::element::types::CaretAffinity;
 use crate::host::HostContext;
 use crate::{KeyEvent, KeyState, LemonKey, NamedKey};
 
@@ -7,6 +8,7 @@ pub(super) struct FieldEditor {
     pub value: String,
     /// Cursor position as a byte offset in [`Self::value`].
     pub cursor: usize,
+    pub affinity: CaretAffinity,
     /// When set, the range from this anchor to [`Self::cursor`] is selected.
     selection_anchor: Option<usize>,
 }
@@ -16,6 +18,7 @@ impl FieldEditor {
         Self {
             value: initial.into(),
             cursor: 0,
+            affinity: Default::default(),
             selection_anchor: None,
         }
     }
@@ -25,6 +28,7 @@ impl FieldEditor {
         if self.value != value {
             self.value = value;
             self.clear_selection();
+            self.affinity = CaretAffinity::Downstream;
             self.clamp_cursor_to_boundary();
         }
     }
@@ -33,7 +37,7 @@ impl FieldEditor {
     ///
     /// Supports character insertion, Backspace/Delete, ArrowLeft/ArrowRight,
     /// Home, End, Space, and Ctrl/Cmd+A/C/V shortcuts. Released key events are ignored.
-    pub fn handle_key(&mut self, event: &KeyEvent) {
+    pub fn handle_key(&mut self, event: &KeyEvent, multiline: bool) {
         if event.state == KeyState::Released {
             return;
         }
@@ -52,8 +56,15 @@ impl FieldEditor {
                     self.copy_selection();
                     return;
                 }
+                if chars.eq_ignore_ascii_case("x") {
+                    if self.selection_range().is_some_and(|(a, b)| a != b) {
+                        self.copy_selection();
+                        self.delete_selection();
+                    }
+                    return;
+                }
                 if chars.eq_ignore_ascii_case("v") {
-                    self.paste_from_clipboard();
+                    self.paste_from_clipboard(multiline);
                     return;
                 }
             }
@@ -63,57 +74,128 @@ impl FieldEditor {
             LemonKey::Character(chars)
                 if !event.modifiers.ctrl && !event.modifiers.alt && !event.modifiers.meta =>
             {
-                self.delete_selection();
-                for ch in chars.chars() {
-                    self.value.insert(self.cursor, ch);
-                    self.cursor += ch.len_utf8();
+                self.insert_text(chars, multiline);
+            }
+            LemonKey::Named(NamedKey::Backspace) => {
+                if self.selection_range().is_some_and(|(a, b)| a != b) {
+                    self.delete_selection();
+                } else if self.cursor > 0 {
+                    let previous = self.prev_char_boundary(self.cursor);
+                    self.value.drain(previous..self.cursor);
+                    self.cursor = previous;
                 }
             }
-            LemonKey::Named(NamedKey::Backspace) if self.cursor > 0 => {
-                if self.selection_anchor.is_some() {
+            LemonKey::Named(NamedKey::Delete) => {
+                if self.selection_range().is_some_and(|(a, b)| a != b) {
                     self.delete_selection();
-                } else {
-                    let prev = self.prev_char_boundary(self.cursor);
-                    self.value.drain(prev..self.cursor);
-                    self.cursor = prev;
-                }
-            }
-            LemonKey::Named(NamedKey::Delete) if self.cursor < self.value.len() => {
-                if self.selection_anchor.is_some() {
-                    self.delete_selection();
-                } else {
+                } else if self.cursor < self.value.len() {
                     let next = self.next_char_boundary(self.cursor);
                     self.value.drain(self.cursor..next);
                 }
             }
-            LemonKey::Named(NamedKey::ArrowLeft) if self.cursor > 0 => {
-                self.clear_selection();
-                self.cursor = self.prev_char_boundary(self.cursor);
+            LemonKey::Named(NamedKey::ArrowLeft) => {
+                let target = if event.modifiers.shift {
+                    self.prev_char_boundary(self.cursor)
+                } else {
+                    self.selection_range()
+                        .map_or_else(|| self.prev_char_boundary(self.cursor), |(start, _)| start)
+                };
+                self.move_cursor(target, event.modifiers.shift);
             }
-            LemonKey::Named(NamedKey::ArrowRight) if self.cursor < self.value.len() => {
-                self.clear_selection();
-                self.cursor = self.next_char_boundary(self.cursor);
+            LemonKey::Named(NamedKey::ArrowRight) => {
+                let target = if event.modifiers.shift {
+                    self.next_char_boundary(self.cursor)
+                } else {
+                    self.selection_range()
+                        .map_or_else(|| self.next_char_boundary(self.cursor), |(_, end)| end)
+                };
+                self.move_cursor(target, event.modifiers.shift);
+            }
+            LemonKey::Named(NamedKey::Enter) if multiline => self.insert_text("\n", true),
+            LemonKey::Named(NamedKey::ArrowUp | NamedKey::ArrowDown) if multiline => {
+                let start = self.value[..self.cursor].rfind('\n').map_or(0, |i| i + 1);
+                let column = self.value[start..self.cursor].chars().count();
+                let target = if event.key == LemonKey::Named(NamedKey::ArrowUp) {
+                    if start == 0 {
+                        0
+                    } else {
+                        let previous = self.value[..start - 1].rfind('\n').map_or(0, |i| i + 1);
+                        previous
+                            + self.value[previous..start - 1]
+                                .char_indices()
+                                .nth(column)
+                                .map_or(start - 1 - previous, |(i, _)| i)
+                    }
+                } else {
+                    self.value[self.cursor..]
+                        .find('\n')
+                        .map_or(self.value.len(), |i| {
+                            let next = self.cursor + i + 1;
+                            let end = self.value[next..]
+                                .find('\n')
+                                .map_or(self.value.len(), |i| next + i);
+                            next + self.value[next..end]
+                                .char_indices()
+                                .nth(column)
+                                .map_or(end - next, |(i, _)| i)
+                        })
+                };
+                self.move_cursor(target, event.modifiers.shift);
             }
             LemonKey::Named(NamedKey::Home) => {
-                self.clear_selection();
-                self.cursor = 0;
+                let target = if multiline && !shortcut {
+                    self.value[..self.cursor].rfind('\n').map_or(0, |i| i + 1)
+                } else {
+                    0
+                };
+                self.move_cursor(target, event.modifiers.shift);
             }
             LemonKey::Named(NamedKey::End) => {
-                self.clear_selection();
-                self.cursor = self.value.len();
+                let target = if multiline && !shortcut {
+                    self.value[self.cursor..]
+                        .find('\n')
+                        .map_or(self.value.len(), |i| self.cursor + i)
+                } else {
+                    self.value.len()
+                };
+                self.move_cursor(target, event.modifiers.shift);
             }
-            LemonKey::Named(NamedKey::Space) => {
-                self.delete_selection();
-                self.value.insert(self.cursor, ' ');
-                self.cursor += 1;
-            }
+            LemonKey::Named(NamedKey::Space) => self.insert_text(" ", multiline),
             _ => {}
         }
+    }
+
+    pub fn move_cursor(&mut self, cursor: usize, extend: bool) {
+        if extend {
+            self.selection_anchor.get_or_insert(self.cursor);
+        } else {
+            self.clear_selection();
+        }
+        self.cursor = cursor;
+        self.affinity = CaretAffinity::Downstream;
+        self.clamp_cursor_to_boundary();
+        if self.selection_anchor == Some(self.cursor) {
+            self.clear_selection();
+        }
+    }
+
+    fn insert_text(&mut self, text: &str, multiline: bool) {
+        let text = text.replace("\r\n", "\n").replace('\r', "\n");
+        let text = if multiline {
+            text
+        } else {
+            text.replace('\n', " ")
+        };
+        self.delete_selection();
+        self.value.insert_str(self.cursor, &text);
+        self.cursor += text.len();
+        self.affinity = CaretAffinity::Upstream;
     }
 
     fn select_all(&mut self) {
         self.selection_anchor = Some(0);
         self.cursor = self.value.len();
+        self.affinity = CaretAffinity::Upstream;
     }
 
     fn clear_selection(&mut self) {
@@ -134,6 +216,7 @@ impl FieldEditor {
         if let Some((start, end)) = self.selection_range() {
             self.value.drain(start..end);
             self.cursor = start;
+            self.affinity = CaretAffinity::Downstream;
         }
         self.clear_selection();
     }
@@ -152,7 +235,7 @@ impl FieldEditor {
         HostContext::current().set_clipboard_text(text);
     }
 
-    fn paste_from_clipboard(&mut self) {
+    fn paste_from_clipboard(&mut self, multiline: bool) {
         let Some(text) = HostContext::current().clipboard_text() else {
             return;
         };
@@ -160,12 +243,7 @@ impl FieldEditor {
             return;
         }
 
-        self.delete_selection();
-        for ch in text.chars() {
-            self.value.insert(self.cursor, ch);
-            self.cursor += ch.len_utf8();
-        }
-        self.clamp_cursor_to_boundary();
+        self.insert_text(&text, multiline);
     }
 
     /// Clamps the cursor inside the current text and onto a UTF-8 char boundary.
@@ -230,8 +308,8 @@ mod tests {
     fn typing_ascii_inserts_and_advances_cursor() {
         let mut state = FieldEditor::new("");
 
-        state.handle_key(&key(LemonKey::Character("h".into())));
-        state.handle_key(&key(LemonKey::Character("i".into())));
+        state.handle_key(&key(LemonKey::Character("h".into())), false);
+        state.handle_key(&key(LemonKey::Character("i".into())), false);
 
         assert_eq!(state.value, "hi");
         assert_eq!(state.cursor, 2);
@@ -242,10 +320,11 @@ mod tests {
         let mut state = FieldEditor {
             value: "abc".into(),
             cursor: 2,
+            affinity: Default::default(),
             selection_anchor: None,
         };
 
-        state.handle_key(&key(LemonKey::Named(NamedKey::Backspace)));
+        state.handle_key(&key(LemonKey::Named(NamedKey::Backspace)), false);
 
         assert_eq!(state.value, "ac");
         assert_eq!(state.cursor, 1);
@@ -256,10 +335,11 @@ mod tests {
         let mut state = FieldEditor {
             value: "abc".into(),
             cursor: 1,
+            affinity: Default::default(),
             selection_anchor: None,
         };
 
-        state.handle_key(&key(LemonKey::Named(NamedKey::Delete)));
+        state.handle_key(&key(LemonKey::Named(NamedKey::Delete)), false);
 
         assert_eq!(state.value, "ac");
         assert_eq!(state.cursor, 1);
@@ -270,18 +350,20 @@ mod tests {
         let mut start = FieldEditor {
             value: "abc".into(),
             cursor: 0,
+            affinity: Default::default(),
             selection_anchor: None,
         };
-        start.handle_key(&key(LemonKey::Named(NamedKey::Backspace)));
+        start.handle_key(&key(LemonKey::Named(NamedKey::Backspace)), false);
         assert_eq!(start.value, "abc");
         assert_eq!(start.cursor, 0);
 
         let mut end = FieldEditor {
             value: "abc".into(),
             cursor: 3,
+            affinity: Default::default(),
             selection_anchor: None,
         };
-        end.handle_key(&key(LemonKey::Named(NamedKey::Delete)));
+        end.handle_key(&key(LemonKey::Named(NamedKey::Delete)), false);
         assert_eq!(end.value, "abc");
         assert_eq!(end.cursor, 3);
     }
@@ -291,31 +373,35 @@ mod tests {
         let mut state = FieldEditor {
             value: "abc".into(),
             cursor: 1,
+            affinity: Default::default(),
             selection_anchor: None,
         };
 
-        state.handle_key(&key(LemonKey::Named(NamedKey::ArrowRight)));
+        state.handle_key(&key(LemonKey::Named(NamedKey::ArrowRight)), false);
         assert_eq!(state.cursor, 2);
 
-        state.handle_key(&key(LemonKey::Named(NamedKey::ArrowLeft)));
+        state.handle_key(&key(LemonKey::Named(NamedKey::ArrowLeft)), false);
         assert_eq!(state.cursor, 1);
 
-        state.handle_key(&key(LemonKey::Named(NamedKey::Home)));
+        state.handle_key(&key(LemonKey::Named(NamedKey::Home)), false);
         assert_eq!(state.cursor, 0);
 
-        state.handle_key(&key(LemonKey::Named(NamedKey::End)));
+        state.handle_key(&key(LemonKey::Named(NamedKey::End)), false);
         assert_eq!(state.cursor, 3);
     }
 
     #[test]
     fn key_released_events_are_ignored() {
         let mut state = FieldEditor::new("");
-        state.handle_key(&KeyEvent {
-            key: LemonKey::Character("x".into()),
-            modifiers: Modifiers::default(),
-            repeat: false,
-            state: KeyState::Released,
-        });
+        state.handle_key(
+            &KeyEvent {
+                key: LemonKey::Character("x".into()),
+                modifiers: Modifiers::default(),
+                repeat: false,
+                state: KeyState::Released,
+            },
+            false,
+        );
 
         assert_eq!(state.value, "");
         assert_eq!(state.cursor, 0);
@@ -325,7 +411,7 @@ mod tests {
     fn unicode_insertion_updates_cursor_as_byte_offset() {
         let mut state = FieldEditor::new("");
 
-        state.handle_key(&key(LemonKey::Character("€".into())));
+        state.handle_key(&key(LemonKey::Character("€".into())), false);
 
         assert_eq!(state.value, "€");
         assert_eq!(state.cursor, 3);
@@ -336,20 +422,21 @@ mod tests {
         let mut state = FieldEditor {
             value: "a€b".into(),
             cursor: "a€b".len(),
+            affinity: Default::default(),
             selection_anchor: None,
         };
 
-        state.handle_key(&key(LemonKey::Named(NamedKey::ArrowLeft)));
+        state.handle_key(&key(LemonKey::Named(NamedKey::ArrowLeft)), false);
         assert_eq!(state.cursor, "a€".len());
 
-        state.handle_key(&key(LemonKey::Named(NamedKey::ArrowLeft)));
+        state.handle_key(&key(LemonKey::Named(NamedKey::ArrowLeft)), false);
         assert_eq!(state.cursor, "a".len());
 
-        state.handle_key(&key(LemonKey::Named(NamedKey::Delete)));
+        state.handle_key(&key(LemonKey::Named(NamedKey::Delete)), false);
         assert_eq!(state.value, "ab");
         assert_eq!(state.cursor, "a".len());
 
-        state.handle_key(&key(LemonKey::Named(NamedKey::Backspace)));
+        state.handle_key(&key(LemonKey::Named(NamedKey::Backspace)), false);
         assert_eq!(state.value, "b");
         assert_eq!(state.cursor, 0);
     }
@@ -359,10 +446,11 @@ mod tests {
         let mut state = FieldEditor {
             value: "hi".into(),
             cursor: 2,
+            affinity: Default::default(),
             selection_anchor: None,
         };
 
-        state.handle_key(&key(LemonKey::Named(NamedKey::Space)));
+        state.handle_key(&key(LemonKey::Named(NamedKey::Space)), false);
 
         assert_eq!(state.value, "hi ");
         assert_eq!(state.cursor, 3);
@@ -371,33 +459,42 @@ mod tests {
     #[test]
     fn modified_character_shortcuts_are_not_inserted() {
         let mut state = FieldEditor::new("");
-        state.handle_key(&KeyEvent {
-            key: LemonKey::Character("x".into()),
-            modifiers: Modifiers {
-                ctrl: true,
-                ..Default::default()
+        state.handle_key(
+            &KeyEvent {
+                key: LemonKey::Character("x".into()),
+                modifiers: Modifiers {
+                    ctrl: true,
+                    ..Default::default()
+                },
+                repeat: false,
+                state: KeyState::Pressed,
             },
-            repeat: false,
-            state: KeyState::Pressed,
-        });
-        state.handle_key(&KeyEvent {
-            key: LemonKey::Character("x".into()),
-            modifiers: Modifiers {
-                alt: true,
-                ..Default::default()
+            false,
+        );
+        state.handle_key(
+            &KeyEvent {
+                key: LemonKey::Character("x".into()),
+                modifiers: Modifiers {
+                    alt: true,
+                    ..Default::default()
+                },
+                repeat: false,
+                state: KeyState::Pressed,
             },
-            repeat: false,
-            state: KeyState::Pressed,
-        });
-        state.handle_key(&KeyEvent {
-            key: LemonKey::Character("x".into()),
-            modifiers: Modifiers {
-                meta: true,
-                ..Default::default()
+            false,
+        );
+        state.handle_key(
+            &KeyEvent {
+                key: LemonKey::Character("x".into()),
+                modifiers: Modifiers {
+                    meta: true,
+                    ..Default::default()
+                },
+                repeat: false,
+                state: KeyState::Pressed,
             },
-            repeat: false,
-            state: KeyState::Pressed,
-        });
+            false,
+        );
 
         assert_eq!(state.value, "");
         assert_eq!(state.cursor, 0);
@@ -408,16 +505,20 @@ mod tests {
         let mut state = FieldEditor {
             value: "hello".into(),
             cursor: 2,
+            affinity: Default::default(),
             selection_anchor: None,
         };
 
-        state.handle_key(&key_with_modifiers(
-            LemonKey::Character("a".into()),
-            Modifiers {
-                ctrl: true,
-                ..Default::default()
-            },
-        ));
+        state.handle_key(
+            &key_with_modifiers(
+                LemonKey::Character("a".into()),
+                Modifiers {
+                    ctrl: true,
+                    ..Default::default()
+                },
+            ),
+            false,
+        );
 
         assert_eq!(state.cursor, 5);
         assert_eq!(state.selection_anchor, Some(0));
@@ -428,10 +529,11 @@ mod tests {
         let mut state = FieldEditor {
             value: "hello".into(),
             cursor: 5,
+            affinity: Default::default(),
             selection_anchor: Some(0),
         };
 
-        state.handle_key(&key(LemonKey::Named(NamedKey::Backspace)));
+        state.handle_key(&key(LemonKey::Named(NamedKey::Backspace)), false);
 
         assert_eq!(state.value, "");
         assert_eq!(state.cursor, 0);

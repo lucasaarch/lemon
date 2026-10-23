@@ -23,7 +23,7 @@ fn paint_and_chrome_do_not_invalidate_clean_geometry() {
     tree.apply_patch(Patch::UpdateWidgetChrome {
         node: NodePath::root(),
         text_input: None,
-        scroll_viewport: false,
+        scroll_viewport: None,
     })
     .unwrap();
     assert!(!tree.layout_dirty());

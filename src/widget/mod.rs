@@ -12,29 +12,22 @@
 
 /// Primitive containers, text and component construction share this entry point
 /// with composed widgets.
-pub use crate::element::builders::{ColumnView, Component, RowView, Text, View};
+pub use crate::element::builders::{
+    ColumnView, Component, Icon, Image, RowView, ScrollView, ScrollViewStyle, Text, View,
+};
 pub use crate::element::decoration::Decorate;
 
 pub mod button;
-mod field_editor;
+pub mod field;
 pub mod file_tree;
-pub mod icon;
-pub mod image;
-pub mod scroll;
-pub mod secure_field;
 pub mod select;
 pub mod slider;
-pub mod text_field;
 
 pub use button::{Button, ButtonStyle};
+pub use field::{SecureField, TextArea, TextField, TextFieldStyle};
 pub use file_tree::{FileTree, FileTreeNode, FileTreeStyle};
-pub use icon::Icon;
-pub use image::Image;
-pub use scroll::{Scroll, ScrollStyle};
-pub use secure_field::SecureField;
 pub use select::{Select, SelectStyle};
 pub use slider::{Slider, SliderStyle};
-pub use text_field::{TextField, TextFieldStyle};
 
 // Shared timing for built-in controls; root decoration can override it.
 fn interaction_transition() -> crate::Transition {
@@ -303,7 +296,7 @@ mod tests {
         use crate::element::builders::Text;
 
         fn _check(cx: &Cx) -> Element {
-            Scroll::new(cx, Text::new("item"))
+            ScrollView::new(cx, Text::new("item"))
                 .height(180.0)
                 .into_element()
         }
@@ -314,7 +307,7 @@ mod tests {
         use crate::element::builders::Text;
 
         let offset = State::new(10.0f64);
-        let root = Scroll::with_offset(offset.clone(), Text::new("item"))
+        let root = ScrollView::with_offset(offset.clone(), Text::new("item"))
             .height(200.0)
             .width(300.0)
             .into_element();
@@ -324,7 +317,7 @@ mod tests {
         };
 
         assert_eq!(viewport.style.overflow, Overflow::Hidden);
-        assert!(viewport.scroll_viewport);
+        assert_eq!(viewport.scroll_viewport, Some(crate::ScrollAxis::Vertical));
         assert!(viewport.handlers.on_scroll.is_some());
         assert_eq!(viewport.children.len(), 1);
 
@@ -334,9 +327,9 @@ mod tests {
         assert_eq!(inner.style.margin.as_ref().map(|m| m.top), Some(-10.0));
 
         let on_scroll = viewport.handlers.on_scroll.as_ref().unwrap();
-        on_scroll(-20.0);
+        on_scroll(crate::ScrollDelta::new(0.0, -20.0));
         assert_eq!(offset.get(), 30.0);
-        on_scroll(1000.0);
+        on_scroll(crate::ScrollDelta::new(0.0, 1000.0));
         assert_eq!(offset.get(), 0.0);
     }
 }

@@ -717,6 +717,8 @@ mod tests {
             let (value, cursor) = field.get();
             View::new()
                 .text_input(TextInputMeta {
+                    affinity: Default::default(),
+                    multiline: false,
                     selection: None,
                     alignment: Default::default(),
                     cursor,

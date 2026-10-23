@@ -186,8 +186,8 @@ impl WindowState {
     fn event_pass_hover(&mut self, point: LogicalPoint) {
         self.dispatch_input(crate::input::InputEvent::Hover(point));
     }
-    fn event_pass_scroll(&mut self, point: LogicalPoint, delta_y: f64) -> bool {
-        self.dispatch_input(crate::input::InputEvent::Scroll { point, delta_y })
+    fn event_pass_scroll(&mut self, point: LogicalPoint, delta: crate::ScrollDelta) -> bool {
+        self.dispatch_input(crate::input::InputEvent::Scroll { point, delta })
     }
     fn event_pass_keyboard(&mut self, event: WinitKeyEvent) {
         self.dispatch_input(crate::input::InputEvent::Key(KeyEvent {
@@ -597,15 +597,16 @@ impl ApplicationHandler for LemonApplication {
                 };
                 // Normalize line-based scroll to pixel delta. One line ≈ 20 logical pixels,
                 // matching common conventions on platforms that report in line units.
-                let delta_y = match delta {
-                    MouseScrollDelta::LineDelta(_, y) => f64::from(y) * 20.0,
-                    MouseScrollDelta::PixelDelta(pos) => pos.y,
-                };
+                let delta = scroll_delta(
+                    delta,
+                    window_state.active_modifiers.shift,
+                    window_state.scale_factor() as f64,
+                );
                 let point = window_state
                     .last_cursor
                     .map(|(x, y)| LogicalPoint::new(x, y))
                     .unwrap_or(LogicalPoint::new(0.0, 0.0));
-                if window_state.event_pass_scroll(point, delta_y) {
+                if window_state.event_pass_scroll(point, delta) {
                     window_state.request_redraw();
                 }
             }
@@ -761,6 +762,21 @@ pub fn run_with_theme_and_fonts(
     event_loop.run_app(&mut app).expect("run event loop");
 }
 
+fn scroll_delta(delta: MouseScrollDelta, shift: bool, scale: f64) -> crate::ScrollDelta {
+    let mut delta = match delta {
+        MouseScrollDelta::LineDelta(x, y) => {
+            crate::ScrollDelta::new(x as f64 * 20.0, y as f64 * 20.0)
+        }
+        MouseScrollDelta::PixelDelta(position) => {
+            crate::ScrollDelta::new(position.x / scale, position.y / scale)
+        }
+    };
+    if shift && delta.x == 0.0 {
+        delta = crate::ScrollDelta::new(delta.y, 0.0);
+    }
+    delta
+}
+
 fn winit_key_to_lemon(key: &Key) -> LemonKey {
     match key {
         Key::Character(s) => LemonKey::Character(s.to_string()),
@@ -793,6 +809,7 @@ fn lemon_cursor_to_winit(cursor: &Cursor) -> CursorIcon {
         Cursor::NotAllowed => CursorIcon::NotAllowed,
         Cursor::Move => CursorIcon::Move,
         Cursor::Crosshair => CursorIcon::Crosshair,
+        Cursor::ResizeVertical => CursorIcon::NsResize,
     }
 }
 
@@ -1046,6 +1063,34 @@ mod tests {
         assert_eq!(
             window.host.theme().colors.background,
             Theme::default_light().colors.background
+        );
+    }
+}
+
+#[cfg(test)]
+mod scroll_delta_tests {
+    use super::*;
+    #[test]
+    fn native_wheel_preserves_axes_scales_pixels_and_maps_shift_once() {
+        assert_eq!(
+            scroll_delta(MouseScrollDelta::LineDelta(1.0, -2.0), false, 2.0),
+            crate::ScrollDelta::new(20.0, -40.0)
+        );
+        assert_eq!(
+            scroll_delta(
+                MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition::new(12.0, 20.0)),
+                false,
+                2.0
+            ),
+            crate::ScrollDelta::new(6.0, 10.0)
+        );
+        assert_eq!(
+            scroll_delta(MouseScrollDelta::LineDelta(0.0, -2.0), true, 1.0),
+            crate::ScrollDelta::new(-40.0, 0.0)
+        );
+        assert_eq!(
+            scroll_delta(MouseScrollDelta::LineDelta(-2.0, 0.0), true, 1.0),
+            crate::ScrollDelta::new(-40.0, 0.0)
         );
     }
 }

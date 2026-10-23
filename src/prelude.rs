@@ -11,16 +11,20 @@
 
 pub use crate::animation::{AnimationConfig, AnimationHandle, Easing};
 pub use crate::children;
-pub use crate::element::builders::{ColumnView, Component, RowView, Text, View};
-pub use crate::element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};
+pub use crate::element::builders::{
+    ColumnView, Component, Icon, Image, RowView, ScrollView, ScrollViewStyle, Text, View,
+};
+pub use crate::element::events::{
+    Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey, ScrollAxis, ScrollDelta,
+};
 pub use crate::element::style::{Align, Color, Distribute, Overflow, Placement, Position};
 pub use crate::element::types::TextAlignment;
 pub use crate::element::Element;
 pub use crate::platform::run;
 pub use crate::runtime::cx::Cx;
 pub use crate::widget::{
-    Button, ButtonStyle, FileTree, FileTreeNode, FileTreeStyle, Icon, Image, Scroll, ScrollStyle,
-    SecureField, Select, SelectStyle, Slider, SliderStyle, TextField, TextFieldStyle,
+    Button, ButtonStyle, FileTree, FileTreeNode, FileTreeStyle, SecureField, Select, SelectStyle,
+    Slider, SliderStyle, TextArea, TextField, TextFieldStyle,
 };
 pub use crate::window::WindowConfig;
 pub use crate::State;

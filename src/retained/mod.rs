@@ -64,6 +64,17 @@ impl PartialEq for TextCache {
     }
 }
 
+/// Receives a displayed UTF-8 caret index, its visual affinity, and whether to extend selection.
+///
+/// Clones share the same callback. Widgets translate displayed indices back to
+/// their editing state; secure fields translate masked indices without exposing secrets.
+///
+/// ```
+/// use lemon::retained::TextCursorHandler;
+/// let handler: TextCursorHandler = std::rc::Rc::new(|_index, _affinity, _extend| {});
+/// ```
+pub type TextCursorHandler = Rc<dyn Fn(usize, crate::element::types::CaretAffinity, bool)>;
+
 /// Input callbacks attached to a retained node (populated from container builders).
 #[derive(Clone, Default)]
 pub struct EventHandlers {
@@ -72,14 +83,19 @@ pub struct EventHandlers {
     pub on_key_up: Option<Rc<dyn Fn(crate::element::events::KeyEvent)>>,
     pub on_hover_enter: Option<Rc<dyn Fn()>>,
     pub on_hover_leave: Option<Rc<dyn Fn()>>,
-    /// Vertical wheel delta in logical pixels; set via [`.on_scroll`](crate::element::builders::ColumnView::on_scroll).
-    pub on_scroll: Option<Rc<dyn Fn(f64)>>,
+    /// Wheel delta on both axes in logical points; set via [`.on_scroll`](crate::element::builders::ColumnView::on_scroll).
+    pub on_scroll: Option<Rc<dyn Fn(crate::ScrollDelta)>>,
     /// Called when a click is dispatched outside this retained node's bounds.
     pub on_click_outside: Option<Rc<dyn Fn()>>,
     /// Called when a pointer press lands inside this retained node with normalized `(x, y)` coordinates.
     pub on_pointer_down: Option<Rc<dyn Fn(f32, f32)>>,
     /// Called when pointer movement is reported for this retained node with normalized `(x, y)` coordinates.
     pub on_pointer_move: Option<Rc<dyn Fn(f32, f32)>>,
+    /// Logical-point movement while this node owns pointer capture; independent of its moving bounds.
+    pub on_drag: Option<Rc<dyn Fn(f32, f32)>>,
+    /// Sets a displayed UTF-8 caret index and visual affinity, optionally extending selection.
+    /// Used by pointer selection and visual-line keyboard navigation; absent by default.
+    pub on_text_cursor: Option<TextCursorHandler>,
     /// Called when a pointer release is reported for this retained node with normalized `(x, y)` coordinates.
     pub on_pointer_up: Option<Rc<dyn Fn(f32, f32)>>,
     /// Updated after each [`layout_pass`](crate::layout::layout_pass) for scroll viewports; used to clamp wheel delta.
@@ -104,6 +120,8 @@ impl PartialEq for EventHandlers {
             && same(&self.on_click_outside, &other.on_click_outside)
             && same(&self.on_pointer_down, &other.on_pointer_down)
             && same(&self.on_pointer_move, &other.on_pointer_move)
+            && same(&self.on_drag, &other.on_drag)
+            && same(&self.on_text_cursor, &other.on_text_cursor)
             && same(&self.on_pointer_up, &other.on_pointer_up)
             && same(&self.scroll_layout_max, &other.scroll_layout_max)
     }
@@ -130,8 +148,19 @@ impl std::fmt::Debug for EventHandlers {
                 &self.on_hover_leave.as_ref().map(|_| "Rc<dyn Fn()>"),
             )
             .field(
+                "on_drag",
+                &self.on_drag.as_ref().map(|_| "Rc<dyn Fn(f32, f32)>"),
+            )
+            .field(
+                "on_text_cursor",
+                &self
+                    .on_text_cursor
+                    .as_ref()
+                    .map(|_| "Rc<dyn Fn(usize, CaretAffinity, bool)>"),
+            )
+            .field(
                 "on_scroll",
-                &self.on_scroll.as_ref().map(|_| "Rc<dyn Fn(f64)>"),
+                &self.on_scroll.as_ref().map(|_| "Rc<dyn Fn(ScrollDelta)>"),
             )
             .field(
                 "on_click_outside",
@@ -198,7 +227,7 @@ pub struct RetainedNode {
     pub handlers: EventHandlers,
     pub text: Option<TextCache>,
     pub text_input: Option<crate::element::types::TextInputMeta>,
-    pub scroll_viewport: bool,
+    pub scroll_viewport: Option<crate::ScrollAxis>,
 }
 
 impl RetainedNode {
@@ -241,7 +270,7 @@ impl RetainedNode {
                 layout_max_width: None,
             }),
             text_input: None,
-            scroll_viewport: false,
+            scroll_viewport: None,
         }
     }
 
@@ -481,7 +510,7 @@ impl RetainedTree {
                     handlers: EventHandlers::default(),
                     text: None,
                     text_input: None,
-                    scroll_viewport: false,
+                    scroll_viewport: None,
                 };
                 self.replace_with_wrapper(node, wrapper)?;
             }
@@ -1179,6 +1208,8 @@ mod tests {
         let mut tree = RetainedTree::mount(
             View::new()
                 .text_input(TextInputMeta {
+                    affinity: Default::default(),
+                    multiline: false,
                     selection: None,
                     alignment: Default::default(),
                     cursor: 0,
@@ -1193,12 +1224,14 @@ mod tests {
         tree.apply_patch(Patch::UpdateWidgetChrome {
             node: NodePath::root(),
             text_input: Some(TextInputMeta {
+                affinity: Default::default(),
+                multiline: false,
                 selection: None,
                 alignment: Default::default(),
                 cursor: 2,
                 value: "hi".into(),
             }),
-            scroll_viewport: false,
+            scroll_viewport: None,
         })
         .unwrap();
         tree.apply_patch(Patch::UpdateText {
@@ -1218,6 +1251,8 @@ mod tests {
         let mut tree = RetainedTree::mount(
             View::new()
                 .text_input(TextInputMeta {
+                    affinity: Default::default(),
+                    multiline: false,
                     selection: None,
                     alignment: Default::default(),
                     cursor: 0,
@@ -1231,12 +1266,14 @@ mod tests {
         tree.apply_patch(Patch::UpdateWidgetChrome {
             node: NodePath::root(),
             text_input: Some(TextInputMeta {
+                affinity: Default::default(),
+                multiline: false,
                 selection: None,
                 alignment: Default::default(),
                 cursor: 0,
                 value: "hi".into(),
             }),
-            scroll_viewport: false,
+            scroll_viewport: None,
         })
         .unwrap();
         tree.apply_patch(Patch::UpdateText {
@@ -1247,12 +1284,14 @@ mod tests {
         tree.apply_patch(Patch::UpdateWidgetChrome {
             node: NodePath::root(),
             text_input: Some(TextInputMeta {
+                affinity: Default::default(),
+                multiline: false,
                 selection: None,
                 alignment: Default::default(),
                 cursor: 2,
                 value: "hi".into(),
             }),
-            scroll_viewport: false,
+            scroll_viewport: None,
         })
         .unwrap();
 
@@ -1569,7 +1608,7 @@ mod tests {
             handlers: Default::default(),
             text: None,
             text_input: None,
-            scroll_viewport: false,
+            scroll_viewport: None,
         };
 
         assert_eq!(wrapper.children[0].text_content(), Some("child"));
@@ -1695,14 +1734,14 @@ mod tests {
             View::new()
                 .width(200.0)
                 .height(150.0)
-                .on_scroll(move |delta| d.set(delta))
+                .on_scroll(move |delta| d.set(delta.y))
                 .into_element(),
         )
         .unwrap();
 
         let root = tree.root.as_ref().unwrap();
         assert!(root.handlers.on_scroll.is_some());
-        root.handlers.on_scroll.as_ref().unwrap()(42.0);
+        root.handlers.on_scroll.as_ref().unwrap()(crate::ScrollDelta::new(0.0, 42.0));
         assert_eq!(delta_received.get(), 42.0);
     }
 

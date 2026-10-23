@@ -1,5 +1,5 @@
 //! Buttons and fields share the theme typography and default padding.
-//! Compose plain/secure fields, select, slider, and scroll widgets in a small form.
+//! Compose plain/secure fields, a multiline area, select, slider, and scrolling in a small form.
 //! The optional password is cleared on submit and never added to the history.
 //! Type a name, choose a role, and submit settings to the scrollable history.
 //! Use Ctrl/Cmd+A in the name field to see the translucent selection highlight.
@@ -9,6 +9,7 @@ use lemon::prelude::*;
 fn app(cx: &Cx) -> Element {
     let name = cx.state(String::new());
     let password = cx.state(String::new());
+    let notes = cx.state(String::new());
     let role = cx.state(None::<String>);
     let volume = cx.state(0.5_f32);
     let history = cx.state(Vec::<String>::new());
@@ -21,6 +22,7 @@ fn app(cx: &Cx) -> Element {
 
     let name_submit = name.clone();
     let password_submit = password.clone();
+    let notes_submit = notes.clone();
     let role_submit = role.clone();
     let volume_submit = volume.clone();
     let volume_label = volume.clone();
@@ -37,6 +39,11 @@ fn app(cx: &Cx) -> Element {
                 .style(TextFieldStyle::Filled)
                 .placeholder("Password (not saved)")
                 .width(300.0),
+            TextArea::new(cx, notes)
+                .placeholder("Notes")
+                .width(300.0)
+                .height(120.0)
+                .min_height(80.0),
             Select::new(
                 cx,
                 role,
@@ -59,13 +66,19 @@ fn app(cx: &Cx) -> Element {
                     if name.is_empty() {
                         return;
                     }
-                    let entry = format!("{name} — {role} — {:.0}%", volume_submit.get() * 100.0);
+                    let mut entry =
+                        format!("{name} — {role} — {:.0}%", volume_submit.get() * 100.0);
+                    let notes = notes_submit.get();
+                    if !notes.trim().is_empty() {
+                        entry.push_str(&format!("\n{}", notes.trim()));
+                    }
                     history.update(|entries| entries.push(entry));
                     name_submit.update(|state| state.clear());
                     password_submit.update(|state| state.clear());
+                    notes_submit.update(|state| state.clear());
                 }),
             Text::new("Submitted settings"),
-            Scroll::new(cx, entries).width(360.0).height(140.0),
+            ScrollView::new(cx, entries).width(360.0).height(140.0),
         ])
         .into_element()
 }
@@ -74,7 +87,7 @@ fn main() {
     run(
         WindowConfig::default()
             .title("Lemon — form")
-            .size(420.0, 520.0),
+            .size(420.0, 740.0),
         app,
     );
 }

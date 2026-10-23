@@ -79,9 +79,9 @@ Each example has one job. Sources live in [`examples`](examples).
 | `reactivity` | State, derived values, and effects (output in the terminal) |
 | `components` | Independent hook state in keyed component instances |
 | `keys` | Stable row identity during removal and reordering |
-| `layout` | Rows, columns, spacing, alignment, and styled views |
+| `layout` | Rows, columns, placement, styled views, and horizontal scrolling |
 | `custom` | A form centered in a view that fills the window |
-| `form` | TextField, SecureField, Select, Slider, and scrollable submission history |
+| `form` | TextField, SecureField, resizable TextArea, Select, Slider, and scrollable history |
 | `images` | In-memory RGBA pixels and shared image handles |
 | `custom_select` | A mouse-operated picker composed from primitives |
 | `animation` | Animation progress, opacity, and theme tokens |
@@ -198,7 +198,7 @@ single package with `cargo publish`.
 - `UiState::update` detects viewport, scale, focus and caret changes automatically.
   Paint-only style and text-color changes keep geometry and measured text caches.
 - Manual `StyleProps` initializers must set `scroll_content` (normally `false`)
-  or use `..Default::default()`. `Scroll` sets this marker automatically.
+  or use `..Default::default()`. `ScrollView` sets this marker automatically.
 - `Cx::theme` reads the originating host's live theme, not whichever
   unrelated window happened to activate a theme last.
 - Access window UI explicitly through `WindowState::ui`; there is no dereferencing
@@ -264,7 +264,7 @@ for headless use; it does not query the OS. See the [winit platform limits](http
 
 ## Primitive-First Customization
 
-Built-in widgets such as `Button`, `Select`, `Slider`, `Scroll`, `TextField`, and `SecureField` cover common
+Base builders and controls such as `ScrollView`, `Button`, `Select`, `Slider`, `TextField`, `SecureField`, and `TextArea` cover common
 application UI, and their defaults come from the active `Theme`. Start there when the widget shape
 matches your product. Use `run_with_theme` for app-wide tokens and widget style types such as
 `SelectStyle` and `SliderStyle` for local overrides, and `ButtonStyle` / `TextFieldStyle` for ready-made appearances.
@@ -540,7 +540,7 @@ fn explorer(cx: &Cx) -> Element {
 Use `.selection(State<Option<u64>>)` and `.expanded(State<BTreeSet<u64>>)` to
 control selection and disclosure from your application. `FileTreeStyle` controls
 row height, indentation, icon size and guide/hover/selection colors. Nodes can
-supply an explicit `.icon(...)` and `.color(...)`. Wrap the tree in `Scroll` for a
+supply an explicit `.icon(...)` and `.color(...)`. Wrap the tree in `ScrollView` for a
 bounded viewport. Run `cargo run --example file_tree` for a compact explorer.
 
 To refresh the bundled catalog from the latest stable Lucide release:
@@ -555,3 +555,38 @@ Rust catalog with `rustfmt`. The generated header records the release version an
 source URL. Python 3, `rustfmt` and network access are required; no Python packages
 or manual checkout are needed. Download, conversion or formatting failures leave
 the existing catalog intact. Offline updater tests are included in `make check`.
+
+### Multiline fields and scroll views
+
+`TextField`, `SecureField` and `TextArea` live together in `src/widget/field.rs`.
+`TextArea` accepts `State<String>`, wraps text, scrolls vertically and follows its
+caret while editing. Its resize handle changes height only and enforces a minimum:
+
+```rust
+use lemon::prelude::*;
+let cx = Cx::new();
+let notes = State::new(String::new());
+let area = TextArea::new(&cx, notes).width(320.0)
+    .height(140.0).min_height(80.0).resizable(true);
+```
+
+Use `.resizable(false)` for a fixed height. The defaults are 120 points high,
+a 60-point minimum and resizing enabled. The family shares `TextFieldStyle` and
+root `.decorate(...)` styling.
+
+`ScrollView` replaces `Scroll`. Its axis is vertical by default; choose horizontal
+scrolling explicitly. Trackpads preserve both axes; Shift+wheel scrolls horizontally.
+
+```rust
+use lemon::prelude::*;
+let cx = Cx::new();
+let strip = ScrollView::new(&cx, Text::new("Wide content"))
+    .axis(ScrollAxis::Horizontal).width(240.0).height(80.0);
+```
+
+Base composition and presentation (`View`, `RowView`, `ColumnView`, `Text`,
+`Component`, `Icon`, `Image`, `ScrollView`) belong to `element/builders`. Semantic
+controls (`Button`, fields, `Select`, `Slider`, `FileTree`) belong to `widget`.
+This keeps construction separate from interaction policy while preserving the
+runtime → diff → retained → layout → paint pipeline. Public imports remain on the
+crate root and prelude. The old scroll and separate field module paths were removed.

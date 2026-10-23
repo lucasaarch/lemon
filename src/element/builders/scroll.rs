@@ -3,17 +3,17 @@ use std::rc::Rc;
 
 use crate::{
     element::{builders::View, style::Color, style::ColorSource, Element},
-    Cx, State,
+    Cx, ScrollAxis, State,
 };
 
-/// Per-widget visual overrides for [`Scroll`].
+/// Per-widget visual overrides for [`ScrollView`].
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct ScrollStyle {
+pub struct ScrollViewStyle {
     scrollbar_track_color: Option<Color>,
     scrollbar_thumb_color: Option<Color>,
 }
 
-impl ScrollStyle {
+impl ScrollViewStyle {
     /// Overrides the scrollbar track color.
     pub fn scrollbar_track_color(mut self, color: Color) -> Self {
         self.scrollbar_track_color = Some(color);
@@ -27,43 +27,67 @@ impl ScrollStyle {
     }
 }
 
-/// Vertical scroll viewport with internal offset state and a proportional scrollbar thumb.
+/// Single-axis scroll viewport with internal offset state and a proportional scrollbar thumb.
 ///
 /// The content wrapper fills the viewport width, so children requesting `.fill_width()`
 /// use the full available width rather than the width of their text.
 ///
-/// Scroll range is clamped using the **measured** inner content height after each layout pass
+/// ScrollView range is clamped using the **measured** content extent on the selected axis after each layout pass
 /// (see [`layout::sync_scroll_layout_max`](crate::layout::sync_scroll_layout_max)). The track and
 /// thumb are painted in the paint pass from live layout data, so thumb size tracks content
 /// without manual height estimates.
-pub struct Scroll {
+pub struct ScrollView {
     child: Element,
+    axis: ScrollAxis,
     offset: State<f64>,
     height: f32,
     width: Option<f32>,
     /// Fallback max scroll before the first layout measurement (virtualized lists).
-    content_height: Option<f32>,
+    content_extent: Option<f32>,
     layout_max: Rc<Cell<f64>>,
-    style: ScrollStyle,
+    style: ScrollViewStyle,
 }
 
-impl Scroll {
-    /// Creates a scroll region that owns its scroll offset (starts at `0`).
+impl ScrollView {
+    /// Creates a vertical scroll region that owns its scroll offset (starts at `0`).
+    ///
+    /// Consumes one hook slot; construct it in a stable order on every render.
     pub fn new(cx: &Cx, child: impl Into<Element>) -> Self {
         Self::with_offset(cx.state(0.0f64), child)
     }
 
-    /// Creates a scroll region backed by a caller-owned offset signal (advanced use).
+    /// Creates a scroll region backed by a caller-owned offset in logical points.
+    ///
+    /// This constructor consumes no hooks. The selected axis uses the same scalar
+    /// offset; measured content and viewport bounds clamp it after layout.
     pub fn with_offset(offset: State<f64>, child: impl Into<Element>) -> Self {
         Self {
             child: child.into(),
+            axis: ScrollAxis::Vertical,
             offset,
             height: 200.0,
             width: None,
-            content_height: None,
+            content_extent: None,
             layout_max: Rc::new(Cell::new(f64::MAX)),
-            style: ScrollStyle::default(),
+            style: ScrollViewStyle::default(),
         }
+    }
+
+    /// Chooses the scroll direction (default: vertical).
+    ///
+    /// Horizontal views use native horizontal movement or Shift+wheel. Set a
+    /// definite width and height for a bounded viewport; content retains its natural
+    /// size along the scrolling axis and fills the cross axis.
+    ///
+    /// ```
+    /// use lemon::prelude::*;
+    /// let cx = Cx::new();
+    /// let view = ScrollView::new(&cx, RowView::new().child(Text::new("Wide content")))
+    ///     .axis(ScrollAxis::Horizontal).width(240.0).height(80.0);
+    /// ```
+    pub fn axis(mut self, axis: ScrollAxis) -> Self {
+        self.axis = axis;
+        self
     }
 
     /// Sets the viewport height in logical points (default: `200.0`).
@@ -78,17 +102,19 @@ impl Scroll {
         self
     }
 
-    /// Optional fallback max scroll before layout measurement is available.
+    /// Optional fallback content extent along the scrolling axis, in logical points.
+    ///
+    /// Supplies a fallback max scroll before layout measurement is available.
     ///
     /// Prefer the default measured behaviour; use this only for virtualized lists where the
     /// mounted subtree is shorter than the logical list.
-    pub fn content_height(mut self, height: f32) -> Self {
-        self.content_height = Some(height);
+    pub fn content_extent(mut self, height: f32) -> Self {
+        self.content_extent = Some(height);
         self
     }
 
     /// Replaces all scrollbar style overrides.
-    pub fn style(mut self, style: ScrollStyle) -> Self {
+    pub fn style(mut self, style: ScrollViewStyle) -> Self {
         self.style = style;
         self
     }
@@ -107,34 +133,48 @@ impl Scroll {
 
     /// Builds and returns the [`Element`] for this scroll region.
     pub fn into_element(self) -> Element {
+        let axis = self.axis;
         let offset_value = self.offset.get().max(0.0) as f32;
         let offset = self.offset.clone();
         let viewport_h = self.height;
         let width = self.width;
-        let content_height = self.content_height;
+        let content_extent = self.content_extent;
         let layout_max = self.layout_max;
         let layout_max_for_scroll = layout_max.clone();
 
         let inner = View::new()
-            .fill_width()
+            .align(crate::element::style::Align::Start)
             .scroll_content()
-            .outset_top(-offset_value)
             .child(self.child);
+        let mut inner = match axis {
+            ScrollAxis::Vertical => inner.fill_width().outset_top(-offset_value),
+            ScrollAxis::Horizontal => inner.fill_height().outset_left(-offset_value),
+        }
+        .into_element();
+        if let Element::View(view) = &mut inner {
+            view.style.flex_shrink = Some(0.0);
+        }
 
         let mut viewport = View::new()
             .height(viewport_h)
             .clip()
-            .scroll_viewport()
+            .scroll_viewport(axis)
             .scroll_layout_max(layout_max)
             .on_scroll(move |delta| {
                 let measured_max = layout_max_for_scroll.get();
                 let max_offset = if measured_max < f64::MAX / 2.0 {
                     measured_max
                 } else {
-                    content_height
-                        .map_or(f64::MAX, |ch| ((ch as f64) - (viewport_h as f64)).max(0.0))
+                    content_extent.map_or(f64::MAX, |ch| {
+                        ((ch as f64)
+                            - (match axis {
+                                ScrollAxis::Vertical => viewport_h,
+                                ScrollAxis::Horizontal => width.unwrap_or(0.0),
+                            } as f64))
+                            .max(0.0)
+                    })
                 };
-                let next = (offset.get() - delta).max(0.0).min(max_offset);
+                let next = (offset.get() - axis.amount(delta)).max(0.0).min(max_offset);
                 offset.set(next);
             })
             .child(inner);
@@ -155,8 +195,8 @@ impl Scroll {
     }
 }
 
-impl From<Scroll> for Element {
-    fn from(scroll: Scroll) -> Self {
+impl From<ScrollView> for Element {
+    fn from(scroll: ScrollView) -> Self {
         scroll.into_element()
     }
 }
@@ -180,16 +220,17 @@ mod tests {
     #[test]
     fn scroll_uses_shared_viewport_marker() {
         let offset = State::new(10.0f64);
-        let root = Scroll::with_offset(offset.clone(), crate::element::builders::Text::new("item"))
-            .height(200.0)
-            .width(300.0)
-            .into_element();
+        let root =
+            ScrollView::with_offset(offset.clone(), crate::element::builders::Text::new("item"))
+                .height(200.0)
+                .width(300.0)
+                .into_element();
 
         let Element::View(viewport) = root else {
             panic!("expected scroll viewport View");
         };
         assert_eq!(viewport.style.overflow, Overflow::Hidden);
-        assert!(viewport.scroll_viewport);
+        assert_eq!(viewport.scroll_viewport, Some(crate::ScrollAxis::Vertical));
         assert!(viewport.handlers.on_scroll.is_some());
         assert!(viewport.handlers.scroll_layout_max.is_some());
 
@@ -199,40 +240,42 @@ mod tests {
         assert_eq!(inner.style.margin.as_ref().map(|m| m.top), Some(-10.0));
 
         let on_scroll = viewport.handlers.on_scroll.as_ref().unwrap();
-        on_scroll(-20.0);
+        on_scroll(crate::ScrollDelta::new(0.0, -20.0));
         assert_eq!(offset.get(), 30.0);
-        on_scroll(1000.0);
+        on_scroll(crate::ScrollDelta::new(0.0, 1000.0));
         assert_eq!(offset.get(), 0.0);
     }
 
     #[test]
-    fn scroll_with_content_height_clamps_offset_at_max_table_driven() {
+    fn scroll_with_content_extent_clamps_offset_at_max_table_driven() {
         let cases = [
             ("matches_estimate", 596.0_f32, 396.0_f64),
             ("over_estimate", 604.0_f32, 404.0_f64),
         ];
 
-        for (name, content_height, expected_max_offset) in cases {
+        for (name, content_extent, expected_max_offset) in cases {
             let offset = State::new(0.0f64);
-            let root =
-                Scroll::with_offset(offset.clone(), crate::element::builders::Text::new("item"))
-                    .height(200.0)
-                    .content_height(content_height)
-                    .into_element();
+            let root = ScrollView::with_offset(
+                offset.clone(),
+                crate::element::builders::Text::new("item"),
+            )
+            .height(200.0)
+            .content_extent(content_extent)
+            .into_element();
 
             let Element::View(viewport) = root else {
                 panic!("expected View viewport");
             };
             let on_scroll = viewport.handlers.on_scroll.as_ref().unwrap();
 
-            on_scroll(-9999.0);
+            on_scroll(crate::ScrollDelta::new(0.0, -9999.0));
             assert_eq!(
                 offset.get(),
                 expected_max_offset,
-                "{name}: offset must clamp at content_height - viewport_h"
+                "{name}: offset must clamp at content_extent - viewport_h"
             );
 
-            on_scroll(9999.0);
+            on_scroll(crate::ScrollDelta::new(0.0, 9999.0));
             assert_eq!(offset.get(), 0.0, "{name}: offset must clamp at 0");
         }
     }
@@ -253,7 +296,7 @@ mod tests {
         }
 
         let offset = State::new(0.0f64);
-        let root = Scroll::with_offset(offset.clone(), list)
+        let root = ScrollView::with_offset(offset.clone(), list)
             .height(180.0)
             .width(400.0)
             .into_element();
@@ -274,7 +317,7 @@ mod tests {
         let max_offset = cell.get();
 
         let on_scroll = viewport.handlers.on_scroll.as_ref().unwrap();
-        on_scroll(-9999.0);
+        on_scroll(crate::ScrollDelta::new(0.0, -9999.0));
         assert_eq!(
             offset.get(),
             max_offset,
@@ -285,7 +328,7 @@ mod tests {
     #[test]
     fn scroll_layout_max_cell_is_stable_across_into_element_calls() {
         let offset = State::new(0.0f64);
-        let scroll = Scroll::with_offset(offset, crate::element::builders::Text::new("x"));
+        let scroll = ScrollView::with_offset(offset, crate::element::builders::Text::new("x"));
         let cell_a = scroll.layout_max.clone();
         let el_a = scroll.into_element();
         let Element::View(view_a) = el_a else {
@@ -299,9 +342,9 @@ mod tests {
     #[test]
     fn scroll_style_overrides_set_scrollbar_paint_colors() {
         let offset = State::new(0.0f64);
-        let root = Scroll::with_offset(offset, crate::element::builders::Text::new("item"))
+        let root = ScrollView::with_offset(offset, crate::element::builders::Text::new("item"))
             .style(
-                ScrollStyle::default()
+                ScrollViewStyle::default()
                     .scrollbar_track_color(Color::rgb8(1, 2, 3))
                     .scrollbar_thumb_color(Color::rgb8(4, 5, 6)),
             )
@@ -318,8 +361,8 @@ mod tests {
     #[test]
     fn scroll_style_unset_fields_fall_back_to_theme_tokens() {
         let offset = State::new(0.0f64);
-        let root = Scroll::with_offset(offset, crate::element::builders::Text::new("item"))
-            .style(ScrollStyle::default().scrollbar_thumb_color(Color::rgb8(4, 5, 6)))
+        let root = ScrollView::with_offset(offset, crate::element::builders::Text::new("item"))
+            .style(ScrollViewStyle::default().scrollbar_thumb_color(Color::rgb8(4, 5, 6)))
             .into_element();
 
         let Element::View(viewport) = root else {

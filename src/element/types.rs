@@ -58,9 +58,26 @@ pub enum TextAlignment {
     End,
 }
 
-/// Editing metadata for a single-line text field (caret painting, focus chrome).
+/// Which visual side owns a caret at a shared soft line-break boundary.
+///
+/// One UTF-8 insertion index can be either the end of one visual line or the
+/// start of the next. Keep this alongside the index when moving a caret.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum CaretAffinity {
+    /// Attach to the preceding cluster (for example End on a wrapped line).
+    Upstream,
+    /// Attach to the following cluster (the default; for example Home).
+    #[default]
+    Downstream,
+}
+
+/// Editing metadata shared by single-line and multiline fields (caret, selection and focus chrome).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TextInputMeta {
+    /// Visual side of the insertion index at a soft line break.
+    pub affinity: CaretAffinity,
+    /// Whether this editor accepts line breaks and visual-line navigation (default: false).
+    pub multiline: bool,
     /// Selected UTF-8 byte range in `value`, painted behind the text while focused.
     ///
     /// Use an ordered, nonempty range on character boundaries. Invalid ranges are
@@ -84,8 +101,8 @@ pub struct BoxElement {
     pub handlers: crate::retained::EventHandlers,
     /// When set, the paint pass draws a caret for this field when it has keyboard focus.
     pub text_input: Option<TextInputMeta>,
-    /// Marks a clipped viewport that may show a vertical scrollbar when content overflows.
-    pub scroll_viewport: bool,
+    /// The axis of a clipped scroll viewport; `None` disables its scrollbar.
+    pub scroll_viewport: Option<crate::ScrollAxis>,
 }
 
 #[derive(Clone)]

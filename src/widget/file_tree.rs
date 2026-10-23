@@ -149,7 +149,7 @@ impl FileTreeStyle {
 /// This widget consumes three hook slots; construct it in a stable order. Rows use
 /// no hooks, so nodes can be freely inserted/reordered with stable unique IDs.
 /// Data is supplied by the application; this widget never reads the filesystem.
-/// Wrap it in [`super::Scroll`] for scrolling and use `.decorate(...)` for its root.
+/// Wrap it in [`super::ScrollView`] for scrolling and use `.decorate(...)` for its root.
 ///
 /// ```
 /// use lemon::prelude::*;

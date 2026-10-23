@@ -59,7 +59,7 @@ fn one_decoration_styles_every_builder_without_replacing_widget_contracts() {
         TextField::new(&cx, State::new("text".to_owned())).decorate(panel),
         SecureField::new(&cx, State::new("secret".to_owned())).decorate(panel),
         Slider::new(&cx, State::new(0.5)).decorate(panel),
-        Scroll::new(&cx, Text::new("content")).decorate(panel),
+        ScrollView::new(&cx, Text::new("content")).decorate(panel),
         Select::new(&cx, State::new(Some(1)), vec![(1, "One".into())]).decorate(panel),
         Image::new(image).decorate(panel),
     ];
@@ -134,7 +134,7 @@ fn pointer_focus_keyboard_capture_hover_and_scroll_work_without_desktop() {
             .child(TextField::new(cx, source.clone()).decorate(panel))
             .child(Slider::new(cx, source_volume.clone()).width(240.0))
             .child(
-                Scroll::with_offset(source_offset.clone(), View::new().height(600.0))
+                ScrollView::with_offset(source_offset.clone(), View::new().height(600.0))
                     .width(240.0)
                     .height(80.0),
             )
@@ -180,7 +180,7 @@ fn pointer_focus_keyboard_capture_hover_and_scroll_work_without_desktop() {
     assert_eq!(volume.get(), 1.0, "release ends capture");
     ui.dispatch_input(InputEvent::Scroll {
         point: LogicalPoint::new(scroll.x + 10.0, scroll.y + 10.0),
-        delta_y: -30.0,
+        delta: lemon::ScrollDelta::new(0.0, -30.0),
     })
     .unwrap();
     assert!(offset.get() > 0.0);
