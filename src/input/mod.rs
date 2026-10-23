@@ -75,6 +75,9 @@ impl Default for InputState {
 impl UiState {
     pub(crate) fn reconcile_input(&mut self) {
         let root = self.retained.as_ref().and_then(|tree| tree.root.as_ref());
+        if let Some(tree) = &self.retained {
+            self.paint_dirty |= self.input.focus_manager.reconcile_modal(tree);
+        }
         let exists = |id| root.and_then(|root| find_interactive_node_by_taffy_id(root, id));
         if self
             .input
@@ -473,6 +476,51 @@ impl UiState {
             self.input.last_caret_activity = Instant::now();
             self.paint_dirty = true;
             return self.input.focus_manager.focused.is_some();
+        }
+
+        // Escape is handled by the nearest containing scope before its focused child.
+        if state == KeyState::Pressed
+            && !event.repeat
+            && lemon_key == LemonKey::Named(NamedKey::Escape)
+        {
+            fn escape_handler(
+                node: &crate::retained::RetainedNode,
+                focused: Option<taffy::NodeId>,
+            ) -> Option<std::rc::Rc<dyn Fn()>> {
+                if !node.style.interactive {
+                    return None;
+                }
+                if let Some(child) = node
+                    .children
+                    .iter()
+                    .find_map(|child| escape_handler(child, focused))
+                {
+                    return Some(child);
+                }
+                let contains = focused.is_some_and(|id| {
+                    crate::input::hit_test::find_node_by_taffy_id(node, id).is_some()
+                });
+                if contains || node.style.modal {
+                    node.handlers.on_escape.clone()
+                } else {
+                    None
+                }
+            }
+            if let Some(handler) = self
+                .retained
+                .as_ref()
+                .and_then(|tree| tree.root.as_ref())
+                .and_then(|root| {
+                    escape_handler(
+                        crate::retained::focus::active_modal(root).unwrap_or(root),
+                        self.input.focus_manager.focused,
+                    )
+                })
+            {
+                handler();
+                self.paint_dirty = true;
+                return true;
+            }
         }
 
         let Some(focused_id) = self.input.focus_manager.focused else {

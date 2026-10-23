@@ -400,6 +400,43 @@ macro_rules! container_builder {
                 self
             }
 
+            /// Prevents pointer input inside this rectangle from reaching content behind it.
+            /// Child controls still receive input. Defaults to false; useful for overlay panels.
+            ///
+            /// ```
+            /// use lemon::View;
+            /// let panel = View::new().blocks_input(true);
+            /// ```
+            pub fn blocks_input(mut self, blocks: bool) -> Self {
+                self.0.style.blocks_input = blocks;
+                self
+            }
+
+            /// Sets the minimum width in logical points (default: automatic content minimum).
+            /// Use zero to let a row child shrink below its text's natural width and wrap.
+            ///
+            /// ```
+            /// use lemon::View;
+            /// let panel = View::new().width(400.0).min_width(0.0);
+            /// ```
+            pub fn min_width(mut self, width: f32) -> Self {
+                self.0.style.min_width = Some(crate::element::style::Dimension::Points(width));
+                self
+            }
+
+            /// Handles Escape from this view or a focused descendant before ordinary key input.
+            /// The nearest handler wins, allowing nested popovers to dismiss independently.
+            /// Repeated key presses do not trigger dismissal.
+            ///
+            /// ```
+            /// use lemon::View;
+            /// let overlay = View::new().on_escape(|| {});
+            /// ```
+            pub fn on_escape(mut self, f: impl Fn() + 'static) -> Self {
+                self.0.handlers.on_escape = Some(Rc::new(f));
+                self
+            }
+
             /// Sets an image to draw inside this container using object-fit: contain scaling.
             ///
             /// The image is scaled uniformly to fit within the container's layout rectangle while

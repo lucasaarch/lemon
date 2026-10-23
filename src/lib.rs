@@ -85,8 +85,9 @@ pub use font::{register_font_bytes, register_font_path, FontRegistrationError};
 pub use icons::IconData;
 pub use transition::{Transition, TransitionProperty};
 pub use widget::{
-    Button, ButtonStyle, FileTree, FileTreeNode, FileTreeStyle, SecureField, Select, SelectStyle,
-    Slider, SliderStyle, TextArea, TextField, TextFieldStyle,
+    Button, ButtonStyle, Checkbox, Dialog, FileTree, FileTreeNode, FileTreeStyle, Popover,
+    SecureField, Select, SelectStyle, Slider, SliderStyle, Switch, TextArea, TextField,
+    TextFieldStyle, ToastId, Toaster,
 };
 
 pub use element::events::{
@@ -102,7 +103,7 @@ pub use layout::{
     LayoutMap, LayoutRect, Viewport,
 };
 pub use reactive::State;
-pub use window::WindowConfig;
+pub use window::{WindowChrome, WindowConfig};
 
 pub use paint::{paint_pass, PaintStats};
 pub use platform::{

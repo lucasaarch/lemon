@@ -82,6 +82,7 @@ Each example has one job. Sources live in [`examples`](examples).
 | `layout` | Rows, columns, placement, styled views, and horizontal scrolling |
 | `custom` | A form centered in a view that fills the window |
 | `form` | TextField, SecureField, resizable TextArea, Select, Slider, and scrollable history |
+| `controls` | Checkbox, Switch, Popover, Dialog, Toaster, and window chrome |
 | `images` | In-memory RGBA pixels and shared image handles |
 | `custom_select` | A mouse-operated picker composed from primitives |
 | `animation` | Animation progress, opacity, and theme tokens |
@@ -255,7 +256,13 @@ run_with_theme(WindowConfig::default(), ThemePair::new(light, dark), app);
 ```
 
 Passing a single `Theme` to `run_with_theme` keeps that palette fixed. Local widget overrides continue to take precedence.
-Native window decorations retain the system appearance.
+Native window decorations retain the system appearance. Choose chrome through
+`WindowConfig::default().chrome(WindowChrome::Overlay)` to extend content behind
+the title bar while keeping traffic lights on macOS, or `WindowChrome::Borderless`
+to remove title bar and buttons. On Windows and Linux both custom modes remove
+native decorations and buttons; behavior of shadows and resizing depends on the
+window manager. The default is `WindowChrome::System`. Reserve space for macOS
+traffic lights in overlay layouts; Lemon does not insert an extra content inset.
 
 Detection and live change events use winit's macOS and Windows support. When the
 platform does not report an appearance (including the current X11/Wayland API),
@@ -272,6 +279,20 @@ matches your product. Use `run_with_theme` for app-wide tokens and widget style 
 `TextField` and `SecureField` accept `State<String>`; cursor and selection stay internal.
 `SecureField` shares `TextFieldStyle`, displays bullets, and
 blocks clipboard copy/cut shortcuts. Its string state retains the original value for app code.
+
+`Checkbox::new(cx, value)` and `Switch::new(cx, value)` bind to `State<bool>`;
+`.label(...)` and `.disabled(...)` configure their shared interaction behavior.
+`Popover::new(cx, open, anchor, content)` and `Dialog::new(cx, open, content)`
+bind visibility to `State<bool>`. Keep them mounted while closed for exit fades.
+Dialogs block background input, contain Tab traversal and restore focus when
+closed. Popovers dismiss on outside presses or Escape from within the control.
+Use `ScrollView` inside a dialog for content taller than the viewport.
+
+`Toaster::new(cx)` declares a component-owned queue. Mount one clone and capture
+another in actions: `toaster.show("Saved")`. Notifications fade and expire after
+four seconds; `show_for`, `dismiss` and `clear` control their lifetime. These
+panels and notifications render in the Lemon window; they are not OS dialogs or
+system notifications. See `cargo run --example controls`.
 
 When a widget almost fits but the visual structure does not, rebuild the control from primitives:
 `View`, `ColumnView`, `RowView`, `Text`, `Button`, `State`, and event handlers. This keeps the app in the

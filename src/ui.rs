@@ -143,6 +143,7 @@ impl UiState {
         let mut tree = RetainedTree::mount(element)?;
         tree.apply_patches(self.runtime.take_patches())?;
         self.retained = Some(tree);
+        self.reconcile_input();
         self.layout_dirty = true;
         self.paint_dirty = true;
         Ok(())

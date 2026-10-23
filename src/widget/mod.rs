@@ -20,8 +20,14 @@ pub use crate::element::decoration::Decorate;
 pub mod button;
 pub mod field;
 pub mod file_tree;
+pub mod overlay;
 pub mod select;
 pub mod slider;
+pub mod toaster;
+pub mod toggle;
+pub use overlay::{Dialog, Popover};
+pub use toaster::{ToastId, Toaster};
+pub use toggle::{Checkbox, Switch};
 
 pub use button::{Button, ButtonStyle};
 pub use field::{SecureField, TextArea, TextField, TextFieldStyle};

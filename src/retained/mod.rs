@@ -87,6 +87,8 @@ pub struct EventHandlers {
     pub on_scroll: Option<Rc<dyn Fn(crate::ScrollDelta)>>,
     /// Called when a click is dispatched outside this retained node's bounds.
     pub on_click_outside: Option<Rc<dyn Fn()>>,
+    /// Dismissal callback for Escape in this subtree; nearest containing handler wins.
+    pub on_escape: Option<Rc<dyn Fn()>>,
     /// Called when a pointer press lands inside this retained node with normalized `(x, y)` coordinates.
     pub on_pointer_down: Option<Rc<dyn Fn(f32, f32)>>,
     /// Called when pointer movement is reported for this retained node with normalized `(x, y)` coordinates.
@@ -117,6 +119,7 @@ impl PartialEq for EventHandlers {
             && same(&self.on_hover_enter, &other.on_hover_enter)
             && same(&self.on_hover_leave, &other.on_hover_leave)
             && same(&self.on_scroll, &other.on_scroll)
+            && same(&self.on_escape, &other.on_escape)
             && same(&self.on_click_outside, &other.on_click_outside)
             && same(&self.on_pointer_down, &other.on_pointer_down)
             && same(&self.on_pointer_move, &other.on_pointer_move)
@@ -130,6 +133,10 @@ impl PartialEq for EventHandlers {
 impl std::fmt::Debug for EventHandlers {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("EventHandlers")
+            .field(
+                "on_escape",
+                &self.on_escape.as_ref().map(|_| "Rc<dyn Fn()>"),
+            )
             .field("on_click", &self.on_click.as_ref().map(|_| "Rc<dyn Fn()>"))
             .field(
                 "on_key_down",
@@ -799,6 +806,13 @@ impl Default for RetainedTree {
 impl StyleProps {
     pub fn to_taffy_style(&self) -> Style {
         Style {
+            min_size: Size {
+                width: self
+                    .min_width
+                    .clone()
+                    .map_or(taffy::Dimension::Auto, into_taffy_dimension),
+                height: taffy::Dimension::Auto,
+            },
             size: Size {
                 width: self
                     .width

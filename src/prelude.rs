@@ -23,10 +23,11 @@ pub use crate::element::Element;
 pub use crate::platform::run;
 pub use crate::runtime::cx::Cx;
 pub use crate::widget::{
-    Button, ButtonStyle, FileTree, FileTreeNode, FileTreeStyle, SecureField, Select, SelectStyle,
-    Slider, SliderStyle, TextArea, TextField, TextFieldStyle,
+    Button, ButtonStyle, Checkbox, Dialog, FileTree, FileTreeNode, FileTreeStyle, Popover,
+    SecureField, Select, SelectStyle, Slider, SliderStyle, Switch, TextArea, TextField,
+    TextFieldStyle, ToastId, Toaster,
 };
-pub use crate::window::WindowConfig;
+pub use crate::window::{WindowChrome, WindowConfig};
 pub use crate::State;
 
 pub use crate::element::decoration::Decorate;

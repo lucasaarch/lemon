@@ -645,10 +645,24 @@ impl ApplicationHandler for LemonApplication {
 }
 
 fn native_window_attributes(config: &WindowConfig) -> winit::window::WindowAttributes {
-    Window::default_attributes()
+    let attributes = Window::default_attributes()
         .with_title(config.title.clone())
         .with_inner_size(LogicalSize::new(config.width, config.height))
         .with_resizable(config.resizable)
+        .with_decorations(config.chrome != crate::WindowChrome::Borderless);
+    #[cfg(target_os = "macos")]
+    {
+        use winit::platform::macos::WindowAttributesExtMacOS;
+        if config.chrome == crate::WindowChrome::Overlay {
+            return attributes
+                .with_titlebar_transparent(true)
+                .with_title_hidden(true)
+                .with_fullsize_content_view(true);
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
+    let attributes = attributes.with_decorations(config.chrome == crate::WindowChrome::System);
+    attributes
 }
 
 fn resolve_native_theme(themes: &ThemePair, appearance: Option<NativeTheme>) -> Theme {
@@ -835,6 +849,22 @@ mod tests {
     }
 
     #[test]
+    fn chrome_configuration_maps_to_native_decorations() {
+        use crate::WindowChrome;
+        for chrome in [
+            WindowChrome::System,
+            WindowChrome::Overlay,
+            WindowChrome::Borderless,
+        ] {
+            let config = WindowConfig::default().chrome(chrome);
+            let attributes = native_window_attributes(&config);
+            let decorated = chrome == WindowChrome::System
+                || (cfg!(target_os = "macos") && chrome == WindowChrome::Overlay);
+            assert_eq!(attributes.decorations, decorated);
+        }
+    }
+
+    #[test]
     fn app_state_starts_without_windows() {
         let state = AppState::new(WindowConfig::default(), |_cx| {
             Text::new("hi").into_element()
@@ -900,7 +930,8 @@ mod tests {
         let config = WindowConfig::default()
             .title("Settings")
             .size(480.0, 360.0)
-            .resizable(false);
+            .resizable(false)
+            .chrome(crate::WindowChrome::Borderless);
         Cx::new().open_window(config.clone(), |_| Text::new("Settings").into_element());
         let request = host.take_window_requests().pop().unwrap();
         assert_eq!(request.config, config);

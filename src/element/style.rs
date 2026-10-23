@@ -205,9 +205,17 @@ pub struct StyleProps {
     /// Whether this subtree accepts pointer, keyboard and focus input (default: true).
     /// Disabling input preserves layout and paint, allowing an overlay to fade out safely.
     pub interactive: bool,
+    /// Restricts input and focus to this subtree while interactive (default: false).
+    /// Used by [`crate::Dialog`]; the foremost modal scope owns input until closed.
+    pub modal: bool,
+    /// Prevents pointer hits from reaching content behind this rectangle (default: false).
+    /// Descendants remain interactive; used by overlay panels and notification cards.
+    pub blocks_input: bool,
     /// Implicit visual transition for this subtree; absent by default.
     pub transition: Option<crate::transition::Transition>,
     pub width: Option<Dimension>,
+    /// Minimum width; absent uses the layout engine's automatic content minimum.
+    pub min_width: Option<Dimension>,
     pub height: Option<Dimension>,
     pub padding: Option<Edges<f32>>,
     pub margin: Option<Edges<f32>>,
@@ -258,8 +266,11 @@ impl Default for StyleProps {
     fn default() -> Self {
         Self {
             interactive: true,
+            modal: false,
+            blocks_input: false,
             transition: None,
             width: None,
+            min_width: None,
             height: None,
             padding: None,
             margin: None,

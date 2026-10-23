@@ -10,6 +10,26 @@
 /// ```
 pub type RootComponent = std::sync::Arc<dyn Fn(&crate::Cx) -> crate::element::Element>;
 
+/// Native window chrome. Defaults to the operating system title bar and borders.
+///
+/// ```
+/// use lemon::{WindowChrome, WindowConfig};
+/// let window = WindowConfig::default().chrome(WindowChrome::Overlay);
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum WindowChrome {
+    /// Use the operating system title bar, borders and window buttons.
+    #[default]
+    System,
+    /// Extend content behind a transparent title bar on macOS, keeping traffic lights.
+    /// Reserve space for the buttons in your content. On Windows and Linux this
+    /// removes decorations, including native buttons; draw your own controls.
+    Overlay,
+    /// Remove the title bar and native buttons on all supported desktop platforms.
+    /// Borderless resizing and shadows depend on the window manager.
+    Borderless,
+}
+
 /// Native window configuration used by [`crate::run`] and [`crate::Cx::open_window`].
 ///
 /// Defaults to a resizable 900 × 600 logical-point window titled "Lemon".
@@ -34,6 +54,8 @@ pub struct WindowConfig {
     pub height: f32,
     /// Whether the user can resize the window.
     pub resizable: bool,
+    /// Native title bar and border appearance (default: system decorations).
+    pub chrome: WindowChrome,
 }
 
 impl Default for WindowConfig {
@@ -43,11 +65,18 @@ impl Default for WindowConfig {
             width: 900.0,
             height: 600.0,
             resizable: true,
+            chrome: WindowChrome::System,
         }
     }
 }
 
 impl WindowConfig {
+    /// Selects native chrome; applies to primary and subsequently opened windows.
+    pub fn chrome(mut self, chrome: WindowChrome) -> Self {
+        self.chrome = chrome;
+        self
+    }
+
     /// Sets the window title.
     pub fn title(mut self, title: impl Into<String>) -> Self {
         self.title = title.into();
@@ -77,11 +106,13 @@ mod tests {
         let config = WindowConfig::default()
             .title("Counter")
             .size(640.0, 480.0)
-            .resizable(false);
+            .resizable(false)
+            .chrome(WindowChrome::Overlay);
 
         assert_eq!(config.title, "Counter");
         assert_eq!(config.width, 640.0);
         assert_eq!(config.height, 480.0);
         assert!(!config.resizable);
+        assert_eq!(config.chrome, WindowChrome::Overlay);
     }
 }

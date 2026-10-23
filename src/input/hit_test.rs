@@ -71,6 +71,10 @@ fn hit_test<'a>(
         }
         let inside = clips.iter().all(|rect| point_in_rect(point, rect));
         let rect = node.taffy_id.and_then(|id| layout.get(id));
+        if inside && node.style.blocks_input && rect.is_some_and(|rect| point_in_rect(point, rect))
+        {
+            *hit = None;
+        }
         if inside && accepts(node) && rect.is_some_and(|rect| point_in_rect(point, rect)) {
             *hit = Some(node);
         }
@@ -103,6 +107,7 @@ fn hit_test<'a>(
             clips.pop();
         }
     }
+    let node = crate::retained::focus::active_modal(node).unwrap_or(node);
     let mut hit = None;
     let mut deferred = Vec::new();
     visit(
@@ -151,12 +156,20 @@ pub fn hit_test_pointer_down<'a>(
 ///
 /// Used by the platform layer to close popovers or dropdowns when the user clicks elsewhere.
 pub fn dispatch_outside_clicks(node: &RetainedNode, layout: &LayoutMap, point: LogicalPoint) {
+    dispatch_outside(
+        crate::retained::focus::active_modal(node).unwrap_or(node),
+        layout,
+        point,
+    );
+}
+
+fn dispatch_outside(node: &RetainedNode, layout: &LayoutMap, point: LogicalPoint) {
     if !node.style.interactive {
         return;
     }
     if matches!(node.kind, RetainedKind::Component { .. }) {
         for child in &node.children {
-            dispatch_outside_clicks(child, layout, point);
+            dispatch_outside(child, layout, point);
         }
         return;
     }
@@ -169,7 +182,7 @@ pub fn dispatch_outside_clicks(node: &RetainedNode, layout: &LayoutMap, point: L
     }
 
     for child in &node.children {
-        dispatch_outside_clicks(child, layout, point);
+        dispatch_outside(child, layout, point);
     }
 }
 
@@ -217,7 +230,11 @@ pub(crate) fn find_interactive_node_by_taffy_id(
     node: &RetainedNode,
     id: taffy::NodeId,
 ) -> Option<&RetainedNode> {
-    find_node(node, id, true)
+    find_node(
+        crate::retained::focus::active_modal(node).unwrap_or(node),
+        id,
+        true,
+    )
 }
 
 fn find_node(
