@@ -85,7 +85,7 @@ Each example has one job. Sources live in [`examples`](examples).
 | `controls` | Checkbox, Switch, Popover, Dialog, Toaster, and window chrome |
 | `images` | In-memory RGBA pixels and shared image handles |
 | `custom_select` | A mouse-operated picker composed from primitives |
-| `animation` | Animation progress, opacity, and theme tokens |
+| `animation` | Motion, filters, gradients, hover, focus, and window events |
 
 Run any example with `cargo run --example <name>`. Start with:
 
@@ -451,6 +451,43 @@ let badge = View::new().position(Position::Fixed).top(16.0).right(16.0)
     .width(80.0).height(32.0);
 ```
 
+### Visual effects and events
+
+Containers accept `.opacity(0.8)`, `.blur(4.0)` and `.brightness(1.2)`.
+Use `.decorate(|view| ...)` to apply them to any widget. Effects include all
+children, text and images without changing layout or hit geometry. Blur affects
+content, uses a Gaussian standard deviation in logical points (capped at 1024),
+and does not sample the background behind the view. Brightness preserves alpha:
+`1` is unchanged, `0` is black, and values above `1` brighten.
+
+```rust
+use lemon::prelude::*;
+let card = View::new().width(240.0).height(120.0)
+    .gradient(RadialGradient::new((0.5, 0.5), 0.7,
+        Color::rgb8(100, 160, 255), Color::rgb8(30, 40, 80)))
+    .opacity(0.9).blur(2.0).brightness(1.1)
+    .on_hover(|inside| println!("hover: {inside}"))
+    .focusable().on_focus(|focused| println!("focus: {focused}"));
+```
+
+`LinearGradient::new(start, end, first, last)` and
+`RadialGradient::new(center, radius, inner, outer)` use normalized coordinates;
+radial radius is relative to the shorter side. Both support `.stops([...])` with
+`GradientStop::new(position, color)` for multi-color fills. Stops are sorted,
+with at least two positions in `0..=1`.
+
+Hover includes descendants and sends `false` on exit, removal, disabled input or
+window leave. Focus observes direct element focus, including loss on removal;
+plain views need `.focusable()`, while controls already support focus. Existing
+`.action`, `.on_hover_enter`, `.on_hover_leave`, keyboard and pointer events
+remain available.
+
+Opacity and filters isolate descendant layers into their own compositing group.
+Blur and brightness use intermediate GPU textures; strong blurs and textures
+larger than 4096 pixels are downsampled. Native hosts handle this automatically.
+Custom renderers must use `lemon::Renderer` with `lemon::Scene` from
+`UiState::scene()` rather than passing that scene to a raw Vello renderer.
+
 ### Visual transitions
 
 Apply `.transition(...)` to a view, or use `.decorate(...)` on a widget. The setting
@@ -474,7 +511,7 @@ Supported properties: `Surface` (solid color), `BorderColor`, `FocusRing`,
 selects only those properties. Duration defaults to 150 ms with linear easing.
 Initial mounting is immediate; interrupted transitions continue from the current
 appearance. Selected properties restart together on a new target. Zero duration
-snaps to the target. Layout dimensions, gradients, shadows and images change
+snaps to the target. Layout dimensions, gradients, blur, brightness, shadows and images change
 immediately. Pointer interaction always uses the current layout.
 
 The `animation` example combines explicit `cx.motion(...)` with implicit transitions.
@@ -486,6 +523,14 @@ or `update_at` with a monotonic timestamp and honor their host's frame requests.
 `WindowConfig` configures both `run(...)` and `cx.open_window(...)`. The same
 initialization applies registered fonts and the application theme to every window.
 Each request opens an independent window; closing the last window exits the app.
+`WindowConfig` also accepts `.on_open(|| ...)`, `.on_close(|| ...)`,
+`.on_focus(|active| ...)`, `.on_resize(|width, height| ...)` and `.on_move(|x, y| ...)`.
+Sizes and positions use logical points; some window managers do not report movement.
+`.on_close_requested(|| bool)` can veto a close by returning `false` (for example,
+to show a save confirmation). `on_close` runs once after acceptance, before native
+resources are dropped; forced OS destruction cannot be vetoed. Callbacks apply
+to both main and newly opened windows and may update shared `State` values.
+
 The `components` example includes a Settings button showing the same API:
 
 ```rust

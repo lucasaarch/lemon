@@ -23,7 +23,7 @@ fn vector_icons_flow_through_freezing_diff_and_paint_without_layout_changes() {
     let stats = paint_pass(
         ui.retained().unwrap(),
         ui.layout_map(),
-        &mut vello::Scene::new(),
+        &mut lemon::Scene::new(),
         2.0,
         None,
         false,
@@ -56,7 +56,7 @@ fn zero_size_icons_draw_nothing() {
     let stats = paint_pass(
         ui.retained().unwrap(),
         ui.layout_map(),
-        &mut vello::Scene::new(),
+        &mut lemon::Scene::new(),
         1.0,
         None,
         false,

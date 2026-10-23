@@ -239,6 +239,14 @@ pub struct StyleProps {
     /// `0.0` is fully transparent and `1.0` is fully opaque.
     /// Container builders clamp values to the valid `0.0..=1.0` range.
     pub opacity: f32,
+    /// Marks an explicit opacity compositing group; set by `.opacity(...)` even for `1`.
+    /// Keeps descendant layering stable during opacity transitions. Defaults to false.
+    pub opacity_group: bool,
+    /// Gaussian content blur in logical points, capped to 1024; zero by default.
+    /// Does not blur the backdrop.
+    pub blur: f32,
+    /// RGB multiplier for this subtree; `1` by default, `0` is black. Alpha is preserved.
+    pub brightness: f32,
     pub flex_grow: Option<f32>,
     pub flex_shrink: Option<f32>,
     pub align_items: Option<Align>,
@@ -266,6 +274,16 @@ pub struct StyleProps {
     pub position: Position,
 }
 
+impl StyleProps {
+    pub(crate) fn has_filter(&self) -> bool {
+        (self.blur.is_finite() && self.blur > 0.0)
+            || (self.brightness.is_finite() && self.brightness >= 0.0 && self.brightness != 1.0)
+    }
+    pub(crate) fn isolates(&self) -> bool {
+        self.has_filter() || self.opacity_group || self.opacity != 1.0
+    }
+}
+
 impl Default for StyleProps {
     fn default() -> Self {
         Self {
@@ -283,6 +301,9 @@ impl Default for StyleProps {
             column_gap: None,
             row_gap: None,
             opacity: 1.0,
+            opacity_group: false,
+            blur: 0.0,
+            brightness: 1.0,
             flex_grow: None,
             flex_shrink: None,
             align_items: None,
@@ -364,40 +385,131 @@ impl<F: Fn() -> Color + 'static> From<F> for ColorSource {
     }
 }
 
-/// Two-stop linear gradient painted within a container's layout rect.
-///
-/// `start` and `end` use normalized coordinates where `(0.0, 0.0)` is the top-left corner and
-/// `(1.0, 1.0)` is the bottom-right corner.
+/// A color and its normalized position along a gradient.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct LinearGradient {
-    pub start: (f32, f32),
-    pub end: (f32, f32),
-    pub start_color: Color,
-    pub end_color: Color,
+pub struct GradientStop {
+    /// Position in `0..=1`.
+    pub position: f32,
+    /// Color at this position.
+    pub color: Color,
 }
-
+impl GradientStop {
+    /// Creates a stop; panics for non-finite or out-of-range positions.
+    pub fn new(position: f32, color: Color) -> Self {
+        assert!(
+            position.is_finite() && (0.0..=1.0).contains(&position),
+            "gradient position must be in 0..=1"
+        );
+        Self { position, color }
+    }
+}
+fn gradient_stops(stops: impl IntoIterator<Item = GradientStop>) -> Vec<GradientStop> {
+    let mut stops: Vec<_> = stops.into_iter().collect();
+    assert!(stops.len() >= 2, "gradients require at least two stops");
+    for stop in &stops {
+        GradientStop::new(stop.position, stop.color);
+    }
+    stops.sort_by(|a, b| a.position.total_cmp(&b.position));
+    stops
+}
+/// Linear fill using normalized start/end coordinates within a container.
+///
+/// ```
+/// use lemon::{Color, LinearGradient, View};
+/// let view = View::new().gradient(LinearGradient::new((0.0,0.0), (1.0,1.0),
+///     Color::rgb8(255,0,0), Color::rgb8(0,0,255)));
+/// ```
+#[derive(Clone, Debug, PartialEq)]
+pub struct LinearGradient {
+    /// Normalized start point; `(0,0)` is top-left.
+    pub start: (f32, f32),
+    /// Normalized end point; `(1,1)` is bottom-right.
+    pub end: (f32, f32),
+    /// Ordered color stops; at least two.
+    pub stops: Vec<GradientStop>,
+}
 impl LinearGradient {
-    /// Creates a two-stop linear gradient inside the painted rect.
-    ///
-    /// ```
-    /// use lemon::{Color, LinearGradient, View};
-    ///
-    /// let _ = View::new()
-    ///     .gradient(LinearGradient::new(
-    ///         (0.0, 0.0),
-    ///         (1.0, 1.0),
-    ///         Color::rgb8(255, 128, 64),
-    ///         Color::rgb8(64, 128, 255),
-    ///     ))
-    ///     .into_element();
-    /// ```
+    /// Creates a two-color gradient. Panics for non-finite coordinates.
     pub fn new(start: (f32, f32), end: (f32, f32), start_color: Color, end_color: Color) -> Self {
+        assert!(
+            [start.0, start.1, end.0, end.1]
+                .iter()
+                .all(|v| v.is_finite()),
+            "gradient coordinates must be finite"
+        );
         Self {
             start,
             end,
-            start_color,
-            end_color,
+            stops: vec![
+                GradientStop::new(0.0, start_color),
+                GradientStop::new(1.0, end_color),
+            ],
         }
+    }
+    /// Replaces color stops, sorting by position. Panics for fewer than two or invalid stops.
+    ///
+    /// ```
+    /// use lemon::{Color, GradientStop, LinearGradient};
+    /// let gradient = LinearGradient::new((0.0,0.0),(1.0,0.0),Color::default(),Color::default())
+    ///     .stops([GradientStop::new(0.0,Color::rgb8(255,0,0)),
+    ///         GradientStop::new(0.5,Color::rgb8(0,255,0)), GradientStop::new(1.0,Color::rgb8(0,0,255))]);
+    /// ```
+    pub fn stops(mut self, stops: impl IntoIterator<Item = GradientStop>) -> Self {
+        self.stops = gradient_stops(stops);
+        self
+    }
+}
+/// Circular radial fill with a normalized center and radius relative to the shorter side.
+///
+/// ```
+/// use lemon::{Color, RadialGradient, View};
+/// let view = View::new().gradient(RadialGradient::new((0.5,0.5),0.5,
+///     Color::rgb8(255,255,255),Color::rgb8(20,80,200)));
+/// ```
+#[derive(Clone, Debug, PartialEq)]
+pub struct RadialGradient {
+    /// Normalized center within the container.
+    pub center: (f32, f32),
+    /// Radius as a fraction of the shorter side; `0.5` reaches the nearest edge from the center.
+    pub radius: f32,
+    /// Ordered color stops from center to outer radius.
+    pub stops: Vec<GradientStop>,
+}
+impl RadialGradient {
+    /// Creates a two-color radial fill. Panics for non-finite coordinates or a nonpositive radius.
+    pub fn new(center: (f32, f32), radius: f32, inner: Color, outer: Color) -> Self {
+        assert!(
+            center.0.is_finite() && center.1.is_finite() && radius.is_finite() && radius > 0.0,
+            "radial coordinates must be finite and radius positive"
+        );
+        Self {
+            center,
+            radius,
+            stops: vec![GradientStop::new(0.0, inner), GradientStop::new(1.0, outer)],
+        }
+    }
+    /// Replaces color stops, sorting by position. Panics for fewer than two or invalid stops.
+    pub fn stops(mut self, stops: impl IntoIterator<Item = GradientStop>) -> Self {
+        self.stops = gradient_stops(stops);
+        self
+    }
+}
+/// A container's linear or radial background fill; supplied through `.gradient(...)`.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Gradient {
+    /// A fill along a line.
+    Linear(LinearGradient),
+    /// A fill radiating from a center point.
+    Radial(RadialGradient),
+}
+impl From<LinearGradient> for Gradient {
+    fn from(value: LinearGradient) -> Self {
+        Self::Linear(value)
+    }
+}
+impl From<RadialGradient> for Gradient {
+    fn from(value: RadialGradient) -> Self {
+        Self::Radial(value)
     }
 }
 
@@ -443,8 +555,8 @@ impl BoxShadow {
 #[derive(Clone, Default)]
 pub struct PaintProps {
     pub background: Option<ColorSource>,
-    /// Optional two-stop linear gradient painted instead of [`background`](Self::background).
-    pub background_gradient: Option<LinearGradient>,
+    /// Optional linear or radial gradient painted instead of [`background`](Self::background).
+    pub background_gradient: Option<Gradient>,
     /// Per-side border colors. `None` skips painting for that side.
     pub border_color: Edges<Option<ColorSource>>,
     /// Per-side border widths in logical points (`0.0` = no border on that side).
@@ -496,7 +608,7 @@ impl std::fmt::Debug for PaintProps {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct PaintData {
     pub background: Option<Color>,
-    pub background_gradient: Option<LinearGradient>,
+    pub background_gradient: Option<Gradient>,
     pub border_color: Edges<Option<Color>>,
     pub border_width: Edges<f32>,
     pub radius: CornerRadii,
@@ -514,7 +626,7 @@ impl PaintProps {
     pub fn resolve(&self) -> PaintData {
         PaintData {
             background: self.background.as_ref().map(|c| c.resolve()),
-            background_gradient: self.background_gradient,
+            background_gradient: self.background_gradient.clone(),
             border_color: resolve_color_edges(&self.border_color),
             border_width: self.border_width,
             radius: self.radius.clone(),

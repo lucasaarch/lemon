@@ -51,7 +51,7 @@ fn both_axes_scroll_clamp_and_paint_with_explicit_content_wrappers() {
         let stats = lemon::paint_pass(
             ui.retained().unwrap(),
             ui.layout_map(),
-            &mut vello::Scene::new(),
+            &mut lemon::Scene::new(),
             1.0,
             None,
             false,
@@ -349,7 +349,7 @@ fn both_paints_only_overflowing_axes_and_refreshes_limits_after_paint_only_rende
         let stats = lemon::paint_pass(
             ui.retained().unwrap(),
             ui.layout_map(),
-            &mut vello::Scene::new(),
+            &mut lemon::Scene::new(),
             1.0,
             None,
             false,

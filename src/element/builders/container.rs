@@ -1,5 +1,5 @@
 use crate::element::{
-    style::{BoxShadow, Color, ColorSource, CornerRadii, Edges, LinearGradient, Overflow},
+    style::{BoxShadow, Color, ColorSource, CornerRadii, Edges, Gradient, Overflow},
     types::{BoxElement, Key},
     Element,
 };
@@ -48,6 +48,7 @@ macro_rules! container_builder {
             ///
             /// Values are clamped to `0.0..=1.0`; non-finite inputs fall back to `1.0`.
             pub fn opacity(mut self, v: f32) -> Self {
+                self.0.style.opacity_group = true;
                 self.0.style.opacity = if v.is_finite() {
                     v.clamp(0.0, 1.0)
                 } else {
@@ -55,6 +56,41 @@ macro_rules! container_builder {
                 };
                 self
             }
+            /// Blurs this view and its children with a Gaussian standard deviation in logical points.
+            /// Defaults to zero. Layout and hit testing do not move; this is content blur,
+            /// not backdrop blur. Filtered subtrees form their own visual stacking context.
+            /// Values above 1024 points are capped to bound intermediate rendering.
+            /// Panics for negative or non-finite values.
+            ///
+            /// ```
+            /// use lemon::{Text, View};
+            /// let view = View::new().blur(4.0).child(Text::new("Soft content"));
+            /// ```
+            pub fn blur(mut self, radius: f32) -> Self {
+                assert!(
+                    radius.is_finite() && radius >= 0.0,
+                    "blur must be finite and nonnegative"
+                );
+                self.0.style.blur = radius.min(1024.0);
+                self
+            }
+            /// Multiplies this subtree's RGB brightness while preserving alpha.
+            /// Defaults to `1`; `0` produces black, values above `1` brighten.
+            /// Applied after blur. Panics for negative or non-finite values.
+            ///
+            /// ```
+            /// use lemon::View;
+            /// let dimmed = View::new().brightness(0.6).opacity(0.8);
+            /// ```
+            pub fn brightness(mut self, factor: f32) -> Self {
+                assert!(
+                    factor.is_finite() && factor >= 0.0,
+                    "brightness must be finite and nonnegative"
+                );
+                self.0.style.brightness = factor;
+                self
+            }
+
             /// Uniform padding on all sides, in logical points.
             pub fn inset(mut self, v: f32) -> Self {
                 self.0.style.padding = Some(Edges::all(v));
@@ -236,9 +272,17 @@ macro_rules! container_builder {
                 self
             }
 
-            /// Two-stop linear gradient fill painted inside this container’s rounded bounds.
-            pub fn gradient(mut self, gradient: LinearGradient) -> Self {
-                self.0.paint.background_gradient = Some(gradient);
+            /// Linear or radial fill painted inside this container's rounded bounds.
+            /// Replaces any solid surface; pass `LinearGradient` or `RadialGradient`.
+            /// Both support multiple color stops through their `.stops(...)` methods.
+            ///
+            /// ```
+            /// use lemon::{Color, RadialGradient, View};
+            /// let view = View::new().gradient(RadialGradient::new((0.5, 0.5), 0.5,
+            ///     Color::rgb8(255, 255, 255), Color::rgb8(30, 80, 180)));
+            /// ```
+            pub fn gradient(mut self, gradient: impl Into<Gradient>) -> Self {
+                self.0.paint.background_gradient = Some(gradient.into());
                 self.0.paint.background = None;
                 self
             }
@@ -497,6 +541,30 @@ macro_rules! container_builder {
                 f: impl Fn(crate::element::events::KeyEvent) + 'static,
             ) -> Self {
                 self.0.handlers.on_key_up = Some(Rc::new(f));
+                self
+            }
+            /// Observes pointer entry/exit for this view, including its descendants.
+            /// Receives `true` on entry and `false` on exit, hide, removal or window leave.
+            /// Does not add a Tab stop. Existing enter/leave callbacks also remain active.
+            ///
+            /// ```
+            /// use lemon::View;
+            /// let view = View::new().on_hover(|hovered| println!("hover: {hovered}"));
+            /// ```
+            pub fn on_hover(mut self, f: impl Fn(bool) + 'static) -> Self {
+                self.0.handlers.on_hover = Some(Rc::new(f));
+                self
+            }
+            /// Observes this view's direct focus, including loss on hide or removal.
+            /// Add `.focusable()` for a plain container; controls already opt in.
+            /// This observes element focus, independently of native window activation.
+            ///
+            /// ```
+            /// use lemon::View;
+            /// let view = View::new().focusable().on_focus(|focused| println!("focus: {focused}"));
+            /// ```
+            pub fn on_focus(mut self, f: impl Fn(bool) + 'static) -> Self {
+                self.0.handlers.on_focus = Some(Rc::new(f));
                 self
             }
             pub fn on_hover_enter(mut self, f: impl Fn() + 'static) -> Self {

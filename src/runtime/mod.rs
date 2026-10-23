@@ -807,12 +807,13 @@ mod tests {
         let trigger = State::new(false);
         let watched = trigger.clone();
         let mut rt = Runtime::new();
+        let expected_gradient = active_gradient.clone();
         rt.mount(move |_cx| {
             let active = watched.get();
             let gradient = if active {
-                active_gradient
+                active_gradient.clone()
             } else {
-                inactive_gradient
+                inactive_gradient.clone()
             };
             let shadow = if active {
                 active_shadow
@@ -840,7 +841,7 @@ mod tests {
             patches.iter().any(|patch| matches!(
                 patch,
                 Patch::UpdatePaint { paint, .. }
-                    if paint.background_gradient == Some(active_gradient)
+                    if paint.background_gradient == Some(expected_gradient.clone().into())
                         && paint.box_shadow == Some(active_shadow)
                         && paint.border_color.top == Some(Color::rgb8(255, 0, 0))
                         && paint.border_color.right == Some(Color::rgb8(80, 80, 80))

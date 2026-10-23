@@ -61,6 +61,8 @@ pub struct WindowConfig {
     /// Only used with [`WindowChrome::Overlay`]; ignored on other platforms.
     /// Coordinates must be finite and nonnegative; invalid direct field values are ignored.
     pub traffic_lights_position: Option<(f32, f32)>,
+    /// Native lifecycle observers; empty by default. Configure using the `on_*` methods.
+    pub events: WindowEvents,
 }
 
 impl Default for WindowConfig {
@@ -72,6 +74,7 @@ impl Default for WindowConfig {
             resizable: true,
             chrome: WindowChrome::System,
             traffic_lights_position: None,
+            events: WindowEvents::default(),
         }
     }
 }
@@ -169,5 +172,117 @@ mod tests {
                 .traffic_lights_position,
             Some((0.0, 0.0))
         );
+    }
+}
+
+/// Window lifecycle callbacks, configured through [`WindowConfig`] builder methods.
+/// Clones share callbacks; equality compares callback identity, not closure contents.
+#[derive(Clone, Default)]
+pub struct WindowEvents {
+    pub(crate) open: Option<std::rc::Rc<dyn Fn()>>,
+    pub(crate) close: Option<std::rc::Rc<dyn Fn()>>,
+    pub(crate) close_requested: Option<std::rc::Rc<dyn Fn() -> bool>>,
+    pub(crate) focus: Option<std::rc::Rc<dyn Fn(bool)>>,
+    pub(crate) resize: Option<std::rc::Rc<dyn Fn(f32, f32)>>,
+    pub(crate) moved: Option<std::rc::Rc<dyn Fn(f32, f32)>>,
+}
+impl std::fmt::Debug for WindowEvents {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("WindowEvents")
+            .field("open", &self.open.is_some())
+            .field("close", &self.close.is_some())
+            .field("close_requested", &self.close_requested.is_some())
+            .field("focus", &self.focus.is_some())
+            .field("resize", &self.resize.is_some())
+            .field("moved", &self.moved.is_some())
+            .finish()
+    }
+}
+impl PartialEq for WindowEvents {
+    fn eq(&self, other: &Self) -> bool {
+        fn same<T: ?Sized>(a: &Option<std::rc::Rc<T>>, b: &Option<std::rc::Rc<T>>) -> bool {
+            match (a, b) {
+                (Some(a), Some(b)) => std::rc::Rc::ptr_eq(a, b),
+                (None, None) => true,
+                _ => false,
+            }
+        }
+        same(&self.open, &other.open)
+            && same(&self.close, &other.close)
+            && same(&self.close_requested, &other.close_requested)
+            && same(&self.focus, &other.focus)
+            && same(&self.resize, &other.resize)
+            && same(&self.moved, &other.moved)
+    }
+}
+impl WindowConfig {
+    /// Called once after the native window and renderer are attached to the host.
+    /// Applies independently to main and `Cx::open_window` windows. No callback by default.
+    ///
+    /// ```no_run
+    /// use lemon::WindowConfig;
+    /// let config = WindowConfig::default().on_open(|| println!("opened"));
+    /// ```
+    pub fn on_open(mut self, callback: impl Fn() + 'static) -> Self {
+        self.events.open = Some(std::rc::Rc::new(callback));
+        self
+    }
+    /// Called once when the host removes the window after an accepted close.
+    /// Runs before native resources are dropped; does not run when close is canceled.
+    /// No callback by default.
+    ///
+    /// ```
+    /// use lemon::WindowConfig;
+    /// let config = WindowConfig::default().on_close(|| println!("closed"));
+    /// ```
+    pub fn on_close(mut self, callback: impl Fn() + 'static) -> Self {
+        self.events.close = Some(std::rc::Rc::new(callback));
+        self
+    }
+    /// Intercepts a user's close request. Return `true` to close or `false` to keep open.
+    /// With no callback, close requests are accepted. Forced OS destruction cannot be vetoed.
+    ///
+    /// ```no_run
+    /// use lemon::{State, WindowConfig};
+    /// let saved = State::new(true);
+    /// let config = WindowConfig::default().on_close_requested(move || saved.get());
+    /// ```
+    pub fn on_close_requested(mut self, callback: impl Fn() -> bool + 'static) -> Self {
+        self.events.close_requested = Some(std::rc::Rc::new(callback));
+        self
+    }
+    /// Observes native window activation (`true`) and deactivation (`false`).
+    /// Independent of which Lemon element has keyboard focus. No callback by default.
+    ///
+    /// ```
+    /// use lemon::WindowConfig;
+    /// let config = WindowConfig::default().on_focus(|active| println!("active: {active}"));
+    /// ```
+    pub fn on_focus(mut self, callback: impl Fn(bool) + 'static) -> Self {
+        self.events.focus = Some(std::rc::Rc::new(callback));
+        self
+    }
+    /// Observes client width/height changes in logical points, including DPI changes.
+    /// No callback by default; initial dimensions are available in this configuration.
+    ///
+    /// ```
+    /// use lemon::WindowConfig;
+    /// let config = WindowConfig::default().on_resize(|width, height| println!("{width} x {height}"));
+    /// ```
+    pub fn on_resize(mut self, callback: impl Fn(f32, f32) + 'static) -> Self {
+        self.events.resize = Some(std::rc::Rc::new(callback));
+        self
+    }
+    /// Observes native outer-window `(x,y)` movement in logical screen coordinates.
+    /// Not reported by platforms/window managers that do not expose window positions.
+    /// No callback by default.
+    ///
+    /// ```
+    /// use lemon::WindowConfig;
+    /// let config = WindowConfig::default().on_move(|x, y| println!("position: {x}, {y}"));
+    /// ```
+    pub fn on_move(mut self, callback: impl Fn(f32, f32) + 'static) -> Self {
+        self.events.moved = Some(std::rc::Rc::new(callback));
+        self
     }
 }

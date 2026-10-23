@@ -18,7 +18,10 @@ pub use crate::element::events::{
     Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey, ScrollAxis, ScrollDelta,
     ScrollOffset,
 };
-pub use crate::element::style::{Align, Color, Distribute, Overflow, Placement, Position};
+pub use crate::element::style::{
+    Align, Color, Distribute, Gradient, GradientStop, LinearGradient, Overflow, Placement,
+    Position, RadialGradient,
+};
 pub use crate::element::types::TextAlignment;
 pub use crate::element::Element;
 pub use crate::platform::run;

@@ -191,12 +191,15 @@ mod tests {
         assert!(el.paint.background.is_none());
         assert_eq!(
             el.paint.background_gradient,
-            Some(LinearGradient::new(
-                (0.0, 0.0),
-                (1.0, 1.0),
-                Color::rgb8(10, 20, 30),
-                Color::rgb8(40, 50, 60),
-            ))
+            Some(
+                LinearGradient::new(
+                    (0.0, 0.0),
+                    (1.0, 1.0),
+                    Color::rgb8(10, 20, 30),
+                    Color::rgb8(40, 50, 60),
+                )
+                .into()
+            )
         );
     }
 

@@ -69,6 +69,14 @@ fn hit_test<'a>(
         if !node.style.interactive {
             return;
         }
+        let isolated = node.style.isolates();
+        let mut inherited_clips = clips.clone();
+        let mut local_deferred = Vec::new();
+        let deferred = if isolated {
+            &mut local_deferred
+        } else {
+            deferred
+        };
         let inside = clips.iter().all(|rect| point_in_rect(point, rect));
         let rect = node.taffy_id.and_then(|id| layout.get(id));
         if inside && node.style.blocks_input && rect.is_some_and(|rect| point_in_rect(point, rect))
@@ -105,6 +113,19 @@ fn hit_test<'a>(
         }
         if clipped {
             clips.pop();
+        }
+        while !local_deferred.is_empty() {
+            local_deferred.sort_by_key(|(z, _)| *z);
+            let (_, child) = local_deferred.remove(0);
+            visit(
+                child,
+                layout,
+                point,
+                &mut inherited_clips,
+                accepts,
+                hit,
+                &mut local_deferred,
+            );
         }
     }
     let node = crate::retained::focus::active_modal(node).unwrap_or(node);
@@ -204,7 +225,8 @@ pub fn hit_test_hover<'a>(
     point: LogicalPoint,
 ) -> Option<&'a RetainedNode> {
     let hit = hit_test(node, layout, point, |node| {
-        node.handlers.on_hover_enter.is_some()
+        node.handlers.on_hover.is_some()
+            || node.handlers.on_hover_enter.is_some()
             || node.handlers.on_hover_leave.is_some()
             || node.style.cursor != crate::element::events::Cursor::Default
     });

@@ -27,6 +27,7 @@ pub struct LayoutRect {
 pub struct LayoutMap {
     rects: HashMap<NodeId, LayoutRect>,
     flow_rects: HashMap<NodeId, LayoutRect>,
+    pub(crate) viewport: Option<Viewport>,
 }
 
 impl LayoutMap {
@@ -159,7 +160,10 @@ pub fn layout_pass(
         .root
         .as_ref()
         .ok_or(RetainedError::UnsupportedElement("empty retained tree"))?;
-    let mut map = LayoutMap::default();
+    let mut map = LayoutMap {
+        viewport: Some(viewport),
+        ..Default::default()
+    };
     collect_layouts(&tree.taffy, root_node, Point::ZERO, &mut map);
     fix_absolute_overlay_bounds(root_node, &mut map);
     map.flow_rects = map.rects.clone();

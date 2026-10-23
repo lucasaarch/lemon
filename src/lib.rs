@@ -95,7 +95,8 @@ pub use element::events::{
     ScrollOffset,
 };
 pub use element::style::{
-    BoxShadow, Color, Distribute, LinearGradient, Overflow, Placement, Position, StyleProps,
+    BoxShadow, Color, Distribute, Gradient, GradientStop, LinearGradient, Overflow, Placement,
+    Position, RadialGradient, StyleProps,
 };
 pub use element::types::TextAlignment;
 pub use layout::{
@@ -106,7 +107,7 @@ pub use layout::{
 pub use reactive::State;
 pub use window::{WindowChrome, WindowConfig};
 
-pub use paint::{paint_pass, PaintStats};
+pub use paint::{paint_pass, PaintStats, Renderer, Scene};
 pub use platform::{
     run, run_with_fonts, run_with_theme, run_with_theme_and_fonts, AppState, WindowState,
 };
@@ -126,10 +127,10 @@ pub use element::decoration::Decorate;
 mod tests {
     use super::*;
     use crate::diff::Patch;
+    use crate::paint::Scene;
     use parley::FontContext;
     use std::thread::sleep;
     use std::time::{Duration, Instant};
-    use vello::Scene;
 
     fn layout_pass(
         tree: &mut RetainedTree,

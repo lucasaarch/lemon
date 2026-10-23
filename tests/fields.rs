@@ -205,7 +205,7 @@ fn clean_fields_paint_only_the_caret_when_focused_unless_explicitly_overridden()
                 let tree = ui.retained().unwrap();
                 let root = tree.root().unwrap();
                 for focused in [None, root.taffy_id] {
-                    let mut scene = vello::Scene::new();
+                    let mut scene = lemon::Scene::new();
                     let stats = paint_pass(tree, ui.layout_map(), &mut scene, 1.0, focused, true);
                     let expected = if focused.is_some() {
                         1 + usize::from(explicit)
@@ -286,7 +286,7 @@ fn selection_highlight_follows_focus_and_editing_without_changing_layout() {
                     let unfocused = paint_pass(
                         tree,
                         ui.layout_map(),
-                        &mut vello::Scene::new(),
+                        &mut lemon::Scene::new(),
                         1.0,
                         None,
                         caret,
@@ -294,7 +294,7 @@ fn selection_highlight_follows_focus_and_editing_without_changing_layout() {
                     let focused = paint_pass(
                         tree,
                         ui.layout_map(),
-                        &mut vello::Scene::new(),
+                        &mut lemon::Scene::new(),
                         1.0,
                         root.taffy_id,
                         caret,

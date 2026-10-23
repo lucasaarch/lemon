@@ -12,6 +12,10 @@ fn app(cx: &Cx) -> Element {
     let progress = animation.progress();
     let value = cx.state(String::new());
     let alternate = cx.state(false);
+    let hovered = cx.state(false);
+    let focused = cx.state(false);
+    let hover = hovered.clone();
+    let focus = focused.clone();
     let color = if alternate.get() {
         theme.colors.surface_hover
     } else {
@@ -30,12 +34,27 @@ fn app(cx: &Cx) -> Element {
                 .height(48.0)
                 .rounding(theme.radius.md)
                 .opacity(0.3 + progress * 0.7)
-                .surface(color)
+                .gradient(RadialGradient::new(
+                    (0.25, 0.25),
+                    1.0,
+                    color,
+                    theme.colors.surface
+                ))
+                .blur((1.0 - progress) * 3.0)
+                .brightness(if hovered.get() { 1.3 } else { 1.0 })
+                .on_hover(move |inside| hover.set(inside))
                 .transition(transition.properties([TransitionProperty::Surface])),
             TextField::new(cx, value)
                 .placeholder("Click to focus, then click outside")
                 .width(280.0)
-                .decorate(|view| view.transition(transition)),
+                .decorate(|view| view
+                    .transition(transition)
+                    .on_focus(move |active| focus.set(active))),
+            Text::new(if focused.get() {
+                "Field focused"
+            } else {
+                "Field unfocused"
+            }),
             Button::new(cx, "Play")
                 .action(move || {
                     animation.reset();
@@ -54,7 +73,10 @@ fn main() {
     run_with_theme(
         WindowConfig::default()
             .title("Lemon — animation")
-            .size(360.0, 300.0),
+            .size(360.0, 320.0)
+            .on_open(|| println!("Window opened"))
+            .on_focus(|active| println!("Window focused: {active}"))
+            .on_close(|| println!("Window closed")),
         themes,
         app,
     );

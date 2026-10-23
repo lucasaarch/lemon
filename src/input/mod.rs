@@ -1,6 +1,7 @@
 //! Backend-independent focus, pointer capture, keyboard, hover and scrolling.
 use crate::retained::TextCursorHandler;
 pub mod hit_test;
+mod observers;
 use crate::{
     retained::focus::FocusManager, retained::RetainedError, ui::UiState, Cursor, KeyEvent,
     KeyState, LemonKey, NamedKey,
@@ -21,6 +22,8 @@ pub enum InputEvent {
     Click(LogicalPoint),
     /// Updates hover handlers and the requested cursor.
     Hover(LogicalPoint),
+    /// Pointer left the host window; releases hover without canceling drag capture.
+    PointerLeave,
     /// ScrollView delta in logical points at `point` (positive moves content upward).
     Scroll {
         /// Position of the pointer.
@@ -41,8 +44,12 @@ pub struct InputOutcome {
     pub cursor: Cursor,
 }
 
+type FocusObserver = (taffy::NodeId, Option<std::rc::Rc<dyn Fn(bool)>>);
+
 pub(crate) struct InputState {
     focus_manager: FocusManager,
+    observed_focus: Option<FocusObserver>,
+    hovered_nodes: Vec<(taffy::NodeId, crate::retained::EventHandlers)>,
     pub(crate) pointer_focus: bool,
     hovered_node_id: Option<taffy::NodeId>,
     mouse_capture_node: Option<taffy::NodeId>,
@@ -59,6 +66,8 @@ impl Default for InputState {
     fn default() -> Self {
         Self {
             focus_manager: FocusManager::new(),
+            observed_focus: None,
+            hovered_nodes: Vec::new(),
             pointer_focus: false,
             hovered_node_id: None,
             mouse_capture_node: None,
@@ -106,6 +115,8 @@ impl UiState {
             self.input.hovered_node_id = None;
             self.input.cursor = Cursor::Default;
         }
+        self.notify_focus();
+        self.reconcile_hover_observers();
     }
 
     /// Returns the focused node, if any; focus is managed by input dispatch.
@@ -167,9 +178,14 @@ impl UiState {
                 self.event_pass_hover(point);
                 false
             }
+            InputEvent::PointerLeave => {
+                self.clear_hover();
+                false
+            }
             InputEvent::Scroll { point, delta } => self.event_pass_scroll(point, delta),
             InputEvent::Key(event) => self.event_pass_keyboard(event),
         };
+        self.notify_focus();
         self.apply_updates()?;
         Ok(InputOutcome {
             handled,
@@ -575,64 +591,6 @@ impl UiState {
         self.input.last_caret_activity = Instant::now();
         self.paint_dirty = true;
         true
-    }
-
-    fn event_pass_hover(&mut self, point: LogicalPoint) {
-        let new_id = self
-            .retained
-            .as_ref()
-            .and_then(|tree| tree.root.as_ref())
-            .and_then(|root| hit_test_hover(root, &self.layout_map, point))
-            .and_then(|node| node.taffy_id);
-
-        if new_id == self.input.hovered_node_id {
-            self.input.cursor = new_id
-                .and_then(|id| {
-                    self.retained
-                        .as_ref()?
-                        .root
-                        .as_ref()
-                        .and_then(|root| find_interactive_node_by_taffy_id(root, id))
-                })
-                .map(|node| node.style.cursor.clone())
-                .unwrap_or(Cursor::Default);
-            return;
-        }
-
-        let old_leave = self.input.hovered_node_id.and_then(|old_id| {
-            self.retained
-                .as_ref()
-                .and_then(|tree| tree.root.as_ref())
-                .and_then(|root| find_interactive_node_by_taffy_id(root, old_id))
-                .and_then(|node| node.handlers.on_hover_leave.clone())
-        });
-
-        let (new_enter, new_cursor) = if let Some(id) = new_id {
-            self.retained
-                .as_ref()
-                .and_then(|tree| tree.root.as_ref())
-                .and_then(|root| find_interactive_node_by_taffy_id(root, id))
-                .map(|node| {
-                    (
-                        node.handlers.on_hover_enter.clone(),
-                        node.style.cursor.clone(),
-                    )
-                })
-                .unwrap_or((None, Cursor::Default))
-        } else {
-            (None, Cursor::Default)
-        };
-
-        if let Some(handler) = old_leave {
-            handler();
-        }
-        if let Some(handler) = new_enter {
-            handler();
-        }
-        self.input.cursor = new_cursor;
-
-        self.input.hovered_node_id = new_id;
-        self.paint_dirty = true;
     }
 
     /// Route a scroll event through hit-test and dispatch `on_scroll` (logical coordinates).

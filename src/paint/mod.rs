@@ -5,7 +5,9 @@ use vello::peniko::{
     color::AlphaColor, BlendMode, Blob, Color as PenikoColor, Fill, Gradient, ImageAlphaType,
     ImageBrush, ImageData as PenikoImageData, ImageFormat,
 };
-use vello::{Glyph, Scene};
+use vello::{Glyph, Scene as RawScene};
+mod scene;
+pub use scene::{Renderer, Scene};
 
 use crate::element::style::{Color, CornerRadii, Edges, Overflow};
 use crate::layout::{caret_geometry_in_layout, measure_single_line_width, LayoutMap, LayoutRect};
@@ -22,6 +24,9 @@ fn clip_everything() -> Rect {
 struct PaintContext<'a> {
     /// Global scale applied to all logical coordinates (HiDPI).
     base: Affine,
+    filters: &'a std::cell::RefCell<Vec<scene::FilterLayer>>,
+    skip_filter: Option<NodeId>,
+    viewport: Rect,
     visuals: Option<&'a std::collections::HashMap<NodeId, crate::transition::Visual>>,
 }
 
@@ -46,6 +51,7 @@ pub struct PaintStats {
 
 /// Walks the retained tree and records Vello draw commands into `scene`.
 ///
+/// Use [`Renderer`] to render the resulting [`Scene`], including its filter layers.
 /// Coordinates in `layout` are logical points; `scale_factor` scales the root transform for HiDPI
 /// (pass the window’s scale factor, often `1.0` in tests).
 pub fn paint_pass(
@@ -82,7 +88,24 @@ pub(crate) fn paint_pass_with_visuals(
     } else {
         Affine::scale(f64::from(scale_factor))
     };
-    let ctx = PaintContext { base, visuals };
+    scene.identity = std::sync::Arc::new(());
+    let viewport = layout.viewport.unwrap_or(crate::Viewport {
+        width: 1.0,
+        height: 1.0,
+    });
+    let ctx = PaintContext {
+        base,
+        visuals,
+        filters: &scene.layers,
+        skip_filter: None,
+        viewport: Rect::new(
+            0.0,
+            0.0,
+            f64::from(viewport.width * scale_factor),
+            f64::from(viewport.height * scale_factor),
+        ),
+    };
+    let scene = &mut scene.raw;
 
     scene.push_layer(
         Fill::NonZero,
@@ -133,7 +156,7 @@ pub(crate) fn paint_pass_with_visuals(
 fn paint_node<'a>(
     node: &'a RetainedNode,
     layout: &LayoutMap,
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     scale_factor: f32,
     focused: Option<NodeId>,
@@ -179,6 +202,60 @@ fn paint_node<'a>(
         return;
     };
 
+    if node.style.has_filter() && ctx.skip_filter != Some(taffy_id) {
+        let mut content = RawScene::new();
+        let mut deferred = Vec::new();
+        let inner = PaintContext {
+            skip_filter: Some(taffy_id),
+            ..ctx
+        };
+        paint_node(
+            node,
+            layout,
+            &mut content,
+            inner,
+            scale_factor,
+            focused,
+            caret_visible,
+            stats,
+            &mut deferred,
+        );
+        while !deferred.is_empty() {
+            deferred.sort_by_key(|(z, _)| *z);
+            let (_, child) = deferred.remove(0);
+            paint_node(
+                child,
+                layout,
+                &mut content,
+                inner,
+                scale_factor,
+                focused,
+                caret_visible,
+                stats,
+                &mut deferred,
+            );
+        }
+        let blur = if node.style.blur.is_finite() {
+            node.style.blur.clamp(0.0, 1024.0)
+        } else {
+            0.0
+        };
+        let brightness = if node.style.brightness.is_finite() && node.style.brightness >= 0.0 {
+            node.style.brightness
+        } else {
+            1.0
+        };
+        scene::filter_layer(
+            ctx.filters,
+            scene,
+            content,
+            ctx.viewport,
+            f64::from(blur) * f64::from(scale_factor),
+            brightness,
+        );
+        return;
+    }
+
     let opacity = resolved_opacity(
         ctx.visual(node)
             .map_or(node.style.opacity, |visual| visual.opacity),
@@ -195,6 +272,12 @@ fn paint_node<'a>(
         );
     }
 
+    let mut local_deferred = Vec::new();
+    let deferred = if node.style.isolates() {
+        &mut local_deferred
+    } else {
+        global_deferred
+    };
     paint_container(node, rect, scene, ctx, stats);
     paint_text(node, rect, scene, ctx, stats);
     paint_image(node, rect, scene, ctx);
@@ -225,7 +308,7 @@ fn paint_node<'a>(
         stats,
         node.scroll_viewport
             .and_then(|_| crate::layout::scroll_viewport_rect(node, layout)),
-        global_deferred,
+        deferred,
     );
 
     if clip_children {
@@ -244,6 +327,21 @@ fn paint_node<'a>(
     );
     paint_scrollbar(node, layout, scene, ctx, stats);
 
+    while !local_deferred.is_empty() {
+        local_deferred.sort_by_key(|(z, _)| *z);
+        let (_, child) = local_deferred.remove(0);
+        paint_node(
+            child,
+            layout,
+            scene,
+            ctx,
+            scale_factor,
+            focused,
+            caret_visible,
+            stats,
+            &mut local_deferred,
+        );
+    }
     if use_opacity_layer {
         scene.pop_layer();
     }
@@ -253,7 +351,7 @@ fn paint_node<'a>(
 fn paint_children<'a>(
     children: &'a [RetainedNode],
     layout: &LayoutMap,
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     scale_factor: f32,
     focused: Option<NodeId>,
@@ -298,7 +396,7 @@ fn paint_children<'a>(
 fn paint_container(
     node: &RetainedNode,
     rect: &LayoutRect,
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
@@ -317,7 +415,7 @@ fn paint_container(
         paint_box_shadow(scene, ctx, rect, &paint.radius, shadow, stats);
     }
 
-    if let Some(gradient) = paint.background_gradient {
+    if let Some(gradient) = &paint.background_gradient {
         fill_gradient_rounded_rect(scene, ctx, rect, &shape, gradient, stats);
     } else if let Some(background) = paint.background {
         fill_rounded_rect(scene, ctx, &shape, background, stats);
@@ -361,7 +459,7 @@ fn paint_container(
 }
 
 fn paint_box_shadow(
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     rect: &LayoutRect,
     radii: &CornerRadii,
@@ -390,7 +488,7 @@ fn paint_box_shadow(
 
 /// Fills rectangular strips for each side that has a positive border width.
 fn paint_per_side_borders(
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     rect: &LayoutRect,
     radii: &CornerRadii,
@@ -445,7 +543,7 @@ fn paint_per_side_borders(
 fn paint_icon(
     node: &RetainedNode,
     rect: &LayoutRect,
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
@@ -486,7 +584,7 @@ fn paint_icon(
 /// then centered within the rectangle. No fill stat is recorded; image draws do not count as
 /// fills. Returns early if the node is not a container kind, has no image, or has zero-size
 /// dimensions.
-fn paint_image(node: &RetainedNode, rect: &LayoutRect, scene: &mut Scene, ctx: PaintContext) {
+fn paint_image(node: &RetainedNode, rect: &LayoutRect, scene: &mut RawScene, ctx: PaintContext) {
     let is_container = matches!(
         node.kind,
         RetainedKind::View | RetainedKind::Row | RetainedKind::Column
@@ -534,7 +632,7 @@ fn paint_image(node: &RetainedNode, rect: &LayoutRect, scene: &mut Scene, ctx: P
 fn paint_text(
     node: &RetainedNode,
     rect: &LayoutRect,
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
@@ -568,7 +666,7 @@ fn inset_rect(outer: &LayoutRect, padding: &Edges<f32>) -> LayoutRect {
 }
 
 fn paint_parley_layout(
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     layout: &ParleyLayout,
     origin_x: f32,
@@ -614,7 +712,7 @@ fn paint_parley_layout(
 }
 
 fn fill_rounded_rect(
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     shape: &RoundedRect,
     color: Color,
@@ -625,11 +723,11 @@ fn fill_rounded_rect(
 }
 
 fn fill_gradient_rounded_rect(
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     rect: &LayoutRect,
     shape: &RoundedRect,
-    gradient: crate::element::style::LinearGradient,
+    gradient: &crate::element::style::Gradient,
     stats: &mut PaintStats,
 ) {
     let brush = to_peniko_gradient(rect, gradient);
@@ -638,7 +736,7 @@ fn fill_gradient_rounded_rect(
 }
 
 fn stroke_rounded_rect(
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     shape: &RoundedRect,
     color: Color,
@@ -674,22 +772,38 @@ fn to_peniko_color(color: Color) -> PenikoColor {
     AlphaColor::new([color.r, color.g, color.b, color.a])
 }
 
-fn to_peniko_gradient(
-    rect: &LayoutRect,
-    gradient: crate::element::style::LinearGradient,
-) -> Gradient {
-    let start = (
-        rect.x + rect.width * gradient.start.0,
-        rect.y + rect.height * gradient.start.1,
-    );
-    let end = (
-        rect.x + rect.width * gradient.end.0,
-        rect.y + rect.height * gradient.end.1,
-    );
-    Gradient::new_linear(start, end).with_stops([
-        to_peniko_color(gradient.start_color),
-        to_peniko_color(gradient.end_color),
-    ])
+fn to_peniko_gradient(rect: &LayoutRect, gradient: &crate::element::style::Gradient) -> Gradient {
+    use crate::element::style::Gradient as FillGradient;
+    let (brush, stops) = match gradient {
+        FillGradient::Linear(g) => (
+            Gradient::new_linear(
+                (
+                    rect.x + rect.width * g.start.0,
+                    rect.y + rect.height * g.start.1,
+                ),
+                (
+                    rect.x + rect.width * g.end.0,
+                    rect.y + rect.height * g.end.1,
+                ),
+            ),
+            &g.stops,
+        ),
+        FillGradient::Radial(g) => (
+            Gradient::new_radial(
+                (
+                    rect.x + rect.width * g.center.0,
+                    rect.y + rect.height * g.center.1,
+                ),
+                rect.width.min(rect.height) * g.radius,
+            ),
+            &g.stops,
+        ),
+    };
+    let stops: Vec<vello::peniko::ColorStop> = stops
+        .iter()
+        .map(|stop| (stop.position, to_peniko_color(stop.color)).into())
+        .collect();
+    brush.with_stops(stops.as_slice())
 }
 
 fn uniform_border_color(colors: &Edges<Option<Color>>) -> Option<Color> {
@@ -726,7 +840,7 @@ fn paint_focus_ring(
     rect: &LayoutRect,
     taffy_id: NodeId,
     focused: Option<NodeId>,
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
@@ -813,7 +927,7 @@ fn paint_text_input_selection(
     node: &RetainedNode,
     layout: &LayoutMap,
     focused: Option<NodeId>,
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
@@ -834,7 +948,7 @@ fn paint_text_input_caret(
     _scale_factor: f32,
     focused: Option<NodeId>,
     caret_visible: bool,
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
@@ -961,7 +1075,7 @@ const WIDGET_SCROLLBAR_THUMB_MIN: f32 = 20.0;
 fn paint_scrollbar(
     node: &RetainedNode,
     layout: &LayoutMap,
-    scene: &mut Scene,
+    scene: &mut RawScene,
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {

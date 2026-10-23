@@ -415,7 +415,7 @@ mod tests {
             0.25
         );
         // The presentation ring still paints during blur even though focus is gone.
-        let mut scene = vello::Scene::new();
+        let mut scene = crate::paint::Scene::new();
         let stats = crate::paint::paint_pass_with_visuals(
             ui.retained().unwrap(),
             ui.layout_map(),

@@ -1,8 +1,8 @@
 //! Headless processing of a window's UI, independent of native presentation.
 
+use crate::paint::Scene;
 use parley::FontContext;
 use taffy::NodeId;
-use vello::Scene;
 
 use crate::element::Element;
 use crate::retained::RetainedError;
@@ -85,7 +85,8 @@ impl UiState {
     pub fn layout_map(&self) -> &LayoutMap {
         &self.layout_map
     }
-    /// Returns the scene most recently built by `update`.
+    /// Returns the scene most recently built by `update`; render with [`crate::Renderer`]
+    /// so subtree blur and brightness layers are processed.
     pub fn scene(&self) -> &Scene {
         &self.scene
     }
@@ -154,12 +155,14 @@ impl UiState {
     /// Dirty flags accumulate across batches. Earlier mutations remain applied
     /// if a later patch fails; errors are propagated to the host.
     pub fn apply_updates(&mut self) -> Result<(), RetainedError> {
-        self.runtime.flush_effects();
-        let patches = self.runtime.take_patches();
-        if patches.is_empty() {
-            return Ok(());
+        loop {
+            self.runtime.flush_effects();
+            let patches = self.runtime.take_patches();
+            if patches.is_empty() {
+                return Ok(());
+            }
+            self.apply_patches(patches)?;
         }
-        self.apply_patches(patches)
     }
 
     /// Applies an ordered patch batch, accumulating geometry and paint invalidation.

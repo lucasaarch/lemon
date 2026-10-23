@@ -117,6 +117,12 @@ pub(crate) fn active_modal(root: &RetainedNode) -> Option<&RetainedNode> {
         if !node.style.interactive {
             return;
         }
+        let mut local = Vec::new();
+        let deferred = if node.style.isolates() {
+            &mut local
+        } else {
+            deferred
+        };
         if node.style.modal {
             *best = Some(node);
         }
@@ -126,6 +132,11 @@ pub(crate) fn active_modal(root: &RetainedNode) -> Option<&RetainedNode> {
             } else {
                 visit(child, best, deferred);
             }
+        }
+        while !local.is_empty() {
+            local.sort_by_key(|node| node.style.z_index);
+            let child = local.remove(0);
+            visit(child, best, &mut local);
         }
     }
     let mut best = None;

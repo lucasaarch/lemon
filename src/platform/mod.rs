@@ -8,10 +8,11 @@ use std::num::NonZeroUsize;
 use std::sync::Arc;
 use std::time::Instant;
 
+use crate::paint::Renderer;
 use parley::FontContext;
 use vello::peniko::Color;
 use vello::util::{RenderContext, RenderSurface};
-use vello::{AaConfig, Renderer, RendererOptions};
+use vello::{AaConfig, RendererOptions};
 use winit::application::ApplicationHandler;
 use winit::dpi::LogicalSize;
 use winit::event::{
@@ -54,6 +55,9 @@ pub struct WindowState {
     host: HostContext,
     last_cursor: Option<(f32, f32)>,
     traffic_lights_position: Option<(f32, f32)>,
+    events: crate::window::WindowEvents,
+    opened: bool,
+    last_window_focus: Option<bool>,
 }
 
 impl WindowState {
@@ -68,6 +72,9 @@ impl WindowState {
             root_component: Some(root_component),
             last_cursor: None,
             traffic_lights_position: None,
+            events: crate::window::WindowEvents::default(),
+            opened: false,
+            last_window_focus: None,
         }
     }
 
@@ -81,6 +88,7 @@ impl WindowState {
         window: Arc<Window>,
         config: &WindowConfig,
     ) {
+        self.events = config.events.clone();
         self.traffic_lights_position = if config.chrome == crate::WindowChrome::Overlay {
             config.traffic_lights_position
         } else {
@@ -115,6 +123,30 @@ impl WindowState {
         self.surface = Some(surface);
         self.renderer = Some(renderer);
         self.ui.invalidate_layout();
+    }
+
+    fn notify_open(&mut self) {
+        if !std::mem::replace(&mut self.opened, true) {
+            let _scope = self.host.enter();
+            if let Some(callback) = &self.events.open {
+                callback();
+            }
+        }
+    }
+    fn notify_window_focus(&mut self, focused: bool) {
+        let _scope = self.host.enter();
+        if self.last_window_focus.replace(focused) != Some(focused) {
+            if let Some(callback) = &self.events.focus {
+                callback(focused);
+            }
+        }
+    }
+    fn allows_close(&self) -> bool {
+        let _scope = self.host.enter();
+        self.events
+            .close_requested
+            .as_ref()
+            .is_none_or(|callback| callback())
     }
 
     fn update_native_chrome(&self) {
@@ -455,7 +487,12 @@ impl AppState {
     }
 
     fn remove_window(&mut self, window_id: WindowId) -> bool {
-        self.windows.remove(&window_id);
+        if let Some(window) = self.windows.remove(&window_id) {
+            let _scope = window.host.enter();
+            if let Some(callback) = &window.events.close {
+                callback();
+            }
+        }
         self.windows.is_empty()
     }
 
@@ -484,6 +521,7 @@ impl AppState {
         window_state.attach_window(&mut self.render_cx, window, &req.config);
         window_state.request_redraw();
         self.windows.insert(window_id, window_state);
+        self.windows.get_mut(&window_id).unwrap().notify_open();
     }
 }
 
@@ -513,6 +551,7 @@ impl ApplicationHandler for LemonApplication {
         window_state.attach_window(&mut state.render_cx, window, &config);
         window_state.request_redraw();
         state.windows.insert(window_id, window_state);
+        state.windows.get_mut(&window_id).unwrap().notify_open();
     }
 
     fn window_event(
@@ -530,10 +569,52 @@ impl ApplicationHandler for LemonApplication {
             .get(&window_id)
             .map(|window| window.host.enter());
         match event {
-            WindowEvent::CloseRequested if state.remove_window(window_id) => {
-                event_loop.exit();
+            WindowEvent::CloseRequested => {
+                if state
+                    .windows
+                    .get(&window_id)
+                    .is_some_and(|window| window.allows_close())
+                    && state.remove_window(window_id)
+                {
+                    event_loop.exit();
+                }
             }
-            WindowEvent::CloseRequested => {}
+            WindowEvent::Destroyed => {
+                if state.remove_window(window_id) {
+                    event_loop.exit();
+                }
+            }
+            WindowEvent::Focused(focused) => {
+                if let Some(window) = state.windows.get_mut(&window_id) {
+                    window.notify_window_focus(focused);
+                }
+            }
+            WindowEvent::CursorLeft { .. } => {
+                if let Some(window) = state.windows.get_mut(&window_id) {
+                    window.dispatch_input(crate::input::InputEvent::PointerLeave);
+                }
+            }
+            WindowEvent::Moved(position) => {
+                if let Some(window) = state.windows.get(&window_id) {
+                    if let (Some(native), Some(callback)) = (&window.window, &window.events.moved) {
+                        let position: winit::dpi::LogicalPosition<f32> =
+                            position.to_logical(native.scale_factor());
+                        callback(position.x, position.y);
+                    }
+                }
+            }
+            WindowEvent::ScaleFactorChanged { .. } => {
+                if let Some(window) = state.windows.get_mut(&window_id) {
+                    window.ui.invalidate_layout();
+                    window.request_redraw();
+                    if let (Some(native), Some(callback)) = (&window.window, &window.events.resize)
+                    {
+                        let size: LogicalSize<f32> =
+                            native.inner_size().to_logical(native.scale_factor());
+                        callback(size.width, size.height);
+                    }
+                }
+            }
             WindowEvent::ThemeChanged(appearance) => {
                 if state.windows.contains_key(&window_id) {
                     state.apply_system_theme(Some(appearance));
@@ -544,6 +625,12 @@ impl ApplicationHandler for LemonApplication {
                     return;
                 };
                 window_state.resize_surface(&mut state.render_cx, size.width, size.height);
+                if let (Some(native), Some(callback)) =
+                    (&window_state.window, &window_state.events.resize)
+                {
+                    let logical: LogicalSize<f32> = size.to_logical(native.scale_factor());
+                    callback(logical.width, logical.height);
+                }
                 window_state.request_redraw();
             }
             WindowEvent::ModifiersChanged(modifiers) => {
@@ -655,6 +742,11 @@ impl ApplicationHandler for LemonApplication {
         if let Some(state) = self.state.as_mut() {
             let animation_redraw = state.tick_animations();
             for window_state in state.windows.values_mut() {
+                let _scope = window_state.activate_theme();
+                // Window observers can update shared reactive state without an input event.
+                if let Err(error) = window_state.ui.apply_updates() {
+                    eprintln!("UI update: {error:?}");
+                }
                 window_state.ui.tick_caret_blink();
                 if window_state.ui.focused_text_input()
                     || window_state.needs_redraw()
@@ -892,6 +984,49 @@ mod tests {
                 || (cfg!(target_os = "macos") && chrome == WindowChrome::Overlay);
             assert_eq!(attributes.decorations, decorated);
         }
+    }
+
+    #[test]
+    fn window_observers_are_per_window_deduplicated_and_close_can_be_vetoed() {
+        use std::{
+            cell::{Cell, RefCell},
+            rc::Rc,
+        };
+        let log = Rc::new(RefCell::new(Vec::new()));
+        let allow = Rc::new(Cell::new(false));
+        let opened = log.clone();
+        let focused = log.clone();
+        let closed = log.clone();
+        let accepted = allow.clone();
+        let config = WindowConfig::default()
+            .on_open(move || opened.borrow_mut().push("open"))
+            .on_focus(move |value| {
+                focused
+                    .borrow_mut()
+                    .push(if value { "focus" } else { "blur" })
+            })
+            .on_close_requested(move || accepted.get())
+            .on_close(move || closed.borrow_mut().push("close"));
+        assert_eq!(config, config.clone());
+        assert_ne!(config, WindowConfig::default());
+        let mut app = AppState::new(config.clone(), |_| Text::new("hi").into_element());
+        let mut window = app.make_window_state();
+        // attach_window copies these observers for both primary and requested windows.
+        window.events = config.events;
+        window.notify_open();
+        window.notify_open();
+        window.notify_window_focus(true);
+        window.notify_window_focus(true);
+        window.notify_window_focus(false);
+        assert!(!window.allows_close());
+        assert_eq!(*log.borrow(), vec!["open", "focus", "blur"]);
+        allow.set(true);
+        assert!(window.allows_close());
+        let id = WindowId::dummy();
+        app.windows.insert(id, window);
+        assert!(app.remove_window(id));
+        assert!(app.remove_window(id));
+        assert_eq!(*log.borrow(), vec!["open", "focus", "blur", "close"]);
     }
 
     #[test]

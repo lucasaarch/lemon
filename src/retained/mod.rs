@@ -83,6 +83,10 @@ pub struct EventHandlers {
     pub on_key_up: Option<Rc<dyn Fn(crate::element::events::KeyEvent)>>,
     pub on_hover_enter: Option<Rc<dyn Fn()>>,
     pub on_hover_leave: Option<Rc<dyn Fn()>>,
+    /// Hover changes for this view and its descendants; `true` on entry, `false` on exit.
+    pub on_hover: Option<Rc<dyn Fn(bool)>>,
+    /// Direct keyboard focus changes; `true` on focus, `false` on blur or removal.
+    pub on_focus: Option<Rc<dyn Fn(bool)>>,
     /// Wheel delta on both axes in logical points; set via [`.on_scroll`](crate::element::builders::ColumnView::on_scroll).
     pub on_scroll: Option<Rc<dyn Fn(crate::ScrollDelta)>>,
     /// Called when a click is dispatched outside this retained node's bounds.
@@ -118,6 +122,8 @@ impl PartialEq for EventHandlers {
             && same(&self.on_key_up, &other.on_key_up)
             && same(&self.on_hover_enter, &other.on_hover_enter)
             && same(&self.on_hover_leave, &other.on_hover_leave)
+            && same(&self.on_hover, &other.on_hover)
+            && same(&self.on_focus, &other.on_focus)
             && same(&self.on_scroll, &other.on_scroll)
             && same(&self.on_escape, &other.on_escape)
             && same(&self.on_click_outside, &other.on_click_outside)
@@ -133,6 +139,8 @@ impl PartialEq for EventHandlers {
 impl std::fmt::Debug for EventHandlers {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("EventHandlers")
+            .field("on_hover", &self.on_hover.as_ref().map(|_| "callback"))
+            .field("on_focus", &self.on_focus.as_ref().map(|_| "callback"))
             .field(
                 "on_escape",
                 &self.on_escape.as_ref().map(|_| "Rc<dyn Fn()>"),
