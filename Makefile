@@ -3,7 +3,7 @@
 
 CARGO := cargo
 
-.PHONY: help check ci fmt fmt-check clippy test build build-examples doc doc-open clean
+.PHONY: help check ci fmt fmt-check clippy test test-scripts build build-examples doc doc-open clean
 
 .DEFAULT_GOAL := help
 
@@ -11,7 +11,7 @@ help: ## Show available targets
 	@printf "Lemon — useful commands:\n\n"
 	@grep -E '^[a-zA-Z0-9_.-]+:.*##' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
-check: fmt-check clippy test build-examples ## CI gates: fmt, clippy, test, examples
+check: fmt-check clippy test test-scripts build-examples ## CI gates: fmt, clippy, test, examples
 
 ci: check ## Alias for check
 
@@ -26,6 +26,9 @@ clippy: ## Lint with warnings denied
 
 test: ## Run all tests (lib, widget, doctests)
 	$(CARGO) test
+
+test-scripts: ## Test maintenance scripts without network access
+	python3 -m unittest discover -s scripts -p 'test_*.py'
 
 build: ## Build library and binaries
 	$(CARGO) build

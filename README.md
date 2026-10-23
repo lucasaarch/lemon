@@ -542,3 +542,16 @@ control selection and disclosure from your application. `FileTreeStyle` controls
 row height, indentation, icon size and guide/hover/selection colors. Nodes can
 supply an explicit `.icon(...)` and `.color(...)`. Wrap the tree in `Scroll` for a
 bounded viewport. Run `cargo run --example file_tree` for a compact explorer.
+
+To refresh the bundled catalog from the latest stable Lucide release:
+
+```bash
+python3 scripts/update_lucide.py
+```
+
+The updater queries GitHub's latest release, downloads that release's source,
+converts its SVGs to Lemon vectors, copies the upstream license and formats the
+Rust catalog with `rustfmt`. The generated header records the release version and
+source URL. Python 3, `rustfmt` and network access are required; no Python packages
+or manual checkout are needed. Download, conversion or formatting failures leave
+the existing catalog intact. Offline updater tests are included in `make check`.
