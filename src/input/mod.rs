@@ -43,6 +43,7 @@ pub struct InputOutcome {
 
 pub(crate) struct InputState {
     focus_manager: FocusManager,
+    pub(crate) pointer_focus: bool,
     hovered_node_id: Option<taffy::NodeId>,
     mouse_capture_node: Option<taffy::NodeId>,
     mouse_button_down: bool,
@@ -58,6 +59,7 @@ impl Default for InputState {
     fn default() -> Self {
         Self {
             focus_manager: FocusManager::new(),
+            pointer_focus: false,
             hovered_node_id: None,
             mouse_capture_node: None,
             mouse_button_down: false,
@@ -134,6 +136,13 @@ impl UiState {
         self.apply_updates()?;
         if self.layout_dirty {
             self.layout(viewport)?;
+        }
+        match &event {
+            InputEvent::PointerDown(_) | InputEvent::Click(_) => self.input.pointer_focus = true,
+            InputEvent::Key(event) if event.state == KeyState::Pressed => {
+                self.input.pointer_focus = false
+            }
+            _ => {}
         }
         let handled = match event {
             InputEvent::Click(point) => self.event_pass_click(point),

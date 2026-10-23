@@ -269,6 +269,19 @@ impl UiState {
         if self.viewport != Some(viewport) {
             self.invalidate_layout();
         }
+        // Opted-out controls keep keyboard focus without drawing an outline after clicks.
+        // Editor focus is unaffected, so caret/selection still use the focused node.
+        let focused = focused.filter(|id| {
+            !self.input.pointer_focus
+                || self
+                    .retained
+                    .as_ref()
+                    .and_then(|tree| tree.root.as_ref())
+                    .and_then(|root| crate::input::hit_test::find_node_by_taffy_id(root, *id))
+                    .is_none_or(|node| {
+                        node.text_input.is_some() || node.style.focus_ring_on_pointer
+                    })
+        });
         let paint_context = (scale, focused, caret_visible);
         if self.last_paint != Some(paint_context) {
             self.invalidate_paint();

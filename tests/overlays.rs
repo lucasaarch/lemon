@@ -211,6 +211,27 @@ fn toast_queue_updates_after_mount_expires_and_belongs_to_its_host() {
     toaster.show("One");
     toaster.show("Two");
     update(&mut ui);
+    fn text_rect(ui: &UiState, content: &str) -> lemon::layout::LayoutRect {
+        fn find<'a>(node: &'a RetainedNode, content: &str) -> Option<&'a RetainedNode> {
+            if node
+                .text
+                .as_ref()
+                .is_some_and(|text| text.content == content)
+            {
+                return Some(node);
+            }
+            node.children.iter().find_map(|child| find(child, content))
+        }
+        let node = find(ui.retained().unwrap().root().unwrap(), content).unwrap();
+        *ui.layout_map().get(node.taffy_id.unwrap()).unwrap()
+    }
+    let one = text_rect(&ui, "One");
+    let two = text_rect(&ui, "Two");
+    assert!(
+        one.y + one.height < two.y,
+        "toasts must stack without overlapping"
+    );
+
     assert_eq!(collect_focusable(ui.retained().unwrap()).len(), 2);
     key(&mut ui, NamedKey::Tab);
     key(&mut ui, NamedKey::Space);

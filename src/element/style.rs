@@ -257,6 +257,10 @@ pub struct StyleProps {
     /// Cross-axis alignment when this node is a flex child (e.g. avoid stretch in a column).
     pub align_self: Option<Align>,
     pub focusable: bool,
+    /// Whether pointer focus draws a ring on non-editor controls (default: true).
+    /// False preserves keyboard focus chrome while hiding the outline after clicks.
+    /// Text editors keep pointer focus chrome and caret/selection behavior.
+    pub focus_ring_on_pointer: bool,
     pub cursor: crate::element::events::Cursor,
     /// Positioning mode; defaults to normal-flow [`Position::Relative`].
     pub position: Position,
@@ -288,6 +292,7 @@ impl Default for StyleProps {
             z_index: 0,
             align_self: None,
             focusable: false,
+            focus_ring_on_pointer: true,
             cursor: crate::element::events::Cursor::default(),
             position: Position::Relative,
         }
