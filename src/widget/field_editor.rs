@@ -120,7 +120,7 @@ impl FieldEditor {
         self.selection_anchor = None;
     }
 
-    fn selection_range(&self) -> Option<(usize, usize)> {
+    pub fn selection_range(&self) -> Option<(usize, usize)> {
         self.selection_anchor.map(|anchor| {
             if anchor <= self.cursor {
                 (anchor, self.cursor)

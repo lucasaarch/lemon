@@ -2,6 +2,7 @@
 //! Compose plain/secure fields, select, slider, and scroll widgets in a small form.
 //! The optional password is cleared on submit and never added to the history.
 //! Type a name, choose a role, and submit settings to the scrollable history.
+//! Use Ctrl/Cmd+A in the name field to see the translucent selection highlight.
 
 use lemon::prelude::*;
 

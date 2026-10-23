@@ -61,6 +61,11 @@ pub enum TextAlignment {
 /// Editing metadata for a single-line text field (caret painting, focus chrome).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TextInputMeta {
+    /// Selected UTF-8 byte range in `value`, painted behind the text while focused.
+    ///
+    /// Use an ordered, nonempty range on character boundaries. Invalid ranges are
+    /// ignored. `None` (the default) draws no selection; secure fields use `None`.
+    pub selection: Option<std::ops::Range<usize>>,
     /// Horizontal alignment, also used to anchor the caret when the value is empty.
     pub alignment: TextAlignment,
     /// UTF-8 byte offset in the displayed `value`, used to position the caret.

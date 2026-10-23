@@ -222,3 +222,100 @@ fn clean_fields_paint_only_the_caret_when_focused_unless_explicitly_overridden()
         }
     }
 }
+
+#[test]
+fn selection_highlight_follows_focus_and_editing_without_changing_layout() {
+    use lemon::{
+        host::HostContext, input::InputEvent, paint::paint_pass, ui::UiState, Theme, Viewport,
+    };
+    for theme in [Theme::default_light(), Theme::default_dark()] {
+        let host = HostContext::new(theme);
+        let _scope = host.enter();
+        for alignment in [
+            TextAlignment::Start,
+            TextAlignment::Center,
+            TextAlignment::End,
+        ] {
+            for secure in [false, true] {
+                let value = State::new("Olá 世界".to_owned());
+                let source = value.clone();
+                let mut ui = UiState::default();
+                ui.mount(move |cx| {
+                    if secure {
+                        SecureField::new(cx, source.clone())
+                            .style(TextFieldStyle::Clean)
+                            .alignment(alignment)
+                            .width(240.0)
+                            .into_element()
+                    } else {
+                        TextField::new(cx, source.clone())
+                            .style(TextFieldStyle::Clean)
+                            .alignment(alignment)
+                            .width(240.0)
+                            .into_element()
+                    }
+                })
+                .unwrap();
+                let viewport = Viewport {
+                    width: 400.0,
+                    height: 200.0,
+                };
+                ui.update(viewport, 1.0, None, true).unwrap();
+                ui.dispatch_input(InputEvent::Key(press(LemonKey::Named(NamedKey::Tab))))
+                    .unwrap();
+                ui.update(viewport, 1.0, ui.focused(), true).unwrap();
+                let geometry = ui.layout_map().clone();
+                let mut select = press(LemonKey::Character("a".into()));
+                select.modifiers.meta = true;
+                ui.dispatch_input(InputEvent::Key(select)).unwrap();
+                ui.update(viewport, 1.0, ui.focused(), true).unwrap();
+                assert_eq!(ui.layout_map(), &geometry);
+                assert_eq!(value.get(), "Olá 世界");
+                let tree = ui.retained().unwrap();
+                let root = tree.root().unwrap();
+                let meta = root.text_input.as_ref().unwrap();
+                assert_eq!(
+                    meta.selection,
+                    if secure {
+                        None
+                    } else {
+                        Some(0..value.get().len())
+                    }
+                );
+                for caret in [false, true] {
+                    let unfocused = paint_pass(
+                        tree,
+                        ui.layout_map(),
+                        &mut vello::Scene::new(),
+                        1.0,
+                        None,
+                        caret,
+                    );
+                    let focused = paint_pass(
+                        tree,
+                        ui.layout_map(),
+                        &mut vello::Scene::new(),
+                        1.0,
+                        root.taffy_id,
+                        caret,
+                    );
+                    assert_eq!(focused.fills - unfocused.fills, u32::from(!secure));
+                }
+                ui.dispatch_input(InputEvent::Key(press(LemonKey::Character("x".into()))))
+                    .unwrap();
+                ui.update(viewport, 1.0, ui.focused(), true).unwrap();
+                assert_eq!(value.get(), "x");
+                assert!(ui
+                    .retained()
+                    .unwrap()
+                    .root()
+                    .unwrap()
+                    .text_input
+                    .as_ref()
+                    .unwrap()
+                    .selection
+                    .is_none());
+            }
+        }
+    }
+}

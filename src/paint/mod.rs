@@ -207,6 +207,8 @@ fn paint_node<'a>(
         scene.push_layer(Fill::NonZero, BlendMode::default(), 1.0, ctx.base, &clip);
     }
 
+    paint_text_input_selection(node, layout, focused, scene, ctx, stats);
+
     paint_children(
         &node.children,
         layout,
@@ -703,6 +705,82 @@ fn first_text_descendant(node: &RetainedNode) -> Option<&RetainedNode> {
     None
 }
 
+fn text_input_selection_rects(node: &RetainedNode, layout: &LayoutMap) -> Vec<Rect> {
+    let Some(meta) = node.text_input.as_ref() else {
+        return Vec::new();
+    };
+    let Some(range) = meta.selection.as_ref() else {
+        return Vec::new();
+    };
+    if range.start >= range.end || meta.value.get(range.clone()).is_none() {
+        return Vec::new();
+    }
+    let Some(text_node) = first_text_descendant(node) else {
+        return Vec::new();
+    };
+    let Some(text) = text_node.text.as_ref() else {
+        return Vec::new();
+    };
+    // Never highlight a placeholder or use a stale text layout.
+    if text.content != meta.value {
+        return Vec::new();
+    }
+    let Some(text_layout) = text.parley_layout.as_ref() else {
+        return Vec::new();
+    };
+    let Some(rect) = text_node.taffy_id.and_then(|id| layout.get(id)) else {
+        return Vec::new();
+    };
+    let Some(field_rect) = node.taffy_id.and_then(|id| layout.get(id)) else {
+        return Vec::new();
+    };
+    let content = inset_rect(field_rect, &node.style.padding.unwrap_or_default());
+    let clip = Rect::new(
+        content.x as f64,
+        content.y as f64,
+        (content.x + content.width) as f64,
+        (content.y + content.height) as f64,
+    );
+    use parley::editing::{Cursor, Selection};
+    use parley::layout::Affinity;
+    let selection = Selection::new(
+        Cursor::from_byte_index(text_layout, range.start, Affinity::Downstream),
+        Cursor::from_byte_index(text_layout, range.end, Affinity::Upstream),
+    );
+    selection
+        .geometry(text_layout)
+        .into_iter()
+        .filter_map(|(bounds, _)| {
+            let bounds = Rect::new(
+                bounds.x0 + rect.x as f64,
+                bounds.y0 + rect.y as f64,
+                bounds.x1 + rect.x as f64,
+                bounds.y1 + rect.y as f64,
+            )
+            .intersect(clip);
+            (bounds.width() > 0.0 && bounds.height() > 0.0).then_some(bounds)
+        })
+        .collect()
+}
+
+fn paint_text_input_selection(
+    node: &RetainedNode,
+    layout: &LayoutMap,
+    focused: Option<NodeId>,
+    scene: &mut Scene,
+    ctx: PaintContext,
+    stats: &mut PaintStats,
+) {
+    if focused.is_none() || focused != node.taffy_id {
+        return;
+    }
+    let color = crate::theme::current_theme().colors.accent.with_alpha(0.28);
+    for rect in text_input_selection_rects(node, layout) {
+        scene.fill(Fill::NonZero, ctx.base, to_peniko_color(color), None, &rect);
+        stats.fills += 1;
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn paint_text_input_caret(
     node: &RetainedNode,
@@ -910,6 +988,45 @@ mod tests {
     ) -> Result<LayoutMap, crate::retained::RetainedError> {
         let mut font_cx = FontContext::new();
         crate::layout::layout_pass(tree, &mut font_cx, viewport)
+    }
+
+    #[test]
+    fn selection_geometry_tracks_aligned_text_and_rejects_invalid_utf8_ranges() {
+        use crate::{Cx, State, TextAlignment, TextField};
+        let cx = Cx::new();
+        let mut tree = RetainedTree::mount(
+            TextField::new(&cx, State::new("école".into()))
+                .width(200.0)
+                .inset(8.0)
+                .alignment(TextAlignment::End)
+                .into_element(),
+        )
+        .unwrap();
+        let layout = layout_pass(
+            &mut tree,
+            Viewport {
+                width: 400.0,
+                height: 200.0,
+            },
+        )
+        .unwrap();
+        let node = tree.root.as_mut().unwrap();
+        node.text_input.as_mut().unwrap().selection = Some(0..6);
+        let rects = text_input_selection_rects(node, &layout);
+        assert_eq!(rects.len(), 1);
+        let text = &node.children[0].children[0];
+        let text_rect = layout.get(text.taffy_id.unwrap()).unwrap();
+        assert!((rects[0].x0 - text_rect.x as f64).abs() < 0.1);
+        // Taffy rounds text width up; glyph advances retain subpixel precision.
+        assert!((rects[0].x1 - 192.0).abs() < 1.0);
+        node.text_input.as_mut().unwrap().selection = Some(0..2);
+        let partial = text_input_selection_rects(node, &layout);
+        assert_eq!(partial.len(), 1);
+        assert!(partial[0].width() > 0.0 && partial[0].width() < rects[0].width());
+        for range in [1..2, 0..99, 2..2] {
+            node.text_input.as_mut().unwrap().selection = Some(range);
+            assert!(text_input_selection_rects(node, &layout).is_empty());
+        }
     }
 
     #[test]
@@ -1563,6 +1680,7 @@ mod tests {
         // Inject text_input meta onto the root node so paint_focus_ring activates.
         if let Some(root) = tree.root.as_mut() {
             root.text_input = Some(TextInputMeta {
+                selection: None,
                 alignment: Default::default(),
                 value: String::new(),
                 cursor: 0,

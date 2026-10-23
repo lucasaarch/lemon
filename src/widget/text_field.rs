@@ -47,7 +47,9 @@ struct FieldOverrides {
 /// reactive dependencies so the parent re-renders when the field value changes.
 ///
 /// Keyboard focus is handled by the platform ([`FocusManager`](crate::retained::focus::FocusManager)):
-/// click or Tab to focus, then type. The paint pass draws the focus ring and text caret.
+/// click or Tab to focus, then type. Ctrl/Cmd+A selects the value; the selection
+/// uses the theme accent color at 28% opacity while focused. Selection is painted
+/// independently of caret blinking. The clean preset also shows this highlight.
 ///
 /// # Examples
 ///
@@ -211,6 +213,13 @@ impl TextField {
     pub fn into_element(self) -> Element {
         let mut field = self.editor.get();
         field.sync_value(self.state.get());
+        let selection = if self.secure {
+            None
+        } else {
+            field
+                .selection_range()
+                .and_then(|(start, end)| (start < end).then_some(start..end))
+        };
         let disabled = self.disabled;
         let secure = self.secure;
         // Paint and retained metadata only receive display text and display byte offsets.
@@ -322,6 +331,7 @@ impl TextField {
             container = container
                 .focusable()
                 .text_input(TextInputMeta {
+                    selection,
                     alignment: self.alignment,
                     cursor,
                     value: current_value,

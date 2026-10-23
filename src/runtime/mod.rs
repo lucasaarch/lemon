@@ -716,6 +716,7 @@ mod tests {
             let (value, cursor) = field.get();
             View::new()
                 .text_input(TextInputMeta {
+                    selection: None,
                     alignment: Default::default(),
                     cursor,
                     value: value.clone(),
