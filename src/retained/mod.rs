@@ -225,6 +225,7 @@ impl RetainedNode {
                 radius: CornerRadii::default(),
                 box_shadow: None,
                 image: None,
+                icon: None,
                 scroll_track_color: None,
                 scroll_thumb_color: None,
                 focus_ring_color: None,

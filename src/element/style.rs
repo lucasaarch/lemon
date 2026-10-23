@@ -438,6 +438,8 @@ pub struct PaintProps {
     pub box_shadow: Option<BoxShadow>,
     /// Optional image drawn inside the container using object-fit: contain scaling.
     pub image: Option<crate::asset::ImageHandle>,
+    /// Optional vector icon drawn within this container using contain scaling.
+    pub icon: Option<crate::icons::IconPaint>,
     /// Optional override for widget scrollbar track painting.
     pub scroll_track_color: Option<ColorSource>,
     /// Optional override for widget scrollbar thumb painting.
@@ -457,6 +459,7 @@ impl std::fmt::Debug for PaintProps {
             .field("radius", &self.radius)
             .field("box_shadow", &self.box_shadow)
             .field("image", &self.image)
+            .field("icon", &self.icon)
             .field(
                 "scroll_track_color",
                 &self.scroll_track_color.as_ref().map(|c| c.resolve()),
@@ -484,6 +487,8 @@ pub struct PaintData {
     pub box_shadow: Option<BoxShadow>,
     /// Optional image drawn inside the container using object-fit: contain scaling.
     pub image: Option<crate::asset::ImageHandle>,
+    /// Optional vector icon drawn within this container using contain scaling.
+    pub icon: Option<crate::icons::IconPaint>,
     pub scroll_track_color: Option<Color>,
     pub scroll_thumb_color: Option<Color>,
     pub focus_ring_color: Option<Color>,
@@ -499,6 +504,7 @@ impl PaintProps {
             radius: self.radius.clone(),
             box_shadow: self.box_shadow,
             image: self.image.clone(),
+            icon: self.icon.clone(),
             scroll_track_color: self.scroll_track_color.as_ref().map(|c| c.resolve()),
             scroll_thumb_color: self.scroll_thumb_color.as_ref().map(|c| c.resolve()),
             focus_ring_color: self.focus_ring_color.as_ref().map(|c| c.resolve()),

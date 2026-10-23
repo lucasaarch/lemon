@@ -506,3 +506,39 @@ at opacity zero and rejects input immediately, including throughout the exit fad
 `View::interactive(false)` exposes this input behavior for custom overlays too.
 Use `SelectStyle::default().dropdown_transition(transition)` to configure the fade;
 zero duration disables it.
+
+### Icons and file trees
+
+Lucide's complete bundled catalog is available through `lemon::icons::lucide` (also
+in the prelude). Icons use vector strokes with round joins and caps; no icon font
+or runtime asset download is needed. Upstream licensing is in
+[`licenses/lucide-LICENSE`](licenses/lucide-LICENSE).
+
+```rust
+use lemon::prelude::*;
+
+let icon = Icon::new(lucide::SETTINGS).size(18.0).stroke_width(1.5);
+```
+
+`FileTree` displays application-supplied files and folders with automatic icons,
+hierarchy guides, selection, hover, and keyboard navigation. IDs must be stable
+and unique throughout the entire tree. It does not scan the filesystem.
+
+```rust
+use lemon::prelude::*;
+
+fn explorer(cx: &Cx) -> Element {
+    FileTree::new(cx, vec![FileTreeNode::folder(1, "src", vec![
+        FileTreeNode::file(2, "main.rs"),
+    ])])
+    .on_select(|id| println!("Selected {id}"))
+    .decorate(|view| view.width(280.0))
+    .into()
+}
+```
+
+Use `.selection(State<Option<u64>>)` and `.expanded(State<BTreeSet<u64>>)` to
+control selection and disclosure from your application. `FileTreeStyle` controls
+row height, indentation, icon size and guide/hover/selection colors. Nodes can
+supply an explicit `.icon(...)` and `.color(...)`. Wrap the tree in `Scroll` for a
+bounded viewport. Run `cargo run --example file_tree` for a compact explorer.

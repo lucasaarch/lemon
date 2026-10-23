@@ -61,6 +61,7 @@ pub mod diff;
 pub mod element;
 pub mod font;
 pub mod host;
+pub mod icons;
 pub mod input;
 pub mod layout;
 pub mod paint;
@@ -79,10 +80,11 @@ pub use animation::{AnimRegistry, AnimSlot, AnimationConfig, AnimationHandle, Ea
 pub use asset::ImageHandle;
 pub use element::builders::{ColumnView, Component, RowView, Text, View};
 pub use font::{register_font_bytes, register_font_path, FontRegistrationError};
+pub use icons::IconData;
 pub use transition::{Transition, TransitionProperty};
 pub use widget::{
-    Button, ButtonStyle, Image, Scroll, ScrollStyle, SecureField, Select, SelectStyle, Slider,
-    SliderStyle, TextField, TextFieldStyle,
+    Button, ButtonStyle, FileTree, FileTreeNode, FileTreeStyle, Icon, Image, Scroll, ScrollStyle,
+    SecureField, Select, SelectStyle, Slider, SliderStyle, TextField, TextFieldStyle,
 };
 
 pub use element::events::{Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey};

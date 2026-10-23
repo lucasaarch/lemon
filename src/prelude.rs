@@ -19,8 +19,8 @@ pub use crate::element::Element;
 pub use crate::platform::run;
 pub use crate::runtime::cx::Cx;
 pub use crate::widget::{
-    Button, ButtonStyle, Image, Scroll, ScrollStyle, SecureField, Select, SelectStyle, Slider,
-    SliderStyle, TextField, TextFieldStyle,
+    Button, ButtonStyle, FileTree, FileTreeNode, FileTreeStyle, Icon, Image, Scroll, ScrollStyle,
+    SecureField, Select, SelectStyle, Slider, SliderStyle, TextField, TextFieldStyle,
 };
 pub use crate::window::WindowConfig;
 pub use crate::State;
@@ -28,3 +28,5 @@ pub use crate::State;
 pub use crate::element::decoration::Decorate;
 
 pub use crate::transition::{Transition, TransitionProperty};
+
+pub use crate::icons::{lucide, IconData};

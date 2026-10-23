@@ -674,6 +674,7 @@ fn freeze_paint(paint: &PaintProps) -> PaintProps {
         radius: resolved.radius,
         box_shadow: resolved.box_shadow,
         image: resolved.image,
+        icon: resolved.icon,
         scroll_track_color: resolved.scroll_track_color.map(ColorSource::Static),
         scroll_thumb_color: resolved.scroll_thumb_color.map(ColorSource::Static),
         focus_ring_color: resolved.focus_ring_color.map(ColorSource::Static),

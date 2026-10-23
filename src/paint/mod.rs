@@ -194,6 +194,7 @@ fn paint_node<'a>(
     paint_container(node, rect, scene, ctx, stats);
     paint_text(node, rect, scene, ctx, stats);
     paint_image(node, rect, scene, ctx);
+    paint_icon(node, rect, scene, ctx, stats);
     paint_focus_ring(node, rect, taffy_id, focused, scene, ctx, stats);
 
     let clip_children = node.style.overflow == Overflow::Hidden;
@@ -416,6 +417,44 @@ fn paint_per_side_borders(
             let r = f64::from(widths.right);
             let bar = Rect::new(x + w - r, y + tr, x + w, y + h - br);
             scene.fill(Fill::NonZero, ctx.base, to_peniko_color(color), None, &bar);
+            stats.fills += 1;
+        }
+    }
+}
+
+fn paint_icon(
+    node: &RetainedNode,
+    rect: &LayoutRect,
+    scene: &mut Scene,
+    ctx: PaintContext,
+    stats: &mut PaintStats,
+) {
+    let Some(icon) = ctx.paint(node).icon.as_ref() else {
+        return;
+    };
+    let size = rect.width.min(rect.height);
+    if !size.is_finite() || size <= 0.0 {
+        return;
+    }
+    let transform = ctx.base
+        * Affine::translate((
+            (rect.x + (rect.width - size) / 2.0) as f64,
+            (rect.y + (rect.height - size) / 2.0) as f64,
+        ))
+        * Affine::scale(size as f64 / 24.0);
+    let color = to_peniko_color(icon.color);
+    if icon.stroke_width.is_finite() && icon.stroke_width > 0.0 {
+        if let Ok(path) = vello::kurbo::BezPath::from_svg(icon.data.stroke) {
+            let stroke = Stroke::new(icon.stroke_width as f64)
+                .with_caps(vello::kurbo::Cap::Round)
+                .with_join(vello::kurbo::Join::Round);
+            scene.stroke(&stroke, transform, color, None, &path);
+            stats.strokes += 1;
+        }
+    }
+    if !icon.data.fill.is_empty() {
+        if let Ok(path) = vello::kurbo::BezPath::from_svg(icon.data.fill) {
+            scene.fill(Fill::NonZero, transform, color, None, &path);
             stats.fills += 1;
         }
     }

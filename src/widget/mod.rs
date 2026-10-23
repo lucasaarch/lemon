@@ -17,6 +17,8 @@ pub use crate::element::decoration::Decorate;
 
 pub mod button;
 mod field_editor;
+pub mod file_tree;
+pub mod icon;
 pub mod image;
 pub mod scroll;
 pub mod secure_field;
@@ -25,6 +27,8 @@ pub mod slider;
 pub mod text_field;
 
 pub use button::{Button, ButtonStyle};
+pub use file_tree::{FileTree, FileTreeNode, FileTreeStyle};
+pub use icon::Icon;
 pub use image::Image;
 pub use scroll::{Scroll, ScrollStyle};
 pub use secure_field::SecureField;
