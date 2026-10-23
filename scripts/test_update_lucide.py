@@ -34,9 +34,8 @@ class ReleaseUpdaterTests(unittest.TestCase):
         for release in [{'tag_name': 'next', 'prerelease': True},
                         {'tag_name': 'draft', 'draft': True}, {}]:
             with self.subTest(release=release), patch.object(updater, 'urlopen',
-                    return_value=io.BytesIO(json.dumps(release).encode())):
-                with self.assertRaises(ValueError):
-                    updater.latest_release()
+                    return_value=io.BytesIO(json.dumps(release).encode())), self.assertRaises(ValueError):
+                updater.latest_release()
 
     def test_reads_only_icons_and_license_and_records_the_release(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -63,9 +62,9 @@ class ReleaseUpdaterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'release.tar.gz'
             archive(path, {'root/icons/folder.svg': SVG, 'root/LICENSE': b'license'})
-            with patch.object(tarfile.TarFile, 'extractfile', return_value=None):
-                with self.assertRaisesRegex(ValueError, 'Cannot read archive member'):
-                    updater.read_archive(path)
+            with patch.object(tarfile.TarFile, 'extractfile', return_value=None), \
+                    self.assertRaisesRegex(ValueError, 'Cannot read archive member'):
+                updater.read_archive(path)
 
     def test_conversion_or_formatting_failure_preserves_both_outputs(self):
         for unsupported in [True, False]:
@@ -81,9 +80,9 @@ class ReleaseUpdaterTests(unittest.TestCase):
                 svg = b'<svg viewBox="0 0 24 24"><image/></svg>' if unsupported else SVG
                 archive(path, {'root/icons/folder.svg': svg, 'root/LICENSE': b'new license'})
                 with patch.object(updater.subprocess, 'run',
-                        side_effect=subprocess.CalledProcessError(1, 'rustfmt')):
-                    with self.assertRaises((ValueError, subprocess.CalledProcessError)):
-                        updater.update_catalog(root, path, '1.61.0')
+                        side_effect=subprocess.CalledProcessError(1, 'rustfmt')), \
+                        self.assertRaises((ValueError, subprocess.CalledProcessError)):
+                    updater.update_catalog(root, path, '1.61.0')
                 self.assertEqual(catalog.read_text(), 'existing catalog')
                 self.assertEqual(license_path.read_text(), 'existing license')
 
