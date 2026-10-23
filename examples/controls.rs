@@ -55,12 +55,14 @@ fn app(cx: &Cx) -> Element {
         .into_element()
 }
 fn main() {
-    run(
-        WindowConfig::default()
-            .title("Lemon — controls")
-            .size(560.0, 520.0)
-            .chrome(WindowChrome::Overlay)
-            .traffic_lights_position(20.0, 20.0),
-        app,
-    );
+    run(|cx| {
+        cx.open_window(
+            WindowConfig::default()
+                .title("Lemon — controls")
+                .size(560.0, 520.0)
+                .chrome(WindowChrome::Overlay)
+                .traffic_lights_position(20.0, 20.0),
+            app,
+        );
+    });
 }

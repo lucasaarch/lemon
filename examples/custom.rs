@@ -25,7 +25,7 @@ fn app(cx: &Cx) -> Element {
 }
 
 fn main() {
-    run(WindowConfig::default(), app)
+    run(|cx| cx.open_window(WindowConfig::default(), app))
 }
 
 #[cfg(test)]

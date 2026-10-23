@@ -21,7 +21,7 @@
 //! }
 //!
 //! fn main() {
-//!     run(WindowConfig::default().title("Counter"), app);
+//!     run(|cx| cx.open_window(WindowConfig::default().title("Counter"), app));
 //! }
 //! ```
 //!
@@ -108,9 +108,7 @@ pub use reactive::State;
 pub use window::{WindowChrome, WindowConfig};
 
 pub use paint::{paint_pass, PaintStats, Renderer, Scene};
-pub use platform::{
-    run, run_with_fonts, run_with_theme, run_with_theme_and_fonts, AppState, WindowState,
-};
+pub use platform::{run, AppCx, ThemeNotFound, WindowState};
 pub use retained::RetainedTree;
 pub use runtime::cx::Cx;
 pub use runtime::Runtime;

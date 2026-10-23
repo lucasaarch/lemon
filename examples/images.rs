@@ -31,10 +31,12 @@ fn app(cx: &Cx) -> Element {
 }
 
 fn main() {
-    run(
-        WindowConfig::default()
-            .title("Lemon — images")
-            .size(340.0, 260.0),
-        app,
-    );
+    run(|cx| {
+        cx.open_window(
+            WindowConfig::default()
+                .title("Lemon — images")
+                .size(340.0, 260.0),
+            app,
+        );
+    });
 }

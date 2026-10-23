@@ -54,10 +54,12 @@ fn app(cx: &Cx) -> Element {
 }
 
 fn main() {
-    run(
-        WindowConfig::default()
-            .title("Lemon — files")
-            .size(304.0, 500.0),
-        app,
-    );
+    run(|cx| {
+        cx.open_window(
+            WindowConfig::default()
+                .title("Lemon — files")
+                .size(304.0, 500.0),
+            app,
+        );
+    });
 }

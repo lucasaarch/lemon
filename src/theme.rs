@@ -8,7 +8,7 @@ use crate::element::style::Color;
 ///
 /// [`Default`] returns the dark palette as a deterministic headless fallback.
 /// The desktop host selects the system appearance by default through [`ThemePair`].
-/// A single `Theme` passed to `run_with_theme` keeps a fixed palette.
+/// A single `Theme` loaded through [`crate::AppCx::load_theme`] keeps a fixed palette.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Theme {
     /// Color tokens used for backgrounds, text, accents, and borders.
@@ -61,15 +61,19 @@ impl Theme {
     ///
     /// Edit this constructor to change Lemon's built-in dark appearance. To customize
     /// only your application, modify a returned theme and put it in a [`ThemePair`];
-    /// passing the pair to `run_with_theme` preserves system appearance switching.
+    /// loading the pair through [`crate::AppCx::load_theme`] preserves system appearance switching.
     /// Passing a single `Theme` instead keeps the application on that fixed palette.
     ///
     /// ```no_run
-    /// use lemon::{run_with_theme, Color, ThemePair, View, WindowConfig};
+    /// use lemon::{run, Color, ThemePair, View, WindowConfig};
     /// let mut themes = ThemePair::default();
     /// themes.dark.colors.background = Color::rgb8(24, 24, 24);
     /// themes.dark.colors.surface = Color::rgb8(36, 36, 36);
-    /// run_with_theme(WindowConfig::default(), themes, |_| View::new().fill().into_element());
+    /// run(move |cx| {
+    ///     cx.load_theme("brand", themes);
+    ///     cx.set_theme("brand").unwrap();
+    ///     cx.open_window(WindowConfig::default(), |_| View::new().fill().into_element());
+    /// });
     /// ```
     pub fn default_dark() -> Self {
         Self::with_palette(
@@ -128,7 +132,7 @@ impl Theme {
 /// Light and dark palettes selected by the desktop host's system appearance.
 ///
 /// The default pair contains Lemon's built-in light and dark palettes. Pass a pair
-/// to `run_with_theme` to customize both appearances while following system changes.
+/// to [`crate::AppCx::load_theme`] to customize both appearances while following system changes.
 /// A single [`Theme`] converts to a pair with identical palettes, keeping its existing
 /// fixed-theme behavior. Unknown native appearance uses the dark palette.
 ///

@@ -24,7 +24,7 @@ pub use crate::element::style::{
 };
 pub use crate::element::types::TextAlignment;
 pub use crate::element::Element;
-pub use crate::platform::run;
+pub use crate::platform::{run, AppCx};
 pub use crate::runtime::cx::Cx;
 pub use crate::widget::{
     Button, ButtonStyle, Checkbox, Dialog, FileTree, FileTreeNode, FileTreeStyle, Popover,

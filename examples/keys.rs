@@ -36,12 +36,14 @@ fn app(cx: &Cx) -> Element {
 }
 
 fn main() {
-    run(
-        WindowConfig::default()
-            .title("Lemon — keys")
-            .size(360.0, 340.0),
-        app,
-    );
+    run(|cx| {
+        cx.open_window(
+            WindowConfig::default()
+                .title("Lemon — keys")
+                .size(360.0, 340.0),
+            app,
+        );
+    });
 }
 
 #[cfg(test)]

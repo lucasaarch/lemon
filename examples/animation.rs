@@ -3,7 +3,7 @@
 use std::time::Duration;
 
 use lemon::prelude::*;
-use lemon::{run_with_theme, ThemePair};
+use lemon::ThemePair;
 
 fn app(cx: &Cx) -> Element {
     let theme = cx.theme();
@@ -70,14 +70,17 @@ fn main() {
     let mut themes = ThemePair::default();
     themes.light.radius.md = 12.0;
     themes.dark.radius.md = 12.0;
-    run_with_theme(
-        WindowConfig::default()
-            .title("Lemon — animation")
-            .size(360.0, 320.0)
-            .on_open(|| println!("Window opened"))
-            .on_focus(|active| println!("Window focused: {active}"))
-            .on_close(|| println!("Window closed")),
-        themes,
-        app,
-    );
+    run(move |cx| {
+        cx.load_theme("animation", themes);
+        cx.set_theme("animation").unwrap();
+        cx.open_window(
+            WindowConfig::default()
+                .title("Lemon — animation")
+                .size(360.0, 320.0)
+                .on_open(|| println!("Window opened"))
+                .on_focus(|active| println!("Window focused: {active}"))
+                .on_close(|| println!("Window closed")),
+            app,
+        );
+    });
 }

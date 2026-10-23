@@ -60,10 +60,12 @@ fn app(cx: &Cx) -> Element {
 }
 
 fn main() {
-    run(
-        WindowConfig::default()
-            .title("Lemon — custom select")
-            .size(320.0, 300.0),
-        app,
-    );
+    run(|cx| {
+        cx.open_window(
+            WindowConfig::default()
+                .title("Lemon — custom select")
+                .size(320.0, 300.0),
+            app,
+        );
+    });
 }

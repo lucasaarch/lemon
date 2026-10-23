@@ -35,11 +35,11 @@ use crate::ui::UiState;
 
 use crate::window::{RootComponent, WindowConfig};
 
-/// Per-window platform state owned by [`AppState`].
+/// Per-window platform state owned by [`AppCx`].
 ///
 /// `WindowState` contains the native window, GPU surface, renderer, runtime, retained tree,
 /// layout cache, and input state for exactly one `winit` [`WindowId`]. Most apps should call
-/// [`run`] or [`run_with_theme`] and let Lemon construct this internally.
+/// [`run`] and let Lemon construct this internally.
 pub struct WindowState {
     /// Native `winit` window handle, attached after the event loop resumes.
     pub window: Option<Arc<Window>>,
@@ -352,23 +352,43 @@ impl WindowState {
     }
 }
 
-/// Top-level platform state for a Lemon application.
+/// Application initialization context passed to [`run`].
 ///
-/// `AppState` owns the shared GPU [`RenderContext`] and the map of live windows keyed by
-/// `winit` [`WindowId`]. The default [`run`] and [`run_with_theme`] entry points create one
-/// window today, but the state is structured so event dispatch and teardown are window-id based.
-pub struct AppState {
-    /// Shared WGPU/Vello render context used to create and resize all window surfaces.
-    pub render_cx: RenderContext,
-    /// Live per-window states keyed by the `WindowId` delivered by `winit` events.
-    pub windows: HashMap<WindowId, WindowState>,
-    window_config: WindowConfig,
-    themes: ThemePair,
-    root_component: RootComponent,
+/// Loads shared fonts and named themes and queues windows before the native event
+/// loop starts. This is separate from the component [`Cx`], which owns view hooks.
+/// Each application owns its resources; newly opened windows inherit them.
+///
+/// ```no_run
+/// use lemon::{run, ThemePair, WindowConfig, Text};
+/// run(|cx| {
+///     cx.load_theme("brand", ThemePair::default());
+///     cx.set_theme("brand").unwrap();
+///     cx.open_window(WindowConfig::default(), |_| Text::new("Hello").into_element());
+/// });
+/// ```
+pub struct AppCx {
+    render_cx: RenderContext,
+    windows: HashMap<WindowId, WindowState>,
+    themes: HashMap<String, ThemePair>,
+    selected_theme: String,
+    appearance: Option<NativeTheme>,
     animation_registry: AnimRegistry,
     registered_fonts: Vec<RegisteredFont>,
     host: HostContext,
 }
+
+/// A theme name passed to [`AppCx::set_theme`] has not been loaded.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ThemeNotFound {
+    /// The unknown theme name. Selection is unchanged when this error is returned.
+    pub name: String,
+}
+impl std::fmt::Display for ThemeNotFound {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "theme {:?} has not been loaded", self.name)
+    }
+}
+impl std::error::Error for ThemeNotFound {}
 
 #[derive(Clone)]
 struct RegisteredFont {
@@ -376,23 +396,17 @@ struct RegisteredFont {
     bytes: Arc<Vec<u8>>,
 }
 
-impl AppState {
-    /// Creates application state for a single-window Lemon app.
-    ///
-    /// The native window is not created until the event loop is resumed. After resume, the first
-    /// window is inserted into [`windows`](Self::windows) under its `winit` [`WindowId`].
-    /// Its appearance follows the system using [`ThemePair::default`], with dark fallback
-    /// when native appearance is unavailable.
-    pub fn new(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) -> Self {
-        Self::with_theme(config, ThemePair::default(), root)
+impl Default for AppCx {
+    fn default() -> Self {
+        Self::new()
     }
-
-    fn with_theme(
-        config: WindowConfig,
-        themes: impl Into<ThemePair>,
-        root: impl Fn(&Cx) -> Element + 'static,
-    ) -> Self {
-        let themes = themes.into();
+}
+impl AppCx {
+    /// Creates an application context with no windows and Lemon's adaptive theme.
+    /// [`run`] creates this context automatically. Custom hosts can create one for
+    /// configuration without starting a native event loop.
+    pub fn new() -> Self {
+        let themes = ThemePair::default();
         let host = HostContext::new(resolve_native_theme(&themes, None)).with_clipboard(
             || arboard::Clipboard::new().ok()?.get_text().ok(),
             |text| {
@@ -404,34 +418,91 @@ impl AppState {
         Self {
             render_cx: RenderContext::new(),
             windows: HashMap::new(),
-            window_config: config,
+            themes: HashMap::from([("lemon".to_owned(), themes)]),
+            selected_theme: "lemon".to_owned(),
+            appearance: None,
             animation_registry: host.animations(),
             host,
-            themes,
-            root_component: Arc::new(root),
             registered_fonts: Vec::new(),
         }
     }
 
+    /// Loads or replaces a named theme. Loading does not select it unless it is
+    /// already active. The initial active name is `"lemon"`.
+    /// A [`ThemePair`] follows system appearance; a single [`Theme`] stays fixed.
+    /// Replacing the active theme updates current and future windows without
+    /// resetting component state. Names are local to this application.
+    ///
+    /// ```
+    /// use lemon::{AppCx, ThemePair};
+    /// let mut cx=AppCx::new();
+    /// cx.load_theme("brand",ThemePair::default());
+    /// cx.set_theme("brand").unwrap();
+    /// ```
+    pub fn load_theme(&mut self, name: impl Into<String>, theme: impl Into<ThemePair>) {
+        let name = name.into();
+        let active = name == self.selected_theme;
+        self.themes.insert(name, theme.into());
+        if active {
+            self.apply_system_theme(self.appearance);
+        }
+    }
+
+    /// Selects a loaded theme for all windows. Returns [`ThemeNotFound`] without
+    /// changing selection when the name is unknown. Select `"lemon"` to restore
+    /// the built-in adaptive pair, unless it has been replaced with `load_theme`.
+    ///
+    /// ```
+    /// use lemon::{AppCx, Theme};
+    /// let mut cx=AppCx::new();
+    /// cx.load_theme("dark",Theme::default_dark());
+    /// cx.set_theme("dark").unwrap();
+    /// assert!(cx.set_theme("missing").is_err());
+    /// ```
+    pub fn set_theme(&mut self, name: &str) -> Result<(), ThemeNotFound> {
+        if !self.themes.contains_key(name) {
+            return Err(ThemeNotFound {
+                name: name.to_owned(),
+            });
+        }
+        self.selected_theme = name.to_owned();
+        self.apply_system_theme(self.appearance);
+        Ok(())
+    }
+
+    /// Queues an independent native window, inheriting this application's fonts
+    /// and selected theme. Call once per initial window inside [`run`]. The root
+    /// may capture shared state and runs on each reactive render, using component [`Cx`].
+    /// Later windows can be requested with [`Cx::open_window`].
+    ///
+    /// ```no_run
+    /// use lemon::{run, Text, WindowConfig};
+    /// run(|cx| {
+    ///     cx.open_window(WindowConfig::default().title("Main"), |_| Text::new("Main").into_element());
+    ///     cx.open_window(WindowConfig::default().title("Tools"), |_| Text::new("Tools").into_element());
+    /// });
+    /// ```
+    pub fn open_window(&self, config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) {
+        self.host.request_window(crate::host::OpenWindowRequest {
+            config,
+            root: Arc::new(root),
+        });
+    }
+
     fn apply_system_theme(&mut self, appearance: Option<NativeTheme>) -> bool {
-        let theme = resolve_native_theme(&self.themes, appearance);
+        self.appearance = appearance;
+        let theme = resolve_native_theme(&self.themes[&self.selected_theme], appearance);
         if !self.host.set_theme(theme) {
             return false;
         }
         for window in self.windows.values_mut() {
-            // Reactive views have queued patches. Chrome and the window clear color
-            // also need repainting when no explicit element property changed.
             window.ui.invalidate_paint();
             window.request_redraw();
         }
         true
     }
 
-    fn make_window_state(&self) -> WindowState {
-        self.make_window_state_with_root(Arc::clone(&self.root_component))
-    }
-
-    fn make_window_state_with_root(&self, root: RootComponent) -> WindowState {
+    fn make_window_state(&self, root: RootComponent) -> WindowState {
         let mut state = WindowState::new(self.host.clone(), root);
         for registered in &self.registered_fonts {
             state
@@ -452,8 +523,18 @@ impl AppState {
     ///
     /// Registered fonts are applied to existing windows immediately and to future windows when
     /// they are created. Use the same family in text styles with
-    /// [`.font(...)`](crate::Text::font).
-    pub fn register_font_bytes(
+    /// [`.font(...)`](crate::Text::font). Returns `FontRegistrationError` if bytes
+    /// contain no readable font face; invalid fonts are not stored.
+    ///
+    /// ```no_run
+    /// use lemon::{run, Text, WindowConfig};
+    /// let bytes=std::fs::read("assets/Brand.ttf").unwrap();
+    /// run(move |cx| {
+    ///     cx.load_font("Brand",bytes).unwrap();
+    ///     cx.open_window(WindowConfig::default(), |_| Text::new("Hello").font("Brand").into_element());
+    /// });
+    /// ```
+    pub fn load_font(
         &mut self,
         family_name: impl Into<String>,
         bytes: impl Into<Vec<u8>>,
@@ -476,14 +557,20 @@ impl AppState {
         Ok(())
     }
 
-    /// Loads a font from `path` and registers it under `family_name`.
-    pub fn register_font_path(
+    /// Loads a font from `path` for all current and future windows under `family_name`.
+    /// Returns `FontRegistrationError` on I/O failure or unreadable font data.
+    ///
+    /// ```no_run
+    /// use lemon::run;
+    /// run(|cx| { cx.load_font_file("Brand", "assets/Brand.ttf").unwrap(); });
+    /// ```
+    pub fn load_font_file(
         &mut self,
         family_name: impl Into<String>,
         path: impl AsRef<std::path::Path>,
     ) -> Result<(), FontRegistrationError> {
         let bytes = std::fs::read(path.as_ref())?;
-        self.register_font_bytes(family_name, bytes)
+        self.load_font(family_name, bytes)
     }
 
     fn remove_window(&mut self, window_id: WindowId) -> bool {
@@ -517,7 +604,7 @@ impl AppState {
         );
         let window_id = window.id();
         self.apply_system_theme(window.theme());
-        let mut window_state = self.make_window_state_with_root(req.root);
+        let mut window_state = self.make_window_state(req.root);
         window_state.attach_window(&mut self.render_cx, window, &req.config);
         window_state.request_redraw();
         self.windows.insert(window_id, window_state);
@@ -525,33 +612,20 @@ impl AppState {
     }
 }
 
-struct LemonApplication {
-    state: Option<AppState>,
-}
-
-impl ApplicationHandler for LemonApplication {
+impl ApplicationHandler for AppCx {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        let Some(state) = self.state.as_mut() else {
-            return;
-        };
+        let state = self;
         if !state.windows.is_empty() {
             return;
         }
 
-        let config = state.window_config.clone();
-        let window = Arc::new(
-            event_loop
-                .create_window(native_window_attributes(&config))
-                .expect("create window"),
-        );
-
-        let window_id = window.id();
-        state.apply_system_theme(window.theme());
-        let mut window_state = state.make_window_state();
-        window_state.attach_window(&mut state.render_cx, window, &config);
-        window_state.request_redraw();
-        state.windows.insert(window_id, window_state);
-        state.windows.get_mut(&window_id).unwrap().notify_open();
+        for request in state.host.take_window_requests() {
+            state.spawn_window(event_loop, request);
+        }
+        // No implicit primary window: an empty startup returns immediately.
+        if state.windows.is_empty() {
+            event_loop.exit();
+        }
     }
 
     fn window_event(
@@ -560,9 +634,7 @@ impl ApplicationHandler for LemonApplication {
         window_id: WindowId,
         event: WindowEvent,
     ) {
-        let Some(state) = self.state.as_mut() else {
-            return;
-        };
+        let state = self;
 
         let _scope = state
             .windows
@@ -731,29 +803,22 @@ impl ApplicationHandler for LemonApplication {
     }
 
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
-        // Spawn any windows requested by `cx.open_window(...)` during the last event batch.
-        if let Some(state) = self.state.as_mut() {
-            let requests = state.host.take_window_requests();
-            for req in requests {
-                state.spawn_window(event_loop, req);
-            }
+        // Spawn windows requested by component callbacks during the last event batch.
+        for request in self.host.take_window_requests() {
+            self.spawn_window(event_loop, request);
         }
-
-        if let Some(state) = self.state.as_mut() {
-            let animation_redraw = state.tick_animations();
-            for window_state in state.windows.values_mut() {
-                let _scope = window_state.activate_theme();
-                // Window observers can update shared reactive state without an input event.
-                if let Err(error) = window_state.ui.apply_updates() {
-                    eprintln!("UI update: {error:?}");
-                }
-                window_state.ui.tick_caret_blink();
-                if window_state.ui.focused_text_input()
-                    || window_state.needs_redraw()
-                    || animation_redraw
-                {
-                    window_state.request_redraw();
-                }
+        let animation_redraw = self.tick_animations();
+        for window_state in self.windows.values_mut() {
+            let _scope = window_state.activate_theme();
+            if let Err(error) = window_state.ui.apply_updates() {
+                eprintln!("UI update: {error:?}");
+            }
+            window_state.ui.tick_caret_blink();
+            if window_state.ui.focused_text_input()
+                || window_state.needs_redraw()
+                || animation_redraw
+            {
+                window_state.request_redraw();
             }
         }
     }
@@ -799,103 +864,37 @@ fn theme_background_peniko(color: crate::element::style::Color) -> Color {
     Color::from_rgb8(r, g, b)
 }
 
-/// Opens a native window and runs `root` as the UI until the window closes.
+/// Configures an application once, then runs its native windows until the last closes.
 ///
-/// Follows the native system light/dark appearance, including changes while running,
-/// using [`ThemePair::default`]. Native detection and change events are available on
-/// macOS and Windows through winit; unavailable appearance falls back to the dark palette.
+/// Use the application context to load fonts/themes and call `open_window` for
+/// each initial window. Without an explicit theme, Lemon follows the system's
+/// light/dark appearance, falling back to dark when unavailable. No windows are
+/// created implicitly; returning without opening any window exits immediately.
+/// The closure may borrow local configuration because it finishes before the loop.
+/// Component roots remain `'static` and receive the component [`Cx`].
 ///
-/// `root` is called on the first frame and again whenever reactive state read during the last
-/// render changes (signals, dynamic text closures, etc.). Build widgets with [`Column`](crate::ColumnView),
-/// [`Text`](crate::Text), button widgets, and related builders, then finish with
-/// [`.into_element()`](crate::ColumnView::into_element).
-///
-/// # Example
-///
-/// See the `counter` example in the repository or the crate-level docs in [`crate`].
-pub fn run(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) {
-    run_with_theme(config, ThemePair::default(), root);
-}
-
-/// Runs `root` with a custom fixed palette or an adaptive light/dark pair.
-///
-/// Passing a [`Theme`] keeps that palette fixed. Passing a [`ThemePair`] follows the
-/// system appearance with the supplied palettes, preserving component state when it
-/// changes. Explicit widget style overrides remain in effect. Unknown native appearance
-/// selects the pair's dark palette. Native decorations retain the system appearance.
-///
-/// The theme is scoped to the originating host during rendering, layout, and painting.
+/// # Panics
+/// Panics if native event-loop creation or execution fails. Run on the main thread;
+/// native platforms generally permit only one event loop per process.
 ///
 /// ```no_run
-/// use lemon::{run_with_theme, Theme, ThemePair, WindowConfig};
-/// use lemon::prelude::*;
-///
-/// fn app(cx: &Cx) -> Element {
-///     let theme = cx.theme();
-///     Text::new("Hello").color(theme.colors.foreground).into_element()
-/// }
-///
-/// let mut light = Theme::default_light();
-/// let mut dark = Theme::default_dark();
-/// light.radius.md = 10.0;
-/// dark.radius.md = 10.0;
-/// run_with_theme(WindowConfig::default(), ThemePair::new(light, dark), app);
+/// use lemon::{run, ThemePair, Text, WindowConfig};
+/// run(|cx| {
+///     cx.load_theme("brand",ThemePair::default());
+///     cx.set_theme("brand").unwrap();
+///     // cx.load_font("Brand", std::fs::read("Brand.ttf").unwrap()).unwrap();
+///     cx.open_window(WindowConfig::default().title("App"), |_| Text::new("Hello").into_element());
+/// });
 /// ```
-pub fn run_with_theme(
-    config: WindowConfig,
-    theme: impl Into<ThemePair>,
-    root: impl Fn(&Cx) -> Element + 'static,
-) {
-    run_with_theme_and_fonts(config, theme, root, |_| {});
-}
-
-/// Runs `root` with system appearance, registering fonts before the first frame.
-///
-/// Uses the same adaptive palettes and platform fallback as [`run`].
-///
-/// # Example
-///
-/// ```no_run
-/// use lemon::prelude::*;
-/// use lemon::{run_with_fonts, WindowConfig};
-///
-/// fn app(_cx: &Cx) -> Element {
-///     Text::new("Brand font").font("MyApp Sans").into_element()
-/// }
-///
-/// fn main() {
-///     let bundled = std::fs::read("assets/MyAppSans.ttf").unwrap();
-///     run_with_fonts(WindowConfig::default(), app, move |state| {
-///         state
-///             .register_font_bytes("MyApp Sans", bundled)
-///             .expect("register bundled font");
-///     });
-/// }
-/// ```
-pub fn run_with_fonts(
-    config: WindowConfig,
-    root: impl Fn(&Cx) -> Element + 'static,
-    register_fonts: impl FnOnce(&mut AppState),
-) {
-    run_with_theme_and_fonts(config, ThemePair::default(), root, register_fonts);
-}
-
-/// Runs `root` with a fixed [`Theme`] or adaptive [`ThemePair`], registering fonts first.
-///
-/// `register_fonts` runs before the event loop starts. Theme selection and platform
-/// fallback match [`run_with_theme`].
-pub fn run_with_theme_and_fonts(
-    config: WindowConfig,
-    theme: impl Into<ThemePair>,
-    root: impl Fn(&Cx) -> Element + 'static,
-    register_fonts: impl FnOnce(&mut AppState),
-) {
+pub fn run(initialize: impl FnOnce(&mut AppCx)) {
     crate::debug::configure_from_env();
     let event_loop = EventLoop::new().expect("create event loop");
-    let mut state = AppState::with_theme(config, theme, root);
-    register_fonts(&mut state);
-    let mut app = LemonApplication { state: Some(state) };
-    event_loop.run_app(&mut app).expect("run event loop");
+    let mut cx = AppCx::new();
+    {
+        let _scope = cx.host.enter();
+        initialize(&mut cx);
+    }
+    event_loop.run_app(&mut cx).expect("run event loop");
 }
 
 fn scroll_delta(delta: MouseScrollDelta, shift: bool, scale: f64) -> crate::ScrollDelta {
@@ -955,6 +954,26 @@ mod tests {
     use crate::element::builders::Text;
     use std::path::PathBuf;
 
+    fn setup(config: WindowConfig, root: impl Fn(&Cx) -> Element + 'static) -> AppCx {
+        let cx = AppCx::new();
+        cx.open_window(config, root);
+        cx
+    }
+    fn themed_setup(
+        config: WindowConfig,
+        theme: impl Into<ThemePair>,
+        root: impl Fn(&Cx) -> Element + 'static,
+    ) -> AppCx {
+        let mut cx = setup(config, root);
+        cx.load_theme("test", theme);
+        cx.set_theme("test").unwrap();
+        cx
+    }
+    fn queued_window(cx: &AppCx) -> WindowState {
+        let root = cx.host.take_window_requests().remove(0).root;
+        cx.make_window_state(root)
+    }
+
     fn test_font_path() -> PathBuf {
         let candidates = [
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -968,6 +987,103 @@ mod tests {
             .map(PathBuf::from)
             .find(|path| path.is_file())
             .expect("expected at least one system TTF font for tests")
+    }
+
+    #[test]
+    fn startup_has_no_implicit_window_and_can_queue_multiple_roots() {
+        let cx = AppCx::new();
+        assert!(cx.host.take_window_requests().is_empty());
+        cx.open_window(WindowConfig::default().title("Main"), |_| {
+            Text::new("Main").into_element()
+        });
+        cx.open_window(WindowConfig::default().title("Tools"), |_| {
+            Text::new("Tools").into_element()
+        });
+        let requests = cx.host.take_window_requests();
+        assert_eq!(requests.len(), 2);
+        for (request, title) in requests.into_iter().zip(["Main", "Tools"]) {
+            assert_eq!(request.config.title, title);
+            let mut window = cx.make_window_state(request.root);
+            window.ensure_mounted();
+            assert_eq!(
+                window.ui.retained().unwrap().root().unwrap().text_content(),
+                Some(title)
+            );
+        }
+    }
+
+    #[test]
+    fn named_themes_are_isolated_replaceable_and_unknown_selection_is_atomic() {
+        let mut cx = AppCx::new();
+        let other = AppCx::new();
+        cx.apply_system_theme(Some(NativeTheme::Light));
+        let mut pair = ThemePair::default();
+        pair.light.radius.md = 42.0;
+        pair.dark.radius.md = 43.0;
+        cx.load_theme("brand", pair.clone());
+        assert_eq!(
+            cx.host.theme(),
+            Theme::default_light(),
+            "loading must not activate"
+        );
+        cx.set_theme("brand").unwrap();
+        assert_eq!(cx.host.theme(), pair.light);
+        cx.apply_system_theme(Some(NativeTheme::Dark));
+        assert_eq!(cx.host.theme(), pair.dark);
+        let err = cx.set_theme("missing").unwrap_err();
+        assert_eq!(err.name, "missing");
+        assert_eq!(cx.host.theme(), pair.dark);
+        assert_eq!(cx.selected_theme, "brand");
+        cx.load_theme("brand", Theme::default_light());
+        assert_eq!(
+            cx.host.theme(),
+            Theme::default_light(),
+            "replacing active theme applies immediately"
+        );
+        assert!(
+            !cx.apply_system_theme(Some(NativeTheme::Light)),
+            "single theme stays fixed"
+        );
+        assert_eq!(other.host.theme(), Theme::default_dark());
+        cx.set_theme("lemon").unwrap();
+        assert_eq!(cx.host.theme(), Theme::default_light());
+    }
+
+    #[test]
+    fn fonts_load_into_current_and_future_windows_and_reject_invalid_data() {
+        let mut cx = AppCx::new();
+        let mut window = cx.make_window_state(Arc::new(|_| Text::new("Text").into_element()));
+        window.ensure_mounted();
+        window
+            .ui
+            .update(
+                Viewport {
+                    width: 300.0,
+                    height: 200.0,
+                },
+                1.0,
+                None,
+                false,
+            )
+            .unwrap();
+        let id = WindowId::dummy();
+        cx.windows.insert(id, window);
+        let bytes = std::fs::read(test_font_path()).unwrap();
+        cx.load_font("Shared", bytes).unwrap();
+        assert!(cx.windows[&id].ui.layout_dirty());
+        assert!(cx
+            .windows
+            .get_mut(&id)
+            .unwrap()
+            .ui
+            .edit_fonts(|fonts| fonts.collection.family_by_name("Shared").is_some()));
+        let mut future = cx.make_window_state(Arc::new(|_| Text::new("Future").into_element()));
+        assert!(future
+            .ui
+            .edit_fonts(|fonts| fonts.collection.family_by_name("Shared").is_some()));
+        let count = cx.registered_fonts.len();
+        assert!(cx.load_font("Bad", vec![1, 2, 3]).is_err());
+        assert_eq!(cx.registered_fonts.len(), count);
     }
 
     #[test]
@@ -1009,8 +1125,8 @@ mod tests {
             .on_close(move || closed.borrow_mut().push("close"));
         assert_eq!(config, config.clone());
         assert_ne!(config, WindowConfig::default());
-        let mut app = AppState::new(config.clone(), |_| Text::new("hi").into_element());
-        let mut window = app.make_window_state();
+        let mut app = setup(config.clone(), |_| Text::new("hi").into_element());
+        let mut window = queued_window(&app);
         // attach_window copies these observers for both primary and requested windows.
         window.events = config.events;
         window.notify_open();
@@ -1031,20 +1147,20 @@ mod tests {
 
     #[test]
     fn app_state_starts_without_windows() {
-        let state = AppState::new(WindowConfig::default(), |_cx| {
+        let state = setup(WindowConfig::default(), |_cx| {
             Text::new("hi").into_element()
         });
 
         assert!(state.windows.is_empty());
-        assert_eq!(state.window_config.title, WindowConfig::default().title);
+        assert_eq!(state.host.take_window_requests().len(), 1);
     }
 
     #[test]
     fn new_window_state_starts_dirty_with_runtime() {
-        let state = AppState::new(WindowConfig::default(), |_cx| {
+        let state = setup(WindowConfig::default(), |_cx| {
             Text::new("hi").into_element()
         });
-        let window_state = state.make_window_state();
+        let window_state = queued_window(&state);
 
         assert!(window_state.ui.layout_dirty());
         assert!(window_state.ui.paint_dirty());
@@ -1055,12 +1171,12 @@ mod tests {
 
     #[test]
     fn removing_last_window_reports_empty_app() {
-        let mut state = AppState::new(WindowConfig::default(), |_cx| {
+        let mut state = setup(WindowConfig::default(), |_cx| {
             Text::new("hi").into_element()
         });
         let id = WindowId::dummy();
 
-        state.windows.insert(id, state.make_window_state());
+        state.windows.insert(id, queued_window(&state));
 
         assert!(state.remove_window(id));
         assert!(state.windows.is_empty());
@@ -1068,15 +1184,15 @@ mod tests {
 
     #[test]
     fn register_font_bytes_applies_to_new_window_font_context() {
-        let mut state = AppState::new(WindowConfig::default(), |_cx| {
+        let mut state = setup(WindowConfig::default(), |_cx| {
             Text::new("hi").into_element()
         });
         let bytes = std::fs::read(test_font_path()).expect("read font bytes");
         state
-            .register_font_bytes("PlatformFontBytes", bytes)
+            .load_font("PlatformFontBytes", bytes)
             .expect("register font bytes");
 
-        let mut window_state = state.make_window_state();
+        let mut window_state = queued_window(&state);
         assert!(window_state.ui.edit_fonts(|fonts| fonts
             .collection
             .family_by_name("PlatformFontBytes")
@@ -1085,10 +1201,10 @@ mod tests {
 
     #[test]
     fn requested_windows_receive_registered_fonts_and_their_own_root() {
-        let mut app = AppState::new(WindowConfig::default(), |_| {
+        let mut app = setup(WindowConfig::default(), |_| {
             Text::new("Main").into_element()
         });
-        app.register_font_path("SettingsFont", test_font_path())
+        app.load_font_file("SettingsFont", test_font_path())
             .unwrap();
         let host = app.host.clone();
         let _scope = host.enter();
@@ -1106,7 +1222,7 @@ mod tests {
         assert_eq!(attributes.title, "Settings");
         assert!(!attributes.resizable);
         // This is the same initialization path used by the native spawn handler.
-        let mut window = app.make_window_state_with_root(request.root);
+        let mut window = app.make_window_state(request.root);
         assert!(window
             .ui
             .edit_fonts(|fonts| fonts.collection.family_by_name("SettingsFont").is_some()));
@@ -1119,14 +1235,14 @@ mod tests {
 
     #[test]
     fn register_font_path_applies_to_new_window_font_context() {
-        let mut state = AppState::new(WindowConfig::default(), |_cx| {
+        let mut state = setup(WindowConfig::default(), |_cx| {
             Text::new("hi").into_element()
         });
         state
-            .register_font_path("PlatformFontPath", test_font_path())
+            .load_font_file("PlatformFontPath", test_font_path())
             .expect("register font path");
 
-        let mut window_state = state.make_window_state();
+        let mut window_state = queued_window(&state);
         assert!(window_state.ui.edit_fonts(|fonts| fonts
             .collection
             .family_by_name("PlatformFontPath")
@@ -1135,7 +1251,7 @@ mod tests {
 
     #[test]
     fn system_appearance_selects_default_palette_for_current_and_future_windows() {
-        let mut app = AppState::new(WindowConfig::default(), |_| {
+        let mut app = setup(WindowConfig::default(), |_| {
             Text::new("Hello").into_element()
         });
         assert_eq!(
@@ -1144,7 +1260,7 @@ mod tests {
             "unknown appearance uses dark fallback"
         );
         assert!(app.apply_system_theme(Some(NativeTheme::Light)));
-        let mut window = app.make_window_state();
+        let mut window = queued_window(&app);
         window.ensure_mounted();
         assert_eq!(window.host.theme(), Theme::default_light());
         let id = WindowId::dummy();
@@ -1166,7 +1282,12 @@ mod tests {
         assert!(app.apply_system_theme(Some(NativeTheme::Dark)));
         assert_eq!(app.windows[&id].host.theme(), Theme::default_dark());
         assert!(app.windows[&id].ui.paint_dirty());
-        assert_eq!(app.make_window_state().host.theme(), Theme::default_dark());
+        assert_eq!(
+            app.make_window_state(Arc::new(|_| Text::new("Future").into_element()))
+                .host
+                .theme(),
+            Theme::default_dark()
+        );
         app.windows
             .get_mut(&id)
             .unwrap()
@@ -1194,12 +1315,12 @@ mod tests {
         light.colors.accent = crate::Color::rgb8(160, 40, 80);
         let mut dark = Theme::default_dark();
         dark.colors.accent = crate::Color::rgb8(90, 180, 130);
-        let mut fixed = AppState::with_theme(WindowConfig::default(), light.clone(), |_| {
+        let mut fixed = themed_setup(WindowConfig::default(), light.clone(), |_| {
             Text::new("Fixed").into_element()
         });
         assert!(!fixed.apply_system_theme(Some(NativeTheme::Dark)));
         assert_eq!(fixed.host.theme(), light);
-        let mut adaptive = AppState::with_theme(
+        let mut adaptive = themed_setup(
             WindowConfig::default(),
             ThemePair::new(light.clone(), dark.clone()),
             |_| Text::new("Adaptive").into_element(),
@@ -1224,8 +1345,8 @@ mod tests {
                 )
                 .into_element()
         }
-        let mut state = AppState::new(WindowConfig::default(), app);
-        let mut window = state.make_window_state();
+        let mut state = setup(WindowConfig::default(), app);
+        let mut window = queued_window(&state);
         window.ensure_mounted();
         let Element::Column(root) = window.ui.runtime().root_element().unwrap() else {
             panic!("column")

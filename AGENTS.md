@@ -46,8 +46,8 @@ User views build an `Element` tree. `Runtime` renders components and freezes dyn
 
 ## Theme ownership
 
-- Desktop `run` / `run_with_fonts` follow native light/dark appearance, including native change events. OS detection stays in desktop; core uses a reactive `HostContext` theme.
-- `ThemePair` supplies adaptive light/dark palettes. A single `Theme` passed to `run_with_theme` stays fixed. Unknown native appearance uses the dark palette; `Theme::default()` is the deterministic headless dark fallback.
+- Desktop `run(|cx| ...)` and the built-in selected theme follow native light/dark appearance, including native change events. OS detection stays in desktop; core uses a reactive `HostContext` theme.
+- `ThemePair` supplies adaptive light/dark palettes. Themes are named with `AppCx::load_theme` and selected with `set_theme`; a single `Theme` stays fixed. Unknown native appearance uses the dark palette; `Theme::default()` is the deterministic headless dark fallback.
 - Preserve component state and local widget overrides on theme changes. Freeze default text colors during rendering so diffing propagates new foregrounds to retained nodes.
 - Use semantic theme colors for example surfaces. Verify theme changes through core/desktop/widget tests; simulated events do not prove an actual OS preference change.
 
@@ -68,7 +68,8 @@ Use only the canonical API in code, examples, and docs. Do not retain deprecated
 - Apply shared root styling with `Decorate::decorate`, available for any `Into<Element>` builder. Decoration runs after widget defaults and preserves container kind, keys, children, handlers and physical placement. Widget-specific styles configure internal parts; avoid copying the full container API onto each widget.
 - Preserve fluent builders: `ColumnView::new()`, `RowView::new()`, `View::new()`, `Text::new(...)`.
 - `Button::new(cx, label)` is the only button builder. Controls and images compose `View`/`Text`; do not add parallel element variants or rendering paths for them.
-- `WindowConfig` lives in `src/window.rs` and configures both `run` and `Cx::open_window`. Window requests carry configuration and root content; native attributes and per-window font initialization belong to platform.
+- `run` accepts one initialization closure with `&mut AppCx`; fonts and named themes belong to this context, and initial windows are explicit. Do not add `run_with_*` variants or implicit primary windows.
+- `WindowConfig` lives in `src/window.rs` and configures both `AppCx::open_window` during `run` initialization and `Cx::open_window` inside components. Window requests carry configuration and root content; native attributes and per-window font initialization belong to platform.
 - `ScrollView` is a base builder with `.axis(ScrollAxis::Vertical | Horizontal | Both)`, vertical by default. Offsets use `State<ScrollOffset>` with independent `x`/`y` values. Scrollbars use one `.scroll_viewport(axis)` marker and one paint path, measured from the explicit `.scroll_content()` wrapper.
 - `Component::new` takes `fn(&Cx) -> Element`. Capturing closures do not fit this API.
 - `Component::new_with_props` takes a typed function pointer and `Clone + PartialEq + 'static` props. Use it for components that need per-instance data and isolated hook state. Use keyed primitive rows when isolated component state is unnecessary.

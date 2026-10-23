@@ -55,10 +55,12 @@ fn app(cx: &Cx) -> Element {
 }
 
 fn main() {
-    run(
-        WindowConfig::default()
-            .title("Lemon — components")
-            .size(320.0, 220.0),
-        app,
-    );
+    run(|cx| {
+        cx.open_window(
+            WindowConfig::default()
+                .title("Lemon — components")
+                .size(320.0, 220.0),
+            app,
+        );
+    });
 }

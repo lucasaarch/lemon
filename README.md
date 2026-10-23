@@ -54,12 +54,9 @@ fn counter(cx: &Cx) -> Element {
 }
 
 fn main() {
-    run(
-        WindowConfig::default()
-            .title("Lemon")
-            .size(900.0, 600.0),
-        counter,
-    );
+    run(|cx| {
+        cx.open_window(WindowConfig::default().title("Lemon").size(900.0, 600.0), counter);
+    });
 }
 ```
 
@@ -223,7 +220,7 @@ Today, the codebase includes:
 
 ## System appearance and custom themes
 
-`run(...)` and `run_with_fonts(...)` follow the native light/dark appearance, both
+`run(|cx| ...)` follows the native light/dark appearance, both
 when the window opens and when the system changes it. Widget defaults, implicit
 text colors, and the window background update together without resetting component
 state. Read semantic tokens with `cx.theme()` instead of hardcoding a light/dark
@@ -231,15 +228,15 @@ surface and relying on an unrelated foreground color.
 
 The built-in palettes live in [`src/theme.rs`](src/theme.rs): edit
 `Theme::default_dark()` or `Theme::default_light()` to change Lemon's defaults.
-For application-specific changes, edit a `ThemePair` before passing it to
-`run_with_theme`. Its `colors` controls fills, text and borders; `chrome` controls
+For application-specific changes, load a named `ThemePair` with
+`cx.load_theme("brand", themes)` and select it with `cx.set_theme("brand")`. Its `colors` controls fills, text and borders; `chrome` controls
 focus rings, carets and scrollbars; `typography`, `spacing` and `radius` control
 the remaining shared defaults.
 
 Applications can supply their own light/dark pair using the same entry point:
 
 ```rust
-use lemon::{run_with_theme, Theme, ThemePair, WindowConfig};
+use lemon::{Theme, ThemePair};
 use lemon::prelude::*;
 
 fn app(_cx: &Cx) -> Element {
@@ -252,10 +249,16 @@ light.radius.md = 10.0;
 dark.radius.md = 10.0;
 dark.colors.background = Color::rgb8(24, 24, 24);
 dark.colors.surface = Color::rgb8(36, 36, 36);
-run_with_theme(WindowConfig::default(), ThemePair::new(light, dark), app);
+run(move |cx| {
+    cx.load_theme("brand", ThemePair::new(light, dark));
+    cx.set_theme("brand").unwrap();
+    cx.open_window(WindowConfig::default(), app);
+});
 ```
 
-Passing a single `Theme` to `run_with_theme` keeps that palette fixed. Local widget overrides continue to take precedence.
+Loading a single `Theme` keeps that palette fixed. Loading a `ThemePair` follows system appearance.
+Loading a theme does not select it; the default active name is `"lemon"`. Unknown
+names return `ThemeNotFound` without changing the current theme. Local widget overrides continue to take precedence.
 Native window decorations retain the system appearance. Choose chrome through
 `WindowConfig::default().chrome(WindowChrome::Overlay)` to extend content behind
 the title bar while keeping traffic lights on macOS, or `WindowChrome::Borderless`
@@ -279,7 +282,7 @@ for headless use; it does not query the OS. See the [winit platform limits](http
 
 Base builders and controls such as `ScrollView`, `Button`, `Select`, `Slider`, `TextField`, `SecureField`, and `TextArea` cover common
 application UI, and their defaults come from the active `Theme`. Start there when the widget shape
-matches your product. Use `run_with_theme` for app-wide tokens and widget style types such as
+matches your product. Use `cx.load_theme` and `cx.set_theme` for app-wide tokens and widget style types such as
 `SelectStyle` and `SliderStyle` for local overrides, and `ButtonStyle` / `TextFieldStyle` for ready-made appearances.
 
 `TextField` and `SecureField` accept `State<String>`; cursor and selection stay internal.
@@ -518,9 +521,36 @@ The `animation` example combines explicit `cx.motion(...)` with implicit transit
 Native windows schedule frames automatically; custom hosts use `UiState::update`
 or `update_at` with a monotonic timestamp and honor their host's frame requests.
 
+### Application startup
+
+`run` calls its initialization closure once before the event loop starts. `AppCx`
+loads shared resources and queues native windows; component `Cx` builds reactive
+views and owns hooks. The context argument is inferred, so both can be named `cx`.
+The closure may borrow local configuration. Window roots remain `'static`.
+
+```rust
+use lemon::prelude::*;
+use lemon::ThemePair;
+fn app(_cx: &Cx) -> Element { Text::new("Hello").font("Brand").into_element() }
+run(|cx| {
+    cx.load_font_file("Brand", "assets/Brand.ttf").expect("load font");
+    // For bundled bytes: cx.load_font("Brand", bytes).unwrap();
+    cx.load_theme("brand", ThemePair::default());
+    cx.set_theme("brand").unwrap();
+    cx.open_window(WindowConfig::default().title("App"), app);
+});
+```
+
+Fonts loaded through `load_font(family, bytes)` or `load_font_file(family, path)`
+are validated and inherited by all windows. Loading errors are returned to the
+caller. Call `open_window` multiple times to start with multiple windows. Returning
+without opening one exits immediately. The `run_with_*` entry points were removed.
+
 ### Additional windows
 
-`WindowConfig` configures both `run(...)` and `cx.open_window(...)`. The same
+`run` receives one application initialization closure with `&mut AppCx`.
+Use `cx.open_window(WindowConfig, root)` for every initial window; no window is created implicitly.
+The component `Cx` also provides `open_window` for windows opened later. The same
 initialization applies registered fonts and the application theme to every window.
 Each request opens an independent window; closing the last window exits the app.
 `WindowConfig` also accepts `.on_open(|| ...)`, `.on_close(|| ...)`,

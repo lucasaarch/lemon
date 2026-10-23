@@ -30,7 +30,7 @@ pub enum WindowChrome {
     Borderless,
 }
 
-/// Native window configuration used by [`crate::run`] and [`crate::Cx::open_window`].
+/// Native window configuration used by [`crate::AppCx::open_window`] and [`crate::Cx::open_window`].
 ///
 /// Defaults to a resizable 900 × 600 logical-point window titled "Lemon".
 ///
