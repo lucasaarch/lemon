@@ -92,6 +92,7 @@ pub use widget::{
 
 pub use element::events::{
     Cursor, KeyEvent, KeyState, LemonKey, Modifiers, NamedKey, ScrollAxis, ScrollDelta,
+    ScrollOffset,
 };
 pub use element::style::{
     BoxShadow, Color, Distribute, LinearGradient, Overflow, Placement, Position, StyleProps,

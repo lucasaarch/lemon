@@ -204,7 +204,7 @@ fn typing_reveals_the_caret_but_manual_scrolling_is_preserved_and_clear_clamps_o
     );
     assert!(text_rect.y + caret.y1 as f32 <= view_rect.y + view_rect.height + 0.1,
         "text={text_rect:?}, viewport={view_rect:?}, caret={caret:?}, extent={:?}, inner={:?}, lines={}, layout_h={}",
-        lemon::layout::scroll_content_extent(viewport,ui.layout_map()),viewport.children[0].style.margin,
+        lemon::layout::scroll_content_bounds(viewport,ui.layout_map()),viewport.children[0].style.margin,
         cache.parley_layout.as_ref().unwrap().len(), cache.parley_layout.as_ref().unwrap().height());
     let offset = -viewport.children[0].style.margin.unwrap_or_default().top;
     assert!(offset > 0.0);

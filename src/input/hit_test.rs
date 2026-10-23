@@ -282,9 +282,7 @@ pub fn hit_test_scroll<'a>(
 ) -> Option<&'a RetainedNode> {
     let hit = hit_test(node, layout, point, |node| {
         node.handlers.on_scroll.is_some()
-            && node
-                .scroll_viewport
-                .is_none_or(|axis| axis.amount(delta) != 0.0)
+            && node.scroll_viewport.is_none_or(|axis| axis.accepts(delta))
     });
     hit
 }

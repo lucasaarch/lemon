@@ -69,7 +69,7 @@ Use only the canonical API in code, examples, and docs. Do not retain deprecated
 - Preserve fluent builders: `ColumnView::new()`, `RowView::new()`, `View::new()`, `Text::new(...)`.
 - `Button::new(cx, label)` is the only button builder. Controls and images compose `View`/`Text`; do not add parallel element variants or rendering paths for them.
 - `WindowConfig` lives in `src/window.rs` and configures both `run` and `Cx::open_window`. Window requests carry configuration and root content; native attributes and per-window font initialization belong to platform.
-- `ScrollView` is a base builder with `.axis(ScrollAxis::Vertical | Horizontal)`, vertical by default. Scrollbars use one `.scroll_viewport(axis)` marker and one paint path, measured from the explicit `.scroll_content()` wrapper.
+- `ScrollView` is a base builder with `.axis(ScrollAxis::Vertical | Horizontal | Both)`, vertical by default. Offsets use `State<ScrollOffset>` with independent `x`/`y` values. Scrollbars use one `.scroll_viewport(axis)` marker and one paint path, measured from the explicit `.scroll_content()` wrapper.
 - `Component::new` takes `fn(&Cx) -> Element`. Capturing closures do not fit this API.
 - `Component::new_with_props` takes a typed function pointer and `Clone + PartialEq + 'static` props. Use it for components that need per-instance data and isolated hook state. Use keyed primitive rows when isolated component state is unnecessary.
 - Call hooks in a stable order on every render. Widget constructors such as `Button::new` consume hook slots too: do not put them in a changing loop or conditional on a shared `Cx`. Use component scopes or primitives there.

@@ -190,11 +190,9 @@ impl UiState {
                 &node.handlers.on_scroll,
             ) {
                 let margin = inner.style.margin.unwrap_or_default();
-                let offset = match axis {
-                    crate::ScrollAxis::Vertical => -margin.top,
-                    crate::ScrollAxis::Horizontal => -margin.left,
-                };
-                if offset as f64 > maximum + 0.01 {
+                if (axis.horizontal() && f64::from(-margin.left) > maximum.x + 0.01)
+                    || (axis.vertical() && f64::from(-margin.top) > maximum.y + 0.01)
+                {
                     callbacks.push(handler.clone());
                 }
             }

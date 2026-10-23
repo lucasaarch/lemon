@@ -578,8 +578,19 @@ macro_rules! container_builder {
                 self.0.handlers.on_pointer_up = Some(Rc::new(f));
                 self
             }
-            /// Binds a cell updated after layout for scroll clamping (used by `ScrollView`).
-            pub fn scroll_layout_max(mut self, cell: std::rc::Rc<std::cell::Cell<f64>>) -> Self {
+            /// Binds measured horizontal/vertical maximum offsets, in logical points.
+            /// Updated after layout for scroll clamping; disabled axes receive zero.
+            /// Used by [`ScrollView`](crate::ScrollView) and custom marked scroll regions.
+            ///
+            /// ```
+            /// use lemon::{ScrollOffset, View};
+            /// let limits = std::rc::Rc::new(std::cell::Cell::new(ScrollOffset::default()));
+            /// let viewport = View::new().scroll_layout_max(limits);
+            /// ```
+            pub fn scroll_layout_max(
+                mut self,
+                cell: std::rc::Rc<std::cell::Cell<crate::ScrollOffset>>,
+            ) -> Self {
                 self.0.handlers.scroll_layout_max = Some(cell);
                 self
             }

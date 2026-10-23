@@ -101,7 +101,7 @@ pub struct EventHandlers {
     /// Called when a pointer release is reported for this retained node with normalized `(x, y)` coordinates.
     pub on_pointer_up: Option<Rc<dyn Fn(f32, f32)>>,
     /// Updated after each [`layout_pass`](crate::layout::layout_pass) for scroll viewports; used to clamp wheel delta.
-    pub scroll_layout_max: Option<Rc<Cell<f64>>>,
+    pub scroll_layout_max: Option<Rc<Cell<crate::ScrollOffset>>>,
 }
 
 impl PartialEq for EventHandlers {
@@ -193,7 +193,10 @@ impl std::fmt::Debug for EventHandlers {
             )
             .field(
                 "scroll_layout_max",
-                &self.scroll_layout_max.as_ref().map(|_| "Rc<Cell<f64>>"),
+                &self
+                    .scroll_layout_max
+                    .as_ref()
+                    .map(|_| "Rc<Cell<crate::ScrollOffset>>"),
             )
             .finish()
     }

@@ -1,7 +1,7 @@
 use lemon::{
     element::Element,
     input::hit_test::{hit_test_on_click, LogicalPoint},
-    layout::{layout_pass, scroll_content_extent, LayoutMap, LayoutRect},
+    layout::{layout_pass, scroll_content_bounds, LayoutMap, LayoutRect},
     retained::{RetainedNode, RetainedTree},
     ColumnView, Position, View, Viewport,
 };
@@ -174,7 +174,10 @@ fn sticky_stops_at_parent_and_preserves_scroll_extent() {
         );
         let root = tree.root().unwrap();
         assert_eq!(rect(&root.children[0].children[0], &map).y, expected);
-        assert_eq!(scroll_content_extent(root, &map), Some(200.0));
+        assert_eq!(
+            scroll_content_bounds(root, &map).map(|bounds| bounds.height),
+            Some(200.0)
+        );
         if offset == 60.0 {
             assert!(hit_test_on_click(root, &map, LogicalPoint::new(5.0, 5.0)).is_some());
         }

@@ -958,16 +958,6 @@ fn empty_field_caret_x(rect: LayoutRect, alignment: crate::TextAlignment) -> f32
 const WIDGET_SCROLLBAR_WIDTH: f32 = 8.0;
 const WIDGET_SCROLLBAR_THUMB_MIN: f32 = 20.0;
 
-fn scroll_offset_from_inner(node: &RetainedNode) -> f32 {
-    crate::layout::scroll_content_node(node)
-        .and_then(|inner| inner.style.margin.as_ref())
-        .map(|m| match node.scroll_viewport.unwrap_or_default() {
-            crate::ScrollAxis::Vertical => (-m.top).max(0.0),
-            crate::ScrollAxis::Horizontal => (-m.left).max(0.0),
-        })
-        .unwrap_or(0.0)
-}
-
 fn paint_scrollbar(
     node: &RetainedNode,
     layout: &LayoutMap,
@@ -975,95 +965,93 @@ fn paint_scrollbar(
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
-    let Some(axis) = node.scroll_viewport else {
+    let (Some(axis), Some(viewport), Some(content)) = (
+        node.scroll_viewport,
+        crate::layout::scroll_viewport_rect(node, layout),
+        crate::layout::scroll_content_bounds(node, layout),
+    ) else {
         return;
     };
-    let Some(viewport_rect) = crate::layout::scroll_viewport_rect(node, layout) else {
-        return;
-    };
-    let Some(content_height) = crate::layout::scroll_content_extent(node, layout) else {
-        return;
-    };
-    let viewport_height = match axis {
-        crate::ScrollAxis::Vertical => viewport_rect.height,
-        crate::ScrollAxis::Horizontal => viewport_rect.width,
-    };
-    if content_height <= viewport_height + 1.0 {
-        return;
+    let margin = crate::layout::scroll_content_node(node)
+        .and_then(|inner| inner.style.margin)
+        .unwrap_or_default();
+    let horizontal = axis.horizontal() && content.width > viewport.width + 1.0;
+    let vertical = axis.vertical() && content.height > viewport.height + 1.0;
+    for (is_horizontal, enabled, other) in
+        [(true, horizontal, vertical), (false, vertical, horizontal)]
+    {
+        if !enabled {
+            continue;
+        }
+        let (visible, extent, offset, cross) = if is_horizontal {
+            (viewport.width, content.width, -margin.left, viewport.height)
+        } else {
+            (viewport.height, content.height, -margin.top, viewport.width)
+        };
+        let track_length = (visible
+            - if other {
+                WIDGET_SCROLLBAR_WIDTH.min(visible)
+            } else {
+                0.0
+            })
+        .max(0.0);
+        let thickness = WIDGET_SCROLLBAR_WIDTH.min(cross).max(0.0);
+        if track_length == 0.0 || thickness == 0.0 {
+            continue;
+        }
+        let thumb_length = (visible / extent * track_length)
+            .clamp(WIDGET_SCROLLBAR_THUMB_MIN.min(track_length), track_length);
+        let travel = track_length - thumb_length;
+        let thumb_offset = (offset / (extent - visible)).clamp(0.0, 1.0) * travel;
+        let (track, thumb) = if is_horizontal {
+            let y = viewport.y + viewport.height - thickness;
+            (
+                Rect::new(
+                    viewport.x.into(),
+                    y.into(),
+                    (viewport.x + track_length).into(),
+                    (y + thickness).into(),
+                ),
+                Rect::new(
+                    (viewport.x + thumb_offset).into(),
+                    y.into(),
+                    (viewport.x + thumb_offset + thumb_length).into(),
+                    (y + thickness).into(),
+                ),
+            )
+        } else {
+            let x = viewport.x + viewport.width - thickness;
+            (
+                Rect::new(
+                    x.into(),
+                    viewport.y.into(),
+                    (x + thickness).into(),
+                    (viewport.y + track_length).into(),
+                ),
+                Rect::new(
+                    x.into(),
+                    (viewport.y + thumb_offset).into(),
+                    (x + thickness).into(),
+                    (viewport.y + thumb_offset + thumb_length).into(),
+                ),
+            )
+        };
+        let paint = ctx.paint(node);
+        let chrome = crate::theme::current_theme().chrome;
+        for (rect, color) in [
+            (
+                track,
+                paint.scroll_track_color.unwrap_or(chrome.scrollbar_track),
+            ),
+            (
+                thumb,
+                paint.scroll_thumb_color.unwrap_or(chrome.scrollbar_thumb),
+            ),
+        ] {
+            scene.fill(Fill::NonZero, ctx.base, to_peniko_color(color), None, &rect);
+            stats.fills += 1;
+        }
     }
-    let scroll_offset = scroll_offset_from_inner(node);
-    let max_offset = (content_height - viewport_height).max(1.0);
-    let track_x = match axis {
-        crate::ScrollAxis::Vertical => {
-            viewport_rect.x + viewport_rect.width - WIDGET_SCROLLBAR_WIDTH
-        }
-        crate::ScrollAxis::Horizontal => {
-            viewport_rect.y + viewport_rect.height - WIDGET_SCROLLBAR_WIDTH
-        }
-    };
-    let track = match axis {
-        crate::ScrollAxis::Vertical => Rect::new(
-            track_x as f64,
-            viewport_rect.y as f64,
-            (track_x + WIDGET_SCROLLBAR_WIDTH) as f64,
-            (viewport_rect.y + viewport_height) as f64,
-        ),
-        crate::ScrollAxis::Horizontal => Rect::new(
-            viewport_rect.x as f64,
-            track_x as f64,
-            (viewport_rect.x + viewport_height) as f64,
-            (track_x + WIDGET_SCROLLBAR_WIDTH) as f64,
-        ),
-    };
-    scene.fill(
-        Fill::NonZero,
-        ctx.base,
-        to_peniko_color(
-            ctx.paint(node)
-                .scroll_track_color
-                .unwrap_or(crate::theme::current_theme().chrome.scrollbar_track),
-        ),
-        None,
-        &track,
-    );
-    stats.fills += 1;
-
-    let thumb_height = (viewport_height / content_height * viewport_height).clamp(
-        WIDGET_SCROLLBAR_THUMB_MIN.min(viewport_height),
-        viewport_height,
-    );
-    let thumb_travel = (viewport_height - thumb_height).max(0.0);
-    let origin = match axis {
-        crate::ScrollAxis::Vertical => viewport_rect.y,
-        crate::ScrollAxis::Horizontal => viewport_rect.x,
-    };
-    let thumb_y = origin + (scroll_offset / max_offset).clamp(0.0, 1.0) * thumb_travel;
-    let thumb = match axis {
-        crate::ScrollAxis::Vertical => Rect::new(
-            track_x as f64,
-            thumb_y as f64,
-            (track_x + WIDGET_SCROLLBAR_WIDTH) as f64,
-            (thumb_y + thumb_height) as f64,
-        ),
-        crate::ScrollAxis::Horizontal => Rect::new(
-            thumb_y as f64,
-            track_x as f64,
-            (thumb_y + thumb_height) as f64,
-            (track_x + WIDGET_SCROLLBAR_WIDTH) as f64,
-        ),
-    };
-    scene.fill(
-        Fill::NonZero,
-        ctx.base,
-        to_peniko_color(
-            ctx.paint(node)
-                .scroll_thumb_color
-                .unwrap_or(crate::theme::current_theme().chrome.scrollbar_thumb),
-        ),
-        None,
-        &thumb,
-    );
-    stats.fills += 1;
 }
 
 #[cfg(test)]
@@ -1720,7 +1708,7 @@ mod tests {
 
         // Build a scroll-bar viewport whose content is taller than the viewport.
         // Structure mirrors the ScrollView widget: viewport -> inner wrapper -> content.
-        // scroll_content_extent returns a height and the scrollbar is drawn.
+        // scroll_content_bounds returns the content size and the scrollbar is drawn.
         let content = View::new()
             .width(100.0)
             .height(300.0)

@@ -106,15 +106,16 @@ fn scroll_content_marker_survives_an_extra_wrapper_and_reactive_updates() {
     let tree = ui.retained().unwrap();
     let content = layout::scroll_content_node(tree.root().unwrap()).unwrap();
     assert!(content.style.scroll_content);
-    let extent = layout::scroll_content_extent(tree.root().unwrap(), ui.layout_map()).unwrap();
-    assert_eq!(extent, 600.0);
+    let extent = layout::scroll_content_bounds(tree.root().unwrap(), ui.layout_map()).unwrap();
+    assert_eq!(extent.height, 600.0);
     ui.apply_patches(lemon::diff::diff(make(0.0), make(30.0), NodePath::root()))
         .unwrap();
     ui.layout(viewport()).unwrap();
     let root = ui.retained().unwrap().root().unwrap();
     assert_eq!(
-        layout::scroll_content_extent(root, ui.layout_map()),
-        Some(extent)
+        layout::scroll_content_bounds(root, ui.layout_map())
+            .map(|bounds| (bounds.width, bounds.height)),
+        Some((extent.width, extent.height))
     );
     // A paint-only mutation must not undo geometry invalidation.
     ui.apply_patches([Patch::UpdatePaint {
@@ -141,5 +142,5 @@ fn unmarked_scroll_wrappers_are_not_inferred_from_tree_depth() {
     ui.layout(viewport()).unwrap();
     let root = ui.retained().unwrap().root().unwrap();
     assert!(layout::scroll_content_node(root).is_none());
-    assert!(layout::scroll_content_extent(root, ui.layout_map()).is_none());
+    assert!(layout::scroll_content_bounds(root, ui.layout_map()).is_none());
 }

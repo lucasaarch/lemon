@@ -312,7 +312,7 @@ mod tests {
     fn scroll_builds_hidden_viewport_and_updates_offset() {
         use crate::element::builders::Text;
 
-        let offset = State::new(10.0f64);
+        let offset = State::new(crate::ScrollOffset::new(0.0, 10.0));
         let root = ScrollView::with_offset(offset.clone(), Text::new("item"))
             .height(200.0)
             .width(300.0)
@@ -334,8 +334,8 @@ mod tests {
 
         let on_scroll = viewport.handlers.on_scroll.as_ref().unwrap();
         on_scroll(crate::ScrollDelta::new(0.0, -20.0));
-        assert_eq!(offset.get(), 30.0);
+        assert_eq!(offset.get(), crate::ScrollOffset::new(0.0, 30.0));
         on_scroll(crate::ScrollDelta::new(0.0, 1000.0));
-        assert_eq!(offset.get(), 0.0);
+        assert_eq!(offset.get(), crate::ScrollOffset::default());
     }
 }

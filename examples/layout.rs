@@ -1,4 +1,4 @@
-//! Rows arrange children horizontally, columns vertically, and views group styled content.
+//! Container layout, shared styling, and a canvas that scrolls on both axes.
 
 use lemon::prelude::*;
 
@@ -31,9 +31,24 @@ fn app(cx: &Cx) -> Element {
                 ),
         )
         .child(
-            ScrollView::new(cx, RowView::new().spacing(12.0)
-                .child(Text::new("A horizontal scroll view keeps wide content on one line. Shift+wheel scrolls sideways.")))
-                .axis(ScrollAxis::Horizontal).width(360.0).height(48.0),
+            ScrollView::new(
+                cx,
+                ColumnView::new()
+                    .width(720.0)
+                    .height(320.0)
+                    .inset(16.0)
+                    .surface(theme.colors.surface)
+                    .distribute(Distribute::Between)
+                    .child(Text::new(
+                        "A wide canvas: scroll horizontally and vertically.",
+                    ))
+                    .child(Text::new(
+                        "Bottom of the canvas. Shift+wheel moves horizontally.",
+                    )),
+            )
+            .axis(ScrollAxis::Both)
+            .width(360.0)
+            .height(100.0),
         )
         .child(Text::new("Fixed to window").decorate(|view| {
             view.position(Position::Fixed)
@@ -50,7 +65,7 @@ fn main() {
     run(
         WindowConfig::default()
             .title("Lemon — layout")
-            .size(440.0, 350.0),
+            .size(440.0, 420.0),
         app,
     );
 }

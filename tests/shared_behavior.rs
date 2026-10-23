@@ -125,7 +125,7 @@ fn pointer_focus_keyboard_capture_hover_and_scroll_work_without_desktop() {
     let source = value.clone();
     let volume = State::new(0.0);
     let source_volume = volume.clone();
-    let offset = State::new(0.0);
+    let offset = State::new(ScrollOffset::default());
     let source_offset = offset.clone();
     let mut ui = UiState::default();
     ui.mount(move |cx| {
@@ -183,7 +183,7 @@ fn pointer_focus_keyboard_capture_hover_and_scroll_work_without_desktop() {
         delta: lemon::ScrollDelta::new(0.0, -30.0),
     })
     .unwrap();
-    assert!(offset.get() > 0.0);
+    assert!(offset.get().y > 0.0);
     ui.dispatch_input(key(LemonKey::Named(NamedKey::Tab), Modifiers::default()))
         .unwrap();
     assert_ne!(ui.focused(), Some(field));

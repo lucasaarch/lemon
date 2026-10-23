@@ -79,7 +79,7 @@ Each example has one job. Sources live in [`examples`](examples).
 | `reactivity` | State, derived values, and effects (output in the terminal) |
 | `components` | Independent hook state in keyed component instances |
 | `keys` | Stable row identity during removal and reordering |
-| `layout` | Rows, columns, placement, styled views, and horizontal scrolling |
+| `layout` | Rows, columns, placement, styled views, and scrolling on both axes |
 | `custom` | A form centered in a view that fills the window |
 | `form` | TextField, SecureField, resizable TextArea, Select, Slider, and scrollable history |
 | `controls` | Checkbox, Switch, Popover, Dialog, Toaster, and window chrome |
@@ -601,15 +601,22 @@ Use `.resizable(false)` for a fixed height. The defaults are 120 points high,
 a 60-point minimum and resizing enabled. The family shares `TextFieldStyle` and
 root `.decorate(...)` styling.
 
-`ScrollView` replaces `Scroll`. Its axis is vertical by default; choose horizontal
-scrolling explicitly. Trackpads preserve both axes; Shift+wheel scrolls horizontally.
+`ScrollView` is vertical by default. Select `ScrollAxis::Horizontal` for a strip,
+or `ScrollAxis::Both` for a canvas. Trackpads preserve both axes, including diagonal
+movement; Shift+wheel scrolls horizontally. Calling `.axis(...)` again replaces
+its previous value. Scrollbars appear independently for overflowing axes.
 
 ```rust
 use lemon::prelude::*;
 let cx = Cx::new();
-let strip = ScrollView::new(&cx, Text::new("Wide content"))
-    .axis(ScrollAxis::Horizontal).width(240.0).height(80.0);
+let canvas = ScrollView::new(&cx, View::new().width(800.0).height(600.0))
+    .axis(ScrollAxis::Both).width(320.0).height(200.0);
 ```
+
+For caller-owned positions, `ScrollView::with_offset` takes
+`State<ScrollOffset>` (`ScrollOffset::new(x, y)`) instead of a scalar state.
+Offsets use logical points from the content origin. Optional pre-layout estimates
+use `.content_size(width, height)`; measured bounds determine the final limits.
 
 Base composition and presentation (`View`, `RowView`, `ColumnView`, `Text`,
 `Component`, `Icon`, `Image`, `ScrollView`) belong to `element/builders`. Semantic

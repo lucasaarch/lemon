@@ -191,20 +191,27 @@ pub fn scroll_content_node(node: &RetainedNode) -> Option<&RetainedNode> {
     None
 }
 
-/// Total content extent on the viewport's scroll axis, in logical points.
+/// Measured content bounds in logical coordinates, before sticky/fixed positioning.
 ///
-/// Uses the explicitly marked scroll-content wrapper. Unmarked trees are not
-/// scroll regions; set `StyleProps::scroll_content` on the offset wrapper.
-pub fn scroll_content_extent(node: &RetainedNode, layout: &LayoutMap) -> Option<f32> {
+/// Uses the explicitly marked scroll-content wrapper; its width and height provide
+/// the independent content extents. Clipped descendants contribute their visible
+/// viewport bounds, not hidden content. Unmarked trees are not scroll regions.
+/// Returns `None` when there is no clipped scroll handler or marked content.
+///
+/// ```
+/// use lemon::{prelude::*, ui::UiState, Viewport, layout::scroll_content_bounds};
+/// let mut ui = UiState::default();
+/// ui.mount(|cx| ScrollView::new(cx, View::new().width(600.0).height(400.0))
+///     .axis(ScrollAxis::Both).width(200.0).height(100.0).into_element()).unwrap();
+/// ui.layout(Viewport { width: 300.0, height: 200.0 }).unwrap();
+/// let bounds = scroll_content_bounds(ui.retained().unwrap().root().unwrap(), ui.layout_map()).unwrap();
+/// assert_eq!((bounds.width, bounds.height), (600.0, 400.0));
+/// ```
+pub fn scroll_content_bounds(node: &RetainedNode, layout: &LayoutMap) -> Option<LayoutRect> {
     if node.handlers.on_scroll.is_none() || node.style.overflow != Overflow::Hidden {
         return None;
     }
-    let inner = scroll_content_node(node)?;
-    let bounds = union_descendant_bounds(inner, &layout.flow_rects)?;
-    Some(match node.scroll_viewport.unwrap_or_default() {
-        crate::ScrollAxis::Vertical => bounds.height,
-        crate::ScrollAxis::Horizontal => bounds.width,
-    })
+    union_descendant_bounds(scroll_content_node(node)?, &layout.flow_rects)
 }
 
 /// Content rectangle inside a viewport's padding, shared by scrolling and editor chrome.
@@ -242,18 +249,39 @@ pub(crate) fn text_input_node(node: &RetainedNode) -> Option<&RetainedNode> {
     node.children.iter().find_map(text_input_node)
 }
 
-/// Maximum scroll offset for a clipped viewport with an inner content wrapper, from layout results.
-pub fn scroll_content_max_offset(node: &RetainedNode, layout: &LayoutMap) -> Option<f64> {
-    if node.handlers.on_scroll.is_none() || node.style.overflow != Overflow::Hidden {
-        return None;
-    }
-    let viewport_rect = scroll_viewport_rect(node, layout)?;
-    let content = scroll_content_extent(node, layout)?;
-    let viewport = match node.scroll_viewport.unwrap_or_default() {
-        crate::ScrollAxis::Vertical => viewport_rect.height,
-        crate::ScrollAxis::Horizontal => viewport_rect.width,
-    };
-    Some(f64::from((content - viewport).max(0.0)))
+/// Maximum horizontal and vertical offsets for a clipped viewport, in logical points.
+///
+/// Subtracts the viewport's content area, excluding padding, from measured content
+/// bounds. Disabled axes have a zero maximum; returns `None` for unmarked content.
+///
+/// ```
+/// use lemon::{prelude::*, ui::UiState, Viewport, scroll_content_max_offset};
+/// let mut ui = UiState::default();
+/// ui.mount(|cx| ScrollView::new(cx, View::new().width(600.0).height(400.0))
+///     .axis(ScrollAxis::Both).width(200.0).height(100.0).into_element()).unwrap();
+/// ui.layout(Viewport { width: 300.0, height: 200.0 }).unwrap();
+/// let maximum = scroll_content_max_offset(ui.retained().unwrap().root().unwrap(), ui.layout_map());
+/// assert_eq!(maximum, Some(ScrollOffset::new(400.0, 300.0)));
+/// ```
+pub fn scroll_content_max_offset(
+    node: &RetainedNode,
+    layout: &LayoutMap,
+) -> Option<crate::ScrollOffset> {
+    let viewport = scroll_viewport_rect(node, layout)?;
+    let content = scroll_content_bounds(node, layout)?;
+    let axis = node.scroll_viewport.unwrap_or_default();
+    Some(crate::ScrollOffset::new(
+        if axis.horizontal() {
+            f64::from((content.width - viewport.width).max(0.0))
+        } else {
+            0.0
+        },
+        if axis.vertical() {
+            f64::from((content.height - viewport.height).max(0.0))
+        } else {
+            0.0
+        },
+    ))
 }
 
 /// Writes [`scroll_content_max_offset`] into each node's
@@ -683,7 +711,7 @@ fn fix_absolute_overlay_bounds(node: &RetainedNode, map: &mut LayoutMap) {
     }
 
     if let Some(taffy_id) = node.taffy_id {
-        if node.style.position == Position::Absolute {
+        if node.style.position == Position::Absolute && node.style.overflow != Overflow::Hidden {
             if let Some(rect) = map.rects.get(&taffy_id).copied() {
                 if let Some(content) = union_descendant_bounds(node, &map.rects) {
                     let height = (content.y + content.height) - rect.y;
@@ -725,6 +753,9 @@ fn union_descendant_bounds(
                     Some(u) => union_layout_rects(u, *rect),
                 });
             }
+        }
+        if child.style.overflow == Overflow::Hidden {
+            continue;
         }
         if let Some(desc) = union_descendant_bounds(child, rects) {
             union = Some(match union {
@@ -861,7 +892,10 @@ mod tests {
             );
         }
 
-        let offset = std::rc::Rc::new(std::cell::Cell::new(f64::MAX));
+        let offset = std::rc::Rc::new(std::cell::Cell::new(crate::ScrollOffset::new(
+            f64::MAX,
+            f64::MAX,
+        )));
         let root = ColumnView::new()
             .child(
                 View::new()
@@ -887,7 +921,7 @@ mod tests {
         let viewport = &tree.root.as_ref().unwrap().children[0];
         let max = scroll_content_max_offset(viewport, &layout).unwrap();
         assert_eq!(offset.get(), max);
-        assert!(max > 0.0);
+        assert!(max.y > 0.0);
     }
 
     #[test]

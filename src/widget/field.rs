@@ -470,7 +470,7 @@ impl From<TextField> for Element {
 struct AreaLayout {
     height: f32,
     minimum: f32,
-    offset: State<f64>,
+    offset: State<crate::ScrollOffset>,
     resize: Option<State<Option<f32>>>,
 }
 
@@ -498,7 +498,7 @@ pub struct TextArea {
     minimum: f32,
     resizable: bool,
     resized: State<Option<f32>>,
-    offset: State<f64>,
+    offset: State<crate::ScrollOffset>,
 }
 impl TextArea {
     /// Creates an enabled multiline field with theme defaults and app-owned text.
@@ -509,7 +509,7 @@ impl TextArea {
             minimum: 60.0,
             resizable: true,
             resized: cx.state(None),
-            offset: cx.state(0.0),
+            offset: cx.state(crate::ScrollOffset::default()),
         }
     }
     /// Sets the placeholder shown only when the value is empty.
