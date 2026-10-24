@@ -28,8 +28,9 @@ pub use crate::platform::{run, AppCx};
 pub use crate::runtime::cx::Cx;
 pub use crate::widget::{
     Button, ButtonStyle, Checkbox, Dialog, FileTree, FileTreeNode, FileTreeStyle, Popover,
-    SecureField, Select, SelectStyle, Slider, SliderStyle, Switch, TextArea, TextField,
-    TextFieldStyle, ToastId, ToastKind, Toaster,
+    ResizableView, ResizeEdge, SecureField, Select, SelectStyle, Slider, SliderStyle, Switch,
+    Table, TextArea, TextField, TextFieldStyle, ToastId, ToastKind, Toaster, Tree, TreeNode,
+    TreeStyle,
 };
 pub use crate::window::{WindowChrome, WindowConfig};
 pub use crate::State;

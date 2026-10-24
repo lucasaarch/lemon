@@ -33,6 +33,8 @@ fn both_axes_scroll_clamp_and_paint_with_explicit_content_wrappers() {
             ScrollAxis::Horizontal => ScrollDelta::new(-9999.0, 0.0),
             ScrollAxis::Both => ScrollDelta::new(-9999.0, -9999.0),
         };
+        ui.dispatch_input(InputEvent::Hover(LogicalPoint::new(20.0, 20.0)))
+            .unwrap();
         ui.dispatch_input(InputEvent::Scroll {
             point: LogicalPoint::new(20.0, 20.0),
             delta,
@@ -72,6 +74,90 @@ fn both_axes_scroll_clamp_and_paint_with_explicit_content_wrappers() {
             }
         }
     }
+}
+
+#[test]
+fn scrollbar_thumb_drag_updates_offset_and_consumes_its_release_click() {
+    use std::{cell::Cell, rc::Rc};
+
+    let offset = State::new(ScrollOffset::default());
+    let clicked = Rc::new(Cell::new(false));
+    let did_click = clicked.clone();
+    let scroll_offset = offset.clone();
+    let mut ui = UiState::default();
+    ui.mount(move |_| {
+        let on_click = did_click.clone();
+        ScrollView::with_offset(
+            scroll_offset.clone(),
+            View::new().height(600.0).action(move || on_click.set(true)),
+        )
+        .width(200.0)
+        .height(100.0)
+        .into_element()
+    })
+    .unwrap();
+    let viewport = Viewport {
+        width: 300.0,
+        height: 200.0,
+    };
+    ui.update(viewport, 1.0, None, false).unwrap();
+
+    let thumb_start = LogicalPoint::new(196.0, 10.0);
+    let thumb_end = LogicalPoint::new(196.0, 50.0);
+    ui.dispatch_input(InputEvent::PointerDown(thumb_start))
+        .unwrap();
+    ui.dispatch_input(InputEvent::PointerMove(thumb_end))
+        .unwrap();
+    assert!(
+        offset.get().y > 0.0,
+        "drag should advance the scroll offset"
+    );
+    ui.update(viewport, 1.0, None, false).unwrap();
+    ui.dispatch_input(InputEvent::PointerUp(thumb_end)).unwrap();
+    ui.dispatch_input(InputEvent::Click(thumb_end)).unwrap();
+    assert!(
+        !clicked.get(),
+        "the thumb release must not click its content"
+    );
+}
+
+#[test]
+fn scrollbar_visibility_tracks_pointer_enter_and_leave() {
+    let mut ui = UiState::default();
+    ui.mount(|_| {
+        ScrollView::with_offset(
+            State::new(ScrollOffset::default()),
+            View::new().height(600.0),
+        )
+        .width(200.0)
+        .height(100.0)
+        .into_element()
+    })
+    .unwrap();
+    let viewport = Viewport {
+        width: 300.0,
+        height: 200.0,
+    };
+    ui.update(viewport, 1.0, None, false).unwrap();
+    let paint_fills = |ui: &UiState| {
+        lemon::paint_pass(
+            ui.retained().unwrap(),
+            ui.layout_map(),
+            &mut lemon::Scene::new(),
+            1.0,
+            None,
+            false,
+        )
+        .fills
+    };
+    assert_eq!(paint_fills(&ui), 0);
+
+    ui.dispatch_input(InputEvent::Hover(LogicalPoint::new(20.0, 20.0)))
+        .unwrap();
+    assert_eq!(paint_fills(&ui), 2);
+
+    ui.dispatch_input(InputEvent::PointerLeave).unwrap();
+    assert_eq!(paint_fills(&ui), 0);
 }
 
 #[test]
@@ -343,6 +429,8 @@ fn both_paints_only_overflowing_axes_and_refreshes_limits_after_paint_only_rende
         })
         .unwrap();
         update(&mut ui);
+        ui.dispatch_input(InputEvent::Hover(LogicalPoint::new(20.0, 20.0)))
+            .unwrap();
         color.set(Color::rgb8(3, 2, 1));
         wheel(&mut ui, (20.0, 20.0), -9999.0, -9999.0);
         assert_eq!(

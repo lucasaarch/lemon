@@ -27,6 +27,10 @@ pub mod overlay;
 
 pub mod select;
 
+pub mod table;
+
+pub mod resizable_view;
+
 pub mod slider;
 
 pub mod toaster;
@@ -38,9 +42,11 @@ pub use toggle::{Checkbox, Switch};
 
 pub use button::{Button, ButtonStyle};
 pub use field::{SecureField, TextArea, TextField, TextFieldStyle};
-pub use file_tree::{FileTree, FileTreeNode, FileTreeStyle};
+pub use file_tree::{FileTree, FileTreeNode, FileTreeStyle, Tree, TreeNode, TreeStyle};
+pub use resizable_view::{ResizableView, ResizeEdge};
 pub use select::{Select, SelectStyle};
 pub use slider::{Slider, SliderStyle};
+pub use table::Table;
 
 // Shared timing for built-in controls; root decoration can override it.
 fn interaction_transition() -> crate::Transition {

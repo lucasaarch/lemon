@@ -7,11 +7,24 @@ Changes to Lemon's public API are recorded here. Releases follow [Semantic Versi
 ### Application API
 
 - `Toaster` supports `Info`, `Success`, `Warning` and `Error` notifications with distinct icons and colors; plain `show` and `show_for` remain informational.
+- `Cx::on_mount` runs after the first frame and returns cleanup that runs when the component unmounts or its window closes.
 
 ### Reactive behavior
 
 - Effects and derived values stop observing states that their latest evaluation no longer reads.
 - Suppressed observation and effect execution restore their state after a caught panic.
+- Pending mount-time watchers no longer run or retain resources after their component unmounts.
+
+### Diagnostics
+
+- Debug builds open a native Lemon DevTools window with F12: a retained-tree inspector with layout/paint details and highlighting, component/hook metadata, and a bounded CPU profiling history. Profiler timings exclude GPU presentation waits. Inspector code and instrumentation are excluded from release builds.
+- `Tree`, `TreeNode` and `TreeStyle` provide collapsible application hierarchies with custom icons; `FileTree` now uses the same tree interaction and painting implementation.
+- `Tree` starts with branches expanded and reports hovered rows; DevTools keeps all branches visible, mirrors hover as a soft target highlight, and colors node icons by element kind. `View`, `RowView`, `ColumnView`, `Text`, and `Component` accept `.id(...)` labels for the inspector.
+- Scrollbar thumbs support pointer dragging and track clicks.
+- `Table` renders themed headers and equal-width string cells. `ResizableView` wraps a pane with explicitly selected resize edges and direction-aware native resize cursors.
+
+- Disabled traces skip message formatting. Runtime traces include component unmounts; layout and paint traces include pass durations.
+- Debug builds warn when a component changes its hook count across renders. Patch traces report text length instead of content.
 
 ## [1.0.0] - 2026-10-23
 

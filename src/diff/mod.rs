@@ -49,6 +49,13 @@ pub enum Patch {
         /// Complete new set of callbacks, including removals.
         handlers: crate::retained::EventHandlers,
     },
+    /// Updates a descriptive debug ID without invalidating layout or paint.
+    UpdateDebugId {
+        /// Path of the node whose ID changed.
+        node: NodePath,
+        /// The new optional ID.
+        id: Option<String>,
+    },
     UpdatePaint {
         node: NodePath,
         paint: PaintData,
@@ -90,12 +97,13 @@ pub enum Patch {
 impl Patch {
     /// Returns a conservative layout requirement without access to the previous tree.
     ///
-    /// Paint data, component metadata, and widget chrome only require repainting.
+    /// Paint data, debug IDs, component metadata, and widget chrome only require repainting.
     /// Style and text-style updates are refined against the old geometry by the retained
     /// tree. Hosts should read `RetainedTree::layout_dirty()` after applying a batch.
     pub fn invalidates_layout(&self) -> bool {
         match self {
             Self::UpdateHandlers { .. }
+            | Self::UpdateDebugId { .. }
             | Self::UpdatePaint { .. }
             | Self::UpdateWidgetChrome { .. }
             | Self::UpdateComponent { .. } => false,
@@ -197,6 +205,12 @@ pub(crate) fn reconcile(
                 patches.push(Patch::UpdateText {
                     node: path.clone(),
                     content: ns,
+                });
+            }
+            if o.debug_id != n.debug_id {
+                patches.push(Patch::UpdateDebugId {
+                    node: path.clone(),
+                    id: n.debug_id,
                 });
             }
             if o.style != n.style {
@@ -552,6 +566,18 @@ mod tests {
         let patches = diff(old, new, NodePath::root());
         assert_eq!(patches.len(), 1);
         assert!(matches!(patches[0], Patch::UpdateStyle { .. }));
+    }
+
+    #[test]
+    fn debug_id_change_has_no_layout_invalidation() {
+        let old = crate::View::new().id("before").into_element();
+        let new = crate::View::new().id("after").into_element();
+        let patches = diff(old, new, NodePath::root());
+        assert!(matches!(
+            patches.as_slice(),
+            [Patch::UpdateDebugId { id: Some(id), .. }] if id == "after"
+        ));
+        assert!(!patches[0].invalidates_layout());
     }
 
     #[test]

@@ -55,6 +55,7 @@ pub(crate) struct InputState {
     pub(crate) pointer_focus: bool,
     hovered_node_id: Option<taffy::NodeId>,
     mouse_capture_node: Option<taffy::NodeId>,
+    scrollbar_drag: Option<ScrollbarDrag>,
     mouse_button_down: bool,
     last_pointer: Option<LogicalPoint>,
     reveal_caret: bool,
@@ -74,6 +75,7 @@ impl Default for InputState {
             pointer_focus: false,
             hovered_node_id: None,
             mouse_capture_node: None,
+            scrollbar_drag: None,
             mouse_button_down: false,
             last_pointer: None,
             reveal_caret: false,
@@ -84,6 +86,50 @@ impl Default for InputState {
             cursor: Cursor::Default,
         }
     }
+}
+
+#[derive(Clone, Copy)]
+struct ScrollbarDrag {
+    node: taffy::NodeId,
+    axis: crate::ScrollAxis,
+    grab_offset: f32,
+}
+
+#[derive(Clone)]
+struct ScrollbarHit {
+    node: taffy::NodeId,
+    geometry: crate::layout::ScrollbarGeometry,
+    point: LogicalPoint,
+}
+
+fn rect_contains(rect: crate::LayoutRect, point: LogicalPoint) -> bool {
+    point.x >= rect.x
+        && point.x <= rect.x + rect.width
+        && point.y >= rect.y
+        && point.y <= rect.y + rect.height
+}
+
+fn hit_scrollbar(
+    node: &crate::retained::RetainedNode,
+    layout: &crate::LayoutMap,
+    point: LogicalPoint,
+) -> Option<ScrollbarHit> {
+    if let Some(id) = node.taffy_id {
+        if let Some(geometry) = crate::layout::scrollbar_geometry(node, layout)
+            .into_iter()
+            .find(|bar| bar.binding.is_some() && rect_contains(bar.track, point))
+        {
+            return Some(ScrollbarHit {
+                node: id,
+                geometry,
+                point,
+            });
+        }
+    }
+    node.children
+        .iter()
+        .rev()
+        .find_map(|child| hit_scrollbar(child, layout, point))
 }
 
 impl UiState {
@@ -109,6 +155,7 @@ impl UiState {
         {
             self.input.mouse_capture_node = None;
             self.input.last_pointer = None;
+            self.input.scrollbar_drag = None;
         }
         if self
             .input
@@ -143,13 +190,39 @@ impl UiState {
     /// })).unwrap();
     /// ```
     pub fn dispatch_input(&mut self, event: InputEvent) -> Result<InputOutcome, RetainedError> {
+        self.dispatch_input_inner(event, true)
+    }
+
+    /// Dispatches high-frequency input without flushing reactive updates.
+    ///
+    /// Desktop hosts use this to collect native pointer and scroll events from one event-loop
+    /// batch, then call [`apply_updates`](UiState::apply_updates) once before scheduling a
+    /// frame. Hit testing uses the current layout throughout the batch; event deltas are still
+    /// delivered individually and state updates accumulate normally.
+    pub(crate) fn dispatch_input_deferred(
+        &mut self,
+        event: InputEvent,
+    ) -> Result<InputOutcome, RetainedError> {
+        self.dispatch_input_inner(event, false)
+    }
+
+    fn dispatch_input_inner(
+        &mut self,
+        event: InputEvent,
+        flush_updates: bool,
+    ) -> Result<InputOutcome, RetainedError> {
         let _scope = self.host.enter();
         let viewport = self.viewport.ok_or(RetainedError::UnsupportedElement(
             "input requires an initial layout",
         ))?;
-        self.apply_updates()?;
+        if flush_updates || self.layout_dirty {
+            self.apply_updates()?;
+        }
         if self.layout_dirty {
             self.layout(viewport)?;
+        }
+        if !flush_updates {
+            crate::reactive::observer::defer_notifications();
         }
         match &event {
             InputEvent::PointerDown(_) | InputEvent::Click(_) => self.input.pointer_focus = true,
@@ -189,7 +262,9 @@ impl UiState {
             InputEvent::Key(event) => self.event_pass_keyboard(event),
         };
         self.notify_focus();
-        self.apply_updates()?;
+        if flush_updates {
+            self.apply_updates()?;
+        }
         Ok(InputOutcome {
             handled,
             cursor: self.input.cursor.clone(),
@@ -326,6 +401,10 @@ impl UiState {
         }) {
             return true;
         }
+        if self.scrollbar_hit(point).is_some() {
+            // Scrollbars paint above their content. A press there must not activate it.
+            return true;
+        }
         let Some(tree) = self.retained.as_ref() else {
             return false;
         };
@@ -376,6 +455,30 @@ impl UiState {
             return false;
         };
 
+        if let Some(hit) = hit_scrollbar(root, &self.layout_map, point) {
+            let (origin, length, coordinate) = match hit.geometry.axis {
+                crate::ScrollAxis::Horizontal => {
+                    (hit.geometry.thumb.x, hit.geometry.thumb.width, point.x)
+                }
+                _ => (hit.geometry.thumb.y, hit.geometry.thumb.height, point.y),
+            };
+            let grab_offset = if rect_contains(hit.geometry.thumb, point) {
+                coordinate - origin
+            } else {
+                length * 0.5
+            };
+            self.input.mouse_capture_node = Some(hit.node);
+            self.input.last_pointer = Some(point);
+            self.input.scrollbar_drag = Some(ScrollbarDrag {
+                node: hit.node,
+                axis: hit.geometry.axis,
+                grab_offset,
+            });
+            self.apply_scrollbar_pointer(hit);
+            return true;
+        }
+        self.input.scrollbar_drag = None;
+
         dispatch_outside_clicks(root, &self.layout_map, point);
 
         let hit = hit_test_pointer_down(root, &self.layout_map, point);
@@ -419,6 +522,18 @@ impl UiState {
         let Some(capture_id) = self.input.mouse_capture_node else {
             return false;
         };
+        if let Some(drag) = self.input.scrollbar_drag {
+            self.input.dragged |= self
+                .input
+                .last_pointer
+                .replace(point)
+                .is_some_and(|previous| previous != point);
+            let Some(hit) = self.scrollbar_hit_for_drag(drag, point) else {
+                return false;
+            };
+            self.apply_scrollbar_pointer(hit);
+            return true;
+        }
         let Some(node) = self
             .retained
             .as_ref()
@@ -458,6 +573,9 @@ impl UiState {
 
     /// Dispatch `on_pointer_up` to the currently captured node (if any) with normalized coords.
     fn event_pass_pointer_up(&mut self, point: LogicalPoint) -> bool {
+        if self.input.scrollbar_drag.take().is_some() {
+            return true;
+        }
         let Some(capture_id) = self.input.mouse_capture_node else {
             return false;
         };
@@ -485,7 +603,71 @@ impl UiState {
 
             return true;
         }
+        self.input.scrollbar_drag = None;
         false
+    }
+
+    fn scrollbar_hit(&self, point: LogicalPoint) -> Option<ScrollbarHit> {
+        let root = self.retained.as_ref()?.root()?;
+        hit_scrollbar(root, &self.layout_map, point)
+    }
+
+    fn scrollbar_hit_for_drag(
+        &self,
+        drag: ScrollbarDrag,
+        point: LogicalPoint,
+    ) -> Option<ScrollbarHit> {
+        let root = self.retained.as_ref()?.root()?;
+        let node = find_interactive_node_by_taffy_id(root, drag.node)?;
+        let geometry = crate::layout::scrollbar_geometry(node, &self.layout_map)
+            .into_iter()
+            .find(|bar| bar.axis == drag.axis)?;
+        Some(ScrollbarHit {
+            node: drag.node,
+            geometry,
+            point,
+        })
+    }
+
+    fn apply_scrollbar_pointer(&mut self, hit: ScrollbarHit) {
+        let drag = self
+            .input
+            .scrollbar_drag
+            .expect("scrollbar hit has active capture");
+        let (start, track_length, thumb_length, coordinate) = match drag.axis {
+            crate::ScrollAxis::Horizontal => (
+                hit.geometry.track.x,
+                hit.geometry.track.width,
+                hit.geometry.thumb.width,
+                hit.point.x,
+            ),
+            _ => (
+                hit.geometry.track.y,
+                hit.geometry.track.height,
+                hit.geometry.thumb.height,
+                hit.point.y,
+            ),
+        };
+        let travel = track_length - thumb_length;
+        let position = (coordinate - drag.grab_offset - start).clamp(0.0, travel.max(0.0));
+        let ratio = if travel > 0.0 {
+            f64::from(position / travel)
+        } else {
+            0.0
+        };
+        let binding = hit
+            .geometry
+            .binding
+            .as_ref()
+            .expect("captured scrollbar has an input binding");
+        let current = binding.offset.get();
+        let next = match drag.axis {
+            crate::ScrollAxis::Horizontal => {
+                crate::ScrollOffset::new(hit.geometry.maximum * ratio, current.y)
+            }
+            _ => crate::ScrollOffset::new(current.x, hit.geometry.maximum * ratio),
+        };
+        (binding.set)(next);
     }
 
     fn event_pass_keyboard(&mut self, event: KeyEvent) -> bool {

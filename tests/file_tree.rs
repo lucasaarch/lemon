@@ -219,6 +219,92 @@ fn duplicate_ids_are_rejected_even_in_closed_folders() {
 }
 
 #[test]
+fn generic_tree_collapses_and_uses_custom_branch_icons() {
+    use lemon::icons::lucide;
+
+    let selected = State::new(None);
+    let selection = selected.clone();
+    let expanded = State::new(BTreeSet::new());
+    let open = expanded.clone();
+    let mut ui = UiState::default();
+    ui.mount(move |cx| {
+        Tree::new(
+            cx,
+            vec![
+                TreeNode::branch(10, "Components", vec![TreeNode::leaf(11, "Button")])
+                    .icon(lucide::COMPONENT)
+                    .expanded_icon(lucide::LAYERS),
+            ],
+        )
+        .selection(selection.clone())
+        .expanded(open.clone())
+        .into_element()
+    })
+    .unwrap();
+    update(&mut ui);
+    assert_eq!(
+        labels(ui.retained().unwrap().root().unwrap()),
+        ["Components"]
+    );
+    click_row(&mut ui, 0);
+    assert_eq!(selected.peek(), Some(10));
+    assert_eq!(
+        labels(ui.retained().unwrap().root().unwrap()),
+        ["Components", "Button"]
+    );
+    let root = ui.retained().unwrap().root().unwrap();
+    let icon = &root.children[0].children[1].children[0];
+    assert_eq!(icon.paint.icon.as_ref().unwrap().data.name(), "layers");
+    click_row(&mut ui, 0);
+    assert_eq!(
+        labels(ui.retained().unwrap().root().unwrap()),
+        ["Components"]
+    );
+}
+
+#[test]
+fn generic_tree_starts_expanded_and_reports_hovered_ids() {
+    let events = Rc::new(RefCell::new(Vec::<Option<u64>>::new()));
+    let callback = events.clone();
+    let mut ui = UiState::default();
+    ui.mount(move |cx| {
+        Tree::new(
+            cx,
+            vec![TreeNode::branch(
+                1,
+                "Components",
+                vec![
+                    TreeNode::branch(2, "Forms", vec![TreeNode::leaf(3, "Button")]),
+                    TreeNode::branch(4, "Empty", vec![]),
+                ],
+            )],
+        )
+        .on_hover({
+            let callback = callback.clone();
+            move |id| callback.borrow_mut().push(id)
+        })
+        .into_element()
+    })
+    .unwrap();
+    update(&mut ui);
+    let root = ui.retained().unwrap().root().unwrap();
+    assert_eq!(labels(root), ["Components", "Forms", "Button", "Empty"]);
+    let button = *ui
+        .layout_map()
+        .get(root.children[2].taffy_id.unwrap())
+        .unwrap();
+    ui.dispatch_input(InputEvent::Hover(LogicalPoint::new(
+        button.x + button.width / 2.0,
+        button.y + button.height / 2.0,
+    )))
+    .unwrap();
+    assert_eq!(&*events.borrow(), &[Some(3)]);
+    ui.dispatch_input(InputEvent::Hover(LogicalPoint::new(350.0, 490.0)))
+        .unwrap();
+    assert_eq!(&*events.borrow(), &[Some(3), None]);
+}
+
+#[test]
 fn inserting_and_reordering_nodes_preserves_selection_and_row_identity() {
     let data = State::new(vec![
         FileTreeNode::file(1, "a.rs"),

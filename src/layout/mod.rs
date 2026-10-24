@@ -51,6 +51,117 @@ pub struct Viewport {
     pub height: f32,
 }
 
+pub(crate) const SCROLLBAR_WIDTH: f32 = 8.0;
+pub(crate) const SCROLLBAR_MIN_THUMB: f32 = 20.0;
+
+#[derive(Clone)]
+pub(crate) struct ScrollbarGeometry {
+    pub axis: crate::ScrollAxis,
+    pub track: LayoutRect,
+    pub thumb: LayoutRect,
+    pub maximum: f64,
+    pub binding: Option<crate::retained::ScrollbarBinding>,
+}
+
+/// Geometry shared by scrollbar painting and pointer hit testing.
+pub(crate) fn scrollbar_geometry(
+    node: &RetainedNode,
+    layout: &LayoutMap,
+) -> Vec<ScrollbarGeometry> {
+    let (Some(axis), Some(viewport), Some(content)) = (
+        node.scroll_viewport,
+        scroll_viewport_rect(node, layout),
+        scroll_content_bounds(node, layout),
+    ) else {
+        return Vec::new();
+    };
+    let margin = scroll_content_node(node)
+        .and_then(|inner| inner.style.margin)
+        .unwrap_or_default();
+    let horizontal = axis.horizontal() && content.width > viewport.width + 1.0;
+    let vertical = axis.vertical() && content.height > viewport.height + 1.0;
+    let mut bars = Vec::with_capacity(2);
+    for (horizontal_axis, enabled, other) in
+        [(true, horizontal, vertical), (false, vertical, horizontal)]
+    {
+        if !enabled {
+            continue;
+        }
+        let (visible, extent, offset, cross) = if horizontal_axis {
+            (viewport.width, content.width, -margin.left, viewport.height)
+        } else {
+            (viewport.height, content.height, -margin.top, viewport.width)
+        };
+        let track_length = (visible
+            - if other {
+                SCROLLBAR_WIDTH.min(visible)
+            } else {
+                0.0
+            })
+        .max(0.0);
+        let thickness = SCROLLBAR_WIDTH.min(cross).max(0.0);
+        if track_length == 0.0 || thickness == 0.0 {
+            continue;
+        }
+        let thumb_length = (visible / extent * track_length)
+            .clamp(SCROLLBAR_MIN_THUMB.min(track_length), track_length);
+        let travel = track_length - thumb_length;
+        let offset = offset.max(0.0);
+        let position = if extent > visible {
+            (offset / (extent - visible)).clamp(0.0, 1.0) * travel
+        } else {
+            0.0
+        };
+        let (track, thumb, maximum) = if horizontal_axis {
+            let y = viewport.y + viewport.height - thickness;
+            (
+                LayoutRect {
+                    x: viewport.x,
+                    y,
+                    width: track_length,
+                    height: thickness,
+                },
+                LayoutRect {
+                    x: viewport.x + position,
+                    y,
+                    width: thumb_length,
+                    height: thickness,
+                },
+                f64::from((content.width - viewport.width).max(0.0)),
+            )
+        } else {
+            let x = viewport.x + viewport.width - thickness;
+            (
+                LayoutRect {
+                    x,
+                    y: viewport.y,
+                    width: thickness,
+                    height: track_length,
+                },
+                LayoutRect {
+                    x,
+                    y: viewport.y + position,
+                    width: thickness,
+                    height: thumb_length,
+                },
+                f64::from((content.height - viewport.height).max(0.0)),
+            )
+        };
+        bars.push(ScrollbarGeometry {
+            axis: if horizontal_axis {
+                crate::ScrollAxis::Horizontal
+            } else {
+                crate::ScrollAxis::Vertical
+            },
+            track,
+            thumb,
+            maximum,
+            binding: node.handlers.scrollbar.clone(),
+        });
+    }
+    bars
+}
+
 struct TextMeasureOutput {
     layout: Layout<ParleyBrush>,
     max_width: Option<f32>,

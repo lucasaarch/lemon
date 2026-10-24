@@ -1,5 +1,6 @@
 //! A UTF-8 document editor with real file I/O, workspace navigation and dirty-close protection.
 //! Run with an optional file: cargo run --example editor -- ./notes.txt
+//! In debug builds, press F12 to inspect this window with Lemon DevTools.
 use lemon::prelude::*;
 use std::{
     collections::BTreeSet,
@@ -261,18 +262,26 @@ fn app(cx: &Cx, document: &Document, files: Rc<Vec<PathBuf>>) -> Element {
                 .grow(1.0)
                 .fill_width()
                 .height(0.0)
-                .child(ScrollView::new(cx, tree).decorate(|view| {
-                    view.width(220.0)
-                        .fill_height()
-                        .inset(8.0)
-                        .border_right(theme.colors.border, 1.0)
-                }))
+                .child(
+                    ResizableView::new(
+                        cx,
+                        ScrollView::new(cx, tree).decorate(|view| view.fill().inset(8.0)),
+                    )
+                    .width(220.0)
+                    .edges([ResizeEdge::Right]),
+                )
                 .child(
                     TextArea::new(cx, document.text.clone())
                         .style(TextFieldStyle::Clean)
                         .resizable(false)
                         .placeholder("Write something worth keeping…")
-                        .decorate(|view| view.fill().min_width(0.0).inset(20.0).grow(1.0)),
+                        .decorate(|view| {
+                            view.fill_height()
+                                .min_width(0.0)
+                                .inset(20.0)
+                                .grow(1.0)
+                                .clip()
+                        }),
                 ),
         )
         .child(

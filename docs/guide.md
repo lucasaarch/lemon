@@ -9,6 +9,7 @@ Lemon describes the intent of a view through fluent builders:
 
 - `cx.state(initial)` declares shared component state; `cx.derive(...)` computes comparable data from it.
 - `cx.watch(...)` runs a callback after mount and whenever its reactive reads change.
+- `cx.on_mount(...)` acquires a resource after the first frame and returns its cleanup.
 - `cx.motion(...)` declares an animation; `cx.theme()` reads the originating host's theme.
 - `.fill()` follows the parent content size (the viewport for a root view); `.fill_width()` and `.fill_height()` select an axis.
 - `.center()` and `.place(Placement::BottomRight)` position children in physical directions, the same for rows and columns.
@@ -20,6 +21,90 @@ Component resources still require stable declaration order across renders. Widge
 also declare state, so put dynamic widget instances in component scopes rather than changing
 loops on a shared `Cx`. `State<T>` clones share a value; element trees are built during rendering,
 not cached with `cx.derive(...)`.
+
+### Pages and component lifetime
+
+Represent each page as a `Component` with its own `Cx`. When navigation removes
+the page from the element tree, Lemon drops its hooks and reactive subscriptions.
+Returning to it mounts a fresh instance; keep state that must survive navigation
+in an ancestor or another app-owned `State`. A page that stays in the tree remains
+mounted even if its content is hidden. Stable sibling keys preserve identity when
+pages or rows move.
+
+Use `cx.watch` for work that follows reactive values. Use `cx.on_mount` when a
+page registers a listener, timer, or other resource that requires cleanup:
+
+```rust
+use lemon::prelude::*;
+
+fn settings(cx: &Cx) -> Element {
+    cx.on_mount(|| {
+        println!("Settings opened");
+        || println!("Settings closed")
+    });
+    Text::new("Settings").into_element()
+}
+
+fn page(show_settings: bool) -> Element {
+    if show_settings {
+        Component::new(settings).into_element()
+    } else {
+        Text::new("Home").into_element()
+    }
+}
+```
+
+The mount callback runs after the first presented frame. If the page disappears
+before then, it never runs and there is nothing to clean up. The returned cleanup
+runs once when that component instance leaves the tree or its window closes.
+
+For diagnostics, set `LEMON_DEBUG=runtime,patches,layout,paint,input` before
+launching an example. The runtime category reports component mount/unmount and
+render decisions; layout and paint report pass duration. Debug builds also warn
+when a component changes its hook count between renders. Keep hooks in a stable
+order and move conditional hooks into child components.
+
+### DevTools (debug builds)
+
+Run any example normally, then press **F12** in its window to open Lemon DevTools:
+
+```sh
+cargo run --example editor
+```
+
+The inspector is a separate Lemon window bound to that application window.
+Pressing F12 again focuses its existing inspector. It cannot inspect itself.
+Closing the inspector stops capture and removes the selection highlight; closing
+the target also closes its inspector. Each application window has its own capture.
+
+- **Elements** shows an icon-bearing hierarchy of retained component
+  boundaries, containers and text, with grouped layout bounds, layout styles and
+  paint properties. Branches stay expanded and rows cannot be collapsed, so every
+  element remains available for selection. Hovering a row softly highlights its
+  bounds in the target; selecting it keeps a stronger highlight. Named elements
+  display their `.id(...)` label in the tree. The list scrolls vertically and the
+  inspector uses square panels. The overlay does not receive input.
+- **Components / hooks** shows runtime paths and keys, render counts and CPU view
+  durations, plus the latest render's hook order, kinds, Rust value types and
+  cumulative declaration counts. View timings exclude freezing and diffing.
+  Counts include renders before the inspector opens. Hook declaration counts are
+  not effect execution counts; state values and text contents are omitted.
+- **Profiler** keeps the latest 120 samples. Select a sample to inspect CPU time
+  spent applying reactive updates/diff/patches, layout and scene construction,
+  plus patch/pass counts and fills, strokes, glyph runs and effect layers. Timings
+  accumulate between samples, including updates processed before redraw. GPU
+  presentation waits are excluded so rendering the inspector cannot contaminate
+  the inspected window's profile.
+
+Pause capture to read a stable snapshot; paused samples are discarded. Resume
+records subsequent target redraws. Idle windows do not produce samples. The
+DevTools window is excluded from capture, but debug instrumentation and displaying
+the inspector still add overhead. A highlight shows the node's layout rectangle;
+ancestor clipping and transitional paint geometry can differ from that rectangle.
+
+The inspector, F12 handling, snapshots and instrumentation are compiled only with
+`debug_assertions`; normal `cargo run --release` builds contain none of them.
+Existing `LEMON_DEBUG` text tracing remains independent of the inspector.
 
 ### Shared decoration
 
@@ -364,6 +449,47 @@ row height, indentation, icon size and guide/hover/selection colors. Nodes can
 supply an explicit `.icon(...)` and `.color(...)`. Wrap the tree in `ScrollView` for a
 bounded viewport. See `cargo run --example editor` for workspace navigation.
 
+### Data tables and resizable panes
+
+`Table` builds a themed header and equal-width columns from string data. Every row
+must contain one value per header. Wrap it in `ScrollView` when it needs a bounded
+viewport:
+
+```rust
+use lemon::prelude::*;
+
+fn people(cx: &Cx) -> Element {
+    Table::new(cx, ["Name", "Role"], [["Ada", "Engineer"], ["Linus", "Maintainer"]])
+        .into_element()
+}
+```
+
+`ResizableView` wraps one pane and only renders resize handles for edges listed in
+`.edges(...)`. A left/right edge requires an initial `.width(...)`; a top/bottom edge
+requires `.height(...)`. It consumes one hook slot, so construct it in stable order
+inside a component. Use multiple edges when a pane should resize in more than one
+direction. Its horizontal and vertical resize cursors appear over their matching
+handles.
+
+```rust
+use lemon::prelude::*;
+
+fn workspace(cx: &Cx) -> Element {
+    RowView::new()
+        .fill()
+        .child(
+            ResizableView::new(cx, Text::new("Files"))
+                .width(260.0)
+                .edges([ResizeEdge::Right]),
+        )
+        .child(View::new().grow(1.0).child(Text::new("Editor")))
+        .into_element()
+}
+```
+
+For a sidebar on the right, put the flexible content first and the sidebar second,
+then use `.edges([ResizeEdge::Left])` so dragging its left edge adjusts its width.
+
 To refresh the bundled catalog from the latest stable Lucide release:
 
 ```bash
@@ -398,7 +524,8 @@ root `.decorate(...)` styling.
 `ScrollView` is vertical by default. Select `ScrollAxis::Horizontal` for a strip,
 or `ScrollAxis::Both` for a canvas. Trackpads preserve both axes, including diagonal
 movement; Shift+wheel scrolls horizontally. Calling `.axis(...)` again replaces
-its previous value. Scrollbars appear independently for overflowing axes.
+its previous value. Scrollbars overlay content, appear only for overflowing axes,
+and are visible while the pointer is over the scroll viewport.
 
 ```rust
 use lemon::prelude::*;

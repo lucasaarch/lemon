@@ -28,6 +28,8 @@ use crate::{layout_pass, sync_scroll_layout_max, Cx, LayoutMap, RetainedTree, Ru
 /// ui.layout_dirty = false;
 /// ```
 pub struct UiState {
+    #[cfg(debug_assertions)]
+    pub(crate) inspection: Option<crate::devtools::Capture>,
     pub(crate) transitions: crate::transition::Transitions,
     pub(crate) transitions_active: bool,
     pub(crate) input: crate::input::InputState,
@@ -54,6 +56,8 @@ pub struct UiState {
 impl Default for UiState {
     fn default() -> Self {
         Self {
+            #[cfg(debug_assertions)]
+            inspection: None,
             transitions: crate::transition::Transitions::default(),
             transitions_active: false,
             input: crate::input::InputState::default(),
@@ -162,6 +166,18 @@ impl UiState {
     /// Dirty flags accumulate across batches. Earlier mutations remain applied
     /// if a later patch fails; errors are propagated to the host.
     pub fn apply_updates(&mut self) -> Result<(), RetainedError> {
+        crate::reactive::observer::flush_deferred_notifications();
+        #[cfg(debug_assertions)]
+        let started = self.inspection.as_ref().map(|_| std::time::Instant::now());
+        let result = self.apply_pending_updates();
+        #[cfg(debug_assertions)]
+        if let (Some(capture), Some(started)) = (&mut self.inspection, started) {
+            capture.pending.updates += started.elapsed();
+        }
+        result
+    }
+
+    fn apply_pending_updates(&mut self) -> Result<(), RetainedError> {
         loop {
             self.runtime.flush_effects();
             let patches = self.runtime.take_patches();
@@ -198,6 +214,10 @@ impl UiState {
             let result = tree.apply_patch(patch);
             self.layout_dirty |= tree.layout_dirty;
             result?;
+            #[cfg(debug_assertions)]
+            if let Some(capture) = &mut self.inspection {
+                capture.pending.patches += 1;
+            }
         }
         self.reconcile_input();
         if self.scroll_limits_dirty && !self.layout_dirty {
@@ -217,6 +237,10 @@ impl UiState {
     ///
     /// Hosts call this explicitly after a resize or before geometry-dependent input.
     pub fn layout(&mut self, viewport: Viewport) -> Result<(), RetainedError> {
+        #[cfg(debug_assertions)]
+        let inspection_started = self.inspection.as_ref().map(|_| std::time::Instant::now());
+        let started =
+            crate::debug::enabled(crate::debug::Category::Layout).then(std::time::Instant::now);
         self.layout_dirty = true;
         self.paint_dirty = true;
         let tree = self
@@ -230,6 +254,20 @@ impl UiState {
         self.layout_dirty = false;
         self.scroll_limits_dirty = true;
         self.viewport = Some(viewport);
+        #[cfg(debug_assertions)]
+        if let (Some(capture), Some(started)) = (&mut self.inspection, inspection_started) {
+            capture.pending.layout += started.elapsed();
+            capture.pending.layouts += 1;
+        }
+        if let Some(started) = started {
+            crate::lemon_trace!(
+                Layout,
+                "layout viewport={:.0}x{:.0} elapsed={:?}",
+                viewport.width,
+                viewport.height,
+                started.elapsed()
+            );
+        }
         Ok(())
     }
 
@@ -321,12 +359,16 @@ impl UiState {
             }
         }
         if self.paint_dirty {
+            #[cfg(debug_assertions)]
+            let inspection_started = self.inspection.as_ref().map(|_| std::time::Instant::now());
+            let started =
+                crate::debug::enabled(crate::debug::Category::Paint).then(std::time::Instant::now);
             let tree = self
                 .retained
                 .as_ref()
                 .ok_or(RetainedError::UnsupportedElement("UI not mounted"))?;
             self.scene.reset();
-            crate::paint::paint_pass_with_visuals(
+            let _stats = crate::paint::paint_pass_with_visuals(
                 tree,
                 &self.layout_map,
                 &mut self.scene,
@@ -335,9 +377,141 @@ impl UiState {
                 caret_visible,
                 Some(&self.transitions.visuals),
             );
+            #[cfg(debug_assertions)]
+            if let (Some(capture), Some(started)) = (&mut self.inspection, inspection_started) {
+                capture.pending.paint += started.elapsed();
+                capture.pending.paints += 1;
+                capture.pending.fills += _stats.fills;
+                capture.pending.strokes += _stats.strokes;
+                capture.pending.glyph_runs += _stats.glyph_runs;
+                capture.pending.effect_layers = self.scene.effect_layer_count();
+                if capture.hovered != capture.highlighted {
+                    if let Some(rect) = capture.hovered.and_then(|id| self.layout_map.get(id)) {
+                        crate::paint::paint_inspector_highlight(
+                            &mut self.scene,
+                            *rect,
+                            scale,
+                            false,
+                        );
+                    }
+                }
+                if let Some(rect) = capture.highlighted.and_then(|id| self.layout_map.get(id)) {
+                    crate::paint::paint_inspector_highlight(&mut self.scene, *rect, scale, true);
+                }
+            }
             self.paint_dirty = false;
             self.last_paint = Some(paint_context);
+            if let Some(started) = started {
+                crate::lemon_trace!(Paint, "scene build elapsed={:?}", started.elapsed());
+            }
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::input::{hit_test::LogicalPoint, InputEvent};
+    use crate::{ResizableView, ResizeEdge, RowView, ScrollOffset, ScrollView, State, View};
+    use std::cell::Cell;
+    use std::rc::Rc;
+
+    fn resize_handle(node: &crate::retained::RetainedNode) -> Option<taffy::NodeId> {
+        if node.style.cursor == crate::Cursor::ResizeHorizontal && node.handlers.on_drag.is_some() {
+            return node.taffy_id;
+        }
+        node.children.iter().find_map(resize_handle)
+    }
+
+    #[test]
+    fn deferred_scroll_events_rerender_once_when_the_batch_is_flushed() {
+        let renders = Rc::new(Cell::new(0));
+        let render_count = renders.clone();
+        let offset = State::new(ScrollOffset::default());
+        let scroll_offset = offset.clone();
+        let mut ui = UiState::default();
+        ui.mount(move |_| {
+            render_count.set(render_count.get() + 1);
+            ScrollView::with_offset(scroll_offset.clone(), View::new().height(500.0))
+                .width(200.0)
+                .height(100.0)
+                .into_element()
+        })
+        .unwrap();
+        let viewport = Viewport {
+            width: 300.0,
+            height: 200.0,
+        };
+        ui.update(viewport, 1.0, None, false).unwrap();
+        assert_eq!(renders.get(), 1);
+
+        for _ in 0..4 {
+            ui.dispatch_input_deferred(InputEvent::Scroll {
+                point: LogicalPoint::new(20.0, 20.0),
+                delta: crate::ScrollDelta::new(0.0, -15.0),
+            })
+            .unwrap();
+        }
+        assert_eq!(offset.peek().y, 60.0);
+        assert_eq!(renders.get(), 1, "events in one batch should not render");
+
+        ui.apply_updates().unwrap();
+        assert_eq!(renders.get(), 2, "the batch should render once");
+        assert!(ui.layout_dirty());
+    }
+
+    #[test]
+    fn deferred_resize_pointer_moves_accumulate_and_render_once() {
+        let renders = Rc::new(Cell::new(0));
+        let render_count = renders.clone();
+        let mut ui = UiState::default();
+        ui.mount(move |cx| {
+            render_count.set(render_count.get() + 1);
+            RowView::new()
+                .fill()
+                .child(
+                    ResizableView::new(cx, View::new().fill())
+                        .width(200.0)
+                        .edges([ResizeEdge::Right]),
+                )
+                .child(View::new().grow(1.0).fill())
+                .into_element()
+        })
+        .unwrap();
+        let viewport = Viewport {
+            width: 600.0,
+            height: 300.0,
+        };
+        ui.update(viewport, 1.0, None, false).unwrap();
+        let handle = resize_handle(ui.retained().unwrap().root().unwrap()).unwrap();
+        let rect = ui.layout_map().get(handle).unwrap();
+        let start = LogicalPoint::new(rect.x + rect.width / 2.0, 100.0);
+        ui.dispatch_input(InputEvent::PointerDown(start)).unwrap();
+        assert_eq!(renders.get(), 1);
+
+        ui.dispatch_input_deferred(InputEvent::PointerMove(LogicalPoint::new(
+            start.x + 20.0,
+            start.y,
+        )))
+        .unwrap();
+        ui.dispatch_input_deferred(InputEvent::PointerMove(LogicalPoint::new(
+            start.x + 50.0,
+            start.y,
+        )))
+        .unwrap();
+        assert_eq!(renders.get(), 1);
+
+        ui.apply_updates().unwrap();
+        assert_eq!(renders.get(), 2);
+        ui.update(viewport, 1.0, None, false).unwrap();
+        let sidebar = &ui.retained().unwrap().root().unwrap().children[0];
+        assert_eq!(
+            ui.layout_map()
+                .get(sidebar.taffy_id.unwrap())
+                .unwrap()
+                .width,
+            250.0
+        );
     }
 }

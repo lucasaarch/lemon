@@ -22,6 +22,7 @@ pub struct Text {
     content: TextContent,
     style: TextStyle,
     key: Option<Key>,
+    debug_id: Option<String>,
 }
 
 impl Text {
@@ -34,12 +35,24 @@ impl Text {
             content: content.into(),
             style: TextStyle::default(),
             key: None,
+            debug_id: None,
         }
     }
 
     /// Stable key when this text node is a keyed sibling (see [`crate::ColumnView::key`]).
     pub fn key(mut self, key: u64) -> Self {
         self.key = Some(Key(key));
+        self
+    }
+
+    /// Sets a descriptive ID for debug inspection without changing reconciliation identity.
+    ///
+    /// ```
+    /// use lemon::Text;
+    /// let label = Text::new("Save").id("save_label");
+    /// ```
+    pub fn id(mut self, id: impl Into<String>) -> Self {
+        self.debug_id = Some(id.into());
         self
     }
 
@@ -77,6 +90,7 @@ impl Text {
             content: self.content,
             style: self.style,
             key: self.key,
+            debug_id: self.debug_id,
         })
     }
 }

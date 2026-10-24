@@ -40,6 +40,40 @@ impl Subscriber for RunObserver {
 thread_local! {
     static OBSERVER_STACK: RefCell<Vec<Weak<dyn Subscriber>>> = RefCell::new(Vec::new());
     static SUPPRESS_NOTIFY: Cell<bool> = const { Cell::new(false) };
+    static DEFER_NOTIFY: Cell<bool> = const { Cell::new(false) };
+    static DEFERRED_SUBSCRIBERS: RefCell<Vec<Weak<dyn Subscriber>>> = RefCell::new(Vec::new());
+}
+
+/// Queues reactive invalidations until the host's current input batch is processed.
+pub(crate) fn defer_notifications() {
+    DEFER_NOTIFY.with(|defer| defer.set(true));
+}
+
+/// Delivers queued invalidations once per subscriber, coalescing repeated event writes.
+pub(crate) fn flush_deferred_notifications() {
+    DEFER_NOTIFY.with(|defer| defer.set(false));
+    let subscribers =
+        DEFERRED_SUBSCRIBERS.with(|pending| std::mem::take(&mut *pending.borrow_mut()));
+    for subscriber in subscribers
+        .into_iter()
+        .filter_map(|subscriber| subscriber.upgrade())
+    {
+        subscriber.mark_dirty();
+    }
+}
+
+pub(crate) fn notify_subscriber(subscriber: &Rc<dyn Subscriber>) {
+    if DEFER_NOTIFY.with(Cell::get) {
+        DEFERRED_SUBSCRIBERS.with(|pending| {
+            let mut pending = pending.borrow_mut();
+            let subscriber = Rc::downgrade(subscriber);
+            if !pending.iter().any(|queued| queued.ptr_eq(&subscriber)) {
+                pending.push(subscriber);
+            }
+        });
+    } else {
+        subscriber.mark_dirty();
+    }
 }
 
 /// Runs `f` without recording signal dependencies or notifying subscribers on writes.

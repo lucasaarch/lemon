@@ -18,6 +18,17 @@ macro_rules! container_builder {
                 $name(BoxElement::default(), $vertical)
             }
 
+            /// Sets a descriptive ID for debug inspection without changing reconciliation identity.
+            ///
+            /// ```
+            /// use lemon::View;
+            /// let view = View::new().id("toolbar");
+            /// ```
+            pub fn id(mut self, id: impl Into<String>) -> Self {
+                self.0.debug_id = Some(id.into());
+                self
+            }
+
             /// Sets spacing between children in logical points (default `0.0`).
             pub fn spacing(mut self, v: f32) -> Self {
                 self.0.style.gap = Some(v);
@@ -694,6 +705,12 @@ macro_rules! container_builder {
                 cell: std::rc::Rc<std::cell::Cell<crate::ScrollOffset>>,
             ) -> Self {
                 self.0.handlers.scroll_layout_max = Some(cell);
+                self
+            }
+
+            #[allow(dead_code)] // Generated for every container; only the View viewport binds it.
+            pub(crate) fn scrollbar(mut self, binding: crate::retained::ScrollbarBinding) -> Self {
+                self.0.handlers.scrollbar = Some(binding);
                 self
             }
 

@@ -51,6 +51,36 @@ pub struct PaintStats {
     pub glyph_runs: u32,
 }
 
+/// Appends diagnostic chrome after application paint without changing layout or hit testing.
+#[cfg(debug_assertions)]
+pub(crate) fn paint_inspector_highlight(
+    scene: &mut Scene,
+    rect: LayoutRect,
+    scale: f32,
+    selected: bool,
+) {
+    let bounds = Rect::new(
+        rect.x.into(),
+        rect.y.into(),
+        (rect.x + rect.width).into(),
+        (rect.y + rect.height).into(),
+    );
+    scene.raw.fill(
+        Fill::NonZero,
+        Affine::scale(scale.into()),
+        PenikoColor::from_rgba8(60, 150, 255, if selected { 35 } else { 14 }),
+        None,
+        &bounds,
+    );
+    scene.raw.stroke(
+        &Stroke::new(if selected { 2.0 } else { 1.0 }),
+        Affine::scale(scale.into()),
+        PenikoColor::from_rgba8(60, 150, 255, if selected { 255 } else { 90 }),
+        None,
+        &bounds,
+    );
+}
+
 /// Walks the retained tree and records Vello draw commands into `scene`.
 ///
 /// Use [`Renderer`] to render the resulting [`Scene`], including its filter layers.
@@ -1071,9 +1101,6 @@ fn empty_field_caret_x(rect: LayoutRect, alignment: crate::TextAlignment) -> f32
             }
 }
 
-const WIDGET_SCROLLBAR_WIDTH: f32 = 8.0;
-const WIDGET_SCROLLBAR_THUMB_MIN: f32 = 20.0;
-
 fn paint_scrollbar(
     node: &RetainedNode,
     layout: &LayoutMap,
@@ -1081,89 +1108,32 @@ fn paint_scrollbar(
     ctx: PaintContext,
     stats: &mut PaintStats,
 ) {
-    let (Some(axis), Some(viewport), Some(content)) = (
-        node.scroll_viewport,
-        crate::layout::scroll_viewport_rect(node, layout),
-        crate::layout::scroll_content_bounds(node, layout),
-    ) else {
-        return;
-    };
-    let margin = crate::layout::scroll_content_node(node)
-        .and_then(|inner| inner.style.margin)
-        .unwrap_or_default();
-    let horizontal = axis.horizontal() && content.width > viewport.width + 1.0;
-    let vertical = axis.vertical() && content.height > viewport.height + 1.0;
-    for (is_horizontal, enabled, other) in
-        [(true, horizontal, vertical), (false, vertical, horizontal)]
-    {
-        if !enabled {
+    for bar in crate::layout::scrollbar_geometry(node, layout) {
+        if !bar
+            .binding
+            .as_ref()
+            .is_some_and(|binding| binding.hovered.get())
+        {
             continue;
         }
-        let (visible, extent, offset, cross) = if is_horizontal {
-            (viewport.width, content.width, -margin.left, viewport.height)
-        } else {
-            (viewport.height, content.height, -margin.top, viewport.width)
-        };
-        let track_length = (visible
-            - if other {
-                WIDGET_SCROLLBAR_WIDTH.min(visible)
-            } else {
-                0.0
-            })
-        .max(0.0);
-        let thickness = WIDGET_SCROLLBAR_WIDTH.min(cross).max(0.0);
-        if track_length == 0.0 || thickness == 0.0 {
-            continue;
-        }
-        let thumb_length = (visible / extent * track_length)
-            .clamp(WIDGET_SCROLLBAR_THUMB_MIN.min(track_length), track_length);
-        let travel = track_length - thumb_length;
-        let thumb_offset = (offset / (extent - visible)).clamp(0.0, 1.0) * travel;
-        let (track, thumb) = if is_horizontal {
-            let y = viewport.y + viewport.height - thickness;
-            (
-                Rect::new(
-                    viewport.x.into(),
-                    y.into(),
-                    (viewport.x + track_length).into(),
-                    (y + thickness).into(),
-                ),
-                Rect::new(
-                    (viewport.x + thumb_offset).into(),
-                    y.into(),
-                    (viewport.x + thumb_offset + thumb_length).into(),
-                    (y + thickness).into(),
-                ),
-            )
-        } else {
-            let x = viewport.x + viewport.width - thickness;
-            (
-                Rect::new(
-                    x.into(),
-                    viewport.y.into(),
-                    (x + thickness).into(),
-                    (viewport.y + track_length).into(),
-                ),
-                Rect::new(
-                    x.into(),
-                    (viewport.y + thumb_offset).into(),
-                    (x + thickness).into(),
-                    (viewport.y + thumb_offset + thumb_length).into(),
-                ),
-            )
-        };
         let paint = ctx.paint(node);
         let chrome = crate::theme::current_theme().chrome;
         for (rect, color) in [
             (
-                track,
+                bar.track,
                 paint.scroll_track_color.unwrap_or(chrome.scrollbar_track),
             ),
             (
-                thumb,
+                bar.thumb,
                 paint.scroll_thumb_color.unwrap_or(chrome.scrollbar_thumb),
             ),
         ] {
+            let rect = Rect::new(
+                rect.x.into(),
+                rect.y.into(),
+                (rect.x + rect.width).into(),
+                (rect.y + rect.height).into(),
+            );
             scene.fill(Fill::NonZero, ctx.base, to_peniko_color(color), None, &rect);
             stats.fills += 1;
         }
@@ -1173,7 +1143,7 @@ fn paint_scrollbar(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::element::builders::{ColumnView, Text, View};
+    use crate::element::builders::{ColumnView, ScrollView, Text, View};
     use crate::layout::{LayoutMap, Viewport};
     use crate::retained::RetainedTree;
     use parley::FontContext;
@@ -1184,6 +1154,47 @@ mod tests {
     ) -> Result<LayoutMap, crate::retained::RetainedError> {
         let mut font_cx = FontContext::new();
         crate::layout::layout_pass(tree, &mut font_cx, viewport)
+    }
+
+    #[cfg(debug_assertions)]
+    #[test]
+    fn inspector_overlay_adds_scene_commands_and_disappears_when_capture_closes() {
+        let mut ui = crate::ui::UiState::default();
+        ui.mount(|_| {
+            View::new()
+                .fill()
+                .surface(Color::rgb8(20, 30, 40))
+                .into_element()
+        })
+        .unwrap();
+        let viewport = Viewport {
+            width: 200.0,
+            height: 100.0,
+        };
+        ui.update(viewport, 2.0, None, true).unwrap();
+        let original_commands = ui.scene.raw.encoding().draw_tags.len();
+        let geometry = ui.layout_map().clone();
+        ui.inspection = Some(crate::devtools::Capture {
+            highlighted: ui.retained().unwrap().root().unwrap().taffy_id,
+            ..Default::default()
+        });
+        ui.invalidate_paint();
+        ui.update(viewport, 2.0, None, true).unwrap();
+        assert!(ui.scene.raw.encoding().draw_tags.len() > original_commands);
+        assert_eq!(&geometry, ui.layout_map());
+        let root_id = ui.retained().unwrap().root().unwrap().taffy_id;
+        let capture = ui.inspection.as_mut().unwrap();
+        capture.highlighted = None;
+        capture.hovered = root_id;
+        ui.invalidate_paint();
+        ui.update(viewport, 2.0, None, true).unwrap();
+        assert!(ui.scene.raw.encoding().draw_tags.len() > original_commands);
+        assert_eq!(&geometry, ui.layout_map());
+        ui.inspection = None;
+        ui.invalidate_paint();
+        ui.update(viewport, 2.0, None, true).unwrap();
+        assert_eq!(ui.scene.raw.encoding().draw_tags.len(), original_commands);
+        assert_eq!(&geometry, ui.layout_map());
     }
 
     #[test]
@@ -1582,24 +1593,28 @@ mod tests {
     }
 
     #[test]
-    fn a_small_scroll_viewport_paints_one_scrollbar_without_invalid_thumb_bounds() {
+    fn scrollbar_is_hidden_until_pointer_enters_an_overflowing_scroll_view() {
         let mut tree = RetainedTree::mount(
-            View::new()
-                .width(100.0)
-                .height(8.0)
-                .clip()
-                .scroll_viewport(crate::ScrollAxis::Vertical)
-                .on_scroll(|_| {})
-                .child(
-                    View::new()
-                        .scroll_content()
-                        .child(View::new().height(200.0)),
-                )
-                .into_element(),
+            ScrollView::with_offset(
+                crate::State::new(crate::ScrollOffset::default()),
+                View::new().height(200.0),
+            )
+            .width(100.0)
+            .height(80.0)
+            .into_element(),
         )
         .unwrap();
-        let stats = layout_and_paint(&mut tree, 1.0);
-        assert_eq!(stats.fills, 2, "one track and one thumb");
+        assert_eq!(layout_and_paint(&mut tree, 1.0).fills, 0);
+        tree.root
+            .as_ref()
+            .unwrap()
+            .handlers
+            .scrollbar
+            .as_ref()
+            .unwrap()
+            .hovered
+            .set(true);
+        assert_eq!(layout_and_paint(&mut tree, 1.0).fills, 2);
     }
 
     #[test]
@@ -1830,15 +1845,22 @@ mod tests {
             .height(300.0)
             .surface(Color::rgb8(200, 200, 200));
         let inner = View::new().scroll_content().child(content);
-        let viewport = View::new()
-            .width(100.0)
-            .height(80.0)
-            .clip()
-            .scroll_viewport(crate::ScrollAxis::Vertical)
-            .on_scroll(|_| {})
-            .child(inner);
-
-        let mut tree = RetainedTree::mount(viewport.into_element()).unwrap();
+        let mut tree = RetainedTree::mount(
+            ScrollView::with_offset(crate::State::new(crate::ScrollOffset::default()), inner)
+                .width(100.0)
+                .height(80.0)
+                .into_element(),
+        )
+        .unwrap();
+        tree.root
+            .as_ref()
+            .unwrap()
+            .handlers
+            .scrollbar
+            .as_ref()
+            .unwrap()
+            .hovered
+            .set(true);
         let stats = layout_and_paint(&mut tree, 1.0);
 
         set_active_theme(original);

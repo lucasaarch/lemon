@@ -100,6 +100,8 @@ pub struct BoxElement {
     pub paint: PaintProps,
     pub children: Vec<crate::element::Element>,
     pub key: Option<Key>,
+    /// Optional descriptive label shown by debug inspection; it does not affect identity.
+    pub debug_id: Option<String>,
     pub handlers: crate::retained::EventHandlers,
     /// When set, the paint pass draws a caret for this field when it has keyboard focus.
     pub text_input: Option<TextInputMeta>,
@@ -112,6 +114,8 @@ pub struct TextElement {
     pub content: TextContent,
     pub style: crate::element::style::TextStyle,
     pub key: Option<Key>,
+    /// Optional descriptive label shown by debug inspection; it does not affect identity.
+    pub debug_id: Option<String>,
 }
 
 impl std::fmt::Debug for TextElement {
@@ -120,6 +124,7 @@ impl std::fmt::Debug for TextElement {
             .field("content", &format!("{:?}", self.content.resolve()))
             .field("style", &self.style)
             .field("key", &self.key)
+            .field("debug_id", &self.debug_id)
             .finish()
     }
 }
@@ -130,6 +135,8 @@ pub struct ComponentElement {
     type_id: std::any::TypeId,
     identity: usize,
     key: Option<Key>,
+    /// Optional descriptive label shown by debug inspection; it does not affect identity.
+    pub(crate) debug_id: Option<String>,
     props: Option<Box<dyn AnyProps>>,
 }
 
@@ -144,6 +151,7 @@ impl ComponentElement {
             type_id,
             identity,
             key: None,
+            debug_id: None,
             props: None,
         }
     }
@@ -173,6 +181,7 @@ impl ComponentElement {
             >(),
             identity,
             key: None,
+            debug_id: None,
             props: Some(Box::new(props)),
         }
     }
@@ -218,6 +227,7 @@ impl Clone for ComponentElement {
             type_id: self.type_id,
             identity: self.identity,
             key: self.key.clone(),
+            debug_id: self.debug_id.clone(),
             props: self.props.as_ref().map(|props| props.clone_box()),
         }
     }
@@ -231,6 +241,7 @@ impl std::fmt::Debug for ComponentElement {
             .field("type_id", &self.type_id)
             .field("identity", &self.identity)
             .field("key", &self.key)
+            .field("debug_id", &self.debug_id)
             .field("props", &self.props.as_ref().map(|_| "Box<dyn AnyProps>"))
             .finish()
     }
@@ -255,6 +266,7 @@ mod tests {
             content: TextContent::Static("hello".into()),
             style: Default::default(),
             key: None,
+            debug_id: None,
         };
         assert_eq!(el.content.resolve(), "hello");
     }
@@ -265,6 +277,7 @@ mod tests {
             content: TextContent::Dynamic(Rc::new(|| "dynamic".to_owned())),
             style: Default::default(),
             key: None,
+            debug_id: None,
         };
         assert_eq!(el.content.resolve(), "dynamic");
     }

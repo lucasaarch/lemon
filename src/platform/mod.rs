@@ -57,6 +57,10 @@ pub struct WindowState {
     traffic_lights_position: Option<(f32, f32)>,
     events: crate::window::WindowEvents,
     opened: bool,
+    #[cfg(debug_assertions)]
+    devtools: Option<crate::devtools::Session>,
+    #[cfg(debug_assertions)]
+    inspected_target: Option<WindowId>,
     last_window_focus: Option<bool>,
 }
 
@@ -74,6 +78,10 @@ impl WindowState {
             traffic_lights_position: None,
             events: crate::window::WindowEvents::default(),
             opened: false,
+            #[cfg(debug_assertions)]
+            devtools: None,
+            #[cfg(debug_assertions)]
+            inspected_target: None,
             last_window_focus: None,
         }
     }
@@ -212,8 +220,25 @@ impl WindowState {
     }
 
     fn dispatch_input(&mut self, event: crate::input::InputEvent) -> bool {
+        self.dispatch_input_with_mode(event, false)
+    }
+
+    fn dispatch_input_deferred(&mut self, event: crate::input::InputEvent) -> bool {
+        self.dispatch_input_with_mode(event, true)
+    }
+
+    fn dispatch_input_with_mode(
+        &mut self,
+        event: crate::input::InputEvent,
+        defer_updates: bool,
+    ) -> bool {
         let _scope = self.activate_theme();
-        match self.ui.dispatch_input(event) {
+        let result = if defer_updates {
+            self.ui.dispatch_input_deferred(event)
+        } else {
+            self.ui.dispatch_input(event)
+        };
+        match result {
             Ok(result) => {
                 if let Some(window) = &self.window {
                     window.set_cursor(lemon_cursor_to_winit(&result.cursor));
@@ -236,7 +261,7 @@ impl WindowState {
     }
 
     fn event_pass_pointer_move(&mut self, point: LogicalPoint) -> bool {
-        self.dispatch_input(crate::input::InputEvent::PointerMove(point))
+        self.dispatch_input_deferred(crate::input::InputEvent::PointerMove(point))
     }
 
     fn event_pass_pointer_up(&mut self, point: LogicalPoint) -> bool {
@@ -244,11 +269,11 @@ impl WindowState {
     }
 
     fn event_pass_hover(&mut self, point: LogicalPoint) {
-        self.dispatch_input(crate::input::InputEvent::Hover(point));
+        self.dispatch_input_deferred(crate::input::InputEvent::Hover(point));
     }
 
     fn event_pass_scroll(&mut self, point: LogicalPoint, delta: crate::ScrollDelta) -> bool {
-        self.dispatch_input(crate::input::InputEvent::Scroll { point, delta })
+        self.dispatch_input_deferred(crate::input::InputEvent::Scroll { point, delta })
     }
 
     fn event_pass_keyboard(&mut self, event: WinitKeyEvent) {
@@ -347,6 +372,10 @@ impl WindowState {
         self.update_frame();
         self.present(render_cx);
         self.ui.finish_frame();
+        #[cfg(debug_assertions)]
+        if let Some(session) = &self.devtools {
+            session.publish(&mut self.ui);
+        }
     }
 
     fn request_redraw(&self) {
@@ -585,6 +614,30 @@ impl AppCx {
     }
 
     fn remove_window(&mut self, window_id: WindowId) -> bool {
+        #[cfg(debug_assertions)]
+        {
+            // Closing an inspector releases capture and removes its overlay; closing its
+            // target also closes the owned inspector, without affecting other windows.
+            let target = self
+                .windows
+                .get(&window_id)
+                .and_then(|window| window.inspected_target);
+            if let Some(target) = target.and_then(|id| self.windows.get_mut(&id)) {
+                target.devtools = None;
+                target.ui.inspection = None;
+                target.ui.invalidate_paint();
+                target.request_redraw();
+            }
+            let inspectors: Vec<_> = self
+                .windows
+                .iter()
+                .filter(|(_, window)| window.inspected_target == Some(window_id))
+                .map(|(id, _)| *id)
+                .collect();
+            for inspector in inspectors {
+                self.remove_window(inspector);
+            }
+        }
         if let Some(window) = self.windows.remove(&window_id) {
             let _scope = window.host.enter();
             if let Some(callback) = &window.events.close {
@@ -603,11 +656,56 @@ impl AppCx {
         requested || active
     }
 
+    #[cfg(debug_assertions)]
+    fn open_devtools(&mut self, event_loop: &ActiveEventLoop, target_id: WindowId) {
+        if let Some(inspector) = self
+            .windows
+            .values()
+            .find(|window| window.inspected_target == Some(target_id))
+        {
+            if let Some(window) = &inspector.window {
+                window.focus_window();
+            }
+            return;
+        }
+        let Some(target) = self.windows.get_mut(&target_id) else {
+            return;
+        };
+        if target.inspected_target.is_some() {
+            return;
+        }
+        let session = crate::devtools::Session::new();
+        target.ui.inspection = Some(crate::devtools::Capture::default());
+        target.devtools = Some(session.clone());
+        target.ui.invalidate_paint();
+        target.request_redraw();
+        // Window roots use Arc by API contract, and run exclusively on the event-loop thread.
+        #[allow(clippy::arc_with_non_send_sync)]
+        let root: RootComponent = Arc::new(move |cx| session.view(cx));
+        let inspector_id = self.spawn_window(
+            event_loop,
+            crate::host::OpenWindowRequest {
+                config: WindowConfig::default()
+                    .title("Lemon DevTools")
+                    .size(1100.0, 760.0),
+                root,
+            },
+        );
+        self.windows
+            .get_mut(&inspector_id)
+            .unwrap()
+            .inspected_target = Some(target_id);
+    }
+
     /// Opens a new native window from a queued [`OpenWindowRequest`](crate::host::OpenWindowRequest).
     ///
     /// Creates the OS window, attaches the GPU surface and renderer, and inserts the new
     /// [`WindowState`] into [`windows`](Self::windows) under its `winit` [`WindowId`].
-    fn spawn_window(&mut self, event_loop: &ActiveEventLoop, req: crate::host::OpenWindowRequest) {
+    fn spawn_window(
+        &mut self,
+        event_loop: &ActiveEventLoop,
+        req: crate::host::OpenWindowRequest,
+    ) -> WindowId {
         let window = Arc::new(
             event_loop
                 .create_window(native_window_attributes(&req.config))
@@ -620,6 +718,7 @@ impl AppCx {
         window_state.request_redraw();
         self.windows.insert(window_id, window_state);
         self.windows.get_mut(&window_id).unwrap().notify_open();
+        window_id
     }
 }
 
@@ -729,6 +828,14 @@ impl ApplicationHandler for AppCx {
                 };
             }
             WindowEvent::KeyboardInput { event, .. } => {
+                #[cfg(debug_assertions)]
+                if event.state == ElementState::Pressed
+                    && !event.repeat
+                    && event.logical_key == Key::Named(WinitNamedKey::F12)
+                {
+                    state.open_devtools(event_loop, window_id);
+                    return;
+                }
                 let Some(window_state) = state.windows.get_mut(&window_id) else {
                     return;
                 };
@@ -821,6 +928,18 @@ impl ApplicationHandler for AppCx {
         let animation_redraw = self.tick_animations();
         for window_state in self.windows.values_mut() {
             let _scope = window_state.activate_theme();
+            #[cfg(debug_assertions)]
+            if let (Some(session), Some(capture)) =
+                (&window_state.devtools, &mut window_state.ui.inspection)
+            {
+                let selected = session.selected.peek();
+                let hovered = session.hovered.peek();
+                if capture.highlighted != selected || capture.hovered != hovered {
+                    capture.highlighted = selected;
+                    capture.hovered = hovered;
+                    window_state.ui.invalidate_paint();
+                }
+            }
             if let Err(error) = window_state.ui.apply_updates() {
                 eprintln!("UI update: {error:?}");
             }
@@ -956,6 +1075,7 @@ fn lemon_cursor_to_winit(cursor: &Cursor) -> CursorIcon {
         Cursor::Move => CursorIcon::Move,
         Cursor::Crosshair => CursorIcon::Crosshair,
         Cursor::ResizeVertical => CursorIcon::NsResize,
+        Cursor::ResizeHorizontal => CursorIcon::EwResize,
     }
 }
 
@@ -1000,6 +1120,40 @@ mod tests {
             .map(PathBuf::from)
             .find(|path| path.is_file())
             .expect("expected at least one system TTF font for tests")
+    }
+
+    #[cfg(debug_assertions)]
+    #[test]
+    fn devtools_close_releases_capture_and_target_close_removes_only_its_inspector() {
+        let mut app = AppCx::new();
+        let target_id = WindowId::from(101);
+        let inspector_id = WindowId::from(102);
+        let other_id = WindowId::from(103);
+        let make_window =
+            || app.make_window_state(Arc::new(|_| Text::new("window").into_element()));
+        let mut target = make_window();
+        target.devtools = Some(crate::devtools::Session::new());
+        target.ui.inspection = Some(crate::devtools::Capture::default());
+        let mut inspector = make_window();
+        inspector.inspected_target = Some(target_id);
+        let other = make_window();
+        app.windows.insert(target_id, target);
+        app.windows.insert(inspector_id, inspector);
+        app.windows.insert(other_id, other);
+        assert!(!app.remove_window(inspector_id));
+        let target = app.windows.get(&target_id).unwrap();
+        assert!(target.devtools.is_none());
+        assert!(target.ui.inspection.is_none());
+        assert!(target.ui.paint_dirty());
+        // A fresh inspector may be attached after the old one closes.
+        let mut inspector =
+            app.make_window_state(Arc::new(|_| Text::new("inspector").into_element()));
+        inspector.inspected_target = Some(target_id);
+        app.windows.insert(inspector_id, inspector);
+        assert!(!app.remove_window(target_id));
+        assert!(!app.windows.contains_key(&inspector_id));
+        assert!(app.windows.contains_key(&other_id));
+        assert_eq!(app.windows.len(), 1);
     }
 
     #[test]

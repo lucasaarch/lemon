@@ -2,7 +2,7 @@ use lemon::diff::{NodePath, Patch};
 use lemon::element::Element;
 use lemon::host::HostContext;
 use lemon::ui::UiState;
-use lemon::{Color, ColumnView, State, Text, Theme, Viewport};
+use lemon::{Color, ColumnView, State, Text, Theme, View, Viewport};
 
 fn viewport() -> Viewport {
     Viewport {
@@ -33,6 +33,33 @@ fn batches_reactive_updates_until_geometry_is_requested() {
     ui.update(viewport(), 1.0, None, true).unwrap();
     assert!(!ui.layout_dirty());
     assert!(!ui.paint_dirty());
+}
+
+#[test]
+fn view_debug_id_reaches_retained_tree_without_relayout() {
+    let id = State::new("toolbar".to_owned());
+    let source = id.clone();
+    let mut ui = UiState::default();
+    ui.mount(move |_| View::new().id(source.get()).width(120.0).into_element())
+        .unwrap();
+    ui.update(viewport(), 1.0, None, true).unwrap();
+    assert_eq!(
+        ui.retained().unwrap().root().unwrap().debug_id.as_deref(),
+        Some("toolbar")
+    );
+    assert!(!ui.layout_dirty());
+
+    id.set("main_toolbar".to_owned());
+    ui.apply_updates().unwrap();
+    assert_eq!(
+        ui.retained().unwrap().root().unwrap().debug_id.as_deref(),
+        Some("main_toolbar")
+    );
+    assert!(!ui.layout_dirty(), "debug labels do not change geometry");
+    assert!(
+        ui.paint_dirty(),
+        "the target redraw publishes the new inspector label"
+    );
 }
 
 #[test]

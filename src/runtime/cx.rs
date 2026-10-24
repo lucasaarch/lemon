@@ -10,16 +10,48 @@ use std::sync::Arc;
 
 use crate::{host::OpenWindowRequest, WindowConfig};
 
+pub(crate) type DeferredEffect = Box<dyn FnOnce()>;
+type Cleanup = Box<dyn FnOnce()>;
+type Mount = Box<dyn FnOnce() -> Cleanup>;
+
+struct MountHook {
+    mount: RefCell<Option<Mount>>,
+    cleanup: RefCell<Option<Cleanup>>,
+}
+
+impl MountHook {
+    fn run(&self) {
+        if let Some(mount) = self.mount.borrow_mut().take() {
+            *self.cleanup.borrow_mut() = Some(mount());
+        }
+    }
+}
+
+impl Drop for MountHook {
+    fn drop(&mut self) {
+        if let Some(cleanup) = self.cleanup.get_mut().take() {
+            cleanup();
+        }
+    }
+}
+
 /// Reactive context passed to your root view and to [`Component`](crate::element::builders::Component) views.
 ///
 /// Declare component resources in a **fixed order** on every render.
 /// Use [`state`](Self::state) for mutable app state and [`watch`](Self::watch) for
 /// side effects that should run after mount or when tracked signals change.
+/// Use [`on_mount`](Self::on_mount) when a resource needs cleanup on unmount.
 pub struct Cx {
     host: crate::host::HostContext,
     hooks: RefCell<Vec<Box<dyn Any>>>,
     index: Cell<usize>,
-    deferred_sink: RefCell<Option<Rc<RefCell<Vec<Effect>>>>>,
+    #[cfg(debug_assertions)]
+    previous_hook_count: Cell<Option<usize>>,
+    #[cfg(debug_assertions)]
+    diagnostics: RefCell<crate::devtools::RenderInfo>,
+    #[cfg(debug_assertions)]
+    render_started: Cell<Option<std::time::Instant>>,
+    deferred_sink: RefCell<Option<Rc<RefCell<Vec<DeferredEffect>>>>>,
 }
 
 impl Cx {
@@ -33,11 +65,17 @@ impl Cx {
             host: crate::host::HostContext::current(),
             hooks: RefCell::new(Vec::new()),
             index: Cell::new(0),
+            #[cfg(debug_assertions)]
+            previous_hook_count: Cell::new(None),
+            #[cfg(debug_assertions)]
+            diagnostics: RefCell::new(crate::devtools::RenderInfo::default()),
+            #[cfg(debug_assertions)]
+            render_started: Cell::new(None),
             deferred_sink: RefCell::new(None),
         }
     }
 
-    pub(crate) fn set_deferred_sink(&self, sink: Rc<RefCell<Vec<Effect>>>) {
+    pub(crate) fn set_deferred_sink(&self, sink: Rc<RefCell<Vec<DeferredEffect>>>) {
         *self.deferred_sink.borrow_mut() = Some(sink);
     }
 
@@ -52,6 +90,53 @@ impl Cx {
     /// Must be called before each re-render of this component.
     pub fn reset_hooks(&self) {
         self.index.set(0);
+        #[cfg(debug_assertions)]
+        self.render_started.set(Some(std::time::Instant::now()));
+    }
+
+    pub(crate) fn check_hook_count(&self) -> Option<(usize, usize)> {
+        #[cfg(debug_assertions)]
+        {
+            if let Some(started) = self.render_started.take() {
+                let mut info = self.diagnostics.borrow_mut();
+                info.renders += 1;
+                let elapsed = started.elapsed();
+                info.last_render = elapsed;
+                info.total_render += elapsed;
+            }
+            let current = self.index.get();
+            let previous = self.previous_hook_count.replace(Some(current));
+            previous
+                .filter(|previous| *previous != current)
+                .map(|previous| (previous, current))
+        }
+        #[cfg(not(debug_assertions))]
+        {
+            None
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    fn record_hook(&self, index: usize, kind: &'static str, value_type: &'static str) {
+        let mut info = self.diagnostics.borrow_mut();
+        if index == info.hooks.len() {
+            info.hooks.push(crate::devtools::HookInfo {
+                kind,
+                value_type,
+                calls: 0,
+            });
+        }
+        let hook = &mut info.hooks[index];
+        hook.kind = kind;
+        hook.value_type = value_type;
+        hook.calls += 1;
+    }
+
+    #[cfg(debug_assertions)]
+    pub(crate) fn inspect_hooks(&self) -> crate::devtools::RenderInfo {
+        let mut info = self.diagnostics.borrow().clone();
+        info.hooks.truncate(self.index.get());
+        info
     }
 
     /// Returns persistent reactive state for this component instance.
@@ -70,6 +155,8 @@ impl Cx {
     pub fn state<T: Clone + 'static>(&self, initial: T) -> crate::State<T> {
         let idx = self.index.get();
         self.index.set(idx + 1);
+        #[cfg(debug_assertions)]
+        self.record_hook(idx, "state", std::any::type_name::<T>());
         let mut hooks = self.hooks.borrow_mut();
         if idx < hooks.len() {
             hooks[idx]
@@ -103,6 +190,8 @@ impl Cx {
     ) -> Derived<T> {
         let idx = self.index.get();
         self.index.set(idx + 1);
+        #[cfg(debug_assertions)]
+        self.record_hook(idx, "derive", std::any::type_name::<T>());
         let mut hooks = self.hooks.borrow_mut();
         if idx < hooks.len() {
             hooks[idx]
@@ -135,15 +224,72 @@ impl Cx {
     pub fn watch(&self, f: impl Fn() + 'static) {
         let idx = self.index.get();
         self.index.set(idx + 1);
+        #[cfg(debug_assertions)]
+        self.record_hook(idx, "watch", std::any::type_name::<Effect>());
         let mut hooks = self.hooks.borrow_mut();
-        if idx >= hooks.len() {
+        if idx < hooks.len() {
+            assert!(hooks[idx].is::<Effect>(), "watch: hook type mismatch");
+        } else {
             let effect = Effect::new_lazy(f);
             if let Some(sink) = self.deferred_sink.borrow().as_ref() {
-                sink.borrow_mut().push(effect.clone());
+                let weak = effect.downgrade();
+                sink.borrow_mut()
+                    .push(Box::new(move || weak.run_deferred_initial()));
             }
             hooks.push(Box::new(effect));
         }
         // On re-render, the effect already lives in hooks; f is dropped
+    }
+
+    /// Runs `mount` once after the first presented frame and runs its returned cleanup
+    /// when this component instance leaves the tree or its window closes.
+    ///
+    /// Declare this hook in a fixed order on every render. The first `mount` closure is
+    /// retained; later closures at the same hook slot are discarded. If the component
+    /// unmounts before its first frame, neither closure runs. The cleanup must release
+    /// resources it creates, such as listeners or timers. For reactive work that re-runs
+    /// when a state changes, use [`watch`](Self::watch).
+    ///
+    /// ```no_run
+    /// use lemon::{element::Element, Cx, Text};
+    /// fn page(cx: &Cx) -> Element {
+    ///     cx.on_mount(|| {
+    ///         println!("page mounted");
+    ///         || println!("page unmounted")
+    ///     });
+    ///     Text::new("Page").into_element()
+    /// }
+    /// ```
+    pub fn on_mount<F, C>(&self, mount: F)
+    where
+        F: FnOnce() -> C + 'static,
+        C: FnOnce() + 'static,
+    {
+        let idx = self.index.get();
+        self.index.set(idx + 1);
+        #[cfg(debug_assertions)]
+        self.record_hook(idx, "on_mount", std::any::type_name::<MountHook>());
+        let mut hooks = self.hooks.borrow_mut();
+        if idx < hooks.len() {
+            assert!(
+                hooks[idx].is::<Rc<MountHook>>(),
+                "on_mount: hook type mismatch"
+            );
+            return;
+        }
+        let hook = Rc::new(MountHook {
+            mount: RefCell::new(Some(Box::new(move || Box::new(mount())))),
+            cleanup: RefCell::new(None),
+        });
+        if let Some(sink) = self.deferred_sink.borrow().as_ref() {
+            let weak = Rc::downgrade(&hook);
+            sink.borrow_mut().push(Box::new(move || {
+                if let Some(hook) = weak.upgrade() {
+                    hook.run();
+                }
+            }));
+        }
+        hooks.push(Box::new(hook));
     }
 
     /// Returns the current theme from this component's originating host context.
@@ -208,6 +354,8 @@ impl Cx {
     pub fn motion(&self, config: AnimationConfig) -> AnimationHandle {
         let idx = self.index.get();
         self.index.set(idx + 1);
+        #[cfg(debug_assertions)]
+        self.record_hook(idx, "motion", std::any::type_name::<AnimationHandle>());
         let mut hooks = self.hooks.borrow_mut();
         if idx < hooks.len() {
             hooks[idx]
@@ -222,10 +370,10 @@ impl Cx {
     }
 }
 
-pub(crate) fn flush_deferred_sink(sink: &Rc<RefCell<Vec<Effect>>>) {
+pub(crate) fn flush_deferred_sink(sink: &Rc<RefCell<Vec<DeferredEffect>>>) {
     let pending = std::mem::take(&mut *sink.borrow_mut());
     for effect in pending {
-        effect.run_deferred_initial();
+        effect();
     }
 }
 
@@ -368,6 +516,17 @@ mod tests {
         assert!(second.is_playing());
         second.reset();
         assert_eq!(first.progress(), 0.0);
+    }
+
+    #[cfg(debug_assertions)]
+    #[test]
+    fn hook_count_change_is_detected_after_rerender() {
+        let cx = Cx::new();
+        cx.reset_hooks();
+        cx.state(0);
+        assert_eq!(cx.check_hook_count(), None);
+        cx.reset_hooks();
+        assert_eq!(cx.check_hook_count(), Some((1, 0)));
     }
 
     #[test]

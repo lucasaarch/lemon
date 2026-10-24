@@ -106,6 +106,15 @@ pub struct EventHandlers {
     pub on_pointer_up: Option<Rc<dyn Fn(f32, f32)>>,
     /// Updated after each [`layout_pass`](crate::layout::layout_pass) for scroll viewports; used to clamp wheel delta.
     pub scroll_layout_max: Option<Rc<Cell<crate::ScrollOffset>>>,
+    /// Current offset and setter used only by pointer dragging on the painted scrollbar.
+    pub(crate) scrollbar: Option<ScrollbarBinding>,
+}
+
+#[derive(Clone)]
+pub(crate) struct ScrollbarBinding {
+    pub offset: Rc<Cell<crate::ScrollOffset>>,
+    pub set: Rc<dyn Fn(crate::ScrollOffset)>,
+    pub hovered: Rc<Cell<bool>>,
 }
 
 impl PartialEq for EventHandlers {
@@ -114,6 +123,20 @@ impl PartialEq for EventHandlers {
             match (left, right) {
                 (None, None) => true,
                 (Some(a), Some(b)) => Rc::ptr_eq(a, b),
+                _ => false,
+            }
+        }
+        fn same_scrollbar(
+            left: &Option<ScrollbarBinding>,
+            right: &Option<ScrollbarBinding>,
+        ) -> bool {
+            match (left, right) {
+                (None, None) => true,
+                (Some(left), Some(right)) => {
+                    Rc::ptr_eq(&left.offset, &right.offset)
+                        && Rc::ptr_eq(&left.set, &right.set)
+                        && Rc::ptr_eq(&left.hovered, &right.hovered)
+                }
                 _ => false,
             }
         }
@@ -133,6 +156,7 @@ impl PartialEq for EventHandlers {
             && same(&self.on_text_cursor, &other.on_text_cursor)
             && same(&self.on_pointer_up, &other.on_pointer_up)
             && same(&self.scroll_layout_max, &other.scroll_layout_max)
+            && same_scrollbar(&self.scrollbar, &other.scrollbar)
     }
 }
 
@@ -206,6 +230,7 @@ impl std::fmt::Debug for EventHandlers {
                     .as_ref()
                     .map(|_| "Rc<Cell<crate::ScrollOffset>>"),
             )
+            .field("scrollbar", &self.scrollbar.as_ref().map(|_| "binding"))
             .finish()
     }
 }
@@ -242,6 +267,8 @@ pub struct RetainedNode {
     pub style: StyleProps,
     pub paint: PaintData,
     pub children: Vec<RetainedNode>,
+    /// Descriptive developer label set by a container builder's `id` method.
+    pub debug_id: Option<String>,
     pub handlers: EventHandlers,
     pub text: Option<TextCache>,
     pub text_input: Option<crate::element::types::TextInputMeta>,
@@ -278,6 +305,7 @@ impl RetainedNode {
                 focus_ring_color: None,
             },
             children: Vec::new(),
+            debug_id: None,
             handlers: EventHandlers::default(),
             text: Some(TextCache {
                 content,
@@ -413,6 +441,7 @@ impl RetainedTree {
                     content: crate::element::content::TextContent::Static(String::new()),
                     style: TextStyle::default(),
                     key: None,
+                    debug_id: None,
                 })
             }
             Element::Fragment(_) => Err(RetainedError::UnsupportedElement("Fragment")),
@@ -430,6 +459,7 @@ impl RetainedTree {
             paint,
             children: node_children,
             key: _,
+            debug_id,
             handlers,
             text_input,
             scroll_viewport,
@@ -454,6 +484,7 @@ impl RetainedTree {
             style: node_style,
             paint: paint.resolve(),
             children,
+            debug_id,
             handlers,
             text: None,
             text_input: text_input.clone(),
@@ -473,7 +504,9 @@ impl RetainedTree {
             .unwrap_or_else(crate::element::style::default_text_color);
         let taffy_id = self.taffy.new_leaf(Style::default())?;
 
-        Ok(RetainedNode::text(taffy_id, content, node.style, color))
+        let mut retained = RetainedNode::text(taffy_id, content, node.style, color);
+        retained.debug_id = node.debug_id;
+        Ok(retained)
     }
 
     /// Applies one validated patch, preserving accumulated invalidation on failure.
@@ -525,6 +558,7 @@ impl RetainedTree {
                     style: StyleProps::default(),
                     paint: PaintData::default(),
                     children: Vec::new(),
+                    debug_id: None,
                     handlers: EventHandlers::default(),
                     text: None,
                     text_input: None,
@@ -547,7 +581,16 @@ impl RetainedTree {
                 self.node_mut(&node)?.style = style;
             }
             Patch::UpdateHandlers { node, handlers } => {
-                self.node_mut(&node)?.handlers = handlers;
+                let retained = self.node_mut(&node)?;
+                if let (Some(previous), Some(next)) =
+                    (&retained.handlers.scrollbar, &handlers.scrollbar)
+                {
+                    next.hovered.set(previous.hovered.get());
+                }
+                retained.handlers = handlers;
+            }
+            Patch::UpdateDebugId { node, id } => {
+                self.node_mut(&node)?.debug_id = id;
             }
             Patch::UpdatePaint { node, paint } => {
                 self.node_mut(&node)?.paint = paint;
@@ -1630,6 +1673,7 @@ mod tests {
                 Default::default(),
                 Default::default(),
             )],
+            debug_id: None,
             handlers: Default::default(),
             text: None,
             text_input: None,

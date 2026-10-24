@@ -10,8 +10,7 @@ use crate::element::{
     types::{BoxElement, ComponentElement, TextElement},
     Element,
 };
-use crate::reactive::Effect;
-use cx::Cx;
+use cx::{Cx, DeferredEffect};
 
 type ViewFn = Rc<dyn Fn(&Cx) -> Element>;
 
@@ -23,8 +22,8 @@ struct ComponentSlot {
     cx: Rc<RefCell<Cx>>,
     component: Option<ComponentElement>,
     children: Vec<ComponentSlot>,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
-    _effect: Effect,
+    deferred_effects: Rc<RefCell<Vec<DeferredEffect>>>,
+    _effect: crate::reactive::Effect,
 }
 
 /// Reactive renderer: mounts a root view, diffs trees, and collects [`Patch`]es.
@@ -34,7 +33,7 @@ struct ComponentSlot {
 pub struct Runtime {
     slots: Vec<ComponentSlot>,
     patch_queue: Vec<Patch>,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+    deferred_effects: Rc<RefCell<Vec<DeferredEffect>>>,
 }
 
 impl Runtime {
@@ -86,9 +85,31 @@ impl Runtime {
         std::mem::take(&mut self.patch_queue)
     }
 
-    /// Run mount-time `Cx::watch` callbacks queued during render (after first paint).
+    /// Run mount-time `Cx::watch` and `Cx::on_mount` callbacks queued during render
+    /// after the first presented frame.
     pub fn flush_deferred_effects(&mut self) {
         cx::flush_deferred_sink(&self.deferred_effects);
+    }
+
+    #[cfg(debug_assertions)]
+    pub(crate) fn inspect_components(&self) -> Vec<crate::devtools::ComponentInfo> {
+        fn collect(slots: &[ComponentSlot], output: &mut Vec<crate::devtools::ComponentInfo>) {
+            for slot in slots {
+                output.push(crate::devtools::ComponentInfo {
+                    id: Rc::as_ptr(&slot.cx) as usize,
+                    path: slot.path.clone(),
+                    key: slot
+                        .component
+                        .as_ref()
+                        .and_then(|component| component.key().cloned()),
+                    render: slot.cx.borrow().inspect_hooks(),
+                });
+                collect(&slot.children, output);
+            }
+        }
+        let mut output = Vec::new();
+        collect(&self.slots, &mut output);
+        output
     }
 
     /// Frozen element tree after the last successful render (for [`RetainedTree::mount`](crate::retained::RetainedTree::mount)).
@@ -107,7 +128,7 @@ fn create_component_slot(
     path: NodePath,
     view: ViewFn,
     lazy_effect: bool,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+    deferred_effects: Rc<RefCell<Vec<DeferredEffect>>>,
 ) -> ComponentSlot {
     let view_cell = Rc::new(RefCell::new(view));
     let cx = Rc::new(RefCell::new(Cx::new()));
@@ -117,18 +138,22 @@ fn create_component_slot(
     let view_cell2 = Rc::clone(&view_cell);
     let cx2 = Rc::clone(&cx);
     let pending2 = Rc::clone(&pending);
+    let diagnostic_path = path.clone();
 
     let effect_body = move || {
         let _scope = cx2.borrow().enter_host();
         cx2.borrow().reset_hooks();
         let tree = view_cell2.borrow()(&cx2.borrow());
+        if let Some((previous, current)) = cx2.borrow().check_hook_count() {
+            crate::debug::warn_hook_count(&diagnostic_path, previous, current);
+        }
         *pending2.borrow_mut() = Some(freeze_element(&tree));
     };
 
     let effect = if lazy_effect {
-        Effect::new_lazy(effect_body)
+        crate::reactive::Effect::new_lazy(effect_body)
     } else {
-        Effect::new(effect_body)
+        crate::reactive::Effect::new(effect_body)
     };
 
     ComponentSlot {
@@ -152,7 +177,14 @@ fn flush_slot_subtree(slot: &mut ComponentSlot, patches: &mut Vec<Patch>) {
 }
 
 fn render_slot(slot: &mut ComponentSlot, patches: &mut Vec<Patch>) {
-    if let Some(new_tree) = slot.pending.borrow_mut().take() {
+    if let Some(mut new_tree) = slot.pending.borrow_mut().take() {
+        if let Some(id) = slot
+            .component
+            .as_ref()
+            .and_then(|component| component.debug_id.as_deref())
+        {
+            set_component_root_id(&mut new_tree, id);
+        }
         let next_previous = new_tree.clone();
         if let Some(old_tree) = slot.previous.take() {
             let single_root = slot.component.is_some()
@@ -183,6 +215,22 @@ fn render_slot(slot: &mut ComponentSlot, patches: &mut Vec<Patch>) {
     }
 }
 
+fn set_component_root_id(element: &mut Element, id: &str) {
+    match element {
+        Element::Text(text) => text.debug_id = Some(id.to_owned()),
+        Element::View(view) | Element::Row(view) | Element::Column(view) => {
+            view.debug_id = Some(id.to_owned());
+        }
+        Element::Fragment(children) => {
+            for child in children {
+                set_component_root_id(child, id);
+            }
+        }
+        Element::Component(component) => component.debug_id = Some(id.to_owned()),
+        Element::None => {}
+    }
+}
+
 fn same_component_identity(old: &ComponentElement, new: &ComponentElement) -> bool {
     old.identity() == new.identity() && old.key() == new.key()
 }
@@ -207,6 +255,12 @@ fn find_slot_mut<'a>(
 fn unmount_subtree_slots(slots: &mut Vec<ComponentSlot>, path: &NodePath) {
     slots.retain_mut(|slot| {
         if slot.path.0.starts_with(&path.0) {
+            crate::lemon_trace!(
+                Runtime,
+                "unmount_component_slot path={} key={:?}",
+                crate::debug::format_path(&slot.path),
+                slot.component.as_ref().and_then(ComponentElement::key)
+            );
             return false;
         }
         unmount_subtree_slots(&mut slot.children, path);
@@ -219,7 +273,7 @@ fn bootstrap_initial_components(
     element: &Element,
     path: NodePath,
     patches: &mut Vec<Patch>,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+    deferred_effects: Rc<RefCell<Vec<DeferredEffect>>>,
 ) {
     match element {
         Element::Component(component) => {
@@ -302,7 +356,7 @@ fn bootstrap_component_output(
     children: Vec<Element>,
     path: NodePath,
     patches: &mut Vec<Patch>,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+    deferred_effects: Rc<RefCell<Vec<DeferredEffect>>>,
 ) {
     match children.as_slice() {
         [] => patches.push(Patch::RemoveChild {
@@ -338,7 +392,7 @@ fn mount_component_slot(
     parent_slots: &mut Vec<ComponentSlot>,
     path: NodePath,
     component: ComponentElement,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+    deferred_effects: Rc<RefCell<Vec<DeferredEffect>>>,
 ) {
     crate::lemon_trace!(
         Runtime,
@@ -351,7 +405,14 @@ fn mount_component_slot(
     // A lazy effect never runs until dirty, but it cannot become dirty until it has run once.
     let mut slot = create_component_slot(path, component.view(), false, deferred_effects);
     slot.component = Some(component);
-    if let Some(initial) = slot.pending.borrow_mut().take() {
+    if let Some(mut initial) = slot.pending.borrow_mut().take() {
+        if let Some(id) = slot
+            .component
+            .as_ref()
+            .and_then(|component| component.debug_id.as_deref())
+        {
+            set_component_root_id(&mut initial, id);
+        }
         slot.previous = Some(initial);
     }
     parent_slots.push(slot);
@@ -361,7 +422,11 @@ fn render_without_subscribing(slot: &ComponentSlot) -> Element {
     let _scope = slot.cx.borrow().enter_host();
     crate::reactive::observer::without_observer(|| {
         slot.cx.borrow().reset_hooks();
-        freeze_element(&slot.view.borrow()(&slot.cx.borrow()))
+        let tree = slot.view.borrow()(&slot.cx.borrow());
+        if let Some((previous, current)) = slot.cx.borrow().check_hook_count() {
+            crate::debug::warn_hook_count(&slot.path, previous, current);
+        }
+        freeze_element(&tree)
     })
 }
 
@@ -425,16 +490,21 @@ fn handle_component_pair(
     new: ComponentElement,
     path: NodePath,
     patches: &mut Vec<Patch>,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+    deferred_effects: Rc<RefCell<Vec<DeferredEffect>>>,
 ) {
     let new_for_patch = new.clone();
     if same_component_identity(old, &new) {
         if let Some(slot) = find_slot_mut(parent_slots, &path) {
+            let debug_id_changed = slot
+                .component
+                .as_ref()
+                .is_none_or(|previous| previous.debug_id != new.debug_id);
             let props_changed = slot
                 .component
                 .as_ref()
                 .is_none_or(|previous| !previous.props_eq(&new));
-            let should_sync_render = if new.has_props() { props_changed } else { true };
+            let should_sync_render =
+                debug_id_changed || if new.has_props() { props_changed } else { true };
             if should_sync_render {
                 *slot.view.borrow_mut() = new.view();
                 sync_render(slot);
@@ -486,7 +556,7 @@ fn diff_component_output_slots(
     new: Element,
     path: NodePath,
     patches: &mut Vec<Patch>,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+    deferred_effects: Rc<RefCell<Vec<DeferredEffect>>>,
 ) {
     let old_children = component_output_children(old);
     let new_children = component_output_children(new);
@@ -517,7 +587,7 @@ fn diff_component_output_children(
     new_children: &[Element],
     parent: &NodePath,
     patches: &mut Vec<Patch>,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+    deferred_effects: Rc<RefCell<Vec<DeferredEffect>>>,
 ) {
     crate::diff::reconcile_children_at(
         &mut SlotReconciler {
@@ -540,7 +610,7 @@ fn diff_component_output_children(
 
 struct SlotReconciler<'a> {
     slots: &'a mut Vec<ComponentSlot>,
-    effects: Rc<RefCell<Vec<Effect>>>,
+    effects: Rc<RefCell<Vec<DeferredEffect>>>,
 }
 
 impl crate::diff::Reconciler for SlotReconciler<'_> {
@@ -671,7 +741,7 @@ fn diff_with_nested_components(
     new: Element,
     path: NodePath,
     patches: &mut Vec<Patch>,
-    deferred_effects: Rc<RefCell<Vec<Effect>>>,
+    deferred_effects: Rc<RefCell<Vec<DeferredEffect>>>,
 ) {
     patches.extend(crate::diff::reconcile(
         &mut SlotReconciler {
@@ -695,6 +765,7 @@ fn freeze_element(element: &Element) -> Element {
                 content: TextContent::Static(text.content.resolve()),
                 style,
                 key: text.key.clone(),
+                debug_id: text.debug_id.clone(),
             })
         }
         Element::View(container) => Element::View(freeze_box(container)),
@@ -714,6 +785,7 @@ fn freeze_box(container: &BoxElement) -> BoxElement {
         paint: freeze_paint(&container.paint),
         children: container.children.iter().map(freeze_element).collect(),
         key: container.key.clone(),
+        debug_id: container.debug_id.clone(),
         handlers: container.handlers.clone(),
         text_input: container.text_input.clone(),
         scroll_viewport: container.scroll_viewport,
@@ -759,6 +831,36 @@ mod tests {
         let mut rt = Runtime::new();
         rt.mount(|_cx| Text::new("hello").into_element());
         assert!(rt.take_patches().is_empty());
+    }
+
+    #[test]
+    fn component_debug_id_is_applied_to_its_rendered_root_and_updates() {
+        use crate::element::builders::Component;
+
+        fn label(_cx: &Cx, value: &u32) -> Element {
+            Text::new(value.to_string()).into_element()
+        }
+
+        let id = State::new(String::from("first"));
+        let source = id.clone();
+        let mut runtime = Runtime::new();
+        runtime.mount(move |_| {
+            Component::new_with_props(label, 7_u32)
+                .id(source.get())
+                .into_element()
+        });
+        let Some(Element::Text(root)) = runtime.slots[0].children[0].previous.as_ref() else {
+            panic!("component output should be a text root")
+        };
+        assert_eq!(root.debug_id.as_deref(), Some("first"));
+        runtime.take_patches();
+
+        id.set("second".into());
+        runtime.flush_effects();
+        assert!(runtime.take_patches().iter().any(|patch| matches!(
+            patch,
+            Patch::UpdateDebugId { id: Some(id), .. } if id == "second"
+        )));
     }
 
     #[test]
@@ -817,6 +919,139 @@ mod tests {
         assert!(!ran.get());
         rt.flush_deferred_effects();
         assert!(ran.get());
+    }
+
+    #[test]
+    fn unmounted_page_does_not_run_or_retain_deferred_watch() {
+        use crate::element::builders::Component;
+        use std::cell::Cell;
+
+        type WatchCapture = (Rc<Cell<u32>>, Rc<()>);
+        thread_local! {
+            static WATCH: RefCell<Option<WatchCapture>> = const { RefCell::new(None) };
+        }
+
+        fn page(cx: &Cx) -> Element {
+            WATCH.with(|watch| {
+                let (calls, held) = watch.borrow().as_ref().unwrap().clone();
+                cx.watch(move || {
+                    let _ = &held;
+                    calls.set(calls.get() + 1);
+                });
+            });
+            Text::new("page").into_element()
+        }
+
+        let calls = Rc::new(Cell::new(0));
+        let resource = Rc::new(());
+        WATCH.with(|watch| *watch.borrow_mut() = Some((calls.clone(), resource.clone())));
+        let page_visible = State::new(true);
+        let visible = page_visible.clone();
+        let mut runtime = Runtime::new();
+        runtime.mount(move |_| {
+            if visible.get() {
+                Component::new(page).into_element()
+            } else {
+                Text::new("away").into_element()
+            }
+        });
+        WATCH.with(|watch| *watch.borrow_mut() = None);
+        assert_eq!(Rc::strong_count(&resource), 2);
+
+        page_visible.set(false);
+        runtime.flush_effects();
+        assert_eq!(Rc::strong_count(&resource), 1);
+        runtime.flush_deferred_effects();
+        assert_eq!(calls.get(), 0);
+    }
+
+    #[test]
+    fn page_mount_cleanup_runs_once_after_removal_and_on_runtime_drop() {
+        use crate::element::builders::Component;
+
+        thread_local! {
+            static EVENTS: RefCell<Option<Rc<RefCell<Vec<&'static str>>>>> = const { RefCell::new(None) };
+        }
+
+        fn page(cx: &Cx) -> Element {
+            EVENTS.with(|events| {
+                let events = events.borrow().as_ref().unwrap().clone();
+                cx.on_mount(move || {
+                    events.borrow_mut().push("mount");
+                    move || events.borrow_mut().push("cleanup")
+                });
+            });
+            Text::new("page").into_element()
+        }
+
+        let events = Rc::new(RefCell::new(Vec::new()));
+        EVENTS.with(|slot| *slot.borrow_mut() = Some(events.clone()));
+        let visible = State::new(true);
+        let state = visible.clone();
+        let mut runtime = Runtime::new();
+        runtime.mount(move |_| {
+            if state.get() {
+                Component::new(page).into_element()
+            } else {
+                Text::new("away").into_element()
+            }
+        });
+        EVENTS.with(|slot| *slot.borrow_mut() = None);
+        assert!(events.borrow().is_empty());
+        runtime.flush_deferred_effects();
+        assert_eq!(&*events.borrow(), &["mount"]);
+
+        visible.set(false);
+        runtime.flush_effects();
+        assert_eq!(&*events.borrow(), &["mount", "cleanup"]);
+        runtime.flush_deferred_effects();
+        EVENTS.with(|slot| *slot.borrow_mut() = Some(events.clone()));
+        visible.set(true);
+        runtime.flush_effects();
+        EVENTS.with(|slot| *slot.borrow_mut() = None);
+        runtime.flush_deferred_effects();
+        assert_eq!(&*events.borrow(), &["mount", "cleanup", "mount"]);
+        drop(runtime);
+        assert_eq!(&*events.borrow(), &["mount", "cleanup", "mount", "cleanup"]);
+    }
+
+    #[test]
+    fn page_unmounted_before_first_frame_skips_mount_and_cleanup() {
+        use crate::element::builders::Component;
+
+        thread_local! {
+            static EVENTS: RefCell<Option<Rc<Cell<u32>>>> = const { RefCell::new(None) };
+        }
+
+        fn page(cx: &Cx) -> Element {
+            EVENTS.with(|events| {
+                let calls = events.borrow().as_ref().unwrap().clone();
+                cx.on_mount(move || {
+                    calls.set(calls.get() + 1);
+                    move || calls.set(calls.get() + 1)
+                });
+            });
+            Text::new("page").into_element()
+        }
+
+        use std::cell::Cell;
+        let calls = Rc::new(Cell::new(0));
+        EVENTS.with(|slot| *slot.borrow_mut() = Some(calls.clone()));
+        let visible = State::new(true);
+        let state = visible.clone();
+        let mut runtime = Runtime::new();
+        runtime.mount(move |_| {
+            if state.get() {
+                Component::new(page).into_element()
+            } else {
+                Text::new("away").into_element()
+            }
+        });
+        EVENTS.with(|slot| *slot.borrow_mut() = None);
+        visible.set(false);
+        runtime.flush_effects();
+        runtime.flush_deferred_effects();
+        assert_eq!(calls.get(), 0);
     }
 
     #[test]

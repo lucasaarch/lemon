@@ -59,6 +59,9 @@ pub mod asset;
 
 pub mod debug;
 
+#[cfg(debug_assertions)]
+mod devtools;
+
 pub mod diff;
 
 pub mod element;
@@ -103,8 +106,9 @@ pub use icons::IconData;
 pub use transition::{Transition, TransitionProperty};
 pub use widget::{
     Button, ButtonStyle, Checkbox, Dialog, FileTree, FileTreeNode, FileTreeStyle, Popover,
-    SecureField, Select, SelectStyle, Slider, SliderStyle, Switch, TextArea, TextField,
-    TextFieldStyle, ToastId, ToastKind, Toaster,
+    ResizableView, ResizeEdge, SecureField, Select, SelectStyle, Slider, SliderStyle, Switch,
+    Table, TextArea, TextField, TextFieldStyle, ToastId, ToastKind, Toaster, Tree, TreeNode,
+    TreeStyle,
 };
 
 pub use element::events::{

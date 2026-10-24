@@ -68,6 +68,8 @@ pub enum Cursor {
     Crosshair,
     /// Cursor for a handle that adjusts height only.
     ResizeVertical,
+    /// Cursor for a handle that adjusts width only.
+    ResizeHorizontal,
 }
 
 #[cfg(test)]

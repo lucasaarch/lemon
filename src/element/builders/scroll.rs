@@ -27,7 +27,7 @@ impl ScrollViewStyle {
     }
 }
 
-/// Scroll viewport with independent axis offsets and proportional scrollbar thumbs.
+/// Scroll viewport with independent axis offsets and proportional overlay scrollbars.
 ///
 /// Vertical content fills the viewport width; horizontal content fills its height.
 /// With [`ScrollAxis::Both`], content keeps its natural size in both directions.
@@ -36,7 +36,8 @@ impl ScrollViewStyle {
 /// ScrollView range is clamped using the **measured** content extent on the selected axis after each layout pass
 /// (see [`layout::sync_scroll_layout_max`](crate::layout::sync_scroll_layout_max)). The track and
 /// thumb are painted in the paint pass from live layout data, so thumb size tracks content
-/// without manual height estimates.
+/// without manual height estimates. Scrollbars appear only when content overflows and only
+/// while the pointer is over the viewport; they overlay content without reserving layout space.
 pub struct ScrollView {
     child: Element,
     axis: ScrollAxis,
@@ -46,6 +47,8 @@ pub struct ScrollView {
     /// Fallback max scroll before the first layout measurement (virtualized lists).
     content_size: Option<(f32, f32)>,
     layout_max: Rc<Cell<ScrollOffset>>,
+    scroll_value: Rc<Cell<ScrollOffset>>,
+    scrollbar_hovered: Rc<Cell<bool>>,
     style: ScrollViewStyle,
 }
 
@@ -77,6 +80,8 @@ impl ScrollView {
             width: None,
             content_size: None,
             layout_max: Rc::new(Cell::new(ScrollOffset::new(f64::MAX, f64::MAX))),
+            scroll_value: Rc::new(Cell::new(ScrollOffset::default())),
+            scrollbar_hovered: Rc::new(Cell::new(false)),
             style: ScrollViewStyle::default(),
         }
     }
@@ -154,6 +159,16 @@ impl ScrollView {
             .get()
             .clamped(ScrollOffset::new(f32::MAX.into(), f32::MAX.into()));
         let offset = self.offset.clone();
+        self.scroll_value.set(offset_value);
+        let scroll_value = self.scroll_value;
+        let scroll_offset = offset.clone();
+        let scrollbar = crate::retained::ScrollbarBinding {
+            offset: scroll_value,
+            set: Rc::new(move |next| scroll_offset.set(next)),
+            hovered: self.scrollbar_hovered.clone(),
+        };
+        let hover_enter = self.scrollbar_hovered.clone();
+        let hover_leave = self.scrollbar_hovered;
         let viewport_h = self.height;
         let width = self.width;
         let content_size = self.content_size;
@@ -181,6 +196,9 @@ impl ScrollView {
             .clip()
             .scroll_viewport(axis)
             .scroll_layout_max(layout_max)
+            .scrollbar(scrollbar)
+            .on_hover_enter(move || hover_enter.set(true))
+            .on_hover_leave(move || hover_leave.set(false))
             .on_scroll(move |delta| {
                 let measured = layout_max_for_scroll.get();
                 let fallback = content_size.map(|(w, h)| {

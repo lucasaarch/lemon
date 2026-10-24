@@ -86,7 +86,7 @@ impl<T: Clone + 'static> State<T> {
             upgraded
         };
         for sub in subs {
-            sub.mark_dirty();
+            crate::reactive::observer::notify_subscriber(&sub);
         }
     }
 }

@@ -14,6 +14,12 @@ pub(crate) fn diff_container_props(
             handlers: new.handlers.clone(),
         });
     }
+    if old.debug_id != new.debug_id {
+        patches.push(Patch::UpdateDebugId {
+            node: path.clone(),
+            id: new.debug_id.clone(),
+        });
+    }
     if old.style != new.style {
         patches.push(Patch::UpdateStyle {
             node: path.clone(),

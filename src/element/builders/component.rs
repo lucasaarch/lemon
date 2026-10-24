@@ -55,6 +55,20 @@ impl Component {
         self
     }
 
+    /// Sets a descriptive ID on the component's rendered root for debug inspection.
+    /// The ID does not change component reconciliation identity. Components that render
+    /// multiple roots apply the ID to each root.
+    ///
+    /// ```
+    /// use lemon::prelude::*;
+    /// fn label(_cx: &Cx) -> Element { Text::new("Save").into_element() }
+    /// let _ = Component::new(label).id("save_button");
+    /// ```
+    pub fn id(mut self, id: impl Into<String>) -> Self {
+        self.0.debug_id = Some(id.into());
+        self
+    }
+
     /// Finishes the builder and returns an [`Element`].
     pub fn into_element(self) -> Element {
         Element::Component(self.0)

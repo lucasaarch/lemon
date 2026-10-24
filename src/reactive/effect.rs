@@ -49,6 +49,17 @@ pub struct Effect {
     _inner: Rc<EffectInner>,
 }
 
+/// Non-owning reference used by the post-paint queue.
+pub(crate) struct WeakEffect(Weak<EffectInner>);
+
+impl WeakEffect {
+    pub(crate) fn run_deferred_initial(&self) {
+        if let Some(inner) = self.0.upgrade() {
+            EffectInner::run(&inner);
+        }
+    }
+}
+
 impl Effect {
     /// Runs `f` now and whenever a signal read by it notifies this effect.
     ///
@@ -71,6 +82,10 @@ impl Effect {
             is_running: Cell::new(false),
         });
         Effect { _inner: inner }
+    }
+
+    pub(crate) fn downgrade(&self) -> WeakEffect {
+        WeakEffect(Rc::downgrade(&self._inner))
     }
 
     /// Run the effect body once (used for deferred `Cx::watch` callbacks after first paint).

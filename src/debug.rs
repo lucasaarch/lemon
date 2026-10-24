@@ -5,9 +5,9 @@
 //! Set an environment variable before launching your app:
 //!
 //! ```bash
-//! LEMON_DEBUG=1 cargo run -p components
+//! LEMON_DEBUG=1 cargo run --example editor
 //! # or filter categories:
-//! LEMON_DEBUG=runtime,patches,input,layout cargo run -p components
+//! LEMON_DEBUG=runtime,patches,input cargo run --example editor
 //! ```
 //!
 //!
@@ -17,10 +17,10 @@
 //! |------------|---------------------------------------------------------------|
 //! | `runtime`  | Effect flush, component slots, render/diff of virtual trees  |
 //! | `patches`  | Each patch applied to the retained tree                       |
-//! | `layout`   | Layout pass entry/exit                                        |
-//! | `paint`    | Paint pass stats                                              |
+//! | `layout`   | Layout pass duration                                          |
+//! | `paint`    | Scene build duration                                          |
 //! | `input`    | Clicks, keyboard dispatch, hit targets                         |
-//! | `signal`   | State `set` / `update` (very noisy)                          |
+//! | `signal`   | Reserved for state diagnostics                                |
 //! | `retained` | Retained-tree mount and structural changes                    |
 //!
 //! Use `1`, `true`, `yes`, or `all` to enable every category.
@@ -266,14 +266,26 @@ pub fn trace(cat: Category, message: impl AsRef<str>) {
     }
 }
 
-/// Log with `format!` args when `cat` is enabled.
+pub(crate) fn warn_hook_count(path: &NodePath, previous: usize, current: usize) {
+    #[cfg(debug_assertions)]
+    eprintln!(
+        "[lemon:warning] hook count changed at {}: {previous} -> {current}; declare hooks in a fixed order or move conditional content into a Component",
+        format_path(path)
+    );
+    #[cfg(not(debug_assertions))]
+    let _ = (path, previous, current);
+}
+
+/// Log with `format!` args when `cat` is enabled, without formatting when disabled.
 #[macro_export]
 macro_rules! lemon_trace {
     ($cat:ident, $($tt:tt)*) => {
-        $crate::debug::trace(
-            $crate::debug::Category::$cat,
-            format!($($tt)*),
-        )
+        if $crate::debug::enabled($crate::debug::Category::$cat) {
+            $crate::debug::trace(
+                $crate::debug::Category::$cat,
+                format!($($tt)*),
+            );
+        }
     };
 }
 
@@ -315,7 +327,7 @@ pub fn element_kind(element: &Element) -> &'static str {
     }
 }
 
-/// One-line patch description.
+/// One-line patch description. Text updates report their character count, not content.
 pub fn format_patch(patch: &Patch) -> String {
     match patch {
         Patch::UpdateComponent { node, component } => format!(
@@ -337,12 +349,19 @@ pub fn format_patch(patch: &Patch) -> String {
             format!("UpdateStyle path={}", format_path(node))
         }
         Patch::UpdateHandlers { node, .. } => format!("UpdateHandlers {}", format_path(node)),
+        Patch::UpdateDebugId { node, id } => format!(
+            "UpdateDebugId path={} set={}",
+            format_path(node),
+            id.is_some()
+        ),
         Patch::UpdatePaint { node, .. } => {
             format!("UpdatePaint path={}", format_path(node))
         }
-        Patch::UpdateText { node, content } => {
-            format!("UpdateText path={} content={content:?}", format_path(node))
-        }
+        Patch::UpdateText { node, content } => format!(
+            "UpdateText path={} chars={}",
+            format_path(node),
+            content.chars().count()
+        ),
         Patch::UpdateTextStyle { node, .. } => {
             format!("UpdateTextStyle path={}", format_path(node))
         }
@@ -375,7 +394,7 @@ pub fn format_patch(patch: &Patch) -> String {
 
 /// Log a batch of patches (patches category).
 pub fn trace_patches(context: &str, patches: &[Patch]) {
-    if !enabled(Category::Patches) && !enabled(Category::Runtime) {
+    if !enabled(Category::Patches) {
         return;
     }
     if patches.is_empty() {
@@ -411,6 +430,17 @@ mod tests {
         let text = format_patch(&patch);
         assert!(text.contains("UpdateText"));
         assert!(text.contains("[5,0]"));
-        assert!(text.contains("\"1\""));
+        assert!(text.contains("chars=1"));
+    }
+
+    #[test]
+    fn disabled_trace_does_not_evaluate_message() {
+        let evaluated = Cell::new(false);
+        disable();
+        crate::lemon_trace!(Runtime, "{}", {
+            evaluated.set(true);
+            "message"
+        });
+        assert!(!evaluated.get());
     }
 }

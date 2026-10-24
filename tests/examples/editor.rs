@@ -82,6 +82,133 @@ fn editor_mounts_and_lays_out_at_useful_window_sizes() {
 }
 
 #[test]
+fn editor_sidebar_resizes_when_its_right_edge_is_dragged() {
+    use lemon::input::{hit_test::LogicalPoint, InputEvent};
+
+    fn resize_handle(
+        node: &lemon::retained::RetainedNode,
+    ) -> Option<&lemon::retained::RetainedNode> {
+        if node.style.cursor == Cursor::ResizeHorizontal && node.handlers.on_drag.is_some() {
+            return Some(node);
+        }
+        node.children.iter().find_map(resize_handle)
+    }
+
+    let document = Document::new();
+    let mut ui = lemon::ui::UiState::default();
+    ui.mount(move |cx| app(cx, &document, Rc::new(Vec::new())))
+        .unwrap();
+    ui.layout(lemon::Viewport {
+        width: 960.0,
+        height: 680.0,
+    })
+    .unwrap();
+
+    let root = ui.retained().unwrap().root().unwrap();
+    let sidebar = &root.children[2].children[0];
+    let sidebar_width = ui
+        .layout_map()
+        .get(sidebar.taffy_id.unwrap())
+        .unwrap()
+        .width;
+    assert_eq!(sidebar_width, 220.0);
+
+    let handle = resize_handle(root).expect("sidebar resize handle");
+    let bounds = *ui.layout_map().get(handle.taffy_id.unwrap()).unwrap();
+    let start = LogicalPoint::new(bounds.x + bounds.width / 2.0, bounds.y + 100.0);
+    assert!(
+        ui.dispatch_input(InputEvent::PointerDown(start))
+            .unwrap()
+            .handled
+    );
+    ui.dispatch_input(InputEvent::PointerMove(LogicalPoint::new(
+        start.x + 60.0,
+        start.y,
+    )))
+    .unwrap();
+    ui.dispatch_input(InputEvent::PointerUp(LogicalPoint::new(
+        start.x + 60.0,
+        start.y,
+    )))
+    .unwrap();
+
+    let root = ui.retained().unwrap().root().unwrap();
+    let sidebar = &root.children[2].children[0];
+    let resized_width = ui
+        .layout_map()
+        .get(sidebar.taffy_id.unwrap())
+        .unwrap()
+        .width;
+    assert_eq!(resized_width, 280.0);
+
+    let root = ui.retained().unwrap().root().unwrap();
+    let handle = resize_handle(root).expect("sidebar resize handle after expansion");
+    let bounds = *ui.layout_map().get(handle.taffy_id.unwrap()).unwrap();
+    let shrink_from = LogicalPoint::new(bounds.x + bounds.width / 2.0, bounds.y + 100.0);
+    ui.dispatch_input(InputEvent::PointerDown(shrink_from))
+        .unwrap();
+    ui.dispatch_input(InputEvent::PointerMove(LogicalPoint::new(
+        shrink_from.x - 250.0,
+        shrink_from.y,
+    )))
+    .unwrap();
+    ui.dispatch_input(InputEvent::PointerUp(LogicalPoint::new(
+        shrink_from.x - 250.0,
+        shrink_from.y,
+    )))
+    .unwrap();
+
+    let root = ui.retained().unwrap().root().unwrap();
+    let sidebar = &root.children[2].children[0];
+    let editor = &root.children[2].children[1];
+    assert_eq!(
+        ui.layout_map()
+            .get(sidebar.taffy_id.unwrap())
+            .unwrap()
+            .width,
+        80.0
+    );
+    assert_eq!(sidebar.style.overflow, lemon::Overflow::Hidden);
+    let editor_bounds = ui.layout_map().get(editor.taffy_id.unwrap()).unwrap();
+    assert_eq!(editor_bounds.x, 80.0);
+    assert_eq!(editor_bounds.width, 880.0);
+    assert_eq!(editor.style.overflow, lemon::Overflow::Hidden);
+    let handle = resize_handle(root).expect("sidebar resize handle at minimum width");
+    let bounds = *ui.layout_map().get(handle.taffy_id.unwrap()).unwrap();
+    assert_eq!(
+        bounds.width, 6.0,
+        "resize handle must stay visible at minimum width"
+    );
+    let expand_from = LogicalPoint::new(bounds.x + bounds.width / 2.0, bounds.y + 100.0);
+    let hit = lemon::input::hit_test::hit_test_pointer_down(root, ui.layout_map(), expand_from);
+    assert_eq!(
+        hit.map(|(node, _)| node.taffy_id),
+        Some(handle.taffy_id),
+        "the narrow sidebar's resize handle must remain the pointer target"
+    );
+    ui.dispatch_input(InputEvent::PointerDown(expand_from))
+        .unwrap();
+    ui.dispatch_input(InputEvent::PointerMove(LogicalPoint::new(
+        expand_from.x + 40.0,
+        expand_from.y,
+    )))
+    .unwrap();
+    ui.dispatch_input(InputEvent::PointerUp(LogicalPoint::new(
+        expand_from.x + 40.0,
+        expand_from.y,
+    )))
+    .unwrap();
+    let sidebar = &ui.retained().unwrap().root().unwrap().children[2].children[0];
+    assert_eq!(
+        ui.layout_map()
+            .get(sidebar.taffy_id.unwrap())
+            .unwrap()
+            .width,
+        120.0
+    );
+}
+
+#[test]
 fn discarding_restores_the_saved_text_and_path() {
     let directory = Directory::new();
     let path = directory.0.join("saved.txt");
