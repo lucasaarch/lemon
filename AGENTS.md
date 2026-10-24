@@ -25,7 +25,7 @@ Lemon is a single Cargo package. Run Cargo and Make commands from the repository
 | `src/retained/` | Retained nodes, patch application, focus traversal |
 | `src/layout/`, `paint/` | Geometry/text layout and Vello scene generation |
 | `src/ui.rs` | Headless update, layout, and scene orchestration (`UiState`) |
-| `src/host.rs`, `host_requests.rs`, `window.rs` | Host context, scoped theme, window request queue/types |
+| `src/host.rs`, `window.rs` | Host context, scoped theme, window request queue/types |
 | `src/widget/` | Semantic controls: button, fields in `field.rs`, select, slider, file tree, toggles, overlays and toaster; editing internals in `field/editor.rs` |
 | `src/platform/` | Native windows/event conversion, clipboard, frame scheduling, presentation |
 | `src/input/` | Headless input dispatch, hit testing, focus and capture |

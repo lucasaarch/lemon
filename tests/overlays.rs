@@ -252,6 +252,70 @@ fn toast_queue_updates_after_mount_expires_and_belongs_to_its_host() {
 }
 
 #[test]
+fn toast_kinds_keep_their_icons_and_follow_theme_changes() {
+    fn status_icons(node: &RetainedNode, icons: &mut Vec<(&'static str, Color)>) {
+        if let Some(icon) = &node.paint.icon {
+            if icon.data != lemon::icons::lucide::X {
+                icons.push((icon.data.name(), icon.color));
+            }
+        }
+        for child in &node.children {
+            status_icons(child, icons);
+        }
+    }
+
+    let host = HostContext::new(Theme::default_dark());
+    let _scope = host.enter();
+    let holder = std::rc::Rc::new(std::cell::RefCell::new(None));
+    let output = holder.clone();
+    let mut ui = UiState::default();
+    ui.mount(move |cx| {
+        let toaster = Toaster::new(cx);
+        *output.borrow_mut() = Some(toaster.clone());
+        View::new().fill().child(toaster).into_element()
+    })
+    .unwrap();
+    let toaster = holder.borrow().clone().unwrap();
+    toaster.show("Default info");
+    toaster.show_kind(ToastKind::Info, "Info");
+    toaster.show_kind(ToastKind::Success, "Success");
+    toaster.show_kind(ToastKind::Warning, "Warning");
+    toaster.show_kind(ToastKind::Error, "Error");
+
+    for theme in [Theme::default_dark(), Theme::default_light()] {
+        let dark = theme == Theme::default_dark();
+        host.set_theme(theme.clone());
+        update(&mut ui);
+        let mut icons = Vec::new();
+        status_icons(ui.retained().unwrap().root().unwrap(), &mut icons);
+        assert_eq!(
+            icons,
+            vec![
+                ("info", theme.colors.accent),
+                ("info", theme.colors.accent),
+                (
+                    "circle-check",
+                    if dark {
+                        Color::rgb8(74, 222, 128)
+                    } else {
+                        Color::rgb8(21, 128, 61)
+                    }
+                ),
+                (
+                    "triangle-alert",
+                    if dark {
+                        Color::rgb8(251, 191, 36)
+                    } else {
+                        Color::rgb8(180, 83, 9)
+                    }
+                ),
+                ("circle-x", theme.colors.error),
+            ]
+        );
+    }
+}
+
+#[test]
 fn popover_panel_blocks_background_click_focus_capture_hover_and_scroll() {
     let open = State::new(true);
     let visible = open.clone();

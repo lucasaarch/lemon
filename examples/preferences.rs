@@ -179,7 +179,10 @@ fn app(cx: &Cx, form: &Form) -> Element {
                         .disabled(draft.name.is_empty() || draft == applied)
                         .action(move || {
                             if apply.apply() {
-                                notice.show("Preferences applied to all previews");
+                                notice.show_kind(
+                                    ToastKind::Success,
+                                    "Preferences applied to all previews",
+                                );
                             }
                         }),
                 )

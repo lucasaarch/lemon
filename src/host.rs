@@ -3,11 +3,22 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-pub use crate::host_requests::OpenWindowRequest;
 use crate::theme::{current_theme, set_active_theme, Theme};
+use crate::window::{RootComponent, WindowConfig};
 use crate::State;
 
 type ClipboardWrite = Rc<dyn Fn(&str)>;
+
+/// Request to the host to create an independent native window.
+///
+/// The host drains its [`HostContext`] queue and interprets these parameters;
+/// the component runtime never creates OS windows.
+pub struct OpenWindowRequest {
+    /// Native title and initial dimensions.
+    pub config: WindowConfig,
+    /// Root view to mount in the new window.
+    pub root: RootComponent,
+}
 
 /// Application-owned window request queue, theme, animation clock and clipboard adapter.
 ///

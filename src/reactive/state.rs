@@ -37,6 +37,9 @@ impl<T: Clone + 'static> State<T> {
     pub fn get(&self) -> T {
         let mut inner = self.0.borrow_mut();
         if let Some(obs) = current_observer() {
+            inner
+                .subscribers
+                .retain(|subscriber| subscriber.strong_count() > 0);
             if !inner.subscribers.iter().any(|w| w.ptr_eq(&obs)) {
                 inner.subscribers.push(obs);
             }
@@ -97,7 +100,7 @@ impl<T> Clone for State<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::reactive::observer::with_observer;
+    use crate::reactive::observer::{with_observer, RunObserver};
     use std::cell::Cell;
     use std::rc::Rc;
 
@@ -157,5 +160,17 @@ mod tests {
         let s2 = s1.clone();
         s1.set(10);
         assert_eq!(s2.get(), 10);
+    }
+
+    #[test]
+    fn reads_prune_subscriptions_from_finished_observer_runs() {
+        let state = State::new(0);
+        for _ in 0..8 {
+            let observer = RunObserver::new(|| {});
+            with_observer(Rc::downgrade(&observer) as Weak<dyn Subscriber>, || {
+                state.get();
+            });
+            assert_eq!(state.0.borrow().subscribers.len(), 1);
+        }
     }
 }

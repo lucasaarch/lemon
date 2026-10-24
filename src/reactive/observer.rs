@@ -1,12 +1,40 @@
 //! Dependency tracking scopes shared by signals and UI render effects.
 
 use std::cell::{Cell, RefCell};
-use std::rc::Weak;
+use std::rc::{Rc, Weak};
 
 /// Dependency target notified when a tracked signal changes.
 pub trait Subscriber {
     /// Schedules or performs this subscriber's reactive work.
     fn mark_dirty(&self);
+}
+
+/// One evaluation's subscriptions. Replacing the token retires dependencies
+/// that the next evaluation did not read.
+pub(crate) struct RunObserver {
+    active: Cell<bool>,
+    on_dirty: Box<dyn Fn()>,
+}
+
+impl RunObserver {
+    pub(crate) fn new(on_dirty: impl Fn() + 'static) -> Rc<Self> {
+        Rc::new(Self {
+            active: Cell::new(true),
+            on_dirty: Box::new(on_dirty),
+        })
+    }
+
+    pub(crate) fn deactivate(&self) {
+        self.active.set(false);
+    }
+}
+
+impl Subscriber for RunObserver {
+    fn mark_dirty(&self) {
+        if self.active.get() {
+            (self.on_dirty)();
+        }
+    }
 }
 
 thread_local! {
@@ -15,24 +43,39 @@ thread_local! {
 }
 
 /// Runs `f` without recording signal dependencies or notifying subscribers on writes.
+/// Restores normal tracking and notifications even if `f` panics.
+///
+/// ```
+/// use lemon::reactive::{Effect, State};
+/// use lemon::reactive::observer::without_observer;
+/// use std::{cell::Cell, rc::Rc};
+/// let value = State::new(0);
+/// let reads = Rc::new(Cell::new(0));
+/// let source = value.clone();
+/// let count = reads.clone();
+/// let _effect = Effect::new(move || {
+///     count.set(count.get() + 1);
+///     without_observer(|| source.get());
+/// });
+/// value.set(1);
+/// assert_eq!(reads.get(), 1);
+/// ```
 pub fn without_observer<R>(f: impl FnOnce() -> R) -> R {
-    let prev_notify = SUPPRESS_NOTIFY.with(|flag| {
-        let prev = flag.get();
-        flag.set(true);
-        prev
-    });
-    let result = OBSERVER_STACK.with(|stack| {
-        let stack_len = stack.borrow().len();
-        let out = f();
-        stack.borrow_mut().truncate(stack_len);
-        out
-    });
-    SUPPRESS_NOTIFY.with(|flag| flag.set(prev_notify));
-    result
+    let previous = SUPPRESS_NOTIFY.with(|flag| flag.replace(true));
+    let _guard = SuppressGuard(previous);
+    f()
 }
 
 pub(crate) fn notifications_suppressed() -> bool {
     SUPPRESS_NOTIFY.with(|flag| flag.get())
+}
+
+struct SuppressGuard(bool);
+
+impl Drop for SuppressGuard {
+    fn drop(&mut self) {
+        SUPPRESS_NOTIFY.with(|flag| flag.set(self.0));
+    }
 }
 
 struct StackGuard;
@@ -54,12 +97,16 @@ pub fn with_observer<R>(observer: Weak<dyn Subscriber>, f: impl FnOnce() -> R) -
 
 /// Returns the innermost dependency target, or `None` outside a tracked scope.
 pub fn current_observer() -> Option<Weak<dyn Subscriber>> {
+    if notifications_suppressed() {
+        return None;
+    }
     OBSERVER_STACK.with(|stack| stack.borrow().last().cloned())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::reactive::state::State;
     use std::cell::Cell;
     use std::rc::Rc;
 
@@ -90,5 +137,33 @@ mod tests {
         let sub = Rc::new(MockSub(Cell::new(0)));
         let result = with_observer(Rc::downgrade(&sub) as Weak<dyn Subscriber>, || 42);
         assert_eq!(result, 42);
+    }
+
+    #[test]
+    fn without_observer_skips_dependencies_and_restores_outer_observer() {
+        let tracked = State::new(0);
+        let untracked = State::new(0);
+        let sub = Rc::new(MockSub(Cell::new(0)));
+        with_observer(Rc::downgrade(&sub) as Weak<dyn Subscriber>, || {
+            without_observer(|| {
+                assert!(current_observer().is_none());
+                untracked.get();
+                untracked.set(1);
+            });
+            tracked.get();
+        });
+        untracked.set(2);
+        assert_eq!(sub.0.get(), 0);
+        tracked.set(1);
+        assert_eq!(sub.0.get(), 1);
+    }
+
+    #[test]
+    fn without_observer_restores_notifications_after_panic() {
+        let result = std::panic::catch_unwind(|| {
+            without_observer(|| panic!("render failed"));
+        });
+        assert!(result.is_err());
+        assert!(!notifications_suppressed());
     }
 }

@@ -29,7 +29,7 @@ pub use crate::runtime::cx::Cx;
 pub use crate::widget::{
     Button, ButtonStyle, Checkbox, Dialog, FileTree, FileTreeNode, FileTreeStyle, Popover,
     SecureField, Select, SelectStyle, Slider, SliderStyle, Switch, TextArea, TextField,
-    TextFieldStyle, ToastId, Toaster,
+    TextFieldStyle, ToastId, ToastKind, Toaster,
 };
 pub use crate::window::{WindowChrome, WindowConfig};
 pub use crate::State;

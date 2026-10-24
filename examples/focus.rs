@@ -59,7 +59,8 @@ fn timer(cx: &Cx, props: &TimerProps) -> Element {
         if value.started.is_some() && value.elapsed_at(Instant::now()) >= total {
             watched.update(|session| session.finish(total));
             ticking.reset();
-            notice.show_for(
+            notice.show_kind_for(
+                ToastKind::Success,
                 "Session complete. Time for a break.",
                 Duration::from_secs(8),
             );

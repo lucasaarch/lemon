@@ -9,10 +9,33 @@ use std::time::Duration;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ToastId(u64);
 
+/// Visual meaning of a notification. Info and error use theme colors; success
+/// and warning use status colors chosen for the active palette's brightness.
+///
+/// ```
+/// use lemon::prelude::*;
+/// let cx = Cx::new();
+/// let toaster = Toaster::new(&cx);
+/// toaster.show_kind(ToastKind::Warning, "Check your settings");
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ToastKind {
+    /// General information; the default for [`Toaster::show`].
+    #[default]
+    Info,
+    /// An action completed successfully.
+    Success,
+    /// An action needs attention.
+    Warning,
+    /// An action failed.
+    Error,
+}
+
 #[derive(Clone)]
 struct Toast {
     id: ToastId,
     message: String,
+    kind: ToastKind,
     timer: AnimationHandle,
     duration: Duration,
 }
@@ -27,6 +50,7 @@ struct Queue {
 /// Declare once in a stable hook slot, clone into actions, and mount one copy.
 /// Notifications appear at the window's bottom-right, fade in/out, expire after
 /// four seconds by default, and can be dismissed with the close button.
+/// Use [`Toaster::show_kind`] for success, warning, and error notifications.
 /// Timers use the originating host's animation clock; no threads or global queue.
 ///
 /// ```
@@ -55,14 +79,30 @@ impl Toaster {
         }
     }
 
-    /// Shows a four-second notification and returns its identity for explicit dismissal.
+    /// Shows a four-second information notification and returns its identity for dismissal.
     pub fn show(&self, message: impl Into<String>) -> ToastId {
-        self.show_for(message, Duration::from_secs(4))
+        self.show_kind(ToastKind::Info, message)
     }
 
-    /// Shows a notification for `duration`, including its fades. Zero expires immediately.
+    /// Shows a notification of `kind` for four seconds and returns its identity.
+    pub fn show_kind(&self, kind: ToastKind, message: impl Into<String>) -> ToastId {
+        self.show_kind_for(kind, message, Duration::from_secs(4))
+    }
+
+    /// Shows an information notification for `duration`, including its fades. Zero expires immediately.
     /// Expired entries are reclaimed on the next enqueue; hidden stacks do not render them.
     pub fn show_for(&self, message: impl Into<String>, duration: Duration) -> ToastId {
+        self.show_kind_for(ToastKind::Info, message, duration)
+    }
+
+    /// Shows a notification of `kind` for `duration`, including its fades.
+    /// Zero expires immediately. Expired entries are reclaimed on the next enqueue.
+    pub fn show_kind_for(
+        &self,
+        kind: ToastKind,
+        message: impl Into<String>,
+        duration: Duration,
+    ) -> ToastId {
         let timer = self
             .animations
             .register(AnimSlot::new(AnimationConfig::new(duration)));
@@ -74,6 +114,7 @@ impl Toaster {
         queue.entries.push(Toast {
             id,
             message: message.into(),
+            kind,
             timer,
             duration,
         });
@@ -102,6 +143,10 @@ impl Toaster {
             .layer(50)
             .width(300.0)
             .spacing(8.0);
+        let dark_palette = self.theme.colors.foreground.r
+            + self.theme.colors.foreground.g
+            + self.theme.colors.foreground.b
+            > 1.5;
         for toast in self.queue.get().entries {
             let progress = toast.timer.progress();
             if progress >= 1.0 {
@@ -113,6 +158,26 @@ impl Toaster {
             let dismiss = self.clone();
             let id = toast.id;
             let key_dismiss = dismiss.clone();
+            let (icon, color) = match toast.kind {
+                ToastKind::Info => (crate::icons::lucide::INFO, self.theme.colors.accent),
+                ToastKind::Success => (
+                    crate::icons::lucide::CIRCLE_CHECK,
+                    if dark_palette {
+                        Color::rgb8(74, 222, 128)
+                    } else {
+                        Color::rgb8(21, 128, 61)
+                    },
+                ),
+                ToastKind::Warning => (
+                    crate::icons::lucide::TRIANGLE_ALERT,
+                    if dark_palette {
+                        Color::rgb8(251, 191, 36)
+                    } else {
+                        Color::rgb8(180, 83, 9)
+                    },
+                ),
+                ToastKind::Error => (crate::icons::lucide::CIRCLE_X, self.theme.colors.error),
+            };
             let close = View::new()
                 .width(24.0)
                 .height(24.0)
@@ -152,6 +217,7 @@ impl Toaster {
                     .surface(self.theme.colors.surface)
                     .border(self.theme.colors.border, 1.0)
                     .rounding(self.theme.radius.md)
+                    .child(Icon::new(icon).size(18.0).color(color))
                     .child(
                         View::new()
                             .min_width(0.0)

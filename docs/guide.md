@@ -130,6 +130,9 @@ Use `ScrollView` inside a dialog for content taller than the viewport.
 `Toaster::new(cx)` declares a component-owned queue. Mount one clone and capture
 another in actions: `toaster.show("Saved")`. Notifications fade and expire after
 four seconds; `show_for`, `dismiss` and `clear` control their lifetime. These
+calls use `ToastKind::Info` by default. Use
+`toaster.show_kind(ToastKind::Success, "Saved")` or `show_kind_for` to mark
+success, warning, or error notifications with their own icons and colors. These
 panels and notifications render in the Lemon window; they are not OS dialogs or
 system notifications. See the `tasks` and `preferences` applications.
 

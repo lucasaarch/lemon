@@ -33,7 +33,7 @@ pub mod toaster;
 
 pub mod toggle;
 pub use overlay::{Dialog, Popover};
-pub use toaster::{ToastId, Toaster};
+pub use toaster::{ToastId, ToastKind, Toaster};
 pub use toggle::{Checkbox, Switch};
 
 pub use button::{Button, ButtonStyle};

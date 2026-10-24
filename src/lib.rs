@@ -51,8 +51,6 @@
 
 pub mod prelude;
 
-mod host_requests;
-
 mod macros;
 
 pub mod animation;
@@ -106,7 +104,7 @@ pub use transition::{Transition, TransitionProperty};
 pub use widget::{
     Button, ButtonStyle, Checkbox, Dialog, FileTree, FileTreeNode, FileTreeStyle, Popover,
     SecureField, Select, SelectStyle, Slider, SliderStyle, Switch, TextArea, TextField,
-    TextFieldStyle, ToastId, Toaster,
+    TextFieldStyle, ToastId, ToastKind, Toaster,
 };
 
 pub use element::events::{

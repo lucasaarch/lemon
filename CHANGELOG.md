@@ -2,6 +2,17 @@
 
 Changes to Lemon's public API are recorded here. Releases follow [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Application API
+
+- `Toaster` supports `Info`, `Success`, `Warning` and `Error` notifications with distinct icons and colors; plain `show` and `show_for` remain informational.
+
+### Reactive behavior
+
+- Effects and derived values stop observing states that their latest evaluation no longer reads.
+- Suppressed observation and effect execution restore their state after a caught panic.
+
 ## [1.0.0] - 2026-10-23
 
 Lemon 1.0 establishes the current native desktop API as the stable baseline.

@@ -1,6 +1,6 @@
 //! Cached reactive computations.
 
-use crate::reactive::observer::{current_observer, with_observer, Subscriber};
+use crate::reactive::observer::{current_observer, with_observer, RunObserver, Subscriber};
 use std::cell::{Cell, RefCell};
 use std::rc::{Rc, Weak};
 
@@ -8,16 +8,30 @@ struct DerivedInner<T> {
     f: Box<dyn Fn() -> T>,
     cached: RefCell<Option<T>>,
     stale: Cell<bool>,
-    self_weak: RefCell<Weak<DerivedInner<T>>>,
+    observer: RefCell<Option<Rc<RunObserver>>>,
     downstream: RefCell<Vec<Weak<dyn Subscriber>>>,
 }
 
-impl<T: Clone + PartialEq + 'static> Subscriber for DerivedInner<T> {
-    fn mark_dirty(&self) {
-        let weak = self.self_weak.borrow().clone();
-        let new_value = with_observer(weak as Weak<dyn Subscriber>, || (self.f)());
+impl<T: Clone + PartialEq + 'static> DerivedInner<T> {
+    fn evaluate(inner: &Rc<Self>) -> T {
+        let weak = Rc::downgrade(inner);
+        let observer = RunObserver::new(move || {
+            if let Some(inner) = weak.upgrade() {
+                Self::recompute(&inner);
+            }
+        });
+        if let Some(previous) = inner.observer.replace(Some(observer.clone())) {
+            previous.deactivate();
+        }
+        with_observer(Rc::downgrade(&observer) as Weak<dyn Subscriber>, || {
+            (inner.f)()
+        })
+    }
 
-        let changed = match self.cached.borrow().as_ref() {
+    fn recompute(inner: &Rc<Self>) {
+        let new_value = Self::evaluate(inner);
+
+        let changed = match inner.cached.borrow().as_ref() {
             Some(old) => old != &new_value,
             None => true,
         };
@@ -25,11 +39,11 @@ impl<T: Clone + PartialEq + 'static> Subscriber for DerivedInner<T> {
             return;
         }
 
-        self.stale.set(false);
-        *self.cached.borrow_mut() = Some(new_value);
+        inner.stale.set(false);
+        *inner.cached.borrow_mut() = Some(new_value);
 
         let subs: Vec<Rc<dyn Subscriber>> = {
-            let mut downstream = self.downstream.borrow_mut();
+            let mut downstream = inner.downstream.borrow_mut();
             let mut upgraded = Vec::with_capacity(downstream.len());
             downstream.retain(|w| {
                 if let Some(rc) = w.upgrade() {
@@ -48,6 +62,7 @@ impl<T: Clone + PartialEq + 'static> Subscriber for DerivedInner<T> {
 }
 
 /// Cached reactive computation, notifying dependents only when its value changes.
+/// Each evaluation replaces its signal subscriptions, including conditional reads.
 ///
 /// ```
 /// use lemon::reactive::{Derived, State};
@@ -65,10 +80,9 @@ impl<T: Clone + PartialEq + 'static> Derived<T> {
             f: Box::new(f),
             cached: RefCell::new(None),
             stale: Cell::new(true),
-            self_weak: RefCell::new(Weak::new()),
+            observer: RefCell::new(None),
             downstream: RefCell::new(Vec::new()),
         });
-        *inner.self_weak.borrow_mut() = Rc::downgrade(&inner);
         Derived(inner)
     }
 
@@ -76,13 +90,13 @@ impl<T: Clone + PartialEq + 'static> Derived<T> {
     pub fn get(&self) -> T {
         if let Some(obs) = current_observer() {
             let mut downstream = self.0.downstream.borrow_mut();
+            downstream.retain(|subscriber| subscriber.strong_count() > 0);
             if !downstream.iter().any(|w| w.ptr_eq(&obs)) {
                 downstream.push(obs);
             }
         }
         if self.0.stale.get() {
-            let weak = self.0.self_weak.borrow().clone();
-            let value = with_observer(weak as Weak<dyn Subscriber>, || (self.0.f)());
+            let value = DerivedInner::evaluate(&self.0);
             self.0.stale.set(false);
             *self.0.cached.borrow_mut() = Some(value.clone());
             value
@@ -159,5 +173,76 @@ mod tests {
         s.set(20);
         assert_eq!(d.get(), 20);
         assert_eq!(count.get(), 2);
+    }
+
+    #[test]
+    fn derived_stops_listening_to_states_not_read_on_latest_evaluation() {
+        let choose_first = State::new(true);
+        let first = State::new(0);
+        let second = State::new(0);
+        let evaluations = Rc::new(Cell::new(0));
+        let (choice, a, b, count) = (
+            choose_first.clone(),
+            first.clone(),
+            second.clone(),
+            evaluations.clone(),
+        );
+        let derived = Derived::new(move || {
+            count.set(count.get() + 1);
+            if choice.get() {
+                a.get()
+            } else {
+                b.get()
+            }
+        });
+        assert_eq!(derived.get(), 0);
+        choose_first.set(false);
+        assert_eq!(evaluations.get(), 2);
+        first.set(1);
+        assert_eq!(evaluations.get(), 2);
+        second.set(1);
+        assert_eq!(evaluations.get(), 3);
+        assert_eq!(derived.get(), 1);
+        choose_first.set(true);
+        assert_eq!(evaluations.get(), 4);
+        second.set(2);
+        assert_eq!(evaluations.get(), 4);
+        first.set(2);
+        assert_eq!(evaluations.get(), 5);
+        assert_eq!(derived.get(), 2);
+    }
+
+    #[test]
+    fn derived_stops_notifying_effects_that_no_longer_read_it() {
+        let choose_derived = State::new(true);
+        let source = State::new(0);
+        let input = source.clone();
+        let derived = Derived::new(move || input.get());
+        let choice = choose_derived.clone();
+        let value = derived.clone();
+        let runs = Rc::new(Cell::new(0));
+        let count = runs.clone();
+        let _effect = Effect::new(move || {
+            count.set(count.get() + 1);
+            if choice.get() {
+                value.get();
+            }
+        });
+        choose_derived.set(false);
+        assert_eq!(runs.get(), 2);
+        source.set(1);
+        assert_eq!(runs.get(), 2);
+    }
+
+    #[test]
+    fn reads_prune_downstream_subscriptions_from_finished_runs() {
+        let derived = Derived::new(|| 1);
+        for _ in 0..8 {
+            let observer = RunObserver::new(|| {});
+            with_observer(Rc::downgrade(&observer) as Weak<dyn Subscriber>, || {
+                derived.get();
+            });
+            assert_eq!(derived.0.downstream.borrow().len(), 1);
+        }
     }
 }
